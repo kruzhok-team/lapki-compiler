@@ -12,7 +12,7 @@ async def main():
     
     
     async with session.ws_connect('http://localhost:8080/ws') as ws:
-        with open('/home/l140/programming/ide/compiler/src/cpp_example.cpp', 'r') as inp:
+        with open('src/cpp_example.cpp', 'r') as inp:
             data = inp.read()
         
         await ws.send_json({"source" : data, "compiler settings": {"compiler" : "g++", "flags" : ["-o"]}})
