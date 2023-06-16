@@ -3,6 +3,8 @@ import asyncio
 import json
 from aiofile import async_open
 import subprocess
+import base64
+
 #TODO Вынести в отдельный класс
 #TODO Написать тесты
 async def main():
@@ -15,10 +17,13 @@ async def main():
         
         await ws.send_json({"source" : data, "compiler settings": {"compiler" : "g++", "flags" : ["-o"]}})
         
-        output = await ws.receive_bytes()
-        
+        output = await ws.receive_json()
+        json_data = json.loads(output)
+        binary = json_data["binary"]
+        binary = binary.encode('ascii')
+        binary = base64.b64decode(binary)
         async with async_open("./biba.o", 'wb') as f:
-            await f.write(output)
+            await f.write(binary)
             
         subprocess.run("chmod u+x biba.o", shell=True)
         output = subprocess.run("./biba.o", shell=True)

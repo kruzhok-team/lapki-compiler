@@ -6,7 +6,7 @@ import aiohttp
 from aiofile import async_open
 from time import gmtime, strftime
 import json
-
+import base64
 class Handler:
     def __init__():
         pass
@@ -37,8 +37,11 @@ class Handler:
             
             async with async_open(f"{filename}.o", 'rb') as f:
                 binary_data = await f.read()
-                
-                await ws.send_bytes(binary_data)
+            
+            b64_data = base64.b64encode(binary_data)
+            b64_data = json.dumps({"binary" : b64_data.decode("ascii")})
+            print(type(b64_data))
+            await ws.send_json(b64_data)
             
             
         except KeyError:
