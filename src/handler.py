@@ -1,12 +1,14 @@
 from aiohttp import web
 from JsonParser import JsonParser
-from Compiler import Compiler
+from Compiler import Compiler, CompilerResult
 from JsonConverter import JsonConverter
+from RequestError import RequestError
 import aiohttp
 from aiofile import async_open
 from time import gmtime, strftime
 import json
 import base64
+from pathlib import Path
 class Handler:
     def __init__():
         pass
@@ -16,9 +18,7 @@ class Handler:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         
-        
         #TODO Прикрутить logger
-        
         #TODO Вынести в JSON Parser
         data = await ws.receive_json()
         
@@ -29,32 +29,47 @@ class Handler:
             
             #Как генерировать названия файлов? По времени? По токену?
             #TODO Вынести работу с файлами в FileManager?
+            
+            
             filename = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-            async with async_open(f"{filename}.cpp", 'w') as f:
+            
+            try:
+                fileformat = Compiler.supported_compilers[compiler]
+            except KeyError:
+                await RequestError(F"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+            
+            Path(f"server/{filename}/").mkdir(parents=True, exist_ok=True)
+            
+            async with async_open(f"server/{filename}/{filename}.{fileformat}", 'w') as f:
                 await f.write(source)
 
-            output = await Compiler.compile(f"{filename}.cpp", f"{filename}.o", flags, compiler)
+            result = await Compiler.compile(f"server/{filename}/", filename, flags, compiler)
             
-            async with async_open(f"{filename}.o", 'rb') as f:
-                binary_data = await f.read()
             
-            b64_data = base64.b64encode(binary_data)
-            b64_data = json.dumps({"binary" : b64_data.decode("ascii")})
-            print(type(b64_data))
-            await ws.send_json(b64_data)
+            response = {
+                "result" : "OK",
+                "return code" : result.return_code,
+                "stdout" : result.stdout,
+                "stderr" : result.stderr,
+                "binary" : ""
+            }
+            if result.return_code != 0:
+                response = json.dumps(response)
+                await ws.send_json(response)
+            else:
+                async with async_open(f"server/{filename}/{filename}.zip", 'rb') as f:
+                    binary_data = await f.read()
+                
+                b64_data = base64.b64encode(binary_data)
+                response["binary"] = b64_data.decode("ascii")
             
+            response = json.dumps(response)
+            await ws.send_json(response)
             
         except KeyError:
-            print("Invalid data")
+            await RequestError("Invalid request").dropConnection(ws)
         
-        async for msg in ws:
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                print(msg.data)
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                print('ws connection closed with exception %s' %
-                    ws.exception())
-            else:
-                print(msg.data)
+        await ws.close()
         
         return ws
     
