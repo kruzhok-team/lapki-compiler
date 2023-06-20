@@ -1,0 +1,42 @@
+{
+      "result": "OK/request error description",
+      "returnCode": "compilation return code",
+      "stdout": "compilation stdout",
+      "stderr": "compilation stderr",
+      
+      "source": [
+            {
+                  "fileName": "ExampleSketch.ino",
+                  "fileContent": "generated sourcefile"
+            }
+      ],
+
+      "binary": [
+            {
+                  "fileName": "ExampleSketch.ino.eep",
+                  "fileContent": "bytes encoded as base64"
+            },
+            
+            {
+                  "fileName": "ExampleSketch.ino.elf",
+                  "fileContent": "bytes encoded as base64"
+            },
+
+            {
+                  "fileName": "ExampleSketch.ino.hex",
+                  "fileContent": "bytes encoded as base64"
+            },
+
+            {
+                  "fileName": "ExampleSketch.ino.with_bootloader.bin",
+                  "fileContent": "bytes encoded as base64"
+            },
+
+            {
+                  "fileName": "ExampleSketch.ino.with_bootloader.hex",
+                  "fileContent": "bytes encoded as base64"
+            }
+
+      ]
+
+}
