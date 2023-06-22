@@ -17,9 +17,13 @@ async def main():
         #     data = inp.read()
         
         # await ws.send_json({"source" : data, "compiler settings": {"compiler" : "g++", "flags" : ["-o"]}})
-        with open('src/Examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
-            data = inp.read()
-        await ws.send_json({"source" : data, "compiler settings": {"compiler" : "arduino-cli", "flags" : ["-b", "arduino:avr:uno"]}})
+        # async with async_open('src/Examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
+        #     data = await inp.read()
+        
+        async with async_open('src/Examples/ExampleRequest.json', 'r') as req:
+            json_data = json.loads(await req.read())
+        
+        await ws.send_json(json_data)
         output = await ws.receive_json()
         json_data = json.loads(output)
         result = json_data["result"]
@@ -35,10 +39,6 @@ async def main():
             filename = strftime('%Y-%m-%d %H:%M:%S', gmtime())
             async with async_open(f"client/{filename}.zip", 'wb') as f:
                 await f.write(binary)
-            
-            await unpack_archive(f"client/{filename}.zip", "client", "zip")
-            # subprocess.run(f"chmod u+x client/build/{filename}", shell=True)
-            # output = subprocess.run(f"./client/build/{filename}", shell=True)
         else:
             print(result)
 

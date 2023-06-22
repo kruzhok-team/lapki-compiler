@@ -21,7 +21,7 @@ class Handler:
         #TODO Прикрутить logger
         #TODO Вынести в JSON Parser
         data = await ws.receive_json()
-        
+        print(data)
         try:
             source = data["source"]
             compiler = data["compiler settings"]["compiler"]
