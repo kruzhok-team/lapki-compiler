@@ -1,5 +1,4 @@
 import subprocess
-from RequestError import RequestError
 from aioshutil import make_archive
 from pathlib import Path
 class CompilerResult:

@@ -1,0 +1,19 @@
+{
+    "source": [
+        {
+            "filename" : "cpp_example",
+            "extension" : "cpp",
+            "fileContent" : "*code here*" 
+        },          
+        {
+            "filename" : "cpp_example",
+            "extension" : "hpp",
+            "fileContent" : "*code here*"  
+        }
+    ],
+
+    "compilerSettings": {
+        "compiler": "g++",
+        "flags": ["-o"]
+     }    
+}
