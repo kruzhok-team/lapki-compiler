@@ -1,9 +1,9 @@
 from SourceFile import SourceFile
 import asyncio
 
-class JsonParser:
+class CJsonParser:
     @staticmethod
-    async def parse(request):
+    async def parseStateMachine(request):
         data = await request.json()
         
         try:
@@ -14,9 +14,10 @@ class JsonParser:
     @staticmethod
     async def getFiles(json_data):
         files = []
-        source = json_data["source"]
         
-        for data in source:
+        for data in json_data:
             files.append(SourceFile(data["filename"], data["extension"], data["fileContent"]))
         
         return files
+    
+    

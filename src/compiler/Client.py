@@ -16,7 +16,8 @@ class Client:
             json_data = json.loads(await req.read())
         
         await self.ws.send_json(json.dumps(json_data))
-        
+    
+    #deprecated
     async def getResult(self):
         response = await self.ws.receive_json()
         json_response = json.loads(response)
@@ -59,17 +60,19 @@ class Client:
                 }
             }
             i = 0
-            for glob in globs:
-                for file in path.rglob(glob):
-                    request["source"].append({})
-                    request["source"][i]["filename"] = file.stem
-                    request["source"][i]["extension"] = file.suffix
-                    async with async_open(file, 'r') as f:
-                        request["source"][i]["fileContent"] = await f.read()
-                    i += 1
-                request["compilerSettings"]["compiler"] = compiler
-                request["compilerSettings"]["flags"] = flags
-            
+            for g in globs:
+                print(g)
+                for file in path.glob(g):
+                    if file.is_file():
+                        request["source"].append({})
+                        request["source"][i]["filename"] = file.stem
+                        request["source"][i]["extension"] = file.suffix
+                        async with async_open(file, 'r') as f:
+                            request["source"][i]["fileContent"] = await f.read()
+                        i += 1
+            request["compilerSettings"]["compiler"] = compiler
+            request["compilerSettings"]["flags"] = flags
+                
             await self.ws.send_json(json.dumps(request))
             
             return request

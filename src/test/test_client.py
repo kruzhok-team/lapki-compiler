@@ -3,6 +3,10 @@ import pytest
 from compiler.Client import Client
 from aiofile import async_open
 import base64
+from time import gmtime, strftime
+import json
+from pathlib import Path
+import subprocess
 pytest_plugins = ('pytest_asyncio',)
 
 @pytest.mark.asyncio
@@ -38,16 +42,47 @@ async def test_sendSourceFileCpp():
         }
     }
 
+#Сделать параметрическим
+
 @pytest.mark.asyncio
 async def test_sendMultifileProject():
     client = Client()
     await client.doConnect('http://localhost:8080/ws/source')
-    req = await client.sendMultiFileProject("src/test/Examples/MultifilesExample", "g++", "-o", ("*.cpp", "*.hpp"))
+    req = await client.sendMultiFileProject("src/test/Examples/MultifilesExample", "g++", ["main.cpp", "foo.cpp"], ["*.cpp", "*.hpp"])
 
+    result = await client.ws.receive_json()
+    result = json.loads(result)
+    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
+    Path(path).mkdir(parents=True)
+    for binary in result["binary"]:
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+
+        async with async_open(path + binary["filename"], "wb") as f:
+            await f.write(data)
+    
+    
+    subprocess.run(["chmod", "u+x", path + "a.out"])
+    result = subprocess.run(["./" + path + "a.out"], capture_output=True, text=True)
+    stdout = result.stdout.replace("\n", '')
+    assert stdout == "Result: 8"
+
+@pytest.mark.asyncio
+async def test_sendArduino():
+    client = Client()
+    await client.doConnect('http://localhost:8080/ws/source')
+    req = await client.sendMultiFileProject("src/test/Examples/ExampleSketch", "arduino-cli", ["compile", "-b", "arduino:avr:uno", "ExampleSketch.ino"], ["*.ino"])
     print(req)
-    
-    
-    
+    result = await client.ws.receive_json()
+    result = json.loads(result)
+    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
+    Path(path).mkdir(parents=True)
+    for binary in result["binary"]:
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+
+        async with async_open(path + binary["filename"], "wb") as f:
+            await f.write(data)
     
 @pytest.mark.asyncio
 async def test_sendSMJson():

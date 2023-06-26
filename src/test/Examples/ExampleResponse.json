@@ -7,34 +7,34 @@
       
       "source": [
             {
-                  "fileName": "ExampleSketch.ino",
+                  "filename": "ExampleSketch.ino",
                   "fileContent": "generated sourcefile"
             }
       ],
 
       "binary": [
             {
-                  "fileName": "ExampleSketch.ino.eep",
+                  "filename": "ExampleSketch.ino.eep",
                   "fileContent": "bytes encoded as base64"
             },
             
             {
-                  "fileName": "ExampleSketch.ino.elf",
+                  "filename": "ExampleSketch.ino.elf",
                   "fileContent": "bytes encoded as base64"
             },
 
             {
-                  "fileName": "ExampleSketch.ino.hex",
+                  "filename": "ExampleSketch.ino.hex",
                   "fileContent": "bytes encoded as base64"
             },
 
             {
-                  "fileName": "ExampleSketch.ino.with_bootloader.bin",
+                  "filename": "ExampleSketch.ino.with_bootloader.bin",
                   "fileContent": "bytes encoded as base64"
             },
 
             {
-                  "fileName": "ExampleSketch.ino.with_bootloader.hex",
+                  "filename": "ExampleSketch.ino.with_bootloader.hex",
                   "fileContent": "bytes encoded as base64"
             }
 

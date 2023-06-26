@@ -1,5 +1,4 @@
 from aiohttp import web
-from JsonParser import JsonParser
 from Compiler import Compiler, CompilerResult
 from JsonConverter import JsonConverter
 from RequestError import RequestError
@@ -9,7 +8,7 @@ from time import gmtime, strftime
 import json
 import base64
 from pathlib import Path
-import JsonParser
+from CJsonParser import CJsonParser
 class Handler:
     base_dir = "server/"
     def __init__():
@@ -28,7 +27,6 @@ class Handler:
             source = data["source"]
             compiler = data["compiler settings"]["compiler"]
             flags = data["compiler settings"]["flags"]
-            
             #Как генерировать названия файлов? По времени? По токену?
             #TODO Вынести работу с файлами в FileManager?
             
@@ -37,7 +35,7 @@ class Handler:
             try:
                 fileformat = Compiler.supported_compilers[compiler]
             except KeyError:
-                await RequestError(F"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+                await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
             
             Path(f"server/{filename}/").mkdir(parents=True, exist_ok=True)
             
@@ -74,28 +72,61 @@ class Handler:
         
         return ws
     
+    
+    
     @staticmethod
     async def handle_ws_compile_source(request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         
         data = json.loads(await ws.receive_json())
-        
         try:
             source = data["source"]
-            compiler = data["compilerSettings"]["compiler"]
             flags = data["compilerSettings"]["flags"]
+            compiler = data["compilerSettings"]["compiler"]
+
         except KeyError:
-            await RequestError(F"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+            await RequestError(f"Invalid request").dropConnection(ws)
         
-        dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+        try:
+            Compiler.supported_compilers[compiler]
+        except KeyError:
+            await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+        dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+        
+        if compiler == "arduino-cli":
+            dirname += source[0]["filename"] + "/"
+        
         Path(Handler.base_dir + dirname).mkdir(parents=True, exist_ok=True)
-        files = await JsonParser.getFiles(data)
+        files = await CJsonParser.getFiles(source)
         for file in files:
             path = ''.join([Handler.base_dir, dirname, file.name, file.extension])
-            print(path)
             async with async_open(path, 'w') as f:
                 await f.write(file.content)
+        
+        result = await Compiler.compile(base_dir=Handler.base_dir + dirname, flags=flags, compiler=compiler)
+        response = {
+                "result" : "OK",
+                "return code" : result.return_code,
+                "stdout" : result.stdout,
+                "stderr" : result.stderr,
+                "binary": []
+            }
+        
+        for path in Path(''.join([Handler.base_dir, dirname, "/build/"])).rglob("*"):
+            if path.is_file():
+                async with async_open(path, 'rb') as f:
+                    binary = await f.read()
+                    fileinfo = {}
+                    fileinfo["filename"] = path.name
+                    b64_data = base64.b64encode(binary)
+                    fileinfo["fileContent"] = b64_data.decode("ascii")
+                    response["binary"].append(fileinfo)
+        
+        await ws.send_json(json.dumps(response))     
+        await ws.close()
+        
+        return ws
     @staticmethod
     async def handle_get_compile(request):
         return web.Response(text="Hello world!")
