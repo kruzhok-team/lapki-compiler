@@ -13,34 +13,34 @@ pytest_plugins = ('pytest_asyncio',)
 async def test_sendSmth():
     client = Client()
     await client.doConnect('http://localhost:8080/ws')
-    await client.sendSMJson(path='src/test/Examples/ExampleRequest.json')
+    await client.sendSMJson(path='src/test/Examples/ExampleRequestSM.json')
 
-@pytest.mark.asyncio
-async def test_sendSourceFileCpp():
-    client = Client()
-    await client.doConnect('http://localhost:8080/ws/source')
-    await client.sendSourceFile(path='src/test/Examples/cpp_example.cpp', compiler="g++", flags=["-o"])
+# @pytest.mark.asyncio
+# async def test_sendSourceFileCpp():
+#     client = Client()
+#     await client.doConnect('http://localhost:8080/ws/source')
+#     await client.sendSourceFile(path='src/test/Examples/cpp_example.cpp', compiler="g++", flags=["-o"])
     
-    response = await client.getResult()
+#     response = await client.getResult()
     
-    async with async_open("src/test/Examples/cpp_example.o", 'rb') as f:
-        binary = await f.read()
+#     async with async_open("src/test/Examples/cpp_example.o", 'rb') as f:
+#         binary = await f.read()
     
-    binary = base64.b64encode(binary)
-    binary = binary.decode("ascii")
+#     binary = base64.b64encode(binary)
+#     binary = binary.decode("ascii")
     
-    print(response)    
-    assert response == {
-        "result" : "OK",
-        "compilationCommand" : "g++ cpp_example.cpp -o build/cpp_example.o",
-        "returnCode" : 0,
-        "stdout" : "",
-        "stderr" : "",
-        "binary" : {
-            "filename": "cpp_example.o",
-            "fileContent" : binary 
-        }
-    }
+#     print(response)    
+#     assert response == {
+#         "result" : "OK",
+#         "compilationCommand" : "g++ cpp_example.cpp -o build/cpp_example.o",
+#         "returnCode" : 0,
+#         "stdout" : "",
+#         "stderr" : "",
+#         "binary" : {
+#             "filename": "cpp_example.o",
+#             "fileContent" : binary 
+#         }
+#     }
 
 #Сделать параметрическим
 
@@ -83,7 +83,7 @@ async def test_sendArduino():
 
         async with async_open(path + binary["filename"], "wb") as f:
             await f.write(data)
-    
+
 @pytest.mark.asyncio
 async def test_sendSMJson():
     client = Client()

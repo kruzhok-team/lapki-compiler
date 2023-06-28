@@ -22,11 +22,7 @@ class Compiler:
                 Path(base_dir + 'build/').mkdir(parents=True, exist_ok=True)
                 flags.append("-o")
                 flags.append("./build/a.out")
-            case "arduino-cli":
-                pass
-        print(base_dir, flags, compiler)
         result = subprocess.run([compiler, *flags], cwd=base_dir, capture_output=True, text=True) 
-        print(result.returncode, result.stdout, result.stderr)
         return CompilerResult(result.returncode, result.stdout, result.stderr, base_dir + "build/")
     
     # @staticmethod
