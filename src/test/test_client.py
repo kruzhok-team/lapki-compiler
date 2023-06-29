@@ -89,5 +89,3 @@ async def test_sendSMJson():
     client = Client()
     await client.doConnect('http://localhost:8080/ws')
     await client.sendSMJson("src/test/Examples/ExampleRequest.json")
-    
-    pass

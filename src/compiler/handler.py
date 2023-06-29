@@ -9,6 +9,7 @@ import json
 import base64
 from pathlib import Path
 from CJsonParser import CJsonParser
+from fullgraphmlparser.graphml_to_cpp import CppFileWriter
 class Handler:
     base_dir = "server/"
     def __init__():
@@ -22,8 +23,9 @@ class Handler:
         #TODO Прикрутить logger
         data = json.loads(await ws.receive_json())
         
-        await CJsonParser.parseStateMachine(data)
-
+        sm = await CJsonParser.parseStateMachine(data)
+        print(sm)
+        CppFileWriter(sm_name="biba", start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file("src")
             
             # filename = strftime('%Y-%m-%d %H:%M:%S', gmtime())
             

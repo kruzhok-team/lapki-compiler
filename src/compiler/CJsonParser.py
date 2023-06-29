@@ -5,15 +5,31 @@ from component import Component
 class CJsonParser:
     @staticmethod
     async def createNotes(components):
-        pass
-    
-    
+        includes = []
+        variables = []
+        for component in components:
+            if component.type not in includes:
+                includes.append(f'\n#include "{component.type}.h"')
+            
+            variables.append(f"\n{component.type} {component.name} = {component.type}({' '.join(map(str, list(component.parameters.values())))});")
+        
+        notes = []
+        notes.append({ "y:UMLNoteNode": 
+                            {'y:NodeLabel' : 
+                                {"#text" : f'Code for cpp-file: {"".join(variables)}'}}}
+                      )        
+        notes.append({ "y:UMLNoteNode": 
+                            {'y:NodeLabel' : 
+                                {"#text" : f'Code for h-file: {"".join(includes)}'}}}
+                      )        
+        
+        return notes
     @staticmethod
     async def getComponents(components):
-        result = {}
+        result = []
         
         for component_name in components:
-            result[component_name] = Component(component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"])
+            result.append(Component(component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
         
         return result
     
@@ -47,6 +63,15 @@ class CJsonParser:
         return result
     
     @staticmethod
+    def addTransitionsToStates(transitions, states):
+        new_states = states.copy()
+        for transition in transitions.values():
+            print(transition)
+            new_states[transition.source].trigs.append(transition)
+        
+        print(new_states)
+        return new_states
+    @staticmethod
     async def parseStateMachine(json_data):
         try:
             global_state = State(name="global", type="external", actions="", trigs=[], entry="", exit="", id="global", new_id=["global"], parent=None, childs=[])
@@ -69,7 +94,15 @@ class CJsonParser:
                 global_state.childs.append(proccesed_states[statename])
             transitions = await CJsonParser.getTransitions(json_data["transitions"])
             components = await CJsonParser.getComponents(json_data["components"])
-            print(components)
+            notes = await CJsonParser.createNotes(components)
+            startNode = proccesed_states[json_data["initialState"]].id
+            player_signals = list(transitions.keys())
+            proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
+            return {"states" : [global_state, *list(proccesed_states.values())], 
+                    "notes": notes, 
+                    "startNode" : startNode, 
+                    "playerSignals": player_signals}
+            
             
         except KeyError:
             print("Invalid request")
