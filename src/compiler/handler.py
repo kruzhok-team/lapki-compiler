@@ -10,11 +10,11 @@ import base64
 from pathlib import Path
 from CJsonParser import CJsonParser
 from fullgraphmlparser.graphml_to_cpp import CppFileWriter
+from config import BASE_DIRECTORY
 class Handler:
-    base_dir = "server/"
     def __init__():
         pass
-    
+    #TODO 
     @staticmethod
     async def handle_ws_compile(request):
         ws = web.WebSocketResponse()
@@ -23,18 +23,31 @@ class Handler:
         #TODO Прикрутить logger
         data = json.loads(await ws.receive_json())
         
-        sm = await CJsonParser.parseStateMachine(data)
-        print(sm)
-        CppFileWriter(sm_name="biba", start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file("src")
+        try:
+            sm = await CJsonParser.parseStateMachine(data)
             
-            # filename = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+            compiler_settings = data["compilerSettings"]
             
-            # try:
-            #     fileformat = Compiler.supported_compilers[compiler]
-            # except KeyError:
-            #     await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+            compiler = compiler_settings["compiler"]
+            filename = compiler_settings["filename"][0].lower() + compiler_settings["filename"][1:]
+            flags = compiler_settings["flags"]
+            dirname = strftime('%Y_%m_%d_%H%_M_%S', gmtime()) + '/'
             
-            # Path(f"server/{filename}/").mkdir(parents=True, exist_ok=True)
+            path = Handler.base_dir + dirname
+            Path(path).mkdir(parents=True, exist_ok=True)
+            
+        
+            CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file(path)
+                
+            if compiler not in Compiler.supported_compilers:
+                await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+            
+            component = await CJsonParser.getComponents(data["components"])
+            await Compiler.includeLibraries()
+            result = await Compiler.compile(base_dir=BASE_DIRECTORY+dirname, flags=flags, compiler=compiler)
+            
+            
+            
             
             # async with async_open(f"server/{filename}/{filename}.{fileformat}", 'w') as f:
             #     await f.write(source)
@@ -62,8 +75,8 @@ class Handler:
             # response = json.dumps(response)
             # await ws.send_json(response)
             
-        # except KeyError:
-        #     await RequestError("Invalid request").dropConnection(ws)
+        except KeyError:
+            await RequestError("Invalid request").dropConnection(ws)
         
         await ws.close()
         
@@ -92,14 +105,14 @@ class Handler:
         if compiler == "arduino-cli":
             dirname += source[0]["filename"] + "/"
         
-        Path(Handler.base_dir + dirname).mkdir(parents=True, exist_ok=True)
+        Path(BASE_DIRECTORY + dirname).mkdir(parents=True, exist_ok=True)
         files = await CJsonParser.getFiles(source)
         for file in files:
-            path = ''.join([Handler.base_dir, dirname, file.name, file.extension])
+            path = ''.join([BASE_DIRECTORY, dirname, file.name, file.extension])
             async with async_open(path, 'w') as f:
                 await f.write(file.content)
         
-        result = await Compiler.compile(base_dir=Handler.base_dir + dirname, flags=flags, compiler=compiler)
+        result = await Compiler.compile(base_dir=BASE_DIRECTORY + dirname, flags=flags, compiler=compiler)
         response = {
                 "result" : "OK",
                 "return code" : result.return_code,
@@ -108,7 +121,7 @@ class Handler:
                 "binary": []
             }
         
-        for path in Path(''.join([Handler.base_dir, dirname, "/build/"])).rglob("*"):
+        for path in Path(''.join([BASE_DIRECTORY, dirname, "/build/"])).rglob("*"):
             if path.is_file():
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()

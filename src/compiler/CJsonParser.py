@@ -4,6 +4,15 @@ from fullgraphmlparser.stateclasses import State, Trigger
 from component import Component
 class CJsonParser:
     @staticmethod
+    async def getLibraries(components):
+        libraries = []
+        for component in components:
+            if component.type not in libraries:
+                libraries.append(f"{component.type}")
+
+        return libraries
+
+    @staticmethod
     async def createNotes(components):
         includes = []
         variables = []
@@ -13,14 +22,10 @@ class CJsonParser:
             
             variables.append(f"\n{component.type} {component.name} = {component.type}({' '.join(map(str, list(component.parameters.values())))});")
         
-        notes = []
+        notes = []      
         notes.append({ "y:UMLNoteNode": 
                             {'y:NodeLabel' : 
-                                {"#text" : f'Code for cpp-file: {"".join(variables)}'}}}
-                      )        
-        notes.append({ "y:UMLNoteNode": 
-                            {'y:NodeLabel' : 
-                                {"#text" : f'Code for h-file: {"".join(includes)}'}}}
+                                {"#text" : f'Code for h-file: {"".join([*includes, *variables])}'}}}
                       )        
         
         return notes
@@ -58,7 +63,7 @@ class CJsonParser:
                 if "args" in events[eventname][i].keys():
                     command += ','.join(events[eventname][i]["args"])
                 command += ');'
-            result[eventname] = command
+            result[eventname] = command 
 
         return result
     
@@ -71,6 +76,7 @@ class CJsonParser:
         
         print(new_states)
         return new_states
+    
     @staticmethod
     async def parseStateMachine(json_data):
         try:

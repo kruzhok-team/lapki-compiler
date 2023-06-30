@@ -1,7 +1,8 @@
 import subprocess
-from aioshutil import make_archive
 from pathlib import Path
 from RequestError import RequestError
+import asyncio
+from config import LIBRARY_SOURCE_PATH
 class CompilerResult:
     def __init__(self, _return_code : int, _output : str, _error : str, _path : str):
         self.return_code = _return_code
@@ -24,6 +25,13 @@ class Compiler:
                 flags.append("./build/a.out")
         result = subprocess.run([compiler, *flags], cwd=base_dir, capture_output=True, text=True) 
         return CompilerResult(result.returncode, result.stdout, result.stderr, base_dir + "build/")
+    
+    #TODO Вынести в конфиг различную информацию о путях
+    @staticmethod
+    async def includeLibraries(libraries : list[str]):
+        paths_to_libs = [LIBRARY_SOURCE_PATH + library for library in libraries]
+        print(paths_to_libs)
+        # process = asyncio.create_subprocess_exec("cp")
     
     # @staticmethod
     # async def compile(source_directory_path : str, filename : str, flags : list, compiler : str) -> CompilerResult: 

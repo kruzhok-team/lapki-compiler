@@ -20,7 +20,7 @@ async def main():
         # async with async_open('src/Examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
         #     data = await inp.read()
         
-        async with async_open('src/Examples/ExampleRequest.json', 'r') as req:
+        async with async_open('src/Examples/ExampleRequest4.json', 'r') as req:
             json_data = json.loads(await req.read())
         
         await ws.send_json(json_data)
