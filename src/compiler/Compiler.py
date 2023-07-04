@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 from RequestError import RequestError
 import asyncio
-from config import LIBRARY_SOURCE_PATH
+from config import LIBRARY_SOURCE_PATH, BASE_DIRECTORY
 class CompilerResult:
     def __init__(self, _return_code : int, _output : str, _error : str, _path : str):
         self.return_code = _return_code
@@ -11,10 +11,24 @@ class CompilerResult:
         self.binary_path = _path
         
 class Compiler:
-    supported_compilers = {"gcc" : "c", 
+    c_default_libraries = ["qhsm.h"]
+    
+    cpp_main_function = "int main(){\
+                        \t\t} %s"
+    
+    supported_compilers = {"gcc" : {
+                                "extension" : "c",
+                                "flags" : ["-std=", "-Wall"]}, 
                            "g++" : "cpp", 
                            "arduino-cli": "ino"}
 
+    @staticmethod 
+    def checkFlags(flags, compiler):
+        pass
+    
+    @staticmethod
+    def getBuildFiles(libraries, compiler):
+        pass
     
     @staticmethod
     async def compile(base_dir : str, flags : list, compiler : str) -> CompilerResult:
@@ -25,14 +39,13 @@ class Compiler:
                 flags.append("./build/a.out")
         result = subprocess.run([compiler, *flags], cwd=base_dir, capture_output=True, text=True) 
         return CompilerResult(result.returncode, result.stdout, result.stderr, base_dir + "build/")
-    
-    #TODO Вынести в конфиг различную информацию о путях
+
     @staticmethod
-    async def includeLibraries(libraries : list[str]):
-        paths_to_libs = [LIBRARY_SOURCE_PATH + library for library in libraries]
-        print(paths_to_libs)
-        # process = asyncio.create_subprocess_exec("cp")
-    
+    async def includeHFiles(libraries : list[str], target_directory : str):
+        libraries.append("qhsm.h")
+        paths_to_libs = [''.join([LIBRARY_SOURCE_PATH, library]) for library in libraries]
+        await asyncio.create_subprocess_exec("cp", *paths_to_libs, target_directory, cwd=BASE_DIRECTORY)
+        # data, _ = await process.communicate()
     # @staticmethod
     # async def compile(source_directory_path : str, filename : str, flags : list, compiler : str) -> CompilerResult: 
     #     source_file_path = ''.join([source_directory_path, filename, '.', Compiler.supported_compilers[compiler]])

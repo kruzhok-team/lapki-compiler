@@ -33,7 +33,7 @@ class Handler:
             flags = compiler_settings["flags"]
             dirname = strftime('%Y_%m_%d_%H%_M_%S', gmtime()) + '/'
             
-            path = Handler.base_dir + dirname
+            path = BASE_DIRECTORY + dirname
             Path(path).mkdir(parents=True, exist_ok=True)
             
         
@@ -43,9 +43,10 @@ class Handler:
                 await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
             
             component = await CJsonParser.getComponents(data["components"])
-            await Compiler.includeLibraries()
+            libraries = await CJsonParser.getLibraries(component)
+            await Compiler.includeHFiles(libraries, dirname)
             result = await Compiler.compile(base_dir=BASE_DIRECTORY+dirname, flags=flags, compiler=compiler)
-            
+            print(result.stderr)
             
             
             

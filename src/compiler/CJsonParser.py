@@ -8,12 +8,12 @@ class CJsonParser:
         libraries = []
         for component in components:
             if component.type not in libraries:
-                libraries.append(f"{component.type}")
+                libraries.append(f"{component.type}.h")
 
         return libraries
 
     @staticmethod
-    async def createNotes(components):
+    async def createNotes(components : list, filename : str):
         includes = []
         variables = []
         for component in components:
@@ -26,6 +26,18 @@ class CJsonParser:
         notes.append({ "y:UMLNoteNode": 
                             {'y:NodeLabel' : 
                                 {"#text" : f'Code for h-file: {"".join([*includes, *variables])}'}}}
+                      )        
+        
+        class_filename = filename[0].upper() + filename[1:]
+        variable_filename = "the_" + filename.lower()
+        main_function = '\n\t\t'.join(["int main(){", 
+                                       f"{class_filename}_ctor();", 
+                                       "Qevt event;",
+                                       f"QHsm_init({variable_filename}, event);"]) + "\n}"
+        
+        notes.append({ "y:UMLNoteNode": 
+                            {'y:NodeLabel' : 
+                                {"#text" : f'Code for cpp-file: {main_function}'}}}
                       )        
         
         return notes
@@ -78,41 +90,44 @@ class CJsonParser:
         return new_states
     
     @staticmethod
-    async def parseStateMachine(json_data):
-        try:
-            global_state = State(name="global", type="external", actions="", trigs=[], entry="", exit="", id="global", new_id=["global"], parent=None, childs=[])
-            states = json_data["state"]
-            proccesed_states = {}
-            #Добавить parent?
-            for statename in states:
-                state = json_data["state"][statename]
-                events = await CJsonParser.getEvents(state["events"])
-                on_enter = ""
-                on_exit = ""
-                if "onExit" in events.keys():
-                    on_exit = events["onExit"]
-                if "onEnter" in events.keys():
-                    on_enter = events["onEnter"]
-                proccesed_states[statename] = State(name=statename, type="external", 
-                                                    actions="", trigs=[], entry=on_enter, 
-                                                    exit=on_exit, id=statename,
-                                                    new_id=[statename], parent=global_state, childs = [])
-                global_state.childs.append(proccesed_states[statename])
-            transitions = await CJsonParser.getTransitions(json_data["transitions"])
-            components = await CJsonParser.getComponents(json_data["components"])
-            notes = await CJsonParser.createNotes(components)
-            startNode = proccesed_states[json_data["initialState"]].id
-            player_signals = list(transitions.keys())
-            proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
-            return {"states" : [global_state, *list(proccesed_states.values())], 
-                    "notes": notes, 
-                    "startNode" : startNode, 
-                    "playerSignals": player_signals}
-            
-            
-        except KeyError:
-            print("Invalid request")
-
+    async def parseStateMachine(json_data, filename, compiler):
+        match compiler: 
+            case "gcc" | "g++": 
+                try:
+                    global_state = State(name="global", type="external", actions="", trigs=[], entry="", exit="", id="global", new_id=["global"], parent=None, childs=[])
+                    states = json_data["state"]
+                    proccesed_states = {}
+                    #Добавить parent?
+                    for statename in states:
+                        state = json_data["state"][statename]
+                        events = await CJsonParser.getEvents(state["events"])
+                        on_enter = ""
+                        on_exit = ""
+                        if "onExit" in events.keys():
+                            on_exit = events["onExit"]
+                        if "onEnter" in events.keys():
+                            on_enter = events["onEnter"]
+                        proccesed_states[statename] = State(name=statename, type="internal", 
+                                                            actions="", trigs=[], entry=on_enter, 
+                                                            exit=on_exit, id=statename,
+                                                            new_id=[statename], parent=global_state, childs = [])
+                        global_state.childs.append(proccesed_states[statename])
+                    transitions = await CJsonParser.getTransitions(json_data["transitions"])
+                    components = await CJsonParser.getComponents(json_data["components"])
+                    notes = await CJsonParser.createNotes(components, filename)
+                    startNode = proccesed_states[json_data["initialState"]].id
+                    player_signals = list(transitions.keys())
+                    proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
+                    return {"states" : [global_state, *list(proccesed_states.values())], 
+                            "notes": notes, 
+                            "startNode" : startNode, 
+                            "playerSignals": player_signals}
+                    
+                    
+                except KeyError:
+                    print("Invalid request")
+            case _:
+                print(f"{compiler} not supported ")
     @staticmethod
     async def getFiles(json_data):
         files = []
