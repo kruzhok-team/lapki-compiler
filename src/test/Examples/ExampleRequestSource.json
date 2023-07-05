@@ -14,6 +14,6 @@
 
     "compilerSettings": {
         "compiler": "g++",
-        "flags": ["-o"]
+        "flags": ["-std=c++2a"]
      }    
 }

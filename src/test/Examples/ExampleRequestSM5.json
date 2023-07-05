@@ -60,8 +60,8 @@
 
      "compilerSettings": {
         "filename": "ExampleSketch",
-        "compiler": "gcc",
-        "flags": []
+        "compiler": "g++",
+        "flags": ["-std=c++2a"]
      }
 }
    

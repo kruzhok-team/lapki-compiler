@@ -4,11 +4,11 @@ from fullgraphmlparser.stateclasses import State, Trigger
 from component import Component
 class CJsonParser:
     @staticmethod
-    async def getLibraries(components):
+    async def getLibraries(components) -> list[str]:
         libraries = []
         for component in components:
             if component.type not in libraries:
-                libraries.append(f"{component.type}.h")
+                libraries.append(f"{component.type}")
 
         return libraries
 
@@ -29,11 +29,10 @@ class CJsonParser:
                       )        
         
         class_filename = filename[0].upper() + filename[1:]
-        variable_filename = "the_" + filename.lower()
-        main_function = '\n\t\t'.join(["int main(){", 
+        main_function = '\n\t\t'.join(["\nint main(){", 
                                        f"{class_filename}_ctor();", 
-                                       "Qevt event;",
-                                       f"QHsm_init({variable_filename}, event);"]) + "\n}"
+                                       "QEvt event;",
+                                       f"QMsm_init(the_{filename}, &event);"]) + "\n}"
         
         notes.append({ "y:UMLNoteNode": 
                             {'y:NodeLabel' : 
@@ -41,8 +40,9 @@ class CJsonParser:
                       )        
         
         return notes
+    
     @staticmethod
-    async def getComponents(components):
+    async def getComponents(components : list) -> list[Component]:
         result = []
         
         for component_name in components:
@@ -80,13 +80,24 @@ class CJsonParser:
         return result
     
     @staticmethod
+    def addParentsAndChilds(states, processed_states, global_state):
+        result = processed_states.copy()
+        for statename in states:
+            state = states[statename]
+            try:
+                result[statename].parent = result[state["parent"]]
+                result[state["parent"]].childs.append(result[statename])
+            except KeyError:
+                result[statename].parent = global_state
+                global_state.childs.append(result[statename])
+        
+        return result
+    @staticmethod
     def addTransitionsToStates(transitions, states):
         new_states = states.copy()
         for transition in transitions.values():
-            print(transition)
             new_states[transition.source].trigs.append(transition)
         
-        print(new_states)
         return new_states
     
     @staticmethod
@@ -107,17 +118,18 @@ class CJsonParser:
                             on_exit = events["onExit"]
                         if "onEnter" in events.keys():
                             on_enter = events["onEnter"]
+                        
                         proccesed_states[statename] = State(name=statename, type="internal", 
                                                             actions="", trigs=[], entry=on_enter, 
                                                             exit=on_exit, id=statename,
-                                                            new_id=[statename], parent=global_state, childs = [])
-                        global_state.childs.append(proccesed_states[statename])
+                                                            new_id=[statename], parent=None, childs = [])
                     transitions = await CJsonParser.getTransitions(json_data["transitions"])
                     components = await CJsonParser.getComponents(json_data["components"])
                     notes = await CJsonParser.createNotes(components, filename)
                     startNode = proccesed_states[json_data["initialState"]].id
                     player_signals = list(transitions.keys())
                     proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
+                    proccesed_states = CJsonParser.addParentsAndChilds(states, proccesed_states, global_state)
                     return {"states" : [global_state, *list(proccesed_states.values())], 
                             "notes": notes, 
                             "startNode" : startNode, 
