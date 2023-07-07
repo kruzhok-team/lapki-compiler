@@ -2,7 +2,20 @@ from SourceFile import SourceFile
 import asyncio
 from fullgraphmlparser.stateclasses import State, Trigger
 from component import Component
+from enum import Enum
+
+class Labels(Enum):
+    H = 'Code for h-file'
+    CPP = 'Code for cpp-file'
+    CTOR = 'Constructor code'
 class CJsonParser:
+    @staticmethod
+    async def appendNote(label : Labels, content, notes):
+        notes.append({ "y:UMLNoteNode": 
+                    {'y:NodeLabel' : 
+                        {"#text" : f'{label.value}: {content}'}}}
+                )  
+    
     @staticmethod
     async def getLibraries(components) -> list[str]:
         libraries = []
@@ -13,31 +26,43 @@ class CJsonParser:
         return libraries
 
     @staticmethod
-    async def createNotes(components : list, filename : str):
+    async def createNotes(components : list, filename : str, triggers : list):
         includes = []
         variables = []
+        setup = []
         for component in components:
             if component.type not in includes:
                 includes.append(f'\n#include "{component.type}.h"')
             
             variables.append(f"\n{component.type} {component.name} = {component.type}({' '.join(map(str, list(component.parameters.values())))});")
+        notes = []
         
-        notes = []      
-        notes.append({ "y:UMLNoteNode": 
-                            {'y:NodeLabel' : 
-                                {"#text" : f'Code for h-file: {"".join([*includes, *variables])}'}}}
-                      )        
         
         class_filename = filename[0].upper() + filename[1:]
-        main_function = '\n\t\t'.join(["\nint main(){", 
+        
+        setup_function = '\n\t'.join(["\nvoid setup(){",
+                                      *setup,
+                                      
+                                      "\n}"])
+
+        check_signals = []
+        for name in triggers.keys():
+            check_signals.append('\n\t\t'.join([f"\n\tif({triggers[name]})" "{", f"SIMPLE_DISPATCH(the_{filename}, {name});"]) + "\n\t}")
+        
+        loop_function = ''.join(["\nvoid loop(){", *check_signals,
+                                 "\n}"])
+        
+        main_function = '\n\t'.join(["\nint main(){", 
                                        f"{class_filename}_ctor();", 
                                        "QEvt event;",
-                                       f"QMsm_init(the_{filename}, &event);"]) + "\n}"
+                                       f"QMsm_init(the_{filename}, &event);",
+                                       "setup();",
+                                       "while(true){",
+                                       "\tloop();",
+                                       "}"]) + "\n}"
         
-        notes.append({ "y:UMLNoteNode": 
-                            {'y:NodeLabel' : 
-                                {"#text" : f'Code for cpp-file: {main_function}'}}}
-                      )        
+        await CJsonParser.appendNote(Labels.H, "".join([*includes, *variables]), notes)          
+        await CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function, main_function]), notes)    
         
         return notes
     
@@ -49,20 +74,29 @@ class CJsonParser:
             result.append(Component(component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
         
         return result
+
     
     @staticmethod
     async def getTransitions(transitions):
-        result = {}
+        result = []
+        player_signals = {}
         i = 0
         for transition in transitions:
-            name = f"trig{i}"
+            name = ''.join([transition["condition"]["component"],'_',transition["condition"]["method"].upper()])
             guard = ''.join([transition["condition"]["component"],'.',transition["condition"]["method"],'('])
             if "args" in transition["condition"].keys():
                 guard += ','.join(transition["condition"]["args"])
             guard += ')'
-            result[name] = (Trigger(name=name, source=transition["source"], target=transition["target"], id=i, type="external", guard=guard, action="", points=[]))
+            
+            trig = {}
+            player_signals[name] = guard 
+            trig["name"] = name
+            trig["trigger"] = Trigger(name=name, source=transition["source"], target=transition["target"], id=i, type="external", guard="true", action="", points=[])
+            trig["guard"] = guard
+            
+            result.append(trig)
             i += 1
-        return result       
+        return result, player_signals
         
     
     @staticmethod
@@ -95,8 +129,8 @@ class CJsonParser:
     @staticmethod
     def addTransitionsToStates(transitions, states):
         new_states = states.copy()
-        for transition in transitions.values():
-            new_states[transition.source].trigs.append(transition)
+        for transition in transitions:
+            new_states[transition["trigger"].source].trigs.append(transition["trigger"])
         
         return new_states
     
@@ -123,17 +157,18 @@ class CJsonParser:
                                                             actions="", trigs=[], entry=on_enter, 
                                                             exit=on_exit, id=statename,
                                                             new_id=[statename], parent=None, childs = [])
-                    transitions = await CJsonParser.getTransitions(json_data["transitions"])
+                    transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"])
                     components = await CJsonParser.getComponents(json_data["components"])
-                    notes = await CJsonParser.createNotes(components, filename)
+                    notes = await CJsonParser.createNotes(components, filename, player_signals)
                     startNode = proccesed_states[json_data["initialState"]].id
-                    player_signals = list(transitions.keys())
+                    
                     proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
                     proccesed_states = CJsonParser.addParentsAndChilds(states, proccesed_states, global_state)
+                    
                     return {"states" : [global_state, *list(proccesed_states.values())], 
                             "notes": notes, 
                             "startNode" : startNode, 
-                            "playerSignals": player_signals}
+                            "playerSignals": player_signals.keys()}
                     
                     
                 except KeyError:

@@ -15,6 +15,7 @@ async def test_sendSmth():
     await client.doConnect('http://localhost:8080/ws')
     await client.sendSMJson(path='src/test/Examples/ExampleRequestSM.json')
 
+#deprecated
 @pytest.mark.asyncio
 async def test_sendSourceFileCpp():
     client = Client()

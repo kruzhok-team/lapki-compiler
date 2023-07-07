@@ -5,5 +5,6 @@ Button::Button(int pin){
 }
 
 bool Button::isJustPressed(){
+    std::cout << "Button pressed!" << std::endl;
     return true;
 }

@@ -1,16 +1,9 @@
 {
       "result": "OK/request error description",
-      "compilationCommand": "arduino-cli compile -b arduino:avr:uno ExampleSketch.ino",
       "returnCode": "compilation return code",
       "stdout": "compilation stdout",
       "stderr": "compilation stderr",
       
-      "source": [
-            {
-                  "filename": "ExampleSketch.ino",
-                  "fileContent": "generated sourcefile"
-            }
-      ],
 
       "binary": [
             {

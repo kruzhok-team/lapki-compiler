@@ -31,14 +31,13 @@ class Client:
             # binary = base64.b64decode(binary)
 
         return json_response
-    
+    #deprecated
     async def sendSourceFile(self, path, compiler, flags):
         async with async_open(path, 'r') as req:
             data = await req.read()
         
         await self.ws.send_json(json.dumps(
             {
-                "dataFormat": "source",
                 "source": data,
                 "compilerSettings": {
                     "filename": Path(path).name,

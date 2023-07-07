@@ -47,6 +47,7 @@ class Handler:
             build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
             
+            print(result.stderr)
             
             response = {
                 "result" : "OK",
@@ -84,6 +85,7 @@ class Handler:
         await ws.prepare(request)
         
         data = json.loads(await ws.receive_json())
+        
         try:
             source = data["source"]
             flags = data["compilerSettings"]["flags"]
