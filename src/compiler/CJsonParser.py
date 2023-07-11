@@ -90,9 +90,7 @@ class CJsonParser:
             
             trig = {}
             player_signals[name] = guard 
-            trig["name"] = name
             trig["trigger"] = Trigger(name=name, source=transition["source"], target=transition["target"], id=i, type="external", guard="true", action="", points=[])
-            trig["guard"] = guard
             
             result.append(trig)
             i += 1

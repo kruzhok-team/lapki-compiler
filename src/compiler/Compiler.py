@@ -46,12 +46,13 @@ class Compiler:
                 Path(base_dir + 'build/').mkdir(parents=True, exist_ok=True)
                 flags.append("-o")
                 flags.append("./build/a.out")
-                result = subprocess.run([compiler, *build_files, *flags], cwd=base_dir, capture_output=True, text=True) 
+                process = await asyncio.create_subprocess_exec(compiler, *build_files, *flags, cwd=base_dir, text=False)
             case "arduino-cli":
-                print([compiler, "compile", *flags, *build_files])
-                result = subprocess.run([compiler, "compile", *flags, *build_files], cwd=base_dir, capture_output=True, text=True) 
-                print(result.stderr)
-        return CompilerResult(result.returncode, result.stdout, result.stderr)
+                process = await asyncio.create_subprocess_exec(compiler, "compile", *flags, *build_files, cwd=base_dir, text=False)
+        
+        stdout, stderr = await process.communicate()    
+
+        return CompilerResult(process.returncode, stdout, stderr)
 
     @staticmethod
     async def includeHFiles(libraries : list[str], target_directory : str):

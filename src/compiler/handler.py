@@ -12,6 +12,7 @@ from CJsonParser import CJsonParser
 from fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from config import BASE_DIRECTORY
 class Handler:
+    
     def __init__():
         pass
     #TODO 
@@ -46,8 +47,6 @@ class Handler:
             await Compiler.includeHFiles(libraries, dirname)
             build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
-            
-            print(result.stderr)
             
             response = {
                 "result" : "OK",
