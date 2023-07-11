@@ -1,7 +1,7 @@
-import subprocess
-from pathlib import Path
+from aiopath import AsyncPath
 from RequestError import RequestError
 import asyncio
+from wrapper import to_async
 from config import LIBRARY_SOURCE_PATH, BASE_DIRECTORY, LIBRARY_BINARY_PATH
 class CompilerResult:
     def __init__(self, _return_code : int, _output : str, _error : str):
@@ -30,7 +30,7 @@ class Compiler:
     async def getBuildFiles(libraries, compiler, directory):
         build_files = []
         for glob in Compiler.supported_compilers[compiler]["extension"]:
-            for file in Path(directory).glob(glob):
+            async for file in AsyncPath(directory).glob(glob):
                 build_files.append(file.name)
         
         for library in libraries:
@@ -43,7 +43,7 @@ class Compiler:
     async def compile(base_dir : str, build_files : list, flags : list, compiler : str) -> CompilerResult:
         match compiler:
             case "g++" | "gcc":
-                Path(base_dir + 'build/').mkdir(parents=True, exist_ok=True)
+                await AsyncPath(base_dir + 'build/').mkdir(parents=True, exist_ok=True)
                 flags.append("-o")
                 flags.append("./build/a.out")
                 process = await asyncio.create_subprocess_exec(compiler, *build_files, *flags, cwd=base_dir, text=False)
@@ -61,20 +61,3 @@ class Compiler:
         process = await asyncio.create_subprocess_exec("cp", *paths_to_libs, target_directory, cwd=BASE_DIRECTORY)
         stdout, stderr  = await process.communicate()
         retcode = process.returncode
-    # @staticmethod
-    # async def compile(source_directory_path : str, filename : str, flags : list, compiler : str) -> CompilerResult: 
-    #     source_file_path = ''.join([source_directory_path, filename, '.', Compiler.supported_compilers[compiler]])
-    #     build_directory = source_directory_path + "build/"
-    #     Path(build_directory).mkdir(parents=True, exist_ok=True)
-    #     match compiler:
-    #         case "gcc" | "g++":
-    #             output = subprocess.run([compiler, source_file_path, *flags, build_directory + filename], capture_output=True, text=True)
-    #         case "arduino-cli":
-    #             output = subprocess.run([compiler, "compile", *flags, source_file_path], capture_output=True, text=True)
-    #     if output.returncode == 0:
-    #         path = source_directory_path + filename + ".zip"
-    #         await make_archive(source_directory_path + filename, "zip", source_directory_path)
-    #     else:
-    #         path = ""
-
-    #     return CompilerResult(output.returncode, output.stdout, output.stderr, path)

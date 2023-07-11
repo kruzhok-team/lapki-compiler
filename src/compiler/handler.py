@@ -2,15 +2,17 @@ from aiohttp import web
 from Compiler import Compiler, CompilerResult
 from JsonConverter import JsonConverter
 from RequestError import RequestError
-import aiohttp
+from wrapper import to_async
 from aiofile import async_open
 from time import gmtime, strftime
 import json
 import base64
-from pathlib import Path
+from aiopath import AsyncPath
 from CJsonParser import CJsonParser
 from fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from config import BASE_DIRECTORY
+import asyncjson
+
 class Handler:
     
     def __init__():
@@ -32,12 +34,10 @@ class Handler:
             flags = compiler_settings["flags"]
             dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
             sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler)
-            
             path = BASE_DIRECTORY + dirname
-            Path(path).mkdir(parents=True)
-            
-        
-            CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file(path)
+            await AsyncPath(path).mkdir(parents=True)
+            cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
+            await cpp_file(path)
                 
             if compiler not in Compiler.supported_compilers:
                 await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
@@ -47,7 +47,6 @@ class Handler:
             await Compiler.includeHFiles(libraries, dirname)
             build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
-            
             response = {
                 "result" : "OK",
                 "return code" : result.return_code,
@@ -56,8 +55,8 @@ class Handler:
                 "binary" : []
             }
             if result.return_code == 0:
-                for path in Path(''.join([BASE_DIRECTORY, dirname, "build/"])).rglob("*"):
-                    if path.is_file():
+                async for path in AsyncPath(''.join([BASE_DIRECTORY, dirname, "build/"])).rglob("*"):
+                    if await path.is_file():
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
                             fileinfo = {}
@@ -66,7 +65,7 @@ class Handler:
                             fileinfo["fileContent"] = b64_data.decode("ascii")
                             response["binary"].append(fileinfo)
             
-            response = json.dumps(response)
+            response = await asyncjson.dumps(response)
             await ws.send_json(response)
             
         except KeyError:
@@ -100,7 +99,7 @@ class Handler:
         if compiler == "arduino-cli":
             dirname += source[0]["filename"] + "/"
         
-        Path(dirname).mkdir(parents=True, exist_ok=True)
+        await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
         files = await CJsonParser.getFiles(source)
         for file in files:
             path = ''.join([dirname, file.name, file.extension])
@@ -117,7 +116,7 @@ class Handler:
                 "binary": []
             }
         
-        for path in Path(''.join([dirname, "/build/"])).rglob("*"):
+        async for path in AsyncPath(''.join([dirname, "/build/"])).rglob("*"):
             if path.is_file():
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()
@@ -127,7 +126,7 @@ class Handler:
                     fileinfo["fileContent"] = b64_data.decode("ascii")
                     response["binary"].append(fileinfo)
         
-        await ws.send_json(json.dumps(response))     
+        await ws.send_json(asyncjson.dumps(response))     
         await ws.close()
         
         return ws

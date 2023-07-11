@@ -1,7 +1,7 @@
 import asyncio
 from functools import wraps, partial
-import time
-def wrap(func):
+
+def to_async(func):
     @wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
         if loop is None:

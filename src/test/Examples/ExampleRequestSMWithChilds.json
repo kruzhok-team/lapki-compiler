@@ -1,5 +1,5 @@
 {
-    "state": {
+    "states": {
       "on": {
         "events": {
           "onEnter": [

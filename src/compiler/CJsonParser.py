@@ -3,18 +3,20 @@ import asyncio
 from fullgraphmlparser.stateclasses import State, Trigger
 from component import Component
 from enum import Enum
-
+from wrapper import to_async
 class Labels(Enum):
     H = 'Code for h-file'
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
 class CJsonParser:
+    
     @staticmethod
     async def appendNote(label : Labels, content, notes):
         notes.append({ "y:UMLNoteNode": 
                     {'y:NodeLabel' : 
                         {"#text" : f'{label.value}: {content}'}}}
                 )  
+    
     
     @staticmethod
     async def getLibraries(components) -> list[str]:
@@ -24,7 +26,8 @@ class CJsonParser:
                 libraries.append(f"{component.type}")
 
         return libraries
-
+    
+    
     @staticmethod
     async def createNotes(components : list, filename : str, triggers : list):
         includes = []
@@ -66,6 +69,7 @@ class CJsonParser:
         
         return notes
     
+    
     @staticmethod
     async def getComponents(components : list) -> list[Component]:
         result = []
@@ -75,6 +79,7 @@ class CJsonParser:
         
         return result
 
+    
     
     @staticmethod
     async def getTransitions(transitions):
@@ -111,6 +116,7 @@ class CJsonParser:
 
         return result
     
+    
     @staticmethod
     def addParentsAndChilds(states, processed_states, global_state):
         result = processed_states.copy()
@@ -124,6 +130,8 @@ class CJsonParser:
                 global_state.childs.append(result[statename])
         
         return result
+    
+    
     @staticmethod
     def addTransitionsToStates(transitions, states):
         new_states = states.copy()
@@ -131,6 +139,7 @@ class CJsonParser:
             new_states[transition["trigger"].source].trigs.append(transition["trigger"])
         
         return new_states
+    
     
     @staticmethod
     async def parseStateMachine(json_data, filename, compiler):
@@ -173,6 +182,7 @@ class CJsonParser:
                     print("Invalid request")
             case _:
                 print(f"{compiler} not supported ")
+    
     @staticmethod
     async def getFiles(json_data):
         files = []
