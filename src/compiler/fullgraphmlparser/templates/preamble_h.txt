@@ -1,0 +1,14 @@
+/*.$file${.::STATE_MACHINE_NAME.h} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*
+* Model: STATE_MACHINE_NAME.qm
+* File:  ${.::STATE_MACHINE_NAME.h}
+*
+*/
+/*.$endhead${.::STATE_MACHINE_NAME.h} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+#ifndef STATE_MACHINE_NAME_h
+#define STATE_MACHINE_NAME_h
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "qhsm.h"    /* include own framework tagunil version */
+
