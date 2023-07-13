@@ -126,7 +126,7 @@ class Handler:
                     fileinfo["fileContent"] = b64_data.decode("ascii")
                     response["binary"].append(fileinfo)
         
-        await ws.send_json(asyncjson.dumps(response))     
+        await ws.send_json(await asyncjson.dumps(response))     
         await ws.close()
         
         return ws
