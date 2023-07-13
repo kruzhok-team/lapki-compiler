@@ -1,7 +1,6 @@
 .*
 !/.gitignore
 !/.idea
-__*
 *.qm
 __pycache__
 venv/
