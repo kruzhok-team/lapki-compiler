@@ -5,7 +5,7 @@
           "onEnter": [
             {
               "component": "diod",
-              "method": "turnOn"
+              "method": "on"
             }
           ]
         },
@@ -20,7 +20,7 @@
           "onEnter": [
             {
               "component": "diod",
-              "method": "turnOff"
+              "method": "off"
             }
           ]
         },
@@ -71,7 +71,7 @@
             "y": 127
           },
           "component": "btn",
-          "method": "isJustPressed"
+          "method": "clicked"
         }
       },
       {
@@ -84,7 +84,7 @@
             "y": 285
           },
           "component": "btn",
-          "method": "isJustPressed"
+          "method": "clicked"
         }
       }
     ],
@@ -93,11 +93,12 @@
       "btn": {
         "type": "Button",
         "parameters": {
-          "pin": 10
+          "pin": 10,
+          "mode": "1"
         }
       },
       "diod": {
-        "type": "Led",
+        "type": "LED",
         "parameters": {
           "pin": 13
         }
@@ -106,6 +107,6 @@
     "compilerSettings": {
         "filename": "ExampleSketch",
         "compiler": "arduino-cli",
-        "flags": ["-std=c++2a"]
+        "flags": ["-b", "arduino:avr:uno"]
      }
   }

@@ -33,19 +33,35 @@ class Handler:
             filename = compiler_settings["filename"][0].lower() + compiler_settings["filename"][1:]
             flags = compiler_settings["flags"]
             dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
-            sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler)
             path = BASE_DIRECTORY + dirname
-            await AsyncPath(path).mkdir(parents=True)
-            cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
-            await cpp_file(path)
-                
-            if compiler not in Compiler.supported_compilers:
-                await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+            match compiler:
+                case "g++" | "gcc":
+                    await AsyncPath(path).mkdir(parents=True)
+                    sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler, path=path)
+                    cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
+                    await cpp_file(path, "cpp")
+                    components = await CJsonParser.getComponents(data["components"])
+                    libraries = await CJsonParser.getLibraries(components)
+                    libraries = [*libraries, *Compiler.c_default_libraries]
+                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
+                    await Compiler.includeLibraryFiles(libraries, dirname, ".h")
+                    
+                case "arduino-cli":
+                    dirname += filename + "/"
+                    path += filename + "/"
+                    await AsyncPath(path).mkdir(parents=True)
+                    sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
+                    cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
+                    await cpp_file(path, "ino")
+                    components = await CJsonParser.getComponents(data["components"])
+                    libraries = await CJsonParser.getLibraries(components)
+                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
+                    await Compiler.includeLibraryFiles([*libraries, *Compiler.c_default_libraries], dirname, ".h")
+                    await Compiler.includeLibraryFiles(libraries, dirname, ".ino")
+                    await Compiler.includeLibraryFiles(Compiler.c_default_libraries, dirname, ".c")
+                case _:
+                    await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
             
-            component = await CJsonParser.getComponents(data["components"])
-            libraries = await CJsonParser.getLibraries(component)
-            await Compiler.includeHFiles(libraries, dirname)
-            build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
             response = {
                 "result" : "OK",
@@ -69,7 +85,7 @@ class Handler:
             await ws.send_json(response)
             
         except KeyError:
-            await RequestError("Invalid request").dropConnection(ws)
+            await RequestError(f"Invalid request, {KeyError.args[0]} doesn't support").dropConnection(ws)
         
         await ws.close()
         
@@ -117,7 +133,7 @@ class Handler:
             }
         
         async for path in AsyncPath(''.join([dirname, "/build/"])).rglob("*"):
-            if path.is_file():
+            if await path.is_file():
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()
                     fileinfo = {}

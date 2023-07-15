@@ -58,8 +58,8 @@ class CppFileWriter:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
 
-    def write_to_file(self, folder: str):
-        with open(os.path.join(folder, '%s.cpp' % self.sm_name), 'w') as f:
+    def write_to_file(self, folder: str, extension : str):
+        with open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
             self.f = f
             self._insert_file_template('preamble_c.txt')
             self._write_constructor()

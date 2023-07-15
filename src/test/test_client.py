@@ -97,3 +97,11 @@ async def test_sendNestedSMJson():
     await client.doConnect('http://localhost:8080/ws')
     await client.sendSMJson("src/test/Examples/ExampleRequestSMWithChilds.json")
     response = json.loads(await client.ws.receive_json())
+    
+    
+@pytest.mark.asyncio
+async def test_sendArduinoSMJson():
+    client = Client()
+    await client.doConnect('http://localhost:8080/ws')
+    await client.sendSMJson("src/test/Examples/ExampleRequestSMArduino.json")
+    response = json.loads(await client.ws.receive_json())
