@@ -1,14 +1,24 @@
-from SourceFile import SourceFile
 import asyncio
-from fullgraphmlparser.stateclasses import State, Trigger
-from component import Component
-from enum import Enum
-from wrapper import to_async
 from aiofile import async_open
+from enum import Enum
+
+try:
+    from .SourceFile import SourceFile
+    from .fullgraphmlparser.stateclasses import State, Trigger
+    from .component import Component
+    from .wrapper import to_async
+except ImportError:
+    from compiler.SourceFile import SourceFile
+    from compiler.fullgraphmlparser.stateclasses import State, Trigger
+    from compiler.component import Component
+    from compiler.wrapper import to_async
+
+
 class Labels(Enum):
     H = 'Code for h-file'
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
+
 class CJsonParser:
     
     @staticmethod

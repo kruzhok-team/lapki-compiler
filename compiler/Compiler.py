@@ -1,8 +1,16 @@
-from aiopath import AsyncPath
-from RequestError import RequestError
 import asyncio
-from wrapper import to_async
-from config import LIBRARY_SOURCE_PATH, BASE_DIRECTORY, LIBRARY_BINARY_PATH
+from aiopath import AsyncPath
+
+try:
+    from .RequestError import RequestError
+    from .wrapper import to_async
+    from .config import LIBRARY_SOURCE_PATH, BASE_DIRECTORY, LIBRARY_BINARY_PATH
+except ImportError:
+    from compiler.RequestError import RequestError
+    from compiler.wrapper import to_async
+    from compiler.config import LIBRARY_SOURCE_PATH, BASE_DIRECTORY, LIBRARY_BINARY_PATH
+
+
 class CompilerResult:
     def __init__(self, _return_code : int, _output : str, _error : str):
         self.return_code = _return_code

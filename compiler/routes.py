@@ -1,5 +1,8 @@
 from aiohttp import web
-from handler import Handler
+try:
+    from .handler import Handler
+except ImportError:
+    from compiler.handler import Handler
 
 def setup_routes(app : web.Application):
     app.add_routes([web.get("/ws", Handler.handle_ws_compile)])

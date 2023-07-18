@@ -2,9 +2,15 @@ import os.path
 
 import re
 from collections import defaultdict
-from graphml import *
 from typing import List, Tuple
-from stateclasses import State, Trigger
+
+try:
+    from .stateclasses import State, Trigger
+    from .graphml import *
+except ImportError:
+    from compiler.stateclasses import State, Trigger
+    from compiler.fullgraphmlparser.graphml import *
+
 
 def get_enum(text_labels: List[str]) -> str:
     """

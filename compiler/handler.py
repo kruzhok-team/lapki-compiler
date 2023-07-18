@@ -1,17 +1,27 @@
-from aiohttp import web
-from Compiler import Compiler, CompilerResult
-from JsonConverter import JsonConverter
-from RequestError import RequestError
-from wrapper import to_async
-from aiofile import async_open
-from time import gmtime, strftime
 import json
 import base64
+from time import gmtime, strftime
+from aiohttp import web
+from aiofile import async_open
 from aiopath import AsyncPath
-from CJsonParser import CJsonParser
-from fullgraphmlparser.graphml_to_cpp import CppFileWriter
-from config import BASE_DIRECTORY
 import asyncjson
+
+try:
+    from .CJsonParser import CJsonParser
+    from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
+    from .Compiler import Compiler, CompilerResult
+    from .JsonConverter import JsonConverter
+    from .RequestError import RequestError
+    from .config import BASE_DIRECTORY
+    from .wrapper import to_async
+except ImportError:
+    from compiler.CJsonParser import CJsonParser
+    from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
+    from compiler.Compiler import Compiler, CompilerResult
+    from compiler.JsonConverter import JsonConverter
+    from compiler.RequestError import RequestError
+    from compiler.config import BASE_DIRECTORY
+    from compiler.wrapper import to_async
 
 class Handler:
     

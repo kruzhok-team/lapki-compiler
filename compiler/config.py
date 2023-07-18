@@ -1,3 +1,4 @@
+SERVER_PORT=8081
 BASE_DIRECTORY="server/"
 LIBRARY_SOURCE_PATH="library/source/"
 LIBRARY_BINARY_PATH="library/build/"
