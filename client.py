@@ -7,20 +7,23 @@ import base64
 from time import gmtime, strftime
 from pathlib import Path
 from aioshutil import unpack_archive
+
+from compiler.config import SERVER_PORT
+
 #TODO Вынести в отдельный класс
 #TODO Написать тесты
 async def main():
     session = aiohttp.ClientSession()
     
-    async with session.ws_connect('http://localhost:8080/ws') as ws:
-        # with open('src/Examples/cpp_example.cpp', 'r') as inp:
+    async with session.ws_connect(f'http://localhost:{SERVER_PORT}/ws') as ws:
+        # with open('examples/cpp_example.cpp', 'r') as inp:
         #     data = inp.read()
         
         # await ws.send_json({"source" : data, "compiler settings": {"compiler" : "g++", "flags" : ["-o"]}})
-        # async with async_open('src/Examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
+        # async with async_open('examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
         #     data = await inp.read()
         
-        async with async_open('src/Examples/ExampleRequest4.json', 'r') as req:
+        async with async_open('examples/ExampleRequestSM4.json', 'r') as req:
             json_data = json.loads(await req.read())
         
         await ws.send_json(json_data)

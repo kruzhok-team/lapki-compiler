@@ -6,7 +6,7 @@ pytest_plugins = ('pytest_asyncio',)
 
 @pytest.mark.asyncio
 async def test_getfiles():
-    with open('src/test/Examples/ExampleRequestSource.json', 'r') as f:
+    with open('examples/ExampleRequestSource.json', 'r') as f:
         data = json.load(f)
     
     files = await CJsonParser.getFiles(data["source"])

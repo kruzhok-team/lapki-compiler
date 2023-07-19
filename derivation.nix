@@ -1,4 +1,4 @@
-{ lib, python3Packages }:
+{ lib, python3Packages, arduino-cli }:
 with python3Packages;
 
 let
@@ -71,6 +71,8 @@ buildPythonApplication {
     aiopath
     asyncjson
     clang
+    
+    arduino-cli
   ];
 
   doCheck = false;

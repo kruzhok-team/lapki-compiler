@@ -51,7 +51,7 @@
          }
        },
        "diod": {
-         "type": "Led",
+         "type": "LED",
          "parameters": {
            "pin": 13
          }

@@ -1,4 +1,5 @@
 import os.path
+import inspect 
 
 import re
 from collections import defaultdict
@@ -8,8 +9,10 @@ try:
     from .stateclasses import State, Trigger
     from .graphml import *
 except ImportError:
-    from compiler.stateclasses import State, Trigger
+    from compiler.fullgraphmlparser.stateclasses import State, Trigger
     from compiler.fullgraphmlparser.graphml import *
+
+MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
 
 
 def get_enum(text_labels: List[str]) -> str:
@@ -182,7 +185,7 @@ class CppFileWriter:
                        s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
 
     def _insert_file_template(self, filename: str):
-        with open(os.path.join('src/compiler/fullgraphmlparser/templates', filename)) as input_file:
+        with open(os.path.join(MODULE_PATH, 'templates', filename)) as input_file:
             for line in input_file.readlines():
                 self._insert_string(line)
 

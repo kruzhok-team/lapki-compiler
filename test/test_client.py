@@ -7,24 +7,29 @@ from time import gmtime, strftime
 import json
 from pathlib import Path
 import subprocess
+
+from compiler.config import SERVER_PORT
+
 pytest_plugins = ('pytest_asyncio',)
+
+BASE_ADDR = f'http://localhost:{SERVER_PORT}/ws'
 
 @pytest.mark.asyncio
 async def test_sendSmth():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws')
-    await client.sendSMJson(path='src/test/Examples/ExampleRequestSM.json')
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson(path='examples/ExampleRequestSM.json')
 
 #deprecated
 @pytest.mark.asyncio
 async def test_sendSourceFileCpp():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws/source')
-    await client.sendSourceFile(path='src/test/Examples/MonoFileExample/cpp_example.cpp', compiler="g++", flags=[])
+    await client.doConnect('{BASE_ADDR}/ws/source')
+    await client.sendSourceFile(path='examples/MonoFileExample/cpp_example.cpp', compiler="g++", flags=[])
     
     response = await client.getResult()
     
-    async with async_open("src/test/Examples/cpp_example.o", 'rb') as f:
+    async with async_open("examples/cpp_example.o", 'rb') as f:
         binary = await f.read()
     
     binary = base64.b64encode(binary)
@@ -48,8 +53,8 @@ async def test_sendSourceFileCpp():
 @pytest.mark.asyncio
 async def test_sendMultifileProject():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws/source')
-    req = await client.sendMultiFileProject("src/test/Examples/MultifilesExample", "g++", ["-std=c++2a"], ["*.cpp", "*.hpp"])
+    await client.doConnect(f'{BASE_ADDR}/source')
+    req = await client.sendMultiFileProject("examples/MultifilesExample", "g++", ["-std=c++2a"], ["*.cpp", "*.hpp"])
 
     result = await client.ws.receive_json()
     result = json.loads(result)
@@ -71,8 +76,8 @@ async def test_sendMultifileProject():
 @pytest.mark.asyncio
 async def test_sendArduino():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws/source')
-    req = await client.sendMultiFileProject("src/test/Examples/ExampleSketch", "arduino-cli", ["-b", "arduino:avr:uno", "ExampleSketch.ino"], ["*.ino"])
+    await client.doConnect(f'{BASE_ADDR}/source')
+    req = await client.sendMultiFileProject("examples/ExampleSketch", "arduino-cli", ["-b", "arduino:avr:uno", "ExampleSketch.ino"], ["*.ino"])
     result = await client.ws.receive_json()
     result = json.loads(result)
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
@@ -87,21 +92,21 @@ async def test_sendArduino():
 @pytest.mark.asyncio
 async def test_sendSMJson():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws')
-    await client.sendSMJson("src/test/Examples/ExampleRequestSM5.json")
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson("examples/ExampleRequestSM5.json")
     response = json.loads(await client.ws.receive_json())
     
 @pytest.mark.asyncio
 async def test_sendNestedSMJson():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws')
-    await client.sendSMJson("src/test/Examples/ExampleRequestSMWithChilds.json")
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson("examples/ExampleRequestSMWithChilds.json")
     response = json.loads(await client.ws.receive_json())
     
     
 @pytest.mark.asyncio
 async def test_sendArduinoSMJson():
     client = Client()
-    await client.doConnect('http://localhost:8080/ws')
-    await client.sendSMJson("src/test/Examples/ExampleRequestSMArduino.json")
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson("examples/ExampleRequestSMArduino.json")
     response = json.loads(await client.ws.receive_json())

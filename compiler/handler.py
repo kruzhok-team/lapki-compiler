@@ -12,7 +12,7 @@ try:
     from .Compiler import Compiler, CompilerResult
     from .JsonConverter import JsonConverter
     from .RequestError import RequestError
-    from .config import BASE_DIRECTORY
+    from .config import BUILD_DIRECTORY
     from .wrapper import to_async
 except ImportError:
     from compiler.CJsonParser import CJsonParser
@@ -20,7 +20,7 @@ except ImportError:
     from compiler.Compiler import Compiler, CompilerResult
     from compiler.JsonConverter import JsonConverter
     from compiler.RequestError import RequestError
-    from compiler.config import BASE_DIRECTORY
+    from compiler.config import BUILD_DIRECTORY
     from compiler.wrapper import to_async
 
 class Handler:
@@ -43,7 +43,7 @@ class Handler:
             filename = compiler_settings["filename"][0].lower() + compiler_settings["filename"][1:]
             flags = compiler_settings["flags"]
             dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
-            path = BASE_DIRECTORY + dirname
+            path = BUILD_DIRECTORY + dirname
             match compiler:
                 case "g++" | "gcc":
                     await AsyncPath(path).mkdir(parents=True)
@@ -81,7 +81,7 @@ class Handler:
                 "binary" : []
             }
             if result.return_code == 0:
-                async for path in AsyncPath(''.join([BASE_DIRECTORY, dirname, "build/"])).rglob("*"):
+                async for path in AsyncPath(''.join([BUILD_DIRECTORY, dirname, "build/"])).rglob("*"):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
@@ -120,7 +120,7 @@ class Handler:
         
         if compiler not in Compiler.supported_compilers:
             await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
-        dirname = BASE_DIRECTORY + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+        dirname = BUILD_DIRECTORY + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
         
         if compiler == "arduino-cli":
             dirname += source[0]["filename"] + "/"

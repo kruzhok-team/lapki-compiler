@@ -1,3 +1,3 @@
 import sys
-sys.path.append("./src/compiler/fullgraphmlparser")
+sys.path.append("./compiler/fullgraphmlparser")
 sys.path.append("..")
