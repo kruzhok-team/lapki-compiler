@@ -1,23 +1,64 @@
 {
-"transitions": [
+  "transitions": [
     {
       "source": "on",
       "target": "off",
       "color": "#F29727",
+      "position": {
+        "x": 361,
+        "y": 127
+      },
       "trigger": {
-        "position": {
-          "x": 361,
-          "y": 127
-        },
         "component": "btn",
         "method": "clicked"
       },
+      "do" : [
+        {
+          "component":"diod",
+          "method" : "turnOn",
+          "args": []
+        }
+      ],
       "conditions": [
         {
-            
+          "root": [
+            {
+              "type" : "or",
+              "lvalue": {
+                "type": "equals",
+                  "lvalue" : {
+                    "type" : "value",
+                    "value" : 1
+                  },
+                  "rvalue" : {
+                    "type" : "value",
+                    "value" : 2
+                  }
+              },
+              "rvalue" : {
+                "type" : "and",
+                "lvalue": {
+                  "type": "notEquals",
+                  "lvalue" : {
+                    "type": "value",
+                    "value": 3
+                  },
+                  "rvalue" : {
+                    "type" : "value",
+                    "value" : 4
+                  }
+                },
+                "rvalue":{
+                  "type": "component",
+                  "component": "btn",
+                  "method": "clicked",
+                  "args": {}
+                }
+              }  
+            }
+          ]
         }
       ]
-
     }
-]
+  ]
 }
