@@ -1,4 +1,4 @@
 class JsonConverter:
     @staticmethod
-    async def convert(path) -> str:
+    async def parse(path) -> str:
         return path

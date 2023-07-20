@@ -25,7 +25,7 @@ def create_main(sm_name: str, path: str):
     :return:
     """
     with open(os.path.join(path, "main.cpp"), "w") as f:
-        with open(r"templates/main_c.txt") as templ:
+        with open(r"src/compiler/fullgraphmlparser/templates/main_c.txt") as templ:
             modelname = sm_name[0].lower() + sm_name[1:]
             Modelname = sm_name[0].upper() + sm_name[1:]
             text = Template(templ.read()).safe_substitute({"include": r'#include "%s.h"' % modelname + '\n',
@@ -72,7 +72,7 @@ def create_files(path: str, signals: List[str], modelname: str, functions: List[
     :return:
     """
     with open(os.path.join(path, "service.cpp"), "w") as f:
-        with open(r"templates/service_c.txt") as templ:
+        with open(r"src/compiler/fullgraphmlparser/templates/service_c.txt") as templ:
             keystrokes = create_keystrokes(signals)
             text = Template(templ.read()).substitute({"keystrokes": keystrokes})
             f.write(text)

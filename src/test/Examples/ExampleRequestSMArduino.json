@@ -28,33 +28,6 @@
           "x": 765,
           "y": 134
         }
-      },
-  
-      "child_state": {
-        "parent": "on",
-        "events": {},
-        "bounds": {
-          "x": 0,
-          "y": 50
-        }
-      },
-  
-      "child2_state": {
-        "parent": "child_state",
-        "events": {},
-        "bounds": {
-          "x": 0,
-          "y": 0
-        }
-      },
-  
-      "child3_state": {
-        "parent": "on",
-        "events": {},
-        "bounds": {
-          "x": 300,
-          "y": 0
-        }
       }
     },
   
@@ -94,7 +67,7 @@
         "type": "Button",
         "parameters": {
           "pin": 10,
-          "mode": "1"
+          "mode": "BUTTON_PULLDOWN"
         }
       },
       "diod": {
@@ -106,7 +79,7 @@
     },
     "compilerSettings": {
         "filename": "ExampleSketch",
-        "compiler": "arduino-cli",
-        "flags": ["-b", "arduino:avr:uno"]
+        "compiler": "poweroff",
+        "flags": []
      }
   }

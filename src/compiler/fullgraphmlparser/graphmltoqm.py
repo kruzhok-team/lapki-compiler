@@ -82,7 +82,7 @@ def main(filenames: Union[List[str], str]):
         # get notes
         notes = [node for node in flat_nodes if gr.is_node_a_note(node)]
         # TODO(aeremin) Extract to separate file.
-        CppFileWriter(modelname, start_node, start_action, qm_states, notes, player_signal).write_to_file(os.path.dirname(filename))
+        CppFileWriter(modelname, start_node, start_action, qm_states, notes, player_signal).write_to_file(os.path.dirname(filename), "cpp")
 
     service_files.create_files(os.path.dirname(filenames[0]), player_signal, modelname, functions)
 

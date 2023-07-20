@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <graph>
+    <node id="">
+      <data>
+        <y:GenericNode configuration="com.yworks.bpmn.Event.withShadow">
+          <y:NodeLabel />
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n0">
+      <data>
+        <y:GroupNode>
+          <y:NodeLabel>Бой</y:NodeLabel>
+          <y:NodeLabel>
+entry/
+exit/
+          </y:NodeLabel>
+          <y:Geometry x="-578.005" y="438.187256" width="672.532166" height="802.962646" />
+        </y:GroupNode>
+      </data>
+      <graph>
+        <node id="n0::n1">
+          <data>
+            <y:GenericNode>
+              <y:NodeLabel>Сближение</y:NodeLabel>
+              <y:NodeLabel>entry/
+Ноги.ИдтиКЦели(враг)
+exit/
+</y:NodeLabel>
+              <y:Geometry x="-525.738953" y="609.6686" width="468" height="170" />
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n0::n2">
+          <data>
+            <y:GenericNode>
+              <y:NodeLabel>Атака</y:NodeLabel>
+              <y:NodeLabel>entry/
+ОружиеЦелевое.АтаковатьЦель()
+exit/
+</y:NodeLabel>
+              <y:Geometry x="-630.2711" y="206.705933" width="468" height="170" />
+            </y:GenericNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="n3">
+      <data>
+        <y:GenericNode>
+          <y:NodeLabel>Скан</y:NodeLabel>
+          <y:NodeLabel>entry/
+Таймер.ТаймерЗапуск(0)
+Счетчик.Сброс()
+Таймер.ТаймерВыполнен/
+АнализаторВрагов.ПоискВрагаПоДистанции(мин)
+АнализаторВрагов.ВыбратьЦельюВрага()
+Таймер.ТаймерЗапуск(0)
+АнализаторВрагов.НоваяЦельВраг/
+Счетчик.Прибавить(1)
+exit/
+</y:NodeLabel>
+          <y:Geometry x="-1582.03857" y="606.497559" width="468" height="330" />
+        </y:GenericNode>
+      </data>
+    </node>
+    <edge source="n0" target="n3">
+      <y:EdgeLabel>АнализаторВрагов.ВрагУмер/
+</y:EdgeLabel>
+    </edge>
+    <edge source="n0" target="n3">
+      <y:EdgeLabel>АнализаторВрагов.ВрагВышелИзЗоныВидимости/
+</y:EdgeLabel>
+    </edge>
+    <edge source="n3" target="n0::n1">
+      <y:EdgeLabel>АнализаторВрагов.НоваяЦельВраг/
+[Счетчик.ТекущееЗначениеСчетчика &gt;= 2]
+</y:EdgeLabel>
+    </edge>
+    <edge source="n0::n1" target="n0::n2">
+      <y:EdgeLabel>ОружиеЦелевое.ВрагВошелВЗонуАтаки/
+</y:EdgeLabel>
+    </edge>
+    <edge source="n0::n2" target="n0::n1">
+      <y:EdgeLabel>ОружиеЦелевое.ВрагВышелИзЗоныАтаки/
+</y:EdgeLabel>
+    </edge>
+    <edge source="" target="n3">
+      <y:EdgeLabel></y:EdgeLabel>
+    </edge>
+  </graph>
+</graphml>
