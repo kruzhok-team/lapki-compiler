@@ -169,7 +169,7 @@ class CJsonParser:
     @staticmethod
     async def parseStateMachine(json_data, filename, compiler, path=None):
             try:
-                global_state = State(name="global", type="external", actions="", trigs=[], entry="", exit="", id="global", new_id=["global"], parent=None, childs=[])
+                global_state = State(name="global", type="group", actions="", trigs=[], entry="", exit="", id="global", new_id=["global"], parent=None, childs=[])
                 states = json_data["state"]
                 proccesed_states = {}
                 #Добавить parent?

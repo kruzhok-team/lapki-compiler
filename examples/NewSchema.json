@@ -1,0 +1,23 @@
+{
+"transitions": [
+    {
+      "source": "on",
+      "target": "off",
+      "color": "#F29727",
+      "trigger": {
+        "position": {
+          "x": 361,
+          "y": 127
+        },
+        "component": "btn",
+        "method": "clicked"
+      },
+      "conditions": [
+        {
+            
+        }
+      ]
+
+    }
+]
+}

@@ -1,10 +1,10 @@
-/*.$file${.::ability.h} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
+/*.$file${.::ability.h} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 /*
 * Model: ability.qm
 * File:  ${.::ability.h}
 *
 */
-/*.$endhead${.::ability.h} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+/*.$endhead${.::ability.h} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 #ifndef ability_h
 #define ability_h
 #ifdef __cplusplus
@@ -49,6 +49,7 @@ static Ability ability; /* the only instance of the Ability class */
 
 typedef struct abilityQEvt {
     QEvt super;
+
 } abilityQEvt;
 
 enum PlayerSignals {

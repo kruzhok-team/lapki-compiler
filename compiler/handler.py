@@ -24,16 +24,17 @@ except ImportError:
     from compiler.wrapper import to_async
 
 class Handler:
-    
+
     def __init__():
         pass
-    #TODO 
+
+    # TODO
     @staticmethod
     async def handle_ws_compile(request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-        
-        #TODO Прикрутить logger
+
+        # TODO Прикрутить logger
         data = json.loads(await ws.receive_json())
         try:
             
@@ -61,7 +62,8 @@ class Handler:
                     path += filename + "/"
                     await AsyncPath(path).mkdir(parents=True)
                     sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
-                    cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
+                    cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="", 
+                                                      states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
                     await cpp_file(path, "ino")
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
@@ -70,6 +72,7 @@ class Handler:
                     await Compiler.includeLibraryFiles(libraries, dirname, ".ino")
                     await Compiler.includeLibraryFiles(Compiler.c_default_libraries, dirname, ".c")
                 case _:
+                    print("here")
                     await RequestError(f"Unsupported compiler {compiler}. Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
             
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
@@ -95,7 +98,7 @@ class Handler:
             await ws.send_json(response)
             
         except KeyError:
-            await RequestError(f"Invalid request, {KeyError.args[0]} doesn't support").dropConnection(ws)
+            await RequestError(f"Invalid request, there isn't '{KeyError.args[0]}' key.").dropConnection(ws)
         
         await ws.close()
         
