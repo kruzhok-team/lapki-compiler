@@ -58,7 +58,7 @@ class Compiler:
                 flags.append("./build/a.out")
                 process = await asyncio.create_subprocess_exec(compiler, *build_files, *flags, cwd=base_dir, text=False)
             case "arduino-cli":
-                process = await asyncio.create_subprocess_exec(compiler, "compile", *flags, *build_files, cwd=base_dir, text=False)
+                process = await asyncio.create_subprocess_exec(compiler, "compile", "--export-binaries", *flags, *build_files, cwd=base_dir, text=False)
         
         stdout, stderr = await process.communicate()    
 
