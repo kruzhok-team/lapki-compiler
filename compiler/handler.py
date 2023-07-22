@@ -7,6 +7,7 @@ from aiopath import AsyncPath
 import asyncjson
 
 try:
+    from .GraphmlParser import GraphmlParser
     from .CJsonParser import CJsonParser
     from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
     from .Compiler import Compiler, CompilerResult
@@ -15,6 +16,7 @@ try:
     from .config import BUILD_DIRECTORY
     from .wrapper import to_async
 except ImportError:
+    from compiler.GraphmlParser import GraphmlParser
     from compiler.CJsonParser import CJsonParser
     from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
     from compiler.Compiler import Compiler, CompilerResult
@@ -84,6 +86,7 @@ class Handler:
                 case _:
                     await RequestError(f"Unsupported compiler {compiler}. \
                         Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
+                    return ws
 
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
             response = {
@@ -161,6 +164,21 @@ class Handler:
 
         await ws.send_json(await asyncjson.dumps(response))     
         await ws.close()
+
+        return ws
+
+    @staticmethod
+    async def handle_berloga_import(request):
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        unprocessed_xml = await ws.receive_str()
+        try:
+            response = await GraphmlParser.parse(unprocessed_xml)
+        except KeyError as e:
+            await RequestError(f"There isn't key {e[0]}")
+            return ws
+
+        await ws.send_json(response)
 
         return ws
 

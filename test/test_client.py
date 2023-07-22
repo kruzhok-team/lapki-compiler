@@ -117,3 +117,15 @@ async def test_sendArduinoSMJson():
         data = base64.b64decode(binary["fileContent"])
         async with async_open(path + binary["filename"], "wb") as f:
             await f.write(data)
+
+@pytest.mark.asyncio
+async def test_berlogaImport():
+    client = Client()
+    await client.doConnect(f"{BASE_ADDR}/berloga/import")
+    response = await client.sendBerlogaScheme("examples/Autoborder_638213644305392731.graphml")
+    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
+    Path(path).mkdir(parents=True)
+    async with async_open(path + "berlogaScheme.json", "w") as f:
+        await f.write(response)
+    
+    await client.ws.close()

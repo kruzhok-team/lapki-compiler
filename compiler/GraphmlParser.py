@@ -1,8 +1,9 @@
-from fullgraphmlparser.stateclasses import State, Trigger
-from component import Component
 import xmltodict
-import asyncjson
-import json
+
+try:
+    from .fullgraphmlparser.stateclasses import State, Trigger
+except ImportError:
+    from compiler.fullgraphmlparser.stateclasses import State, Trigger
 """This class gets Berloga-graphml and returns States, Components, Transitions
     Returns:
         _type_: _description_
@@ -169,7 +170,6 @@ class GraphmlParser:
     async def getTransitions(triggers: dict, statesDict: dict) -> tuple[list, str]:
         transitions = []
         initial_state = ""
-        print(triggers)
         used_coordinates: list[tuple[int, int]] = []
         for trigger in triggers:
             transition = {}
@@ -236,13 +236,14 @@ class GraphmlParser:
         graph = xml["graphml"]["graph"]
         nodes = graph["node"]
         triggers = graph["edge"]
-        components = {}
+        components = []
         flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes)
         states = await GraphmlParser.createStates(flattenStates, states_dict)
         transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict)
-        
         # with open("biba.json", "w") as f:
         #     json.dump({"states": states, "transtions": transitions}, f, indent=4,
         #               ensure_ascii=False)
-        
-        return states, triggers, components
+        return {"states": states,
+                "initialState": initial_state,
+                "transitions": transitions,
+                "components": components}

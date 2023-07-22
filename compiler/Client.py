@@ -17,6 +17,15 @@ class Client:
         
         await self.ws.send_json(json.dumps(json_data))
     
+    async def sendBerlogaScheme(self, path):
+        async with async_open(path, 'r') as req:
+            data = await req.read()
+        
+        await self.ws.send_str(data)
+        response = json.dumps(await self.ws.receive_json(), indent=4, ensure_ascii=False)
+
+        return response
+    
     #deprecated
     async def getResult(self):
         response = await self.ws.receive_json()

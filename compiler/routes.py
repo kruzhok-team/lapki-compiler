@@ -8,3 +8,4 @@ def setup_routes(app : web.Application):
     app.add_routes([web.get("/ws", Handler.handle_ws_compile)])
     app.add_routes([web.get("/", Handler.handle_get_compile)])
     app.add_routes([web.get("/ws/source", Handler.handle_ws_compile_source)])
+    app.add_routes([web.get("/ws/berloga/import", Handler.handle_berloga_import)])
