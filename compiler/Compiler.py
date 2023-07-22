@@ -12,11 +12,12 @@ except ImportError:
 
 
 class CompilerResult:
-    def __init__(self, _return_code : int, _output : str, _error : str):
+    def __init__(self, _return_code: int, _output: str, _error: str):
         self.return_code = _return_code
         self.stdout = _output
         self.stderr = _error
-        
+
+
 class Compiler:
     c_default_libraries = ["qhsm"]
     
@@ -44,13 +45,13 @@ class Compiler:
         match compiler:
             case "gcc" | "g++":
                 for library in libraries:
-                    build_files.append(''.join(["../",LIBRARY_BINARY_PATH, library, '.o']))
+                    build_files.append(''.join(["../", LIBRARY_BINARY_PATH, library, '.o']))
         
         return build_files
         
         
     @staticmethod
-    async def compile(base_dir : str, build_files : list, flags : list, compiler : str) -> CompilerResult:
+    async def compile(base_dir: str, build_files: list, flags: list, compiler: str) -> CompilerResult:
         match compiler:
             case "g++" | "gcc":
                 await AsyncPath(base_dir + 'build/').mkdir(parents=True, exist_ok=True)

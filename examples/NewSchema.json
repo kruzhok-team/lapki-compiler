@@ -20,45 +20,49 @@
         }
       ],
       "conditions": [
-        {
-          "root": [
             {
               "type" : "or",
-              "lvalue": {
-                "type": "equals",
-                  "lvalue" : {
-                    "type" : "value",
-                    "value" : 1
-                  },
-                  "rvalue" : {
-                    "type" : "value",
-                    "value" : 2
-                  }
-              },
-              "rvalue" : {
-                "type" : "and",
-                "lvalue": {
-                  "type": "notEquals",
-                  "lvalue" : {
-                    "type": "value",
-                    "value": 3
-                  },
-                  "rvalue" : {
-                    "type" : "value",
-                    "value" : 4
-                  }
+              "values": [
+                {
+                  "type": "equals",
+                  "values": [
+                    {
+                      "type" : "value",
+                      "value" : 1
+                    },
+                    {
+                      "type" : "value",
+                      "value" : 2
+                    }
+                  ]
                 },
-                "rvalue":{
-                  "type": "component",
-                  "component": "btn",
-                  "method": "clicked",
-                  "args": {}
+                {
+                  "type" : "and",
+                  "values": [
+                    {
+                      "type": "notEquals",
+                      "values": [
+                        {
+                          "type": "value",
+                          "value": 3
+                        },
+                        {
+                          "type" : "value",
+                          "value" : 4
+                        }
+                      ]
+                    },
+                    {
+                      "type": "component",
+                      "component": "btn",
+                      "method": "clicked",
+                      "args": []
+                    }
+                ]
                 }
-              }  
+              ]
             }
           ]
         }
       ]
-    }
-  ]
 }

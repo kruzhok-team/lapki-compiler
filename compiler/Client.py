@@ -7,7 +7,7 @@ class Client:
     def __init__(self):
         pass
     
-    async def doConnect(self, addr : str):
+    async def doConnect(self, addr: str):
         session = aiohttp.ClientSession()
         self.ws = await session.ws_connect(addr)
     

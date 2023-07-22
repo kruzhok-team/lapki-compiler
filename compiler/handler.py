@@ -1,6 +1,6 @@
 import json
 import base64
-from time import gmtime, strftime
+from datetime import datetime
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
@@ -25,7 +25,7 @@ except ImportError:
 
 
 class Handler:
-    def __init__():
+    def __init__(self):
         pass
 
     # TODO
@@ -42,7 +42,7 @@ class Handler:
             filename = compiler_settings["filename"][0].lower() + \
                 compiler_settings["filename"][1:]
             flags = compiler_settings["flags"]
-            dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+            dirname = str(datetime.now()) + '/'
             path = BUILD_DIRECTORY + dirname
             match compiler:
                 case "g++" | "gcc":
@@ -127,7 +127,7 @@ class Handler:
             await RequestError(f"Unsupported compiler {compiler}.\
                 Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
 
-        dirname = BUILD_DIRECTORY + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+        dirname = BUILD_DIRECTORY + str(datetime.now()) + '/'
 
         if compiler == "arduino-cli":
             dirname += source[0]["filename"] + "/"
