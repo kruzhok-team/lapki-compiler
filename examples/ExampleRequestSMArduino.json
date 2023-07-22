@@ -7,7 +7,21 @@
               "component": "diod",
               "method": "on"
             }
-          ]
+          ],
+          "componentSignals": [
+            {
+              "component" : "btn",
+              "method": "isPressed",
+              "actions": [
+                {
+                  "component" : "diod",
+                  "method" : "fadeOut",
+                  "args": [5]
+                }
+              ]
+            }
+          ],
+          "UserSignals": {}
         },
         "bounds": {
           "x": 96,
@@ -22,7 +36,8 @@
               "component": "diod",
               "method": "off"
             }
-          ]
+          ],
+          "componentSignals": []
         },
         "bounds": {
           "x": 765,
