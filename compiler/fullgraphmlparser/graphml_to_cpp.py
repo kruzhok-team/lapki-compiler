@@ -65,11 +65,9 @@ class CppFileWriter:
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
                 if trigger.guard:
-                    print(trigger.guard)
-                    print(trigger.action)
                     trigger.guard = trigger.guard.strip()
 
-    def write_to_file(self, folder: str, extension : str):
+    def write_to_file(self, folder: str, extension: str):
         with open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
             self.f = f
             self._insert_file_template('preamble_c.txt')

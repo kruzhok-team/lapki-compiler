@@ -18,7 +18,18 @@ class Labels(Enum):
 
 
 class CJsonParser:
-
+    operatorAlias = {
+        "notEquals": "!=",
+        "equals": "==",
+        "greater": ">",
+        "less": "<",
+        "greaterOrEqual": ">=",
+        "lessOrEqual": "<=",
+        "or": "||",
+        "and": "&&"
+    }
+    
+    
     @staticmethod
     async def appendNote(label: Labels, content, notes):
         notes.append({"y:UMLNoteNode":
@@ -95,6 +106,24 @@ class CJsonParser:
         return result
 
     @staticmethod
+    async def getCondition(condition_dict: dict, condition: list = []) -> str:
+        type: str = condition_dict["type"]
+        if type in list(CJsonParser.operatorAlias.keys()):
+            values = []
+            for value in condition_dict["values"]:
+                values.append(await CJsonParser.getCondition(value))
+            result = f" {CJsonParser.operatorAlias[type]} ".join(map(str, values))
+            return result
+        elif type == "value":
+            return str(condition_dict["value"])
+        elif type == "component":
+            component = condition_dict["component"] + "."
+            method = condition_dict["method"]
+            args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
+            return "".join([component, method, args])
+        return "true"
+    
+    @staticmethod
     async def getTransitions(transitions):
         result = []
         player_signals = {}
@@ -102,20 +131,26 @@ class CJsonParser:
         for transition in transitions:
             # Доделать под новую схему.
 
-            name = ''.join([transition["condition"]["component"], '_',
-                            transition["condition"]["method"]])
+            name = ''.join([transition["trigger"]["component"], '_',
+                            transition["trigger"]["method"]])
 
-            guard = ''.join([transition["condition"]["component"], '.',
-                             transition["condition"]["method"], '('])
-            if "args" in transition["condition"].keys():
-                guard += ','.join(transition["condition"]["args"])
+            guard = ''.join([transition["trigger"]["component"], '.',
+                             transition["trigger"]["method"], '('])
+            if "args" in transition["trigger"].keys():
+                guard += ','.join(transition["trigger"]["args"])
             guard += ')'
 
             trig = {}
             player_signals[name] = guard
+            
+            if "conditions" in transition.keys():
+                root = transition["conditions"]
+                condition = await CJsonParser.getCondition(root)
+            else:
+                condition = "true"
             trig["trigger"] = Trigger(name=name, source=transition["source"],
                                       target=transition["target"], id=i,
-                                      type="external", guard="true",
+                                      type="external", guard=condition,
                                       action="", points=[])
 
             result.append(trig)
@@ -221,7 +256,7 @@ class CJsonParser:
                     "playerSignals": player_signals.keys()}
 
         except KeyError as e:
-            print(f"Invalid request, {e.args[0]} key doesn't support")
+            print(f"Invalid request, there isn't {e.args[0]} key")
 
     @staticmethod
     async def getFiles(json_data):

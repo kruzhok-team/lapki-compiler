@@ -102,8 +102,7 @@ async def test_sendNestedSMJson():
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson("examples/ExampleRequestSMWithChilds.json")
     response = json.loads(await client.ws.receive_json())
-    
-    
+ 
 @pytest.mark.asyncio
 async def test_sendArduinoSMJson():
     client = Client()
@@ -129,3 +128,17 @@ async def test_berlogaImport():
         await f.write(response)
     
     await client.ws.close()
+
+@pytest.mark.asyncio
+async def test_sendTestSchema():
+    client = Client()
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson("examples/testSchema.json")
+    response = json.loads(await client.ws.receive_json())
+    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
+    Path(path).mkdir(parents=True)
+    for binary in response["binary"]:
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+        async with async_open(path + binary["filename"], "wb") as f:
+            await f.write(data)

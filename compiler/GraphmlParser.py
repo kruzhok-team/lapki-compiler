@@ -1,16 +1,13 @@
 import xmltodict
 
-try:
-    from .fullgraphmlparser.stateclasses import State, Trigger
-except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import State, Trigger
-"""This class gets Berloga-graphml and returns States, Components, Transitions
+"""
+    This class gets Berloga-graphml and returns States, Components, Transitions
     Returns:
         _type_: _description_
 """
 class GraphmlParser:
 
-    operatorAllias = {
+    operatorAlias = {
         "!=": "notEquals",
         "==": "equals",
         ">": "greater",
@@ -146,7 +143,7 @@ class GraphmlParser:
             rval = await GraphmlParser.checkValueType(condition[2])
 
             result = {
-                "type": GraphmlParser.operatorAllias[operator],
+                "type": GraphmlParser.operatorAlias[operator],
                 "values": [lval, rval]
             }
 

@@ -19,7 +19,7 @@
           "args": []
         }
       ],
-      "conditions": [
+      "conditions":
             {
               "type" : "or",
               "values": [
@@ -54,15 +54,14 @@
                     },
                     {
                       "type": "component",
-                      "component": "btn",
+                      "component": "btn1",
                       "method": "clicked",
                       "args": []
                     }
+                    ]
+                  }
                 ]
-                }
-              ]
             }
-          ]
         }
       ]
 }
