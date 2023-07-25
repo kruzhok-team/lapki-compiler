@@ -46,7 +46,7 @@ class CJsonParser:
         return libraries
 
     @staticmethod
-    async def createNotes(components: list[Component], filename: str, triggers: list, compiler: str, path):
+    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path):
         includes = []
         variables = []
         setup = []
@@ -122,7 +122,18 @@ class CJsonParser:
             args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
             return "".join([component, method, args])
         return "true"
-    
+
+    @staticmethod
+    async def getActions(actions: list[dict]) -> str:
+        result: list[str] = []
+        for action in actions:
+            component = action["component"]
+            method = "." + action["method"]
+            args = "(" + ",".join(map(str, action["args"])) + ");"
+            result.append("".join([component, method, args]))
+
+        return "".join(result)
+
     @staticmethod
     async def getTransitions(transitions):
         result = []
@@ -142,16 +153,18 @@ class CJsonParser:
 
             trig = {}
             player_signals[name] = guard
-            
-            if "conditions" in transition.keys():
+
+            if "conditions" in transition.keys() and "type" in transition["conditions"]:
                 root = transition["conditions"]
                 condition = await CJsonParser.getCondition(root)
             else:
                 condition = "true"
+
+            action = await CJsonParser.getActions(transition["do"])
             trig["trigger"] = Trigger(name=name, source=transition["source"],
                                       target=transition["target"], id=i,
                                       type="external", guard=condition,
-                                      action="", points=[])
+                                      action=action, points=[])
 
             result.append(trig)
             i += 1

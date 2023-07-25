@@ -8,7 +8,20 @@
       },
       "diod2": {
         "events": {
-            "componentSignals": [],
+            "componentSignals": [
+              {
+                "component": "btn1",
+                "method": "isPressed",
+                "args": [],
+                "actions": [
+                  {
+                    "component": "diod2",
+                    "method":"fadeOut",
+                    "args": [5]
+                  }
+                ]
+              }
+            ],
             "userSignals": []
         }
       },
@@ -99,7 +112,6 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "do":{},
         "conditions":
         {
           "type" : "or",
@@ -139,10 +151,17 @@
                   "method": "clicked",
                   "args": []
                 }
-            ]
+              ]
             }
           ]
-        }
+        },
+        "do":[
+          {
+            "component": "diod1",
+            "method": "fadeOut",
+            "args": [5]
+          }
+        ]
       },
       {
         "source": "diod1_off",
@@ -156,7 +175,8 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       },
       {
         "source": "diod1",
@@ -170,7 +190,8 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       },
       {
         "source": "diod2_on",
@@ -184,7 +205,8 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       },
       {
         "source": "diod2_off",
@@ -198,7 +220,8 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       },
       {
         "source": "diod1",
@@ -212,7 +235,8 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       },
       {
         "source": "diod2",
@@ -226,7 +250,8 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "do":{}
+        "conditions": {},
+        "do":[]
       }
     ],
   
