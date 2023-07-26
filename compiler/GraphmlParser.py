@@ -113,7 +113,7 @@ class GraphmlParser:
         pos = id.rfind(":")
         parent = ""
         if pos != -1:
-            parent = states_dict[id[:pos-1]]["name"]
+            parent = id[:pos-1]
 
         return parent
 
@@ -167,11 +167,12 @@ class GraphmlParser:
         transitions = []
         initial_state = ""
         used_coordinates: list[tuple[int, int]] = []
+        print(triggers)
         for trigger in triggers:
             transition = {}
             try:
-                transition["source"] = statesDict[trigger["@source"]]["name"]
-                transition["target"] = statesDict[trigger["@target"]]["name"]
+                transition["source"] = trigger["@source"]
+                transition["target"] = trigger["@target"]
 
                 event, condition = trigger["y:EdgeLabel"].split("/")
                 component, method = event.split(".")
@@ -186,8 +187,8 @@ class GraphmlParser:
                 transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)
                 transition["do"] = []
                 transitions.append(transition)
-            except KeyError:
-                initial_state = statesDict[trigger["@target"]]["name"]
+            except AttributeError:
+                initial_state = trigger["@target"]
 
         return transitions, initial_state
 
@@ -213,8 +214,9 @@ class GraphmlParser:
             if state["@id"] == '':
                 continue
             new_state = {}
-            name = states_dict[state["@id"]]["name"]
+            id = state["@id"]
             node_type = states_dict[state["@id"]]["type"]
+            new_state["name"] = states_dict[state["@id"]]["name"]
             new_state["events"] = await GraphmlParser.getEvents(state, node_type)
             geometry = await GraphmlParser.getGeometry(state, node_type)
             states_dict[state["@id"]]["geometry"] = geometry
@@ -222,7 +224,7 @@ class GraphmlParser:
             parent = await GraphmlParser.getParentName(state, states_dict)
             if parent != "":
                 new_state["parent"] = parent
-            states[name] = new_state
+            states[id] = new_state
 
         return states
 

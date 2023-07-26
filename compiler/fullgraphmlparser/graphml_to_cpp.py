@@ -66,7 +66,7 @@ class CppFileWriter:
             for trigger in state.trigs:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
-
+        print(self.id_to_name)
     def write_to_file(self, folder: str, extension: str):
         with open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
             self.f = f
@@ -156,8 +156,9 @@ class CppFileWriter:
             'QState STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par) {\n')
         self._insert_string('    /*.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM::initial} */\n')
         self._insert_string('    %s\n' % self.start_action)
+        print(f"Start node:{self.start_node}")
         self._insert_string(
-            '    return Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % self.id_to_name[self.start_node])
+            '    return Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % self.start_node)
         self._insert_string('}\n')
 
     def _write_guard_comment(self, f, state_path: str, event_name: str, guard: str):
@@ -194,7 +195,7 @@ class CppFileWriter:
         state_comment = '/*.${' + state_path + '} '
         state_comment = state_comment + '.' * (76 - len(state_comment)) + '*/\n'
         self.f.write(state_comment)
-        self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.name)
+        self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.id)
         self._insert_string('    QState status_;\n')
         self._insert_string('    switch (e->sig) {\n')
 
@@ -261,7 +262,7 @@ class CppFileWriter:
 
         self._insert_string('        default: {\n')
         if state.parent:
-            self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.name)
+            self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
         else:
             self._insert_string('            status_ = Q_SUPER(&QHsm_top);\n')
         self._insert_string('            break;\n')
@@ -280,7 +281,7 @@ class CppFileWriter:
                 self.all_signals.append(trigger.name)
 
     def _write_states_declarations_recursively(self, state: State):
-        self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.name)
+        self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.id)
         for child_state in state.childs:
             self._write_states_declarations_recursively(child_state)
 
@@ -291,8 +292,7 @@ class CppFileWriter:
         if trigger.type == 'internal':
             self._insert_string(offset + '            status_ = Q_HANDLED();\n')
         elif trigger.type == 'external' or trigger.type == 'choice_result':
-            self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % self.id_to_name[
-                                    trigger.target])
+            self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target)
         elif trigger.type == 'choice_start':
             target_choice_node = next((s for s in self.states if s.id == trigger.target and s.type == 'choice'), None)
             assert target_choice_node

@@ -250,7 +250,7 @@ class CJsonParser:
                         actions += ');\n'
                     on_enter = actions
 
-                proccesed_states[statename] = State(name=statename, type="state",
+                proccesed_states[statename] = State(name=state["name"], type="state",
                                                     actions="", trigs=list(events.values()),
                                                     entry=on_enter, exit=on_exit,
                                                     id=statename, new_id=[statename],
