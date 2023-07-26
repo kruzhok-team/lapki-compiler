@@ -1,4 +1,11 @@
 import xmltodict
+import json
+from aiofile import async_open
+
+try:
+    from .config import SCHEMA_DIRECTORY
+except ImportError:
+    from compiler.config import SCHEMA_DIRECTORY
 
 """
     This class gets Berloga-graphml and returns States, Components, Transitions
@@ -55,11 +62,10 @@ class GraphmlParser:
     async def getEvents(state: dict, node_type: str) -> dict[str, list[dict[str, str]]]:
         str_events: str = state["data"][node_type]["y:NodeLabel"][1]
         events: list[str] = str_events.split("\n")
-        new_events: dict[str, list[dict[str, str]]] = {}
+        new_events: dict[str, list[dict[str, str | list]]] = {}
         current_event: str = ""
         new_events["componentSignals"] = []
         i = -1
-        flagTrigger = False
         for ev in events:
             if "/" in ev:
                 if "." in ev:
@@ -83,7 +89,7 @@ class GraphmlParser:
                     new_events[current_event] = []
                     current_dict = new_events[current_event]
                 continue
-            
+
             action_dict = {}
             action = ev.split(".")
             component = action[0]
@@ -111,13 +117,6 @@ class GraphmlParser:
 
         return parent
 
-    @staticmethod
-    async def getEventFromTransition(action: str):
-        events = action.split("/")
-        result = {}
-        for event in events:
-            pass
-    
     @staticmethod
     async def checkValueType(value: str) -> dict:
         if "." in value:
@@ -228,18 +227,32 @@ class GraphmlParser:
         return states
 
     @staticmethod
+    async def getComponents() -> dict:
+        async with async_open(f"{SCHEMA_DIRECTORY}Berloga.json", "r") as f:
+            data = await f.read()
+            json_data: dict = json.loads(data)
+
+        result = {}
+        components = json_data["platform"]["Берлога/Защита пасеки"]["components"].keys()
+
+        for component in components:
+            result[component] = {}
+            result[component]["type"] = component
+            result[component]["parameters"] = {}
+
+        return result
+
+    @staticmethod
     async def parse(unprocessed_xml: str):
         xml = xmltodict.parse(unprocessed_xml)
         graph = xml["graphml"]["graph"]
         nodes = graph["node"]
         triggers = graph["edge"]
-        components = []
+        components = await GraphmlParser.getComponents()
         flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes)
         states = await GraphmlParser.createStates(flattenStates, states_dict)
         transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict)
-        # with open("biba.json", "w") as f:
-        #     json.dump({"states": states, "transtions": transitions}, f, indent=4,
-        #               ensure_ascii=False)
+
         return {"states": states,
                 "initialState": initial_state,
                 "transitions": transitions,

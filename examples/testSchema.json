@@ -1,12 +1,14 @@
 {
     "state": {
       "diod1": {
+        "name": "diod1",
         "events": {
             "componentSignals": [],
             "userSignals": []
         }
       },
       "diod2": {
+        "name": "diod2",
         "events": {
             "componentSignals": [
               {
@@ -26,6 +28,7 @@
         }
       },
       "diod1_on": {
+        "name": "diod1_on",
         "events": {
           "onEnter": [
             {
@@ -36,7 +39,7 @@
           "componentSignals": [],
           "userSignals": []
         },
-        "parent": "diod1",
+        "parent": "n0",
         "bounds": {
           "x": 96,
           "y": 264
@@ -44,6 +47,7 @@
       },
   
       "diod1_off": {
+        "name": "diod1_off",
         "events": {
           "onEnter": [
             {
@@ -54,13 +58,14 @@
           "componentSignals": [],
           "userSignals": []
         },
-        "parent": "diod1",
+        "parent": "n0",
         "bounds": {
           "x": 765,
           "y": 134
         }
       },
       "diod2_on": {
+        "name": "diod2_on",
         "events": {
           "onEnter": [
             {
@@ -71,7 +76,7 @@
           "componentSignals": [],
           "userSignals": []
         },
-        "parent": "diod2",
+        "parent": "n1",
         "bounds": {
           "x": 96,
           "y": 264
@@ -79,6 +84,7 @@
       },
   
       "diod2_off": {
+        "name": "diod2_off",
         "events": {
           "onEnter": [
             {
@@ -89,7 +95,7 @@
           "componentSignals": [],
           "userSignals": []
         },
-        "parent": "diod2",
+        "parent": "n1",
         "bounds": {
           "x": 765,
           "y": 134
@@ -218,21 +224,6 @@
         },
         "trigger": {
           "component": "btn1",
-          "method": "clicked"
-        },
-        "conditions": {},
-        "do":[]
-      },
-      {
-        "source": "diod1",
-        "target": "diod2",
-        "color": "#F29727",
-        "position": {
-          "x": 361,
-          "y": 127
-        },
-        "trigger": {
-          "component": "btn2",
           "method": "clicked"
         },
         "conditions": {},

@@ -109,8 +109,8 @@ class Handler:
                             response["binary"].append(fileinfo)            
             response = await asyncjson.dumps(response)
             await ws.send_json(response)
-        except KeyError:
-            await RequestError(f"Invalid request, there isn't '{KeyError.args[0]}' key.").dropConnection(ws)
+        except KeyError as e:
+            await RequestError(f"Invalid request, there isn't '{e.args[0]}' key.").dropConnection(ws)
         await ws.close()
         return ws
 
