@@ -216,19 +216,19 @@ class CJsonParser:
         return new_states
 
     @staticmethod
-    async def parseStateMachine(json_data, filename, compiler, path=None):
+    async def parseStateMachine(json_data, filename="", compiler="", path=None):
         try:
             global_state = State(name="global", type="group",
                                  actions="", trigs=[],
                                  entry="", exit="",
                                  id="global", new_id=["global"],
                                  parent=None, childs=[])
-            states = json_data["state"]
+            states = json_data["states"]
             proccesed_states = {}
             # Добавить parent?
             event_signals = {}
             for statename in states:
-                state = json_data["state"][statename]
+                state = json_data["states"][statename]
                 events, new_event_signals = await CJsonParser.getEvents(state["events"]["componentSignals"], statename)
                 event_signals = dict(list(new_event_signals.items()) + list(event_signals.items()))
                 on_enter = ""
@@ -258,7 +258,10 @@ class CJsonParser:
             transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"])
             player_signals = dict(list(player_signals.items()) + list(event_signals.items()))
             components = await CJsonParser.getComponents(json_data["components"])
-            notes = await CJsonParser.createNotes(components, filename, player_signals, compiler=compiler, path=path)
+            if compiler in ["arduino-cli", "g++", "gcc"]:
+                notes = await CJsonParser.createNotes(components, filename, player_signals, compiler=compiler, path=path)
+            else:
+                notes = []
             startNode = proccesed_states[json_data["initialState"]].id
 
             proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)

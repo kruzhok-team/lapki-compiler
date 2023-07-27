@@ -162,17 +162,24 @@ class GraphmlParser:
         used_coordinates.append((nx, ny))
         return {"x": nx, "y": ny}
 
+    # Get n0::n1::n2 str and return n2
+    @staticmethod
+    async def getNodeId(id: str) -> str:
+        pos = id.rfind(":")
+        node_id = id[pos + 1:]
+        
+        return node_id
+    
     @staticmethod
     async def getTransitions(triggers: dict, statesDict: dict) -> tuple[list, str]:
         transitions = []
         initial_state = ""
         used_coordinates: list[tuple[int, int]] = []
-        print(triggers)
         for trigger in triggers:
             transition = {}
             try:
-                transition["source"] = trigger["@source"]
-                transition["target"] = trigger["@target"]
+                transition["source"] = await GraphmlParser.getNodeId(trigger["@source"])
+                transition["target"] = await GraphmlParser.getNodeId(trigger["@target"])
 
                 event, condition = trigger["y:EdgeLabel"].split("/")
                 component, method = event.split(".")
@@ -214,7 +221,7 @@ class GraphmlParser:
             if state["@id"] == '':
                 continue
             new_state = {}
-            id = state["@id"]
+            id = await GraphmlParser.getNodeId(state["@id"])
             node_type = states_dict[state["@id"]]["type"]
             new_state["name"] = states_dict[state["@id"]]["name"]
             new_state["events"] = await GraphmlParser.getEvents(state, node_type)
