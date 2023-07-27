@@ -188,7 +188,7 @@ class GraphmlParser:
                     "method": method
                 }
                 
-                transition["condition"] = await GraphmlParser.getCondition(condition)
+                transition["conditions"] = await GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
                 transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)

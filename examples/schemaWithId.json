@@ -5,6 +5,10 @@
         "events": {
             "componentSignals": [],
             "userSignals": []
+        },
+        "bounds": {
+          "x": 296,
+          "y": 464
         }
       },
       "n1": {
@@ -25,6 +29,10 @@
               }
             ],
             "userSignals": []
+        },
+        "bounds": {
+          "x": 196,
+          "y": 364
         }
       },
       "n2": {

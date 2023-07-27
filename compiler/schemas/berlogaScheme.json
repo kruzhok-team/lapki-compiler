@@ -1,0 +1,265 @@
+{
+    "states": {
+        "n0": {
+            "name": "Бой",
+            "events": {
+                "componentSignals": [],
+                "onEnter": [],
+                "onExit": []
+            },
+            "bounds": {
+                "x": -578,
+                "y": 438
+            }
+        },
+        "n1": {
+            "name": "Сближение",
+            "events": {
+                "componentSignals": [],
+                "onEnter": [
+                    {
+                        "component": "Ноги",
+                        "method": "ИдтиКЦели",
+                        "args": [
+                            "враг"
+                        ]
+                    }
+                ],
+                "onExit": []
+            },
+            "bounds": {
+                "x": -525,
+                "y": 609
+            },
+            "parent": "n0"
+        },
+        "n2": {
+            "name": "Атака",
+            "events": {
+                "componentSignals": [],
+                "onEnter": [
+                    {
+                        "component": "ОружиеЦелевое",
+                        "method": "АтаковатьЦель",
+                        "args": []
+                    }
+                ],
+                "onExit": []
+            },
+            "bounds": {
+                "x": -630,
+                "y": 206
+            },
+            "parent": "n0"
+        },
+        "n3": {
+            "name": "Скан",
+            "events": {
+                "componentSignals": [
+                    {
+                        "component": "Таймер",
+                        "method": "ТаймерВыполнен",
+                        "actions": [
+                            {
+                                "component": "АнализаторВрагов",
+                                "method": "ПоискВрагаПоДистанции",
+                                "args": [
+                                    "мин"
+                                ]
+                            },
+                            {
+                                "component": "АнализаторВрагов",
+                                "method": "ВыбратьЦельюВрага",
+                                "args": []
+                            },
+                            {
+                                "component": "Таймер",
+                                "method": "ТаймерЗапуск",
+                                "args": [
+                                    "0"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "component": "АнализаторВрагов",
+                        "method": "НоваяЦельВраг",
+                        "actions": [
+                            {
+                                "component": "Счетчик",
+                                "method": "Прибавить",
+                                "args": [
+                                    "1"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "onEnter": [
+                    {
+                        "component": "Таймер",
+                        "method": "ТаймерЗапуск",
+                        "args": [
+                            "0"
+                        ]
+                    },
+                    {
+                        "component": "Счетчик",
+                        "method": "Сброс",
+                        "args": []
+                    }
+                ],
+                "onExit": []
+            },
+            "bounds": {
+                "x": -1582,
+                "y": 606
+            }
+        }
+    },
+    "initialState": "n3",
+    "transitions": [
+        {
+            "source": "n0",
+            "target": "n3",
+            "trigger": {
+                "component": "АнализаторВрагов",
+                "method": "ВрагУмер"
+            },
+            "conditions": {},
+            "position": {
+                "x": -242,
+                "y": 687
+            },
+            "do": []
+        },
+        {
+            "source": "n0",
+            "target": "n3",
+            "trigger": {
+                "component": "АнализаторВрагов",
+                "method": "ВрагВышелИзЗоныВидимости"
+            },
+            "conditions": {},
+            "position": {
+                "x": -142,
+                "y": 787
+            },
+            "do": []
+        },
+        {
+            "source": "n3",
+            "target": "n1",
+            "trigger": {
+                "component": "АнализаторВрагов",
+                "method": "НоваяЦельВраг"
+            },
+            "conditions": {
+                "type": "greaterOrEqual",
+                "values": [
+                    {
+                        "type": "component",
+                        "component": "Счетчик",
+                        "method": "ТекущееЗначениеСчетчика",
+                        "args": []
+                    },
+                    {
+                        "type": "value",
+                        "value": "2"
+                    }
+                ]
+            },
+            "position": {
+                "x": -1348,
+                "y": 692
+            },
+            "do": []
+        },
+        {
+            "source": "n1",
+            "target": "n2",
+            "trigger": {
+                "component": "ОружиеЦелевое",
+                "method": "ВрагВошелВЗонуАтаки"
+            },
+            "conditions": {},
+            "position": {
+                "x": -291,
+                "y": 492
+            },
+            "do": []
+        },
+        {
+            "source": "n2",
+            "target": "n1",
+            "trigger": {
+                "component": "ОружиеЦелевое",
+                "method": "ВрагВышелИзЗоныАтаки"
+            },
+            "conditions": {},
+            "position": {
+                "x": -396,
+                "y": 492
+            },
+            "do": []
+        }
+    ],
+    "components": {
+        "Сканер": {
+            "type": "Сканер",
+            "parameters": {}
+        },
+        "АнализаторЦели": {
+            "type": "АнализаторЦели",
+            "parameters": {}
+        },
+        "МодульДвижения": {
+            "type": "МодульДвижения",
+            "parameters": {}
+        },
+        "Самодиагностика": {
+            "type": "Самодиагностика",
+            "parameters": {}
+        },
+        "СвязьСБазой": {
+            "type": "СвязьСБазой",
+            "parameters": {}
+        },
+        "Таймер": {
+            "type": "Таймер",
+            "parameters": {}
+        },
+        "Счётчик": {
+            "type": "Счётчик",
+            "parameters": {}
+        },
+        "ОружиеЦелевое": {
+            "type": "ОружиеЦелевое",
+            "parameters": {}
+        },
+        "ОружиеМассовое": {
+            "type": "ОружиеМассовое",
+            "parameters": {}
+        },
+        "Заряд": {
+            "type": "Заряд",
+            "parameters": {}
+        },
+        "СпособностьПочинка": {
+            "type": "СпособностьПочинка",
+            "parameters": {}
+        },
+        "СпособностьНаМаксимум": {
+            "type": "СпособностьНаМаксимум",
+            "parameters": {}
+        },
+        "СпособностьСтруяДыма": {
+            "type": "СпособностьСтруяДыма",
+            "parameters": {}
+        },
+        "СпособностьСамоуничтожение": {
+            "type": "СпособностьСамоуничтожение",
+            "parameters": {}
+        }
+    }
+}

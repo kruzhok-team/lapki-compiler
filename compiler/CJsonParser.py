@@ -28,8 +28,7 @@ class CJsonParser:
         "or": "||",
         "and": "&&"
     }
-    
-    
+
     @staticmethod
     async def appendNote(label: Labels, content, notes):
         notes.append({"y:UMLNoteNode":
@@ -185,7 +184,7 @@ class CJsonParser:
                 if "args" in event["actions"][i].keys():
                     actions += ','.join(map(str, event["actions"][i]["args"]))
                 actions += ');\n'
-            trig = Trigger(name=eventname, source=statename,
+            trig = Trigger(name=eventname, type="internal", source=statename,
                            target="", action=actions, id=id,
                            points=[])
             id += 1
@@ -194,7 +193,7 @@ class CJsonParser:
         return (result, event_signals)
 
     @staticmethod
-    def addParentsAndChilds(states, processed_states, global_state):
+    async def addParentsAndChilds(states, processed_states, global_state):
         result = processed_states.copy()
         for statename in states:
             state = states[statename]
@@ -208,13 +207,23 @@ class CJsonParser:
         return result
 
     @staticmethod
-    def addTransitionsToStates(transitions, states):
+    async def addTransitionsToStates(transitions, states):
         new_states = states.copy()
         for transition in transitions:
             new_states[transition["trigger"].source].trigs.append(transition["trigger"])
 
         return new_states
 
+    @staticmethod
+    async def getGeometry(state: dict) -> tuple[int, int, int, int]:
+        x = state["bounds"]["x"]
+        y = state["bounds"]["y"]
+        # w = state["bounds"]["w"]
+        # h = state["bounds"]["h"]
+        w = 100
+        h = 100
+        
+        return x, y, w, h
     @staticmethod
     async def parseStateMachine(json_data, filename="", compiler="", path=None):
         try:
@@ -225,7 +234,6 @@ class CJsonParser:
                                  parent=None, childs=[])
             states = json_data["states"]
             proccesed_states = {}
-            # Добавить parent?
             event_signals = {}
             for statename in states:
                 state = json_data["states"][statename]
@@ -249,12 +257,15 @@ class CJsonParser:
                             actions += ','.join(map(str, state["events"]["onEnter"][i]["args"]))
                         actions += ');\n'
                     on_enter = actions
-
+                
+                x, y, w, h = await CJsonParser.getGeometry(state)
                 proccesed_states[statename] = State(name=state["name"], type="state",
                                                     actions="", trigs=list(events.values()),
                                                     entry=on_enter, exit=on_exit,
                                                     id=statename, new_id=[statename],
-                                                    parent=None, childs=[])
+                                                    parent=None, childs=[],
+                                                    x=x, y=y,
+                                                    width=w, height=h)
             transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"])
             player_signals = dict(list(player_signals.items()) + list(event_signals.items()))
             components = await CJsonParser.getComponents(json_data["components"])
@@ -264,8 +275,8 @@ class CJsonParser:
                 notes = []
             startNode = proccesed_states[json_data["initialState"]].id
 
-            proccesed_states = CJsonParser.addTransitionsToStates(transitions, proccesed_states)
-            proccesed_states = CJsonParser.addParentsAndChilds(states, proccesed_states, global_state)
+            proccesed_states = await CJsonParser.addTransitionsToStates(transitions, proccesed_states)
+            proccesed_states = await CJsonParser.addParentsAndChilds(states, proccesed_states, global_state)
             return {"states": [global_state, *list(proccesed_states.values())],
                     "notes": notes,
                     "startNode": startNode,
