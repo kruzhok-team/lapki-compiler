@@ -171,7 +171,7 @@
       },
       {
         "source": "diod1_off",
-        "target": "diod1_on",
+        "target": "diof1_on",
         "color": "#F29727",
         "position": {
           "x": 361,
@@ -231,7 +231,7 @@
       },
       {
         "source": "diod2",
-        "target": "diod1",
+        "target": "diod2",
         "color": "#F29727",
         "position": {
           "x": 361,

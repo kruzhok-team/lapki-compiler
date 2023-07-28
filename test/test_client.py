@@ -126,10 +126,17 @@ async def test_sendSchemaWithId():
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson("examples/schemaWithId.json")
     response = json.loads(await client.ws.receive_json())
-    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
-    Path(path).mkdir(parents=True)
+    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+    build_path = "client/" + dirname + "/build/"
+    source_path = "client/" + dirname + "/source/"
+    Path(build_path).mkdir(parents=True)
+    Path(source_path).mkdir(parents=True)
     for binary in response["binary"]:
         data = binary["fileContent"].encode('ascii')
         data = base64.b64decode(binary["fileContent"])
-        async with async_open(path + binary["filename"], "wb") as f:
+        async with async_open(build_path + binary["filename"], "wb") as f:
             await f.write(data)
+
+    for source in response["source"]:
+        async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
+            await f.write(source["fileContent"])

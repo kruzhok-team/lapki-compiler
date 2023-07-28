@@ -30,7 +30,16 @@ class Handler:
     def __init__(self):
         pass
 
-    # TODO
+    @staticmethod
+    async def readSourceFile(filename: str, extension: str, path: str) -> dict[str, str]:
+        async with async_open(f"{path}{filename}.{extension}", "r") as f:
+            data = await f.read()
+        return {
+            "filename": filename,
+            "extension": extension,
+            "fileContent": data
+        }
+
     @staticmethod
     async def handle_ws_compile(request):
         ws = web.WebSocketResponse()
@@ -46,6 +55,7 @@ class Handler:
             flags = compiler_settings["flags"]
             dirname = str(datetime.now()) + '/'
             path = BUILD_DIRECTORY + dirname
+            extension = Compiler.supported_compilers[compiler]["extension"][0]
             match compiler:
                 case "g++" | "gcc":
                     await AsyncPath(path).mkdir(parents=True)
@@ -57,7 +67,8 @@ class Handler:
                                                       start_action="", states=sm["states"],
                                                       notes=sm["notes"],
                                                       player_signal=sm["playerSignals"]).write_to_file)
-                    await write_to_cpp_file(path, "cpp")
+                    
+                    await write_to_cpp_file(path, extension)
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     libraries = [*libraries, *Compiler.c_default_libraries]
@@ -94,11 +105,14 @@ class Handler:
                 "return code": result.return_code,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
-                "binary": []
+                "binary": [],
+                "source": []
             }
             if result.return_code == 0:
                 response["result"] = "OK"
-                async for path in AsyncPath(''.join([BUILD_DIRECTORY, dirname, "build/"])).rglob("*"):
+                build_path = ''.join([BUILD_DIRECTORY, dirname, "build/"])
+                source_path = ''.join([BUILD_DIRECTORY, dirname])
+                async for path in AsyncPath(build_path).rglob("*"):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
@@ -106,7 +120,10 @@ class Handler:
                             fileinfo["filename"] = path.name
                             b64_data = base64.b64encode(binary)
                             fileinfo["fileContent"] = b64_data.decode("ascii")
-                            response["binary"].append(fileinfo)            
+                            response["binary"].append(fileinfo)
+
+                response["source"].append(await Handler.readSourceFile(filename, extension, source_path))
+                response["source"].append(await Handler.readSourceFile(filename, "h", source_path))  
             response = await asyncjson.dumps(response)
             await ws.send_json(response)
         except KeyError as e:

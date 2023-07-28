@@ -77,7 +77,7 @@ class CJsonParser:
                 includes.append(f'\n#include "{component.type}.h"')
             variables.append(f"\n{component.type} {component.name} = {component.type}({', '.join(map(str, list(component.parameters.values())))});")
         notes = []
-        
+
         class_filename = filename[0].upper() + filename[1:]
         check_signals = []
 
@@ -85,7 +85,6 @@ class CJsonParser:
             component_name = triggers[name]["component_name"]
             component_type = components_types[component_name]
             specific_check = await CJsonParser.specificCheckComponentSignal(name=component_name, type=component_type)
-            print(specific_check)
             check_signals.append('\n\t\t'.join([f"{specific_check}\n\tif({triggers[name]['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});"]) + "\n\t}")
 
         match compiler:

@@ -21,13 +21,13 @@ class CompilerResult:
 class Compiler:
     c_default_libraries = ["qhsm"]
     
-    supported_compilers = {"gcc" : {
-                                "extension" : ["*\.c", "*\.cpp"],
-                                "flags" : ["-c", "-std=", "-Wall"]}, 
-                           "g++" : {
-                                "extension" : ["*.c", "*.cpp"],
-                                "flags" : ["-c", "-std=", "-Wall"]}, 
-                           "arduino-cli": {"extension": "ino",
+    supported_compilers = {"gcc": {
+                                "extension": ["*\.c", "*\.cpp"],
+                                "flags": ["-c", "-std=", "-Wall"]},
+                           "g++": {
+                                "extension": ["*.cpp", "*.c"],
+                                "flags": ["-c", "-std=", "-Wall"]},
+                           "arduino-cli": {"extension": ["ino"],
                                            "flags": ["-b", "avr:arduino:uno"]
                                            }}
     #TODO
