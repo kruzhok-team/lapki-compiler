@@ -24,7 +24,7 @@ class CJsonParser:
         "gcc": ";",
         "g++": ';'
     }
-    
+
     operatorAlias = {
         "notEquals": "!=",
         "equals": "==",
@@ -35,6 +35,20 @@ class CJsonParser:
         "or": "||",
         "and": "&&"
     }
+
+    @staticmethod
+    async def specificCheckComponentSignal(type: str, name: str) -> str:
+        """Функция для специфичных проверок сигналов. Так, например, для
+        проверки состояния кнопки необходимо предварительно вызвать функцию scan
+
+        Returns:
+            str: специчиная для данного компонента проверка сигнала
+        """
+        match type:
+            case 'Button':
+                return f"\n\t{name}.scan();\n\t"
+            case _:
+                return ""
 
     @staticmethod
     async def appendNote(label: Labels, content, notes):
@@ -56,18 +70,23 @@ class CJsonParser:
         includes = []
         variables = []
         setup = []
+        components_types = {}
         for component in components:
+            components_types[component.name] = component.type
             if component.type not in includes:
                 includes.append(f'\n#include "{component.type}.h"')
-
             variables.append(f"\n{component.type} {component.name} = {component.type}({', '.join(map(str, list(component.parameters.values())))});")
         notes = []
-
+        
         class_filename = filename[0].upper() + filename[1:]
-
         check_signals = []
+
         for name in triggers.keys():
-            check_signals.append('\n\t\t'.join([f"\n\tif({triggers[name]})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});"]) + "\n\t}")
+            component_name = triggers[name]["component_name"]
+            component_type = components_types[component_name]
+            specific_check = await CJsonParser.specificCheckComponentSignal(name=component_name, type=component_type)
+            print(specific_check)
+            check_signals.append('\n\t\t'.join([f"{specific_check}\n\tif({triggers[name]['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});"]) + "\n\t}")
 
         match compiler:
             case "g++" | "gcc":
@@ -158,8 +177,9 @@ class CJsonParser:
             guard += ')'
 
             trig = {}
-            player_signals[name] = guard
-
+            player_signals[name] = {}
+            player_signals[name]["guard"] = guard
+            player_signals[name]["component_name"] = transition["trigger"]["component"]
             if "conditions" in transition.keys() and "type" in transition["conditions"]:
                 root = transition["conditions"]
                 condition = await CJsonParser.getCondition(root)
@@ -184,7 +204,10 @@ class CJsonParser:
         for event in events:
             eventname = event["component"] + '_' + event["method"]
             guard = ''.join([event["component"], '.', event["method"], "()"])
-            event_signals[eventname] = guard
+            event_signals[eventname] = {}
+            event_signals[eventname]["guard"] = guard
+            event_signals[eventname]["component_name"] = event["component"]
+            
             actions = ""
             for i in range(len(event["actions"])):
                 actions += event["actions"][i]["component"] + '.' + event["actions"][i]["method"] + '('

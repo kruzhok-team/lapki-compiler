@@ -14,41 +14,13 @@ pytest_plugins = ('pytest_asyncio',)
 
 BASE_ADDR = f'http://localhost:{SERVER_PORT}/ws'
 
+
 @pytest.mark.asyncio
 async def test_sendSmth():
     client = Client()
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson(path='examples/ExampleRequestSM.json')
 
-#deprecated
-@pytest.mark.asyncio
-async def test_sendSourceFileCpp():
-    client = Client()
-    await client.doConnect('{BASE_ADDR}/ws/source')
-    await client.sendSourceFile(path='examples/MonoFileExample/cpp_example.cpp', compiler="g++", flags=[])
-    
-    response = await client.getResult()
-    
-    async with async_open("examples/cpp_example.o", 'rb') as f:
-        binary = await f.read()
-    
-    binary = base64.b64encode(binary)
-    binary = binary.decode("ascii")
-    
-    print(response)    
-    assert response == {
-        "result" : "OK",
-        "compilationCommand" : "g++ cpp_example.cpp -o build/cpp_example.o",
-        "returnCode" : 0,
-        "stdout" : "",
-        "stderr" : "",
-        "binary" : {
-            "filename": "cpp_example.o",
-            "fileContent" : binary 
-        }
-    }
-
-# Сделать параметрическим
 
 @pytest.mark.asyncio
 async def test_sendMultifileProject():
@@ -73,6 +45,7 @@ async def test_sendMultifileProject():
     stdout = result.stdout.replace("\n", '')
     assert stdout == "Result: 8"
 
+
 @pytest.mark.asyncio
 async def test_sendArduino():
     client = Client()
@@ -95,14 +68,16 @@ async def test_sendSMJson():
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson("examples/ExampleRequestSM5.json")
     response = json.loads(await client.ws.receive_json())
-    
+
+
 @pytest.mark.asyncio
 async def test_sendNestedSMJson():
     client = Client()
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson("examples/ExampleRequestSMWithChilds.json")
     response = json.loads(await client.ws.receive_json())
- 
+
+
 @pytest.mark.asyncio
 async def test_sendArduinoSMJson():
     client = Client()
@@ -117,6 +92,7 @@ async def test_sendArduinoSMJson():
         async with async_open(path + binary["filename"], "wb") as f:
             await f.write(data)
 
+
 @pytest.mark.asyncio
 async def test_berlogaImport():
     client = Client()
@@ -129,11 +105,26 @@ async def test_berlogaImport():
     
     await client.ws.close()
 
+
 @pytest.mark.asyncio
 async def test_sendTestSchema():
     client = Client()
     await client.doConnect(BASE_ADDR)
     await client.sendSMJson("examples/testSchema.json")
+    response = json.loads(await client.ws.receive_json())
+    path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
+    Path(path).mkdir(parents=True)
+    for binary in response["binary"]:
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+        async with async_open(path + binary["filename"], "wb") as f:
+            await f.write(data)
+
+@pytest.mark.asyncio
+async def test_sendSchemaWithId():
+    client = Client()
+    await client.doConnect(BASE_ADDR)
+    await client.sendSMJson("examples/schemaWithId.json")
     response = json.loads(await client.ws.receive_json())
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
