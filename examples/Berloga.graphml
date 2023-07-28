@@ -27,7 +27,7 @@ exit/
 							<y:NodeLabel>Сближение</y:NodeLabel>
 							<y:NodeLabel>
 entry/
-Ноги.ИдтиКЦели(враг);
+Ноги.ИдтиКЦели(враг)
 
 exit/
 </y:NodeLabel>
@@ -41,7 +41,7 @@ exit/
 							<y:NodeLabel>Атака</y:NodeLabel>
 							<y:NodeLabel>
 entry/
-ОружиеЦелевое.АтаковатьЦель();
+ОружиеЦелевое.АтаковатьЦель()
 
 exit/
 </y:NodeLabel>
@@ -57,16 +57,16 @@ exit/
 					<y:NodeLabel>Скан</y:NodeLabel>
 					<y:NodeLabel>
 entry/
-Таймер.ТаймерЗапуск(0);
-Счетчик.Сброс();
+Таймер.ТаймерЗапуск(0)
+Счетчик.Сброс()
 
 Таймер_ТаймерВыполнен/
-АнализаторВрагов.ПоискВрагаПоДистанции(мин);
-АнализаторВрагов.ВыбратьЦельюВрага();
-Таймер.ТаймерЗапуск(0);
+АнализаторВрагов.ПоискВрагаПоДистанции(мин)
+АнализаторВрагов.ВыбратьЦельюВрага()
+Таймер.ТаймерЗапуск(0)
 
 АнализаторВрагов_НоваяЦельВраг/
-Счетчик.Прибавить(1);
+Счетчик.Прибавить(1)
 
 exit/
 </y:NodeLabel>
@@ -74,25 +74,25 @@ exit/
 				</y:GenericNode>
 			</data>
 		</node>
-	</graph>
-	<edge source="n0" targer="n3">
-		<y:EdgeLabel>АнализаторВрагов_ВрагУмер/
+		<edge source="n0" targer="n3">
+			<y:EdgeLabel>АнализаторВрагов_ВрагУмер/
 </y:EdgeLabel>
-	</edge>
-	<edge source="n0" targer="n3">
-		<y:EdgeLabel>АнализаторВрагов_ВрагВышелИзЗоныВидимости/
+		</edge>
+		<edge source="n0" targer="n3">
+			<y:EdgeLabel>АнализаторВрагов_ВрагВышелИзЗоныВидимости/
 </y:EdgeLabel>
-	</edge>
-	<edge source="n1" targer="n2">
-		<y:EdgeLabel>ОружиеЦелевое_ВрагВошелВЗонуАтаки/
+		</edge>
+		<edge source="n1" targer="n2">
+			<y:EdgeLabel>ОружиеЦелевое_ВрагВошелВЗонуАтаки/
 </y:EdgeLabel>
-	</edge>
-	<edge source="n2" targer="n1">
-		<y:EdgeLabel>ОружиеЦелевое_ВрагВышелИзЗоныАтаки/
+		</edge>
+		<edge source="n2" targer="n1">
+			<y:EdgeLabel>ОружиеЦелевое_ВрагВышелИзЗоныАтаки/
 </y:EdgeLabel>
-	</edge>
-	<edge source="n3" targer="n1">
-		<y:EdgeLabel>АнализаторВрагов_НоваяЦельВраг/
+		</edge>
+		<edge source="n3" targer="n1">
+			<y:EdgeLabel>АнализаторВрагов_НоваяЦельВраг/
 [Счетчик.ТекущееЗначениеСчетчика() &gt;= 2]</y:EdgeLabel>
-	</edge>
+		</edge>
+	</graph>
 </graphml>

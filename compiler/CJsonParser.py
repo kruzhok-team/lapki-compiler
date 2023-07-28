@@ -18,6 +18,13 @@ class Labels(Enum):
 
 
 class CJsonParser:
+    delimeter = {
+        "Berloga": "",
+        "arduino-cli": ";",
+        "gcc": ";",
+        "g++": ';'
+    }
+    
     operatorAlias = {
         "notEquals": "!=",
         "equals": "==",
@@ -170,7 +177,7 @@ class CJsonParser:
         return result, player_signals
 
     @staticmethod
-    async def getEvents(events: list[dict[str, dict[str, str] | str]], statename: str) -> tuple[dict[str, Trigger], dict[str, str]]:
+    async def getEvents(events: list[dict[str, dict[str, str] | str]], statename: str, compiler: str) -> tuple[dict[str, Trigger], dict[str, str]]:
         result = {}
         id = 0
         event_signals = {}
@@ -183,7 +190,8 @@ class CJsonParser:
                 actions += event["actions"][i]["component"] + '.' + event["actions"][i]["method"] + '('
                 if "args" in event["actions"][i].keys():
                     actions += ','.join(map(str, event["actions"][i]["args"]))
-                actions += ');\n'
+                actions += ")" + CJsonParser.delimeter[compiler] + "\n"
+                
             trig = Trigger(name=eventname, type="internal", source=statename,
                            target="", action=actions, id=id,
                            points=[])
@@ -237,7 +245,7 @@ class CJsonParser:
             event_signals = {}
             for statename in states:
                 state = json_data["states"][statename]
-                events, new_event_signals = await CJsonParser.getEvents(state["events"]["componentSignals"], statename)
+                events, new_event_signals = await CJsonParser.getEvents(state["events"]["componentSignals"], statename, compiler)
                 event_signals = dict(list(new_event_signals.items()) + list(event_signals.items()))
                 on_enter = ""
                 on_exit = ""
@@ -247,7 +255,7 @@ class CJsonParser:
                         actions += state["events"]["onExit"][i]["component"] + '.' + state["events"]["onExit"][i]["method"] + '('
                         if "args" in state["events"]["onExit"][i].keys():
                             actions += ','.join(map(str, state["events"]["onExit"][i]["args"]))
-                        actions += ');\n'
+                        actions += ')' + CJsonParser.delimeter[compiler] + '\n'
                     on_exit = actions
                 if "onEnter" in state["events"]:
                     actions = ""
@@ -255,7 +263,7 @@ class CJsonParser:
                         actions += state["events"]["onEnter"][i]["component"] + '.' + state["events"]["onEnter"][i]["method"] + '('
                         if "args" in state["events"]["onEnter"][i].keys():
                             actions += ','.join(map(str, state["events"]["onEnter"][i]["args"]))
-                        actions += ');\n'
+                        actions += ')' + CJsonParser.delimeter[compiler] + '\n'
                     on_enter = actions
                 
                 x, y, w, h = await CJsonParser.getGeometry(state)

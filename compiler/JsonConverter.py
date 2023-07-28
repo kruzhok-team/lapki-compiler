@@ -29,10 +29,10 @@ class JsonConverter:
         """
         events: list[str] = []
         events.append("\n".join(["\nentry/", state.entry]))
-
         for trig in state.trigs:
             if trig.type == "internal":
                 event = "\n".join([f"\n{trig.name}/", f"{trig.action}"])
+                
                 events.append(event)
             else:
                 if trig.guard == "true":
@@ -119,15 +119,18 @@ class JsonConverter:
         graph["node"] = graph["node"][:-1]
 
         return graph
-        
-    async def parse(self, states: list[State], triggers: list[Trigger]) -> str:
+
+    async def parse(self, states: list[State]) -> str:
         data = {"graphml": {
                     "@xmlns": "http://graphml.graphdrawing.org/xmlns",
                     "@xmlns:y": "http://www.yworks.com/xml/graphml",
                     "graph": await self.getStates(states),
-                    "edge": self.transitions
                     }
                 }
-        with open("Berloga.xml", "w") as f:
-            xmltodict.unparse(data, f, pretty=True)
-        return data
+        data["graphml"]["graph"]["edge"] = self.transitions
+        result = xmltodict.unparse(data, pretty=True)
+        
+        with open("Berloga.graphml", "w") as f:
+            f.write(result)
+        
+        return result

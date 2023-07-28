@@ -183,5 +183,21 @@ class Handler:
         return ws
 
     @staticmethod
+    async def handle_berloga_export(request):
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        schema = json.loads(await ws.receive_json())
+        try:
+            sm = await CJsonParser.parseStateMachine(schema)
+            converter = JsonConverter(ws)
+            xml = converter.parse(sm["states"])
+        except KeyError as e:
+            await RequestError(f"There isn't key {e[0]}")
+            return ws
+
+        await ws.send_str(xml)
+
+        return ws
+    @staticmethod
     async def handle_get_compile(request):
         return web.Response(text="Hello world!")
