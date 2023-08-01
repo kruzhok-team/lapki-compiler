@@ -169,7 +169,44 @@ class GraphmlParser:
         node_id = id[pos + 1:]
         
         return node_id
-    
+
+    @staticmethod
+    async def _parseAction(action: str) -> dict:
+        component, method = action.split('.')
+        call_pos = method.find('(')
+        args = method[call_pos + 1:-1].split(',')
+        if args == [""]:
+            args = []
+        method = method[:call_pos]
+        return {
+            "component": component,
+            "method": method,
+            "args": args
+        }
+
+    @staticmethod
+    async def getActions(actions: list[str]) -> list[dict]:
+        """Функция получает список действий и возвращает их в нотации IDE Lapki.
+
+        Args:
+            actions (list[str]): список действий. 
+            Пример: ["Счётчик.Прибавить(231)", "ОружиеЦелевое.АтаковатьЦель()"]
+
+        Returns:
+            list[dict]: список словарей [{
+                                        "component": Счётчик,
+                                        "method": "Прибавить",
+                                        "args": ["231"]
+                                    }]
+        """
+        result: list[dict] = []
+        for action in actions:
+            result.append(await GraphmlParser._parseAction(action))
+            
+        return result
+
+
+
     @staticmethod
     async def getTransitions(triggers: dict, statesDict: dict) -> tuple[list, str]:
         transitions = []
@@ -181,7 +218,12 @@ class GraphmlParser:
                 transition["source"] = await GraphmlParser.getNodeId(trigger["@source"])
                 transition["target"] = await GraphmlParser.getNodeId(trigger["@target"])
 
+                # condition может содержать условие, условия и действия, действия и пустую строку
                 event, condition = trigger["y:EdgeLabel"].split("/")
+                t = condition.strip().split('\n')
+                condition = t[0]
+                actions = t[1:]
+                actions = await GraphmlParser.getActions(actions)
                 component, method = event.split(".")
                 transition["trigger"] = {
                     "component": component,
@@ -192,9 +234,9 @@ class GraphmlParser:
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
                 transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)
-                transition["do"] = []
+                transition["do"] = actions
                 transitions.append(transition)
-            except AttributeError:
+            except AttributeError as e:
                 initial_state = trigger["@target"]
 
         return transitions, initial_state

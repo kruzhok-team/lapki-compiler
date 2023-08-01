@@ -37,13 +37,13 @@ class JsonConverter:
                     transition = {
                                     "@source": trig.source,
                                     "@target": trig.target,
-                                    "y:EdgeLabel": f"{trig.name}/\n"
+                                    "y:EdgeLabel": f"{trig.name}/{trig.action}\n"
                                 }
                 else:
                     transition = {
                         "@source": trig.source,
                         "@target": trig.target,
-                        "y:EdgeLabel": f"{trig.name}/\n[{trig.guard}]"
+                        "y:EdgeLabel": f"{trig.name}/\n[{trig.guard}]\n{trig.action}"
                         }
                 self.transitions.append(transition)
         events.append("\n".join(["\nexit/", state.exit]))

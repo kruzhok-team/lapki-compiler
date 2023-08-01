@@ -154,15 +154,15 @@ class CJsonParser:
         return "true"
 
     @staticmethod
-    async def getActions(actions: list[dict]) -> str:
+    async def getActions(actions: list[dict], compiler: str) -> str:
         result: list[str] = []
         for action in actions:
             component = action["component"]
             method = "." + action["method"]
-            args = "(" + ",".join(map(str, action["args"])) + ");"
+            args = "(" + ",".join(map(str, action["args"])) + ")" + CJsonParser.delimeter[compiler]
             result.append("".join([component, method, args]))
 
-        return "".join(result)
+        return "\n".join(result)
 
     @staticmethod
     async def getTransitions(transitions: list[dict], compiler: str):
@@ -191,7 +191,7 @@ class CJsonParser:
             else:
                 condition = "true"
 
-            action = await CJsonParser.getActions(transition["do"])
+            action = await CJsonParser.getActions(transition["do"], compiler)
             trig["trigger"] = Trigger(name=name, source=transition["source"],
                                       target=transition["target"], id=i,
                                       type="external", guard=condition,
