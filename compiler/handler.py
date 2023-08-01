@@ -205,11 +205,11 @@ class Handler:
         await ws.prepare(request)
         schema = json.loads(await ws.receive_json())
         try:
-            sm = await CJsonParser.parseStateMachine(schema)
+            sm = await CJsonParser.parseStateMachine(schema, compiler="Berloga")
             converter = JsonConverter(ws)
-            xml = converter.parse(sm["states"])
+            xml = await converter.parse(sm["states"], sm["startNode"])
         except KeyError as e:
-            await RequestError(f"There isn't key {e[0]}")
+            await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
             return ws
 
         await ws.send_str(xml)

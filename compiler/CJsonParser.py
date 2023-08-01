@@ -130,12 +130,12 @@ class CJsonParser:
         return result
 
     @staticmethod
-    async def getCondition(condition_dict: dict, condition: list = []) -> str:
+    async def getCondition(condition_dict: dict, compiler: str, condition: list = []) -> str:
         type: str = condition_dict["type"]
         if type in list(CJsonParser.operatorAlias.keys()):
             values = []
             for value in condition_dict["values"]:
-                values.append(await CJsonParser.getCondition(value))
+                values.append(await CJsonParser.getCondition(value, compiler=compiler))
             result = f" {CJsonParser.operatorAlias[type]} ".join(map(str, values))
             return result
         elif type == "value":
@@ -143,7 +143,13 @@ class CJsonParser:
         elif type == "component":
             component = condition_dict["component"] + "."
             method = condition_dict["method"]
-            args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
+
+            # В Берлоге в условиях используются
+            # только переменные и поля класса!
+            args = ""
+            if compiler != "Berloga":
+                args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
+
             return "".join([component, method, args])
         return "true"
 
@@ -159,7 +165,7 @@ class CJsonParser:
         return "".join(result)
 
     @staticmethod
-    async def getTransitions(transitions):
+    async def getTransitions(transitions: list[dict], compiler: str):
         result = []
         player_signals = {}
         i = 0
@@ -181,7 +187,7 @@ class CJsonParser:
             player_signals[name]["component_name"] = transition["trigger"]["component"]
             if "conditions" in transition.keys() and "type" in transition["conditions"]:
                 root = transition["conditions"]
-                condition = await CJsonParser.getCondition(root)
+                condition = await CJsonParser.getCondition(root, compiler)
             else:
                 condition = "true"
 
@@ -215,8 +221,8 @@ class CJsonParser:
                 actions += ")" + CJsonParser.delimeter[compiler] + "\n"
                 
             trig = Trigger(name=eventname, type="internal", source=statename,
-                           target="", action=actions, id=id,
-                           points=[])
+                        target="", action=actions, id=id,
+                        points=[])
             id += 1
             result[eventname] = trig
 
@@ -296,7 +302,7 @@ class CJsonParser:
                                                     parent=None, childs=[],
                                                     x=x, y=y,
                                                     width=w, height=h)
-            transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"])
+            transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"], compiler)
             player_signals = dict(list(player_signals.items()) + list(event_signals.items()))
             components = await CJsonParser.getComponents(json_data["components"])
             if compiler in ["arduino-cli", "g++", "gcc"]:
@@ -313,7 +319,7 @@ class CJsonParser:
                     "playerSignals": player_signals.keys()}
 
         except KeyError as e:
-            print(f"Invalid request, there isn't {e.args[0]} key")
+            print(f"Invalid request, there isn't {e.args} key")
 
     @staticmethod
     async def getFiles(json_data):

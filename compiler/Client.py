@@ -3,6 +3,7 @@ from aiofile import async_open
 import json
 import base64
 from pathlib import Path
+
 class Client:
     def __init__(self):
         pass
@@ -16,8 +17,11 @@ class Client:
             json_data = json.loads(await req.read())
         
         await self.ws.send_json(json.dumps(json_data))
-    
-    async def sendBerlogaScheme(self, path):
+        response = json.dumps(await self.ws.receive_json(), indent=4, ensure_ascii=False)
+        
+        return response
+        
+    async def importBerlogaScheme(self, path):
         async with async_open(path, 'r') as req:
             data = await req.read()
         
@@ -25,7 +29,15 @@ class Client:
         response = json.dumps(await self.ws.receive_json(), indent=4, ensure_ascii=False)
 
         return response
-    
+
+    async def exportBerlogaScheme(self, path):
+        async with async_open(path, 'r') as req:
+            data = json.loads(await req.read())
+        
+        await self.ws.send_json(json.dumps(data))
+        response = await self.ws.receive_str()
+
+        return response
     #deprecated
     async def getResult(self):
         response = await self.ws.receive_json()

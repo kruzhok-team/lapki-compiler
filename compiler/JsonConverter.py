@@ -1,15 +1,12 @@
 import xmltodict
 
 try:
-    from compiler.fullgraphmlparser.stateclasses import State, Trigger
+    from compiler.fullgraphmlparser.stateclasses import State
 except ImportError:
-    from .fullgraphmlparser.stateclasses import State, Trigger
-
+    from .fullgraphmlparser.stateclasses import State
 
 
 class JsonConverter:
-    
-    # TODO: Геометрия
 
     def __init__(self, ws) -> None:
         self.ws = ws
@@ -19,7 +16,7 @@ class JsonConverter:
         """
             Функция формирует события в состоянии и действия при их наступлении.
             Также формирует список переходов self.transitions.
-            
+
             Вход: State
             Пример возвращаемого значения:
                 entry/
@@ -30,21 +27,22 @@ class JsonConverter:
         events: list[str] = []
         events.append("\n".join(["\nentry/", state.entry]))
         for trig in state.trigs:
+            trig.name = trig.name.replace('_', '.')
             if trig.type == "internal":
                 event = "\n".join([f"\n{trig.name}/", f"{trig.action}"])
-                
+
                 events.append(event)
             else:
                 if trig.guard == "true":
                     transition = {
                                     "@source": trig.source,
-                                    "@targer": trig.target,
+                                    "@target": trig.target,
                                     "y:EdgeLabel": f"{trig.name}/\n"
                                 }
                 else:
                     transition = {
                         "@source": trig.source,
-                        "@targer": trig.target,
+                        "@target": trig.target,
                         "y:EdgeLabel": f"{trig.name}/\n[{trig.guard}]"
                         }
                 self.transitions.append(transition)
@@ -120,13 +118,24 @@ class JsonConverter:
 
         return graph
 
-    async def parse(self, states: list[State]) -> str:
+    async def addInitialState(self, initial_state: str):
+        self.transitions.append(
+                        {
+                            "@source": "",
+                            "@target": initial_state,
+                            "y:EdgeLabel": ""
+                        }
+        )
+    
+    async def parse(self, states: list[State], initial_state: str) -> str:
         data = {"graphml": {
                     "@xmlns": "http://graphml.graphdrawing.org/xmlns",
                     "@xmlns:y": "http://www.yworks.com/xml/graphml",
                     "graph": await self.getStates(states),
                     }
                 }
+        
+        await self.addInitialState(initial_state)
         data["graphml"]["graph"]["edge"] = self.transitions
         result = xmltodict.unparse(data, pretty=True)
         
