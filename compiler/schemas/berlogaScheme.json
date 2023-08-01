@@ -2,11 +2,7 @@
     "states": {
         "n0": {
             "name": "Бой",
-            "events": {
-                "componentSignals": [],
-                "onEnter": [],
-                "onExit": []
-            },
+            "events": [],
             "bounds": {
                 "x": -298,
                 "y": 534
@@ -14,17 +10,21 @@
         },
         "n1": {
             "name": "Сближение",
-            "events": {
-                "componentSignals": [],
-                "onEnter": [
-                    {
-                        "component": "МодульДвижения",
-                        "method": "ДвигатьсяКЦели",
-                        "args": []
-                    }
-                ],
-                "onExit": []
-            },
+            "events": [
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onEnter"
+                    },
+                    "do": [
+                        {
+                            "component": "МодульДвижения",
+                            "method": "ДвигатьсяКЦели",
+                            "args": []
+                        }
+                    ]
+                }
+            ],
             "bounds": {
                 "x": -300,
                 "y": 686
@@ -33,17 +33,21 @@
         },
         "n2": {
             "name": "Атака",
-            "events": {
-                "componentSignals": [],
-                "onEnter": [
-                    {
-                        "component": "ОружиеЦелевое",
-                        "method": "АтаковатьЦель",
-                        "args": []
-                    }
-                ],
-                "onExit": []
-            },
+            "events": [
+                        {
+                            "trigger": {
+                                "component": "System",
+                                "method": "onEnter"
+                            },
+                            "do": [
+                                {
+                                    "component": "ОружиеЦелевое",
+                                    "method": "АтаковатьЦель",
+                                    "args": []
+                                }
+                            ]
+                        }
+            ],
             "bounds": {
                 "x": -296,
                 "y": 352
@@ -52,39 +56,53 @@
         },
         "n3": {
             "name": "Скан",
-            "events": {
-                "componentSignals": [
-                    {
-                        "component": "Сенсор",
-                        "method": "ЦельПолучена",
-                        "actions": [
-                            {
-                                "component": "МодульДвижения",
-                                "method": "ЗадатьКоординатуВверх",
-                                "args": [
-                                    "34"
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                "onEnter": [
-                    {
-                        "component": "Сенсор",
-                        "method": "ПоискВрагаПоДистанции",
-                        "args": [
-                            "мин"
-                        ]
-                    }
-                ],
-                "onExit": [
-                    {
-                        "component": "Сенсор",
-                        "method": "ОстановкаПоиска",
-                        "args": []
-                    }
-                ]
-            },
+            "events":  [
+                        {
+                            "trigger": {
+                                "component": "Сенсор",
+                                "method": "ЦельПолучена",
+                                "args": []
+                            },
+                            "do": [
+                                {
+                                    "component": "МодульДвижения",
+                                    "method": "ЗадатьКоординатуВверх",
+                                    "args": [
+                                        "34"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "trigger":{
+                                "component": "System",
+                                "method": "onEnter",
+                                "args": []
+                            },
+                            "do": [
+                                {
+                                    "component": "Сенсор",
+                                    "method": "ПоискВрагаПоДистанции",
+                                    "args": [
+                                        "мин"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "trigger": {
+                                "component": "System",
+                                "method": "onExit"
+                            },
+                            "do": [
+                                {
+                                    "component": "Сенсор",
+                                    "method": "ОстановкаПоиска",
+                                    "args": []
+                                }
+                            ]
+                        }
+            ],
             "bounds": {
                 "x": -2363,
                 "y": 870
@@ -92,11 +110,7 @@
         },
         "n4": {
             "name": "Состояние",
-            "events": {
-                "componentSignals": [],
-                "onEnter": [],
-                "onExit": []
-            },
+            "events": [],
             "bounds": {
                 "x": -1154,
                 "y": 506

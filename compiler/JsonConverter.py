@@ -139,7 +139,4 @@ class JsonConverter:
         data["graphml"]["graph"]["edge"] = self.transitions
         result = xmltodict.unparse(data, pretty=True)
         
-        with open("Berloga.graphml", "w") as f:
-            f.write(result)
-        
         return result

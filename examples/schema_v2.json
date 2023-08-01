@@ -73,7 +73,9 @@
         "trigger": {
           "component": "btn",
           "method": "isJustPressed"
-        }
+        },
+        "do": [],
+        "condition": []
       },
       {
         "source": "diod2",
@@ -83,7 +85,9 @@
         "trigger": {
           "component": "btn",
           "method": "isJustPressed"
-        }
+        },
+        "do": [],
+        "condition": []
       },
       {
         "source": "diod3",
@@ -93,13 +97,15 @@
         "trigger": {
           "component": "btn",
           "method": "NewMethod"
-        }
+        },
+        "do": [],
+        "condition": []
       }
     ],
   
     "components": {
-      "diod1": {
-        "type": "LED",
+      "btn": {
+        "type": "Button",
         "parameters": {
           "pin": 12
         }
@@ -110,6 +116,12 @@
           "pin": 4
         }
       }
-    }
+    },
+
+    "compilerSettings": {
+      "filename": "ExampleSketch",
+      "compiler": "arduino-cli",
+      "flags": ["-b", "arduino:avr:uno"]
+   }
   }
   

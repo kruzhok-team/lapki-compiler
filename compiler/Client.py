@@ -17,7 +17,7 @@ class Client:
             json_data = json.loads(await req.read())
         
         await self.ws.send_json(json.dumps(json_data))
-        response = json.dumps(await self.ws.receive_json(), indent=4, ensure_ascii=False)
+        response = json.loads(await self.ws.receive_json())
         
         return response
         
@@ -38,37 +38,7 @@ class Client:
         response = await self.ws.receive_str()
 
         return response
-    #deprecated
-    async def getResult(self):
-        response = await self.ws.receive_json()
-        json_response = json.loads(response)
-        result = json_response["result"]
-        
-        if result == 'OK':
-            for k in list(json_response.keys())[:-1]:
-                print(f"{k}: {json_response[k]}")
-            binary = json_response["binary"]
-            binary = binary.encode('ascii')
-            # binary = base64.b64decode(binary)
 
-        return json_response
-    #deprecated
-    async def sendSourceFile(self, path, compiler, flags):
-        async with async_open(path, 'r') as req:
-            data = await req.read()
-        
-        await self.ws.send_json(json.dumps(
-            {
-                "source": data,
-                "compilerSettings": {
-                    "filename": Path(path).name,
-                    "compiler": compiler,
-                    "flags": flags
-                } 
-            }
-        )
-        )
-    
     async def sendMultiFileProject(self, dir_path : str, compiler : str, flags : list, globs):
         path = Path(dir_path)
         

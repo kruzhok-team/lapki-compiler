@@ -13,6 +13,10 @@ except ImportError:
         _type_: _description_
 """
 class GraphmlParser:
+    systemSignalsAlias = {
+        "entry": "onEnter",
+        "exit": "onExit"
+    }
 
     operatorAlias = {
         "!=": "notEquals",
@@ -59,35 +63,33 @@ class GraphmlParser:
         return states, states_dict
 
     @staticmethod
-    async def getEvents(state: dict, node_type: str) -> dict[str, list[dict[str, str]]]:
+    async def getEvents(state: dict, node_type: str) -> list[dict[str, dict]]:
         str_events: str = state["data"][node_type]["y:NodeLabel"][1]
         events: list[str] = str_events.split("\n")
-        new_events: dict[str, list[dict[str, str | list]]] = {}
+        new_events: list[dict[str, list[dict] | dict[str, str]]] = []
         current_event: str = ""
-        new_events["componentSignals"] = []
-        i = -1
+        i = 0
         for ev in events:
             if "/" in ev:
                 if "." in ev:
-                    current_event = "componentSignals"
-                    i += 1
                     command = ev.split(".")
                     component = command[0]
                     method = command[1][:-1]
-                    new_events[current_event].append({
+                    new_events.append({
                         "component": component,
                         "method": method,
-                        "actions": []
+                        "do": []
                     })
-                    current_dict = new_events[current_event][i]["actions"]
+                    current_dict = new_events[i]["do"]
                 else:
                     current_event = ev[:-1].replace(' ', '')
-                    if current_event == "entry":
-                        current_event = "onEnter"
-                    elif current_event == "exit":
-                        current_event = "onExit"
-                    new_events[current_event] = []
-                    current_dict = new_events[current_event]
+                    new_events.append({
+                        "component": "System",
+                        "method": GraphmlParser.systemSignalsAlias[current_event],
+                        "do": []
+                    })
+                    current_dict = new_events[i]["do"]
+                i += 1
                 continue
 
             action_dict = {}

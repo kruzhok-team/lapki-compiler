@@ -9,7 +9,8 @@ except ImportError:
     from compiler.fullgraphmlparser.stateclasses import State, Trigger
     from compiler.component import Component
     from compiler.wrapper import to_async
-
+import sys
+import traceback
 
 class Labels(Enum):
     H = 'Code for h-file'
@@ -145,7 +146,7 @@ class CJsonParser:
             method = condition_dict["method"]
 
             # В Берлоге в условиях используются
-            # только переменные и поля класса!
+            # только переменныеf и поля класса!
             args = ""
             if compiler != "Berloga":
                 args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
@@ -202,31 +203,42 @@ class CJsonParser:
         return result, player_signals
 
     @staticmethod
-    async def getEvents(events: list[dict[str, dict[str, str] | str]], statename: str, compiler: str) -> tuple[dict[str, Trigger], dict[str, str]]:
+    async def getEvents(events: list[dict[str, dict[str, str] | str]], statename: str, compiler: str) -> tuple[dict[str, Trigger], dict[str, str], dict[str, str]]:
         result = {}
         id = 0
         event_signals = {}
+        system_signals = {
+            "onEnter": "",
+            "onExit": ""
+        }
         for event in events:
-            eventname = event["component"] + '_' + event["method"]
-            guard = ''.join([event["component"], '.', event["method"], "()"])
-            event_signals[eventname] = {}
-            event_signals[eventname]["guard"] = guard
-            event_signals[eventname]["component_name"] = event["component"]
-            
-            actions = ""
-            for i in range(len(event["actions"])):
-                actions += event["actions"][i]["component"] + '.' + event["actions"][i]["method"] + '('
-                if "args" in event["actions"][i].keys():
-                    actions += ','.join(map(str, event["actions"][i]["args"]))
-                actions += ")" + CJsonParser.delimeter[compiler] + "\n"
-                
-            trig = Trigger(name=eventname, type="internal", source=statename,
-                        target="", action=actions, id=id,
-                        points=[])
-            id += 1
-            result[eventname] = trig
+            trigger = event["trigger"]
+            component = trigger["component"]
+            method = trigger["method"]
 
-        return (result, event_signals)
+            actions = ""
+            for i in range(len(event["do"])):
+                print(event)
+                actions += event["do"][i]["component"] + '.' + event["do"][i]["method"] + '('
+                if "args" in event["do"][i].keys():
+                    actions += ','.join(map(str, event["do"][i]["args"]))
+                actions += ")" + CJsonParser.delimeter[compiler] + "\n"
+
+            if component != "System":
+                eventname = component + '_' + method
+                guard = ''.join([component, '.', method, "()"])
+                event_signals[eventname] = {}
+                event_signals[eventname]["guard"] = guard
+                event_signals[eventname]["component_name"] = trigger["component"]
+
+                trig = Trigger(name=eventname, type="internal", source=statename,
+                               target="", action=actions, id=id,
+                               points=[])
+                id += 1
+                result[eventname] = trig
+            else:
+                system_signals[method] = actions
+        return (result, event_signals, system_signals)
 
     @staticmethod
     async def addParentsAndChilds(states, processed_states, global_state):
@@ -273,27 +285,12 @@ class CJsonParser:
             event_signals = {}
             for statename in states:
                 state = json_data["states"][statename]
-                events, new_event_signals = await CJsonParser.getEvents(state["events"]["componentSignals"], statename, compiler)
+                events, new_event_signals, system_signals = await CJsonParser.getEvents(state["events"], statename, compiler)
                 event_signals = dict(list(new_event_signals.items()) + list(event_signals.items()))
-                on_enter = ""
-                on_exit = ""
-                if "onExit" in state["events"]:
-                    actions = ""
-                    for i in range(len(state["events"]["onExit"])):
-                        actions += state["events"]["onExit"][i]["component"] + '.' + state["events"]["onExit"][i]["method"] + '('
-                        if "args" in state["events"]["onExit"][i].keys():
-                            actions += ','.join(map(str, state["events"]["onExit"][i]["args"]))
-                        actions += ')' + CJsonParser.delimeter[compiler] + '\n'
-                    on_exit = actions
-                if "onEnter" in state["events"]:
-                    actions = ""
-                    for i in range(len(state["events"]["onEnter"])):
-                        actions += state["events"]["onEnter"][i]["component"] + '.' + state["events"]["onEnter"][i]["method"] + '('
-                        if "args" in state["events"]["onEnter"][i].keys():
-                            actions += ','.join(map(str, state["events"]["onEnter"][i]["args"]))
-                        actions += ')' + CJsonParser.delimeter[compiler] + '\n'
-                    on_enter = actions
-                
+
+                on_enter = system_signals["onEnter"]
+                on_exit = system_signals["onExit"]
+
                 x, y, w, h = await CJsonParser.getGeometry(state)
                 proccesed_states[statename] = State(name=state["name"], type="state",
                                                     actions="", trigs=list(events.values()),
@@ -319,7 +316,13 @@ class CJsonParser:
                     "playerSignals": player_signals.keys()}
 
         except KeyError as e:
-            print(f"Invalid request, there isn't {e.args} key")
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                filename = exception_traceback.tb_frame.f_code.co_filename
+                line_number = exception_traceback.tb_lineno    
+                print("Exception type: ", exception_type)
+                print("File name: ", filename)
+                print("Line number: ", line_number)
+                print(f"Invalid request, there isn't {e.args} key")
 
     @staticmethod
     async def getFiles(json_data):
