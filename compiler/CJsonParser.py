@@ -1,16 +1,17 @@
 from enum import Enum
+import sys
+
 try:
     from .SourceFile import SourceFile
     from .fullgraphmlparser.stateclasses import State, Trigger
     from .component import Component
-    from .wrapper import to_async
+    from .Logger import Logger
 except ImportError:
     from compiler.SourceFile import SourceFile
     from compiler.fullgraphmlparser.stateclasses import State, Trigger
     from compiler.component import Component
-    from compiler.wrapper import to_async
-import sys
-import traceback
+    from compiler.Logger import Logger
+
 
 class Labels(Enum):
     H = 'Code for h-file'
@@ -266,12 +267,15 @@ class CJsonParser:
     async def getGeometry(state: dict) -> tuple[int, int, int, int]:
         x = state["bounds"]["x"]
         y = state["bounds"]["y"]
-        # w = state["bounds"]["w"]
-        # h = state["bounds"]["h"]
-        w = 100
-        h = 100
-        
+        try:
+            w = state["bounds"]["w"]
+            h = state["bounds"]["h"]
+        except KeyError:
+            w = 100
+            h = 100
+
         return x, y, w, h
+
     @staticmethod
     async def parseStateMachine(json_data, filename="", compiler="", path=None):
         try:
@@ -315,14 +319,8 @@ class CJsonParser:
                     "startNode": startNode,
                     "playerSignals": player_signals.keys()}
 
-        except KeyError as e:
-                exception_type, exception_object, exception_traceback = sys.exc_info()
-                filename = exception_traceback.tb_frame.f_code.co_filename
-                line_number = exception_traceback.tb_lineno    
-                print("Exception type: ", exception_type)
-                print("File name: ", filename)
-                print("Line number: ", line_number)
-                print(f"Invalid request, there isn't {e.args} key")
+        except Exception:
+            Logger.logException()
 
     @staticmethod
     async def getFiles(json_data):

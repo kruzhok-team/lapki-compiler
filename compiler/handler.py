@@ -10,20 +10,23 @@ try:
     from .GraphmlParser import GraphmlParser
     from .CJsonParser import CJsonParser
     from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from .Compiler import Compiler, CompilerResult
+    from .Compiler import Compiler
     from .JsonConverter import JsonConverter
     from .RequestError import RequestError
     from .config import BUILD_DIRECTORY
     from .wrapper import to_async
+    from .Logger import Logger
+
 except ImportError:
     from compiler.GraphmlParser import GraphmlParser
     from compiler.CJsonParser import CJsonParser
     from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from compiler.Compiler import Compiler, CompilerResult
+    from compiler.Compiler import Compiler
     from compiler.JsonConverter import JsonConverter
     from compiler.RequestError import RequestError
     from compiler.config import BUILD_DIRECTORY
     from compiler.wrapper import to_async
+    from compiler.Logger import Logger
 
 
 class Handler:
@@ -44,9 +47,9 @@ class Handler:
     async def handle_ws_compile(request):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-
         # TODO Прикрутить logger
         data = json.loads(await ws.receive_json())
+        await Logger.logger.info(data)
         try:
             compiler_settings = data["compilerSettings"]
             compiler = compiler_settings["compiler"]
@@ -64,27 +67,26 @@ class Handler:
                                                              compiler=compiler,
                                                              path=path)
                     write_to_cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"],
-                                                      start_action="", states=sm["states"],
-                                                      notes=sm["notes"],
-                                                      player_signal=sm["playerSignals"]).write_to_file)
-                    
+                                                               start_action="", states=sm["states"],
+                                                               notes=sm["notes"],
+                                                               player_signal=sm["playerSignals"]).write_to_file)
+                    await Logger.logger.info("Parsed and wrote to cpp")
                     await write_to_cpp_file(path, extension)
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     libraries = [*libraries, *Compiler.c_default_libraries]
                     build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
                     await Compiler.includeLibraryFiles(libraries, dirname, ".h")
-
+                    await Logger.logger.info(f"{libraries} included")
                 case "arduino-cli":
                     dirname += filename + "/"
                     path += filename + "/"
                     await AsyncPath(path).mkdir(parents=True)
                     sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
-                    
                     write_to_cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="",
                                                       states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
                     await write_to_cpp_file(path, "ino")
-                    
+                    await Logger.logger.info("Parsed and wrote to ino")
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
@@ -94,7 +96,9 @@ class Handler:
                                                 Compiler.c_default_libraries,
                                                 dirname,
                                                 ".c")
+                    await Logger.logger.info(f"{libraries} included")
                 case _:
+                    await Logger.logger.info(f"Unsupported compiler {compiler}")
                     await RequestError(f"Unsupported compiler {compiler}. \
                         Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
                     return ws
@@ -108,6 +112,7 @@ class Handler:
                 "binary": [],
                 "source": []
             }
+
             if result.return_code == 0:
                 response["result"] = "OK"
                 build_path = ''.join([BUILD_DIRECTORY, dirname, "build/"])
@@ -124,11 +129,19 @@ class Handler:
 
                 response["source"].append(await Handler.readSourceFile(filename, extension, source_path))
                 response["source"].append(await Handler.readSourceFile(filename, "h", source_path))  
+            await Logger.logger.info(f"Response: {response['result'], response['return code'], response['stdout'], response['stderr'], len(response['binary'])}")
             response = await asyncjson.dumps(response)
             await ws.send_json(response)
         except KeyError as e:
+            await Logger.logger.error(f"Invalid request, there isn't '{e.args[0]}' key.")
             await RequestError(f"Invalid request, there isn't '{e.args[0]}' key.").dropConnection(ws)
-        await ws.close()
+            await ws.close()
+            return ws
+        except Exception:
+            await Logger.logException()
+            RequestError("Something went wrong").dropConnection(ws)
+            await ws.close()
+            return ws
         return ws
 
     @staticmethod
@@ -136,14 +149,16 @@ class Handler:
         ws = web.WebSocketResponse()
         await ws.prepare(request)    
         data = json.loads(await ws.receive_json())
+        await Logger.logger.info(data)
         try:
             source = data["source"]
             flags = data["compilerSettings"]["flags"]
             compiler = data["compilerSettings"]["compiler"]
 
-        except KeyError:
-            await RequestError(f"Invalid request").dropConnection(ws)
+        except KeyError as e:
+            await RequestError(f"Invalid request, there isn't key {e.args[0]}").dropConnection(ws)
         if compiler not in Compiler.supported_compilers:
+            await Logger.logger.error(f"Unsupported compiler {compiler}.")
             await RequestError(f"Unsupported compiler {compiler}.\
                 Supported compilers: {Compiler.supported_compilers.keys()}").dropConnection(ws)
 
@@ -189,12 +204,18 @@ class Handler:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
+        await Logger.logger.info("XML received!")
         try:
             response = await GraphmlParser.parse(unprocessed_xml)
         except KeyError as e:
-            await RequestError(f"There isn't key {e[0]}")
+            await Logger.logException()
+            await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
             return ws
-
+        except Exception:
+            await Logger.logException()
+            await RequestError("Something went wrong!").dropConnection(ws)
+            return ws
+        await Logger.logger.info("Converted!")
         await ws.send_json(response)
 
         return ws
@@ -204,17 +225,20 @@ class Handler:
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         schema = json.loads(await ws.receive_json())
+        await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, compiler="Berloga")
             converter = JsonConverter(ws)
             xml = await converter.parse(sm["states"], sm["startNode"])
         except KeyError as e:
+            await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
             return ws
-
+        await Logger.logger.info("Converted!")
         await ws.send_str(xml)
 
         return ws
+
     @staticmethod
     async def handle_get_compile(request):
         return web.Response(text="Hello world!")

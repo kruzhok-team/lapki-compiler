@@ -1,8 +1,8 @@
 import aiohttp
-from aiofile import async_open
 import json
-import base64
+from aiofile import async_open
 from pathlib import Path
+
 
 class Client:
     def __init__(self):
@@ -12,13 +12,13 @@ class Client:
         session = aiohttp.ClientSession()
         self.ws = await session.ws_connect(addr)
     
-    async def sendSMJson(self, path: str):
+    async def sendSMJson(self, path: str) -> dict:
         async with async_open(path, 'r') as req:
             json_data = json.loads(await req.read())
-        
+
         await self.ws.send_json(json.dumps(json_data))
         response = json.loads(await self.ws.receive_json())
-        
+
         return response
         
     async def importBerlogaScheme(self, path):
@@ -39,15 +39,13 @@ class Client:
 
         return response
 
-    async def sendMultiFileProject(self, dir_path : str, compiler : str, flags : list, globs):
+    async def sendMultiFileProject(self, dir_path: str, compiler: str, flags: list, globs):
         path = Path(dir_path)
         
         if path.is_dir():
             request = {
-                "source" : [],
-                "compilerSettings" : {
-                    
-                }
+                "source": [],
+                "compilerSettings": {}
             }
             i = 0
             for g in globs:
