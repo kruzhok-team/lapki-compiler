@@ -30,9 +30,10 @@ class Compiler:
                            "arduino-cli": {"extension": ["ino"],
                                            "flags": ["-b", "avr:arduino:uno"]
                                            }}
-    #TODO
+    
     @staticmethod 
     def checkFlags(flags, compiler):
+        # TODO
         pass
     
     @staticmethod

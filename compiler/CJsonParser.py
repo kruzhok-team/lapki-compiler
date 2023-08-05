@@ -6,12 +6,13 @@ try:
     from .fullgraphmlparser.stateclasses import State, Trigger
     from .component import Component
     from .Logger import Logger
+    from .RequestError import RequestError
 except ImportError:
     from compiler.SourceFile import SourceFile
     from compiler.fullgraphmlparser.stateclasses import State, Trigger
     from compiler.component import Component
     from compiler.Logger import Logger
-
+    from compiler.RequestError import RequestError
 
 class Labels(Enum):
     H = 'Code for h-file'
@@ -277,7 +278,7 @@ class CJsonParser:
         return x, y, w, h
 
     @staticmethod
-    async def parseStateMachine(json_data, filename="", compiler="", path=None):
+    async def parseStateMachine(json_data, ws, filename="", compiler="", path=None):
         try:
             global_state = State(name="global", type="group",
                                  actions="", trigs=[],
@@ -318,9 +319,11 @@ class CJsonParser:
                     "notes": notes,
                     "startNode": startNode,
                     "playerSignals": player_signals.keys()}
-
+        except KeyError as e:
+            await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
+            await Logger.logException()
         except Exception:
-            Logger.logException()
+            await Logger.logException()
 
     @staticmethod
     async def getFiles(json_data):

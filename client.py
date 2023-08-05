@@ -10,8 +10,6 @@ from aioshutil import unpack_archive
 
 from compiler.config import SERVER_PORT
 
-#TODO Вынести в отдельный класс
-#TODO Написать тесты
 async def main():
     session = aiohttp.ClientSession()
     
@@ -22,7 +20,6 @@ async def main():
         # await ws.send_json({"source" : data, "compiler settings": {"compiler" : "g++", "flags" : ["-o"]}})
         # async with async_open('examples/ExampleSketch/ExampleSketch.ino', 'r') as inp:
         #     data = await inp.read()
-        
         async with async_open('examples/ExampleRequestSM4.json', 'r') as req:
             json_data = json.loads(await req.read())
         

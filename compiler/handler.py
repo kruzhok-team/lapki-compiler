@@ -5,6 +5,7 @@ from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 import asyncjson
+import aiohttp
 
 try:
     from .GraphmlParser import GraphmlParser
@@ -44,13 +45,37 @@ class Handler:
         }
 
     @staticmethod
-    async def handle_ws_compile(request):
-        ws = web.WebSocketResponse()
+    async def main(request): 
+        ws = web.WebSocketResponse(autoclose=False)
         await ws.prepare(request)
-        # TODO Прикрутить logger
-        data = json.loads(await ws.receive_json())
-        await Logger.logger.info(data)
+        await Logger.logger.info(request)
+        async for msg in ws:
+            await Logger.logger.info(msg)
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                match msg.data:
+                    case 'close':
+                        await ws.close()
+                    case 'arduino':
+                        await Handler.handle_ws_compile(request, ws)
+                    case 'importBerloga':
+                        await Handler.handle_berloga_import(request, ws)
+                    case 'exportBerloga':
+                        await Handler.handle_berloga_export(request, ws)
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                print('ws connection closed with exception %s' %
+                      ws.exception())
+
+        return ws
+
+    @staticmethod
+    async def handle_ws_compile(request, ws=None):
+        if ws is None:
+            ws = web.WebSocketResponse(autoclose=False)
+            await ws.prepare(request)
         try:
+            await Logger.logger.info(request)
+            data = json.loads(await ws.receive_str())
+            await Logger.logger.info(data)
             compiler_settings = data["compilerSettings"]
             compiler = compiler_settings["compiler"]
             filename = compiler_settings["filename"][0].lower() + \
@@ -62,7 +87,7 @@ class Handler:
             match compiler:
                 case "g++" | "gcc":
                     await AsyncPath(path).mkdir(parents=True)
-                    sm = await CJsonParser.parseStateMachine(data,
+                    sm = await CJsonParser.parseStateMachine(data, ws,
                                                              filename=filename,
                                                              compiler=compiler,
                                                              path=path)
@@ -82,7 +107,7 @@ class Handler:
                     dirname += filename + "/"
                     path += filename + "/"
                     await AsyncPath(path).mkdir(parents=True)
-                    sm = await CJsonParser.parseStateMachine(data, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
+                    sm = await CJsonParser.parseStateMachine(data, ws, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
                     write_to_cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="",
                                                       states=sm["states"], notes=sm["notes"],player_signal=sm["playerSignals"]).write_to_file)
                     await write_to_cpp_file(path, "ino")
@@ -139,7 +164,7 @@ class Handler:
             return ws
         except Exception:
             await Logger.logException()
-            RequestError("Something went wrong").dropConnection(ws)
+            await RequestError("Something went wrong").dropConnection(ws)
             await ws.close()
             return ws
         return ws
@@ -200,9 +225,10 @@ class Handler:
         return ws
 
     @staticmethod
-    async def handle_berloga_import(request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
+    async def handle_berloga_import(request, ws=None):
+        if ws is None:
+            ws = web.WebSocketResponse()
+            await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
         await Logger.logger.info("XML received!")
         try:
@@ -221,13 +247,14 @@ class Handler:
         return ws
 
     @staticmethod
-    async def handle_berloga_export(request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
+    async def handle_berloga_export(request, ws=None):
+        if ws is None:
+            ws = web.WebSocketResponse()
+            await ws.prepare(request)
         schema = json.loads(await ws.receive_json())
         await Logger.logger.info(schema)
         try:
-            sm = await CJsonParser.parseStateMachine(schema, compiler="Berloga")
+            sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
             converter = JsonConverter(ws)
             xml = await converter.parse(sm["states"], sm["startNode"])
         except KeyError as e:

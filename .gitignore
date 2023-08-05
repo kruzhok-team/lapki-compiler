@@ -4,3 +4,4 @@ client
 server/2*
 result
 .vscode
+logs.log

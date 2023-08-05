@@ -28,4 +28,4 @@ class Logger:
         exception_type, exception_object, exception_traceback = sys.exc_info()
         file = exception_traceback.tb_frame.f_code.co_filename
         line_number = exception_traceback.tb_lineno
-        await Logger.logger.exception(f"Exception type: {exception_type}, Exception args: {exception_object.args} File name: {file}, Line number: {line_number}")
+        await Logger.logger.exception(f"Exception type: {exception_type}, Exception args: {exception_object.args} File name: {file}, Line number: {line_number}", exc_info=False)
