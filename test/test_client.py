@@ -136,8 +136,7 @@ async def test_sendSchemaWithId():
     client = Client()
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson("examples/schemaWithId(actual).json")
-    print(response.keys())
-    print("dasdasd")
+    print(response)
     dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
     build_path = "client/" + dirname + "/build/"
     source_path = "client/" + dirname + "/source/"

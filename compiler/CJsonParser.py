@@ -14,6 +14,7 @@ except ImportError:
     from compiler.Logger import Logger
     from compiler.RequestError import RequestError
 
+
 class Labels(Enum):
     H = 'Code for h-file'
     CPP = 'Code for cpp-file'
@@ -148,7 +149,7 @@ class CJsonParser:
             method = condition_dict["method"]
 
             # В Берлоге в условиях используются
-            # только переменныеf и поля класса!
+            # только числа и поля класса!
             args = ""
             if compiler != "Berloga":
                 args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
@@ -320,7 +321,7 @@ class CJsonParser:
                     "startNode": startNode,
                     "playerSignals": player_signals.keys()}
         except KeyError as e:
-            await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
+            await RequestError(f"There isn't key('{e.args[0]}') ").dropConnection(ws)
             await Logger.logException()
         except Exception:
             await Logger.logException()

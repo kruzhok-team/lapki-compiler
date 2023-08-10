@@ -4,7 +4,6 @@ from datetime import datetime
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
-import asyncjson
 import aiohttp
 
 try:
@@ -74,7 +73,7 @@ class Handler:
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
-            data = json.loads(await ws.receive_str())
+            data: dict = json.loads(await ws.receive_str())
             await Logger.logger.info(data)
             compiler_settings = data["compilerSettings"]
             compiler = compiler_settings["compiler"]
@@ -155,7 +154,6 @@ class Handler:
                 response["source"].append(await Handler.readSourceFile(filename, extension, source_path))
                 response["source"].append(await Handler.readSourceFile(filename, "h", source_path))  
             await Logger.logger.info(f"Response: {response['result'], response['return code'], response['stdout'], response['stderr'], len(response['binary'])}")
-            response = await asyncjson.dumps(response)
             await ws.send_json(response)
         except KeyError as e:
             await Logger.logger.error(f"Invalid request, there isn't '{e.args[0]}' key.")
@@ -206,7 +204,7 @@ class Handler:
                 "return code": result.return_code,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
-                "binary": []
+                "binary": [],
             }
 
         async for path in AsyncPath(''.join([dirname, "/build/"])).rglob("*"):
@@ -219,7 +217,7 @@ class Handler:
                     fileinfo["fileContent"] = b64_data.decode("ascii")
                     response["binary"].append(fileinfo)
 
-        await ws.send_json(await asyncjson.dumps(response))     
+        await ws.send_json(response)     
         await ws.close()
 
         return ws
