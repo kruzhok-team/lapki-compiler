@@ -14,10 +14,10 @@ class Client:
     
     async def sendSMJson(self, path: str) -> dict:
         async with async_open(path, 'r') as req:
-            json_data = json.loads(await req.read())
+            json_data: str = await req.read()
 
-        await self.ws.send_json(json.dumps(json_data))
-        response = json.loads(await self.ws.receive_json())
+        await self.ws.send_str(json_data)
+        response = await self.ws.receive_json()
 
         return response
         
@@ -25,7 +25,7 @@ class Client:
         async with async_open(path, 'r') as req:
             data = await req.read()
         
-        await self.ws.send_str(data)
+        await self.ws.send_str(json.dumps(data))
         response = json.dumps(await self.ws.receive_json(), indent=4, ensure_ascii=False)
 
         return response

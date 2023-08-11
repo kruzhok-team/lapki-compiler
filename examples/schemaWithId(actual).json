@@ -14,14 +14,15 @@
             {
               "trigger": {
                 "component": "btn1",
-                "method": "isPressed",
-                "args": []
+                "method": "isPressed"
               },
               "do": [
                 {
                     "component": "diod2",
                     "method":"fadeOut",
-                    "args": [5]
+                    "args": {
+                      "duration": "5"
+                    }
                 }
               ]
             }
@@ -177,8 +178,7 @@
                 {
                   "type": "component",
                   "component": "btn1",
-                  "method": "clicked",
-                  "args": []
+                  "method": "clicked"
                 }
               ]
             }
@@ -188,7 +188,9 @@
           {
             "component": "diod1",
             "method": "fadeOut",
-            "args": [5]
+            "args": {
+              "duration": "5"
+            }
           }
         ]
       },

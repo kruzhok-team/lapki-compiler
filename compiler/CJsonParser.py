@@ -152,7 +152,10 @@ class CJsonParser:
             # только числа и поля класса!
             args = ""
             if compiler != "Berloga":
-                args = "(" + ",".join(map(str, condition_dict["args"])) + ")"
+                arr_args = []
+                if args in condition_dict.keys():
+                    arr_args = list(condition_dict["args"].values())
+                args = "(" + ",".join(map(str, arr_args)) + ")"
 
             return "".join([component, method, args])
         return "true"
@@ -163,7 +166,10 @@ class CJsonParser:
         for action in actions:
             component = action["component"]
             method = "." + action["method"]
-            args = "(" + ",".join(map(str, action["args"])) + ")" + CJsonParser.delimeter[compiler]
+            arr_args = []
+            if "args" in action.keys():
+                arr_args = list(action["args"].values())
+            args = "(" + ",".join(map(str, arr_args)) + ")" + CJsonParser.delimeter[compiler]
             result.append("".join([component, method, args]))
 
         return "\n".join(result)
@@ -174,15 +180,14 @@ class CJsonParser:
         player_signals = {}
         i = 0
         for transition in transitions:
-            # Доделать под новую схему.
-
             name = ''.join([transition["trigger"]["component"], '_',
                             transition["trigger"]["method"]])
 
             guard = ''.join([transition["trigger"]["component"], '.',
                              transition["trigger"]["method"], '('])
             if "args" in transition["trigger"].keys():
-                guard += ','.join(transition["trigger"]["args"])
+                arr_args = list(transition["trigger"]["args"].values())
+                guard += ','.join(arr_args)
             guard += ')'
 
             trig = {}
@@ -194,8 +199,11 @@ class CJsonParser:
                 condition = await CJsonParser.getCondition(root, compiler)
             else:
                 condition = "true"
-
-            action = await CJsonParser.getActions(transition["do"], compiler)
+            if "do" in transition.keys():
+                action = await CJsonParser.getActions(transition["do"],
+                                                      compiler)
+            else:
+                action = ""
             trig["trigger"] = Trigger(name=name, source=transition["source"],
                                       target=transition["target"], id=i,
                                       type="external", guard=condition,
@@ -224,7 +232,8 @@ class CJsonParser:
                 print(event)
                 actions += event["do"][i]["component"] + '.' + event["do"][i]["method"] + '('
                 if "args" in event["do"][i].keys():
-                    actions += ','.join(map(str, event["do"][i]["args"]))
+                    arr_action = list(event["do"][i]["args"].values())
+                    actions += ','.join(map(str, arr_action))
                 actions += ")" + CJsonParser.delimeter[compiler] + "\n"
 
             if component != "System":

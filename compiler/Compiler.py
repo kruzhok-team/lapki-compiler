@@ -60,7 +60,9 @@ class Compiler:
         await process.wait()
         stdout, stderr = await process.communicate()
 
-        return CompilerResult(process.returncode, str(stdout), str(stderr))
+        return CompilerResult(process.returncode,
+                              str(stdout.decode('utf-8')),
+                              str(stderr.decode('utf-8')))
 
     @staticmethod
     async def includeLibraryFiles(libraries : list[str], target_directory : str, extension: str):
