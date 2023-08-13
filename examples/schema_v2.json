@@ -123,5 +123,5 @@
       "compiler": "arduino-cli",
       "flags": ["-b", "arduino:avr:uno"]
    }
-  }
+}
   

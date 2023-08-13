@@ -77,6 +77,7 @@ class Handler:
             await Logger.logger.info(data)
             compiler_settings = data["compilerSettings"]
             compiler = compiler_settings["compiler"]
+            compiler_settings["filename"] = "sketch"
             filename = compiler_settings["filename"][0].lower() + \
                 compiler_settings["filename"][1:]
             flags = compiler_settings["flags"]
@@ -233,7 +234,7 @@ class Handler:
         unprocessed_xml = await ws.receive_str()
         await Logger.logger.info("XML received!")
         try:
-            response = await GraphmlParser.parse(unprocessed_xml)
+            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="Берлога/Защита пасеки")
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
