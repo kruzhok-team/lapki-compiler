@@ -27,9 +27,9 @@ def get_enum(text_labels: List[str]) -> str:
     :return: string
     """
     enum_labels: List[str] = [label + '_SIG' for label in text_labels]
+    enum_labels.append('\n\nLAST_USER_SIG\n};')
     enum = ',\n'.join(enum_labels)
     enum = 'enum PlayerSignals {\nTICK_SEC_SIG = Q_USER_SIG,\n\n' + enum
-    enum = enum + ',\n\nLAST_USER_SIG\n};'
     return enum
 
 class CppFileWriter:
