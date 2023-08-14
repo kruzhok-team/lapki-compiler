@@ -75,10 +75,12 @@ class CJsonParser:
         variables = []
         setup = []
         components_types = {}
+        types = []
         for component in components:
             components_types[component.name] = component.type
-            if component.type not in includes:
+            if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
+                types.append(component.type)
             variables.append(f"\n{component.type} {component.name} = {component.type}({', '.join(map(str, list(component.parameters.values())))});")
         notes = []
 
