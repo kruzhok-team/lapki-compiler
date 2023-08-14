@@ -22,41 +22,21 @@
 || #
 ||
 || @parameter intervl  the interval to call the function
-|| @parameter function the funtion to call each interval
+|| @parameter qhsm     the statemachine, that will receive signals by timeout
+|| @parameter oneshot  if true, the timer will be disabled after the timeout
+|| @parameter signal   signal, that will be emmited by timeout
 */
-Timer::Timer(unsigned long intervl, void (*function)())
+Timer::Timer(QHsm* qhsm, QSignal signal)
 {
-  active = true;
-  previous = 0;
-  interval = intervl;
-  execute = function;
+  _active = false;
+  _previous = 0;
+  _qhsm = qhsm;
+  _signal = signal;
 }
 
-/*
-|| @constructor
-|| | Initialize the Timer object and activate it
-|| #
-||
-|| @parameter prev     the wait time, before starting the interval
-|| @parameter intervl  the interval to call the function
-|| @parameter function the funtion to call each interval
-*/
-Timer::Timer(unsigned long prev, unsigned long intervl, void (*function)())
-{
-  active = true;
-  previous = prev;
-  interval = intervl;
-  execute = function;
-}
-
-/*
-|| @description
-|| | Reset the interval timing
-|| #
-*/
 void Timer::reset()
 {
-  previous = millis();
+  _previous = millis();
 }
 
 /*
@@ -66,7 +46,7 @@ void Timer::reset()
 */
 void Timer::disable()
 {
-  active = false;
+  _active = false;
 }
 
 /*
@@ -76,7 +56,7 @@ void Timer::disable()
 */
 void Timer::enable()
 {
-  active = true;
+  _active = true;
 }
 
 /*
@@ -84,12 +64,13 @@ void Timer::enable()
 || | Check if it is time for this Timer to call the function
 || #
 */
-void Timer::check()
+void Timer::timeout()
 {
-  if (active && (millis() - previous >= interval))
+  difference -= millis() - _previous;
+  if (_active && (millis() - _previous >= _interval))
   {
-    previous = millis();
-    execute();
+    _previous = millis();
+    SIGNAL_DISPATCH(_qhsm, _signal);
   }
 }
 
@@ -102,5 +83,13 @@ void Timer::check()
 */
 void Timer::setInterval(unsigned long intervl)
 {
-  interval = intervl;
+  _interval = intervl;
+}
+
+void Timer::start(unsigned long interval)
+{
+  setInterval(interval);
+  reset();
+  enable();
+  difference = interval;
 }

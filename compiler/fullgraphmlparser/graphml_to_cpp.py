@@ -43,6 +43,7 @@ class CppFileWriter:
         self.player_signal = player_signal
 
         notes_mapping = [('Code for h-file', 'raw_h_code'),
+                         ('Declare variable in h-file', "declare_h_code"),
                          ('Code for cpp-file', 'raw_cpp_code'),
          ('Constructor fields', 'constructor_fields'),
          ('State fields', 'state_fields'),
@@ -51,8 +52,6 @@ class CppFileWriter:
         self.notes_dict = {key: '' for _, key in notes_mapping}
 
         for note in notes:
-            print(note)
-            print("-----------------")
             for prefix, key in notes_mapping:
                 if note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
                     self.notes_dict[key] = note['y:UMLNoteNode']['y:NodeLabel']['#text']
@@ -60,13 +59,12 @@ class CppFileWriter:
         self.start_action = start_action
         self.states = states
         for state in states:
-            print(state)
-            print("--------------------")
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
-                if trigger.guard:
+                if trigger.guard:                
                     trigger.guard = trigger.guard.strip()
-        print(self.id_to_name)
+
+
     def write_to_file(self, folder: str, extension: str):
         with open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
             self.f = f
@@ -84,7 +82,6 @@ class CppFileWriter:
         with open(os.path.join(folder, '%s.h' % self.sm_name), 'w') as f:
             self.f = f
             self._insert_file_template('preamble_h.txt')
-
             if self.notes_dict['raw_h_code']:
                 self._insert_string('//Start of h code from diagram\n')
                 self._insert_string('\n'.join(self.notes_dict['raw_h_code'].split('\n')[1:]) + '\n')
@@ -108,7 +105,7 @@ class CppFileWriter:
                 'QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n')
             self._insert_string('#endif /* def DESKTOP */\n\n')
             self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '^')
-            self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
+            self._insert_string('extern QHsm * const the_STATE_MACHINE_NAME; /* opaque pointer to the STATE_MACHINE_NAME HSM */\n\n')
 
             self._insert_string('typedef struct STATE_MACHINE_NAMEQEvt {\n')
             self._insert_string('    QEvt super;\n')
@@ -116,7 +113,7 @@ class CppFileWriter:
             self._insert_string('    ' + '\n    '.join(event_fields.split('\n')[1:]) + '\n')
             self._insert_string('} STATE_MACHINE_NAMEQEvt;\n\n')
             self._insert_string(get_enum(self.player_signal) + '\n')
-            self._insert_string('extern QHsm * const the_STATE_MACHINE_NAME; /* opaque pointer to the STATE_MACHINE_NAME HSM */\n\n')
+            self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
             self._write_full_line_comment('.$declare${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
             self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
             self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
@@ -127,6 +124,10 @@ class CppFileWriter:
             else:
                 self._insert_string('void);\n')
             self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '^')
+            if self.notes_dict['declare_h_code']:
+                self._insert_string('//Start of h code from diagram\n')
+                self._insert_string('\n'.join(self.notes_dict['declare_h_code'].split('\n')[1:]) + '\n')
+                self._insert_string('//End of h code from diagram\n\n\n')
             self._insert_file_template('footer_h.txt')
             self.f = None
 

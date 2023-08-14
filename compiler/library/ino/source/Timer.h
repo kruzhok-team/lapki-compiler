@@ -23,23 +23,22 @@
 class Timer
 {
   public:
-    Timer(unsigned long interval, QHsm* qhsm);
-    Timer(unsigned long prev, unsigned long interval, QHsm* qhsm, char signal[]);
+    unsigned long difference;
+    Timer(QHsm* qhsm, QSignal signal);
 
     void reset();
     void disable();
     void enable();
-    void check();
-
+    void timeout();
     void setInterval(unsigned long interval);
-
+    void start(unsigned long interval);
   private:
-    bool active;
-    unsigned long previous;
-    unsigned long interval;
-
-    void (*execute)();
-
+    bool _active;
+    unsigned long _previous;
+    unsigned long _interval;
+    QHsm* _qhsm;
+    QSignal _signal;
+    bool _oneshot;
 };
 
 #endif

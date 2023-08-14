@@ -65,6 +65,50 @@
                     },
                     "singletone" : "False"
 
+                },
+                "Timer": {
+                    "description": "Программный таймер.",
+                    "img": "",
+                    "signals": {
+                        "timeout": {
+                            "img": "",
+                            "description": "Время вышло!"
+                        }
+                    },
+                    "parameters": {},
+                    "methods": {
+                        "reset": {
+                            "img": "",
+                            "parameters": {},
+                            "description": "Сбросить таймер, отчет начнется сначала"
+                        },
+                        "disable": {
+                            "img": "",
+                            "parameters": {},
+                            "description": "Отключить таймер."
+                        },
+                        "enable": {
+                            "img": "",
+                            "parameters": {},
+                            "description": "Включить таймер."
+                        },
+                        "start": {
+                            "img": "",
+                            "parameters": {
+                                "img": "",
+                                "interval": "unsigned long",
+                                "description": "Запустить таймер. Будет  сигнал раз в интервал."
+                            }
+                        }
+                    },
+                    "singletone": "False",
+                    "variables": {
+                        "difference": {
+                            "img": "",
+                            "type": "unsigned long",
+                            "description": "Оставшееся время до окончания таймера."
+                        }
+                    }
                 }
             }
         }

@@ -1,5 +1,4 @@
 from enum import Enum
-import sys
 
 try:
     from .SourceFile import SourceFile
@@ -16,12 +15,14 @@ except ImportError:
 
 
 class Labels(Enum):
-    H = 'Code for h-file'
+    H_INCLUDE = 'Code for h-file'
+    H = 'Declare variable in h-file'
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
-
+    
 
 class CJsonParser:
+    # Переделать под не-статический
     delimeter = {
         "Berloga": "",
         "arduino-cli": ";",
@@ -39,9 +40,17 @@ class CJsonParser:
         "or": "||",
         "and": "&&"
     }
-
+    
     @staticmethod
-    async def specificCheckComponentSignal(type: str, name: str) -> str:
+    def initComponent(type: str, name: str, parameters: dict, filename: str):
+        match type:
+            case 'Timer':
+                return f"\n{type} {name} = {type}(the_{filename}, {name}_timeout_SIG);"
+            case _:
+                return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))});"
+                
+    @staticmethod
+    def specificCheckComponentSignal(type: str, name: str, triggers: dict, filename: str, signal: str) -> str:
         """Функция для специфичных проверок сигналов. Так, например, для
         проверки состояния кнопки необходимо предварительно вызвать функцию scan
 
@@ -50,10 +59,14 @@ class CJsonParser:
         """
         match type:
             case 'Button':
-                return f"\n\t{name}.scan();\n\t"
+                return '\n\t\t'.join([f"\n\t{name}.scan();\
+                        \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});\n\t"]) + "\n\t}"
+            case "Timer":
+                return f"\n\t{name}.timeout();"
             case _:
-                return ""
-
+                return '\n\t\t'.join([f"\n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});"]) + "\n\t}"
+    
+    
     @staticmethod
     async def appendNote(label: Labels, content, notes):
         notes.append({"y:UMLNoteNode":
@@ -81,7 +94,10 @@ class CJsonParser:
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
                 types.append(component.type)
-            variables.append(f"\n{component.type} {component.name} = {component.type}({', '.join(map(str, list(component.parameters.values())))});")
+            variables.append(CJsonParser.initComponent(component.type,
+                                                       component.name,
+                                                       component.parameters,
+                                                       filename))
         notes = []
 
         class_filename = filename[0].upper() + filename[1:]
@@ -90,9 +106,12 @@ class CJsonParser:
         for name in triggers.keys():
             component_name = triggers[name]["component_name"]
             component_type = components_types[component_name]
-            specific_check = await CJsonParser.specificCheckComponentSignal(name=component_name, type=component_type)
-            check_signals.append('\n\t\t'.join([f"{specific_check}\n\tif({triggers[name]['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});"]) + "\n\t}")
-
+            check = CJsonParser.specificCheckComponentSignal(name=component_name,        
+                                                             type=component_type, 
+                                                             triggers=triggers[name],
+                                                             filename=filename,
+                                                             signal=name)
+            check_signals.append(check)
         match compiler:
             case "g++" | "gcc":
                 setup_function = '\n\t'.join(["\nvoid setup(){",
@@ -110,8 +129,8 @@ class CJsonParser:
                                              "while(true){",
                                              "\tloop();",
                                              "}"]) + "\n}"
-
-                await CJsonParser.appendNote(Labels.H, "".join([*includes, *variables]), notes)   
+                await CJsonParser.appendNote(Labels.H, "".join(variables), notes)
+                await CJsonParser.appendNote(Labels.H_INCLUDE, "".join(includes), notes)
                 await CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function, main_function]), notes)
 
             case "arduino-cli":
@@ -121,7 +140,8 @@ class CJsonParser:
                                               f"QMsm_init(the_{filename}, &event);",
                                               "\n}"])
                 loop_function = ''.join(["\nvoid loop(){", *check_signals, "\n}"])
-                await CJsonParser.appendNote(Labels.H, "".join([*includes, *variables]), notes)
+                await CJsonParser.appendNote(Labels.H, "".join(variables), notes)
+                await CJsonParser.appendNote(Labels.H_INCLUDE, "".join(includes), notes)
                 await CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function]), notes)
 
         return notes
@@ -172,6 +192,7 @@ class CJsonParser:
             if "args" in action.keys():
                 arr_args = list(action["args"].values())
             args = "(" + ",".join(map(str, arr_args)) + ")" + CJsonParser.delimeter[compiler]
+            print(args)
             result.append("".join([component, method, args]))
 
         return "\n".join(result)
@@ -231,7 +252,6 @@ class CJsonParser:
 
             actions = ""
             for i in range(len(event["do"])):
-                print(event)
                 actions += event["do"][i]["component"] + '.' + event["do"][i]["method"] + '('
                 if "args" in event["do"][i].keys():
                     arr_action = list(event["do"][i]["args"].values())
