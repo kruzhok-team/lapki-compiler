@@ -86,6 +86,7 @@ class Handler:
             extension = Compiler.supported_compilers[compiler]["extension"][0]
             match compiler:
                 case "g++" | "gcc":
+                    platform = "cpp"
                     await AsyncPath(path).mkdir(parents=True)
                     sm = await CJsonParser.parseStateMachine(data, ws,
                                                              filename=filename,
@@ -100,10 +101,11 @@ class Handler:
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     libraries = [*libraries, *Compiler.c_default_libraries]
-                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
-                    await Compiler.includeLibraryFiles(libraries, dirname, ".h")
+                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
+                    await Compiler.includeLibraryFiles(libraries, dirname, ".h", platform)
                     await Logger.logger.info(f"{libraries} included")
                 case "arduino-cli":
+                    platform = "ino"
                     dirname += filename + "/"
                     path += filename + "/"
                     await AsyncPath(path).mkdir(parents=True)
@@ -114,13 +116,14 @@ class Handler:
                     await Logger.logger.info("Parsed and wrote to ino")
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
-                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path)
-                    await Compiler.includeLibraryFiles([*libraries, *Compiler.c_default_libraries], dirname, ".h")
-                    await Compiler.includeLibraryFiles(libraries, dirname, ".ino")
+                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
+                    await Compiler.includeLibraryFiles([*libraries, *Compiler.c_default_libraries], dirname, ".h", platform)
+                    await Compiler.includeLibraryFiles(libraries, dirname, ".ino", platform)
                     await Compiler.includeLibraryFiles(
                         Compiler.c_default_libraries,
                         dirname,
-                        ".c")
+                        ".c",
+                        platform)
                     await Logger.logger.info(f"{libraries} included")
                 case _:
                     await Logger.logger.info(f"Unsupported compiler {compiler}")
@@ -142,6 +145,7 @@ class Handler:
                 response["result"] = "OK"
                 build_path = ''.join([BUILD_DIRECTORY, dirname, "build/"])
                 source_path = ''.join([BUILD_DIRECTORY, dirname])
+                print(result.stdout)
                 async for path in AsyncPath(build_path).rglob("*"):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:

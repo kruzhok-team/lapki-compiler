@@ -3,9 +3,9 @@ from aiopath import AsyncPath
 
 try:
     from .wrapper import to_async
-    from .config import LIBRARY_SOURCE_PATH, BUILD_DIRECTORY, LIBRARY_BINARY_PATH
+    from .config import LIBRARY_PATH, BUILD_DIRECTORY
 except ImportError:
-    from compiler.config import LIBRARY_SOURCE_PATH, BUILD_DIRECTORY, LIBRARY_BINARY_PATH
+    from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
 
 
 class CompilerResult:
@@ -34,7 +34,11 @@ class Compiler:
         pass
     
     @staticmethod
-    async def getBuildFiles(libraries, compiler, directory):
+    def _path(platform: str):
+        return f"{LIBRARY_PATH}{platform}/"
+    
+    @staticmethod
+    async def getBuildFiles(libraries, compiler: str, directory: str, platform: str):
         build_files = []
         for glob in Compiler.supported_compilers[compiler]["extension"]:
             async for file in AsyncPath(directory).glob(glob):
@@ -43,7 +47,7 @@ class Compiler:
         match compiler:
             case "gcc" | "g++":
                 for library in libraries:
-                    build_files.append(''.join(["../", LIBRARY_BINARY_PATH, library, '.o']))
+                    build_files.append(''.join(["../", Compiler._path(platform), "/build/", library, '.o']))
         
         return build_files
                
@@ -65,6 +69,6 @@ class Compiler:
                               str(stderr.decode('utf-8')))
 
     @staticmethod
-    async def includeLibraryFiles(libraries : list[str], target_directory : str, extension: str):
-        paths_to_libs = [''.join([LIBRARY_SOURCE_PATH, library, extension]) for library in libraries]
-        process = await asyncio.create_subprocess_exec("cp", *paths_to_libs, target_directory, cwd=BUILD_DIRECTORY)
+    async def includeLibraryFiles(libraries : list[str], target_directory : str, extension: str, platform: str):
+        paths_to_libs = [''.join([f"{Compiler._path(platform)}source/", library, extension]) for library in libraries]
+        await asyncio.create_subprocess_exec("cp", *paths_to_libs, target_directory, cwd=BUILD_DIRECTORY)
