@@ -2,171 +2,228 @@
     "platform":{
         "Arduino": {
             "components": {
-                "Button" : {
-                    "description" : "Hardware Abstraction for Buttons. It provides an easy way of handling buttons.",
-                    "img": "",
-                    "signals": {
-                        "isPressed" : {
-                            "img" : "",
-                            "description" : "Return true if the button has been pressed"
+                    "Button" : {
+                        "description" : "Hardware Abstraction for Buttons. It provides an easy way of handling buttons.",
+                        "img": "",
+                        "signals": {
+                            "isPressed" : {
+                                "img" : "",
+                                "description" : "Return true if the button has been pressed"
+                            },
+                            "clicked": {
+                                "img" : "",
+                                "description" : "Return > 0 if the button is clicked, or 0 if not."
+                            },
+                            "будет еще": {}
                         },
-                        "clicked": {
-                            "img" : "",
-                            "description" : "Return > 0 if the button is clicked, or 0 if not."
+                        "parameters": {
+                            "buttonPin" : {
+                                "img" : "",
+                                "type": "uint8_t",
+                                "description" : "buttonPin  sets the pin that this switch is connected to"
+                            },
+                            "buttonMode" : {
+                                "img" : "",
+                                "type": "uint8_t",
+                                "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
+                            }
                         },
-                        "будет еще": {}
-                    },
-                    "parameters": {
-                        "buttonPin" : {
-                            "img" : "",
-                            "type": "uint8_t",
-                            "description" : "buttonPin  sets the pin that this switch is connected to"
-                        },
-                        "buttonMode" : {
-                            "img" : "",
-                            "type": "uint8_t",
-                            "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
-                        }
-                    },
-                    "variables" : {},
-                    "methods" : {"что-то еще": ""},
-                    "singletone" : "False"
+                        "variables" : {},
+                        "methods" : {"что-то еще": ""},
+                        "singletone" : "False"
 
-                },
+                    },
 
-                "LED" : {
-                    "description" : "Hardware Abstraction for LEDs. It provides an easy way of handling LEDs.",
-                    "img": "",
-                    "signals": {},
-                    "parameters": {
-                        "ledPin" : {
-                            "img" : "",
-                            "type": "uint8_t",
-                            "description" : "ledPin the pin connected to this LED"
+                    "LED" : {
+                        "description" : "Hardware Abstraction for LEDs. It provides an easy way of handling LEDs.",
+                        "img": "",
+                        "signals": {},
+                        "parameters": {
+                            "ledPin" : {
+                                "img" : "",
+                                "type": "uint8_t",
+                                "description" : "ledPin the pin connected to this LED"
+                            },
+                            "buttonMode" : {
+                                "img" : "",
+                                "type": "uint8_t",
+                                "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
+                            }
                         },
-                        "buttonMode" : {
-                            "img" : "",
-                            "type": "uint8_t",
-                            "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
-                        }
-                    },
-                    "variables" : {},
-                    "methods" : {
-                        "on": {
-                            "img" : "",
-                            "parameters": {},
-                            "description" : "Set this LED on"
+                        "variables" : {},
+                        "methods" : {
+                            "on": {
+                                "img" : "",
+                                "parameters": {},
+                                "description" : "Set this LED on"
+                            },
+                            "off": {
+                                "img" : "",
+                                "parameters": {},
+                                "description" : "Set this LED off"
+                            }
                         },
-                        "off": {
-                            "img" : "",
-                            "parameters": {},
-                            "description" : "Set this LED off"
-                        }
-                    },
-                    "singletone" : "False"
+                        "singletone" : "False"
 
-                },
-                "Timer": {
-                    "description": "Программный таймер.",
-                    "img": "",
-                    "signals": {
-                        "timeout": {
-                            "img": "",
-                            "description": "Время вышло!"
-                        }
                     },
-                    "parameters": {},
-                    "methods": {
-                        "reset": {
-                            "img": "",
-                            "parameters": {},
-                            "description": "Сбросить таймер, отчет начнется сначала"
-                        },
-                        "disable": {
-                            "img": "",
-                            "parameters": {},
-                            "description": "Отключить таймер."
-                        },
-                        "enable": {
-                            "img": "",
-                            "parameters": {},
-                            "description": "Включить таймер."
-                        },
-                        "start": {
-                            "img": "",
-                            "parameters": {
+                    "Timer": {
+                        "description": "Программный таймер.",
+                        "img": "",
+                        "signals": {
+                            "timeout": {
                                 "img": "",
-                                "interval": "unsigned long",
-                                "description": "Запустить таймер. Будет  сигнал раз в интервал."
+                                "description": "Время вышло!"
+                            }
+                        },
+                        "parameters": {},
+                        "methods": {
+                            "reset": {
+                                "img": "",
+                                "parameters": {},
+                                "description": "Сбросить таймер, отчет начнется сначала"
+                            },
+                            "disable": {
+                                "img": "",
+                                "parameters": {},
+                                "description": "Отключить таймер."
+                            },
+                            "enable": {
+                                "img": "",
+                                "parameters": {},
+                                "description": "Включить таймер."
+                            },
+                            "start": {
+                                "img": "",
+                                "parameters": {
+                                    "img": "",
+                                    "interval": "unsigned long",
+                                    "description": "Запустить таймер. Будет  сигнал раз в интервал."
+                                }
+                            }
+                        },
+                        "singletone": "False",
+                        "variables": {
+                            "difference": {
+                                "img": "",
+                                "type": "unsigned long",
+                                "description": "Оставшееся время до окончания таймера."
                             }
                         }
                     },
-                    "singletone": "False",
-                    "variables": {
-                        "difference": {
-                            "img": "",
-                            "type": "unsigned long",
-                            "description": "Оставшееся время до окончания таймера."
-                        }
-                    }
+                    "Counter": {
+                        "description": "Переменная-счетчик.",
+                        "img": "",
+                        "signals": {
+                            "isEqual": {
+                                "img": "",
+                                "description": "Издать сигнал, если значение счетчика равно value",
+                                "parameters": {
+                                    "value": "int"
+                                }
+                            },
+                            "isLess": {
+                                "img": "",
+                                "description": "Издать сигнал, если значение счетчика меньше value",
+                                "parameters": {
+                                    "value": "int"
+                                }
+                            },
+                            "isGreater": {
+                                "img": "",
+                                "description": "Издать сигнал, если значение счетчика больше value",
+                                "parameters": {
+                                    "value": "int"
+                                }
+                            }
+                        },
+                        "parameters": {},
+                        "methods": {
+                            "add": {
+                                "img": "",
+                                "description": "Добавить value к значению счетчика",
+                                "parameters": {
+                                    "value": "int"
+                                }
+                            },
+                            "sub": {
+                                "img": "",
+                                "description": "Вычесть value к значению счетчика",
+                                "parameters": {
+                                    "value": "int"
+                                }
+                            },
+                            "reset": {
+                                "img": "",
+                                "description": "Обнулить значение счетчика.",
+                                "parameters": {}
+                            }
+                        },
+                        "variables": {
+                            "value": {
+                                "img": "",
+                                "description": "Текущее значение счетчика",
+                                "type": "int"
+                            }
+                        },
+
+                        "singletone": "False"                    
                 },
-                "Counter": {
-                    "description": "Переменная-счетчик.",
+                "QHsmSerial": {
+                    "description": "Класс-надстройка над Serial. Вызывает сигналы при получении данных.",
                     "img": "",
                     "signals": {
-                        "isEqual": {
+                        "SERIAL_NO_DATA_RECEIVED": {
                             "img": "",
-                            "description": "Издать сигнал, если значение счетчика равно value",
-                            "parameters": {
-                                "value": "int"
-                            }
+                            "description": "Был вызван read, но данные не были получены"
                         },
-                        "isLess": {
+                        "SERIAL_RECEIVED_BYTE": {
                             "img": "",
-                            "description": "Издать сигнал, если значение счетчика меньше value",
-                            "parameters": {
-                                "value": "int"
-                            }
-                        },
-                        "isGreater": {
-                            "img": "",
-                            "description": "Издать сигнал, если значение счетчика больше value",
-                            "parameters": {
-                                "value": "int"
-                            }
+                            "description": "Были получены данные"
                         }
                     },
-                    "parameters": {},
+                    "parameters": {
+                        "baud": {
+                            "img": "",
+                            "description": "Установить частоту работы Serial",
+                            "type": "unsigned long"
+                        }
+                    },
                     "methods": {
-                        "add": {
+                        "println": {
                             "img": "",
-                            "description": "Добавить value к значению счетчика",
+                            "description": "Вывести данные в Serial монитор с добавлением \\n в конце",
                             "parameters": {
-                                "value": "int"
+                                "value": {
+                                    "img": "",
+                                    "description": "Данные для вывода",
+                                    "type": "int | char[]"
+                                }
                             }
                         },
-                        "sub": {
+                        "print": {
                             "img": "",
-                            "description": "Вычесть value к значению счетчика",
+                            "description": "Вывести данные в Serial монитор с добавлением.",
                             "parameters": {
-                                "value": "int"
+                                "value": {
+                                    "img": "",
+                                    "description": "Данные для вывода",
+                                    "type": "int | char[]"
+                                }
                             }
                         },
-                        "reset": {
+                        "read": {
                             "img": "",
-                            "description": "Обнулить значение счетчика.",
+                            "description": "Прочитать данные из Serial.",
                             "parameters": {}
                         }
                     },
                     "variables": {
-                        "value": {
-                            "img": "",
-                            "description": "Текущее значение счетчика",
-                            "type": "int"
+                        "lastByte": {
+                            "description": "Последний прочитанный байт.",
+                            "type": "int"                    
                         }
                     },
-
-                    "singletone": "False"                    
+                    "singletone": "True"
                 }
             }
         }

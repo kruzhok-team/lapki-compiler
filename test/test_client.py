@@ -199,3 +199,30 @@ async def test_counterSchema():
             await f.write(source["fileContent"])
     
     assert count_binary > 0 and count_source > 0
+
+@pytest.mark.asyncio
+async def test_Serial():
+    client = Client()
+    await client.doConnect(BASE_ADDR)
+    response = await client.sendSMJson("examples/testSerial.json")
+    print(response)
+    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+    build_path = "client/" + dirname + "/build/"
+    source_path = "client/" + dirname + "/source/"
+    Path(build_path).mkdir(parents=True)
+    Path(source_path).mkdir(parents=True)
+    count_binary = 0
+    count_source = 0
+    for binary in response["binary"]:
+        count_binary += 1
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+        async with async_open(build_path + binary["filename"], "wb") as f:
+            await f.write(data)
+
+    for source in response["source"]:
+        count_source += 1
+        async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
+            await f.write(source["fileContent"])
+    
+    assert count_binary > 0 and count_source > 0
