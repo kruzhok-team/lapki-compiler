@@ -82,6 +82,7 @@ class Handler:
                 compiler_settings["filename"][1:]
             flags = compiler_settings["flags"]
             dirname = str(datetime.now()) + '/'
+            dirname = dirname.replace(" ", '_')
             path = BUILD_DIRECTORY + dirname
             extension = Compiler.supported_compilers[compiler]["extension"][0]
             match compiler:
