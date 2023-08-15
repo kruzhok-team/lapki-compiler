@@ -60,7 +60,7 @@ class CJsonParser:
         match type:
             case 'Button':
                 return '\n\t\t'.join([f"\n\t{name}.scan();\
-                        \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {name});\n\t"]) + "\n\t}"
+                        \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});\n\t"]) + "\n\t}"
             case "Timer":
                 return f"\n\t{name}.timeout();"
             case _:
