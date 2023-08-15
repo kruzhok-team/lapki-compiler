@@ -64,9 +64,8 @@ class CJsonParser:
             case "Timer":
                 return f"\n\t{name}.timeout();"
             case _:
-                return '\n\t\t'.join([f"\n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});"]) + "\n\t}"
-    
-    
+                return '\n\t\t'.join([f"\n\t\n\tif({triggers['guard']})", f"SIMPLE_DISPATCH(the_{filename}, {signal});"]) + "\n\t}"
+
     @staticmethod
     async def appendNote(label: Labels, content, notes):
         notes.append({"y:UMLNoteNode":
@@ -203,16 +202,17 @@ class CJsonParser:
         player_signals = {}
         i = 0
         for transition in transitions:
-            name = ''.join([transition["trigger"]["component"], '_',
-                            transition["trigger"]["method"]])
-
             guard = ''.join([transition["trigger"]["component"], '.',
                              transition["trigger"]["method"], '('])
+            arr_args = []
             if "args" in transition["trigger"].keys():
                 arr_args = list(transition["trigger"]["args"].values())
                 guard += ','.join(arr_args)
             guard += ')'
 
+            name = ''.join([transition["trigger"]["component"], '_',
+                            transition["trigger"]["method"]]) + "_".join(arr_args)
+            
             trig = {}
             player_signals[name] = {}
             player_signals[name]["guard"] = guard

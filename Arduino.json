@@ -109,6 +109,64 @@
                             "description": "Оставшееся время до окончания таймера."
                         }
                     }
+                },
+                "Counter": {
+                    "description": "Переменная-счетчик.",
+                    "img": "",
+                    "signals": {
+                        "isEqual": {
+                            "img": "",
+                            "description": "Издать сигнал, если значение счетчика равно value",
+                            "parameters": {
+                                "value": "int"
+                            }
+                        },
+                        "isLess": {
+                            "img": "",
+                            "description": "Издать сигнал, если значение счетчика меньше value",
+                            "parameters": {
+                                "value": "int"
+                            }
+                        },
+                        "isGreater": {
+                            "img": "",
+                            "description": "Издать сигнал, если значение счетчика больше value",
+                            "parameters": {
+                                "value": "int"
+                            }
+                        }
+                    },
+                    "parameters": {},
+                    "methods": {
+                        "add": {
+                            "img": "",
+                            "description": "Добавить value к значению счетчика",
+                            "parameters": {
+                                "value": "int"
+                            }
+                        },
+                        "sub": {
+                            "img": "",
+                            "description": "Вычесть value к значению счетчика",
+                            "parameters": {
+                                "value": "int"
+                            }
+                        },
+                        "reset": {
+                            "img": "",
+                            "description": "Обнулить значение счетчика.",
+                            "parameters": {}
+                        }
+                    },
+                    "variables": {
+                        "value": {
+                            "img": "",
+                            "description": "Текущее значение счетчика",
+                            "type": "int"
+                        }
+                    },
+
+                    "singletone": "False"                    
                 }
             }
         }
