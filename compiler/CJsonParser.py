@@ -90,7 +90,13 @@ class CJsonParser:
                 return f"{name}.init();"
 
         return None
-        
+    
+    # @staticmethod
+    # def actionInMain(component: Component, signals: list[str]):
+    #     match component.type:
+    #         case "PWM":
+    #             signals.append(f"{component.name}.write({','.join(map(str, list(component.parameters.values())))});")
+
     @staticmethod
     async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path):
         includes = []
@@ -99,12 +105,14 @@ class CJsonParser:
         components_types = {}
         types = []
         setup_variables: list[str] = []
+        check_signals = []
         for component in components:
             components_types[component.name] = component.type
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
                 types.append(component.type)
-            
+
+            # CJsonParser.actionInMain(component, check_signals)
             setup_variable = CJsonParser.setupVariables(component.name, component.type)
             if setup_variable:
                 setup_variables.append(setup_variable)
@@ -115,7 +123,6 @@ class CJsonParser:
         notes = []
 
         class_filename = filename[0].upper() + filename[1:]
-        check_signals = []
 
         for name in triggers.keys():
             component_name = triggers[name]["component_name"]
@@ -126,6 +133,8 @@ class CJsonParser:
                                                              filename=filename,
                                                              signal=name)
             check_signals.append(check)
+            
+        print(check_signals)
         match compiler:
             case "g++" | "gcc":
                 setup_function = '\n\t'.join(["\nvoid setup(){",
