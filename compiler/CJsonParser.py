@@ -19,7 +19,7 @@ class Labels(Enum):
     H = 'Declare variable in h-file'
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
-    
+
 
 class CJsonParser:
     # Переделать под не-статический
@@ -40,7 +40,7 @@ class CJsonParser:
         "or": "||",
         "and": "&&"
     }
-    
+
     @staticmethod
     def initComponent(type: str, name: str, parameters: dict, filename: str):
         match type:
@@ -50,7 +50,7 @@ class CJsonParser:
                 return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))}, the_{filename});"
             case _:
                 return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))});"
-                
+
     @staticmethod
     def specificCheckComponentSignal(type: str, name: str, triggers: dict, filename: str, signal: str) -> str:
         """Функция для специфичных проверок сигналов. Так, например, для
@@ -82,15 +82,17 @@ class CJsonParser:
                 libraries.append(f"{component.type}")
 
         return libraries
-    
+
     @staticmethod
     def setupVariables(name: str, type: str) -> str | None:
         match type:
             case "QHsmSerial":
                 return f"{name}.init();"
+            case "DigitalOut":
+                return f"{name}.init();"
 
         return None
-    
+
     # @staticmethod
     # def actionInMain(component: Component, signals: list[str]):
     #     match component.type:
@@ -113,7 +115,8 @@ class CJsonParser:
                 types.append(component.type)
 
             # CJsonParser.actionInMain(component, check_signals)
-            setup_variable = CJsonParser.setupVariables(component.name, component.type)
+            setup_variable = CJsonParser.setupVariables(
+                component.name, component.type)
             if setup_variable:
                 setup_variables.append(setup_variable)
             variables.append(CJsonParser.initComponent(component.type,
@@ -127,13 +130,13 @@ class CJsonParser:
         for name in triggers.keys():
             component_name = triggers[name]["component_name"]
             component_type = components_types[component_name]
-            check = CJsonParser.specificCheckComponentSignal(name=component_name,        
-                                                             type=component_type, 
+            check = CJsonParser.specificCheckComponentSignal(name=component_name,
+                                                             type=component_type,
                                                              triggers=triggers[name],
                                                              filename=filename,
                                                              signal=name)
             check_signals.append(check)
-            
+
         print(check_signals)
         match compiler:
             case "g++" | "gcc":
@@ -163,7 +166,8 @@ class CJsonParser:
                                               "QEvt event;",
                                               f"QMsm_init(the_{filename}, &event);",
                                               "\n}"])
-                loop_function = ''.join(["\nvoid loop(){", *check_signals, "\n}"])
+                loop_function = ''.join(
+                    ["\nvoid loop(){", *check_signals, "\n}"])
                 await CJsonParser.appendNote(Labels.H, "".join(variables), notes)
                 await CJsonParser.appendNote(Labels.H_INCLUDE, "".join(includes), notes)
                 await CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function]), notes)
@@ -175,7 +179,8 @@ class CJsonParser:
         result = []
 
         for component_name in components:
-            result.append(Component(component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
+            result.append(Component(
+                component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
 
         return result
 
@@ -186,7 +191,8 @@ class CJsonParser:
             values = []
             for value in condition_dict["values"]:
                 values.append(await CJsonParser.getCondition(value, compiler=compiler))
-            result = f" {CJsonParser.operatorAlias[type]} ".join(map(str, values))
+            result = f" {CJsonParser.operatorAlias[type]} ".join(
+                map(str, values))
             return result
         elif type == "value":
             return str(condition_dict["value"])
@@ -221,7 +227,8 @@ class CJsonParser:
                     elif act is dict:
                         print(f'{act["component"]}.{act["method"]}')
                         arr_args.append(f'{act["component"]}.{act["method"]}')
-            args = "(" + ",".join(map(str, arr_args)) + ")" + CJsonParser.delimeter[compiler]
+            args = "(" + ",".join(map(str, arr_args)) + ")" + \
+                CJsonParser.delimeter[compiler]
             print(args)
             result.append("".join([component, method, args]))
 
@@ -243,7 +250,7 @@ class CJsonParser:
 
             name = ''.join([transition["trigger"]["component"], '_',
                             transition["trigger"]["method"]]) + "_".join(arr_args)
-            
+
             trig = {}
             player_signals[name] = {}
             player_signals[name]["guard"] = guard
@@ -283,7 +290,8 @@ class CJsonParser:
 
             actions = ""
             for i in range(len(event["do"])):
-                actions += event["do"][i]["component"] + '.' + event["do"][i]["method"] + '('
+                actions += event["do"][i]["component"] + \
+                    '.' + event["do"][i]["method"] + '('
                 if "args" in event["do"][i].keys():
                     arr_action = []
                     for arg in list(event["do"][i]["args"].values()):
@@ -292,7 +300,8 @@ class CJsonParser:
                             arr_action.append(arg)
                         elif type(arg) is dict:
                             print(f'{arg["component"]}.{arg["method"]}')
-                            arr_action.append(f'{arg["component"]}.{arg["method"]}')
+                            arr_action.append(
+                                f'{arg["component"]}.{arg["method"]}')
                     actions += ','.join(map(str, arr_action))
                 actions += ")" + CJsonParser.delimeter[compiler] + "\n"
 
@@ -330,7 +339,8 @@ class CJsonParser:
     async def addTransitionsToStates(transitions, states):
         new_states = states.copy()
         for transition in transitions:
-            new_states[transition["trigger"].source].trigs.append(transition["trigger"])
+            new_states[transition["trigger"].source].trigs.append(
+                transition["trigger"])
 
         return new_states
 
@@ -357,7 +367,7 @@ class CJsonParser:
                     if component.type not in types:
                         signals.append("SERIAL_NO_DATA_RECEIVED")
                         signals.append("SERIAL_RECEIVED_BYTE")
-        
+
         return signals
 
     @staticmethod
@@ -374,7 +384,8 @@ class CJsonParser:
             for statename in states:
                 state = json_data["states"][statename]
                 events, new_event_signals, system_signals = await CJsonParser.getEvents(state["events"], statename, compiler)
-                event_signals = dict(list(new_event_signals.items()) + list(event_signals.items()))
+                event_signals = dict(
+                    list(new_event_signals.items()) + list(event_signals.items()))
 
                 on_enter = system_signals["onEnter"]
                 on_exit = system_signals["onExit"]
@@ -383,12 +394,14 @@ class CJsonParser:
                 proccesed_states[statename] = State(name=state["name"], type="state",
                                                     actions="", trigs=list(events.values()),
                                                     entry=on_enter, exit=on_exit,
-                                                    id=statename, new_id=[statename],
+                                                    id=statename, new_id=[
+                                                        statename],
                                                     parent=None, childs=[],
                                                     x=x, y=y,
                                                     width=w, height=h)
             transitions, player_signals = await CJsonParser.getTransitions(json_data["transitions"], compiler)
-            player_signals = dict(list(player_signals.items()) + list(event_signals.items()))
+            player_signals = dict(
+                list(player_signals.items()) + list(event_signals.items()))
             components = await CJsonParser.getComponents(json_data["components"])
             if compiler in ["arduino-cli", "g++", "gcc"]:
                 notes = await CJsonParser.createNotes(components, filename, player_signals, compiler=compiler, path=path)
@@ -400,7 +413,7 @@ class CJsonParser:
             return {"states": [global_state, *list(proccesed_states.values())],
                     "notes": notes,
                     "startNode": startNode,
-                    "playerSignals": [*player_signals.keys(), 
+                    "playerSignals": [*player_signals.keys(),
                                       *CJsonParser.addSignals(components)]}
         except KeyError as e:
             await RequestError(f"There isn't key('{e.args[0]}') ").dropConnection(ws)
@@ -413,6 +426,7 @@ class CJsonParser:
         files = []
 
         for data in json_data:
-            files.append(SourceFile(data["filename"], data["extension"], data["fileContent"]))
+            files.append(SourceFile(
+                data["filename"], data["extension"], data["fileContent"]))
 
         return files

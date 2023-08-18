@@ -38,10 +38,10 @@ async def test_sendMultifileProject():
 
         async with async_open(path + binary["filename"], "wb") as f:
             await f.write(data)
-    
-    
+
     subprocess.run(["chmod", "u+x", path + "a.out"])
-    result = subprocess.run(["./" + path + "a.out"], capture_output=True, text=True)
+    result = subprocess.run(["./" + path + "a.out"],
+                            capture_output=True, text=True)
     stdout = result.stdout.replace("\n", '')
     assert stdout == "Result: 8"
 
@@ -102,8 +102,9 @@ async def test_berlogaImport():
     Path(path).mkdir(parents=True)
     async with async_open(path + "berlogaScheme.json", "w") as f:
         await f.write(response)
-    
+
     await client.ws.close()
+
 
 @pytest.mark.asyncio
 async def test_berlogaExport():
@@ -114,8 +115,9 @@ async def test_berlogaExport():
     Path(path).mkdir(parents=True)
     async with async_open(path + "berlogaScheme.xml", "w") as f:
         await f.write(response)
-    
+
     await client.ws.close()
+
 
 @pytest.mark.asyncio
 async def test_sendTestSchema():
@@ -130,6 +132,7 @@ async def test_sendTestSchema():
         data = base64.b64decode(binary["fileContent"])
         async with async_open(path + binary["filename"], "wb") as f:
             await f.write(data)
+
 
 @pytest.mark.asyncio
 async def test_sendSchemaWithId():
@@ -152,6 +155,7 @@ async def test_sendSchemaWithId():
         async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
             await f.write(source["fileContent"])
 
+
 @pytest.mark.asyncio
 async def test_timerSchema():
     client = Client()
@@ -172,6 +176,7 @@ async def test_timerSchema():
     for source in response["source"]:
         async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
             await f.write(source["fileContent"])
+
 
 @pytest.mark.asyncio
 async def test_counterSchema():
@@ -197,8 +202,9 @@ async def test_counterSchema():
         count_source += 1
         async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
             await f.write(source["fileContent"])
-    
+
     assert count_binary > 0 and count_source > 0
+
 
 @pytest.mark.asyncio
 async def test_Serial():
@@ -224,7 +230,7 @@ async def test_Serial():
         count_source += 1
         async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
             await f.write(source["fileContent"])
-    
+
     assert count_binary > 0 and count_source > 0
 
 
@@ -252,5 +258,33 @@ async def test_PWM():
         count_source += 1
         async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
             await f.write(source["fileContent"])
-    
+
+    assert count_binary > 0 and count_source > 0
+
+
+@pytest.mark.asyncio
+async def test_digitalOut():
+    client = Client()
+    await client.doConnect(BASE_ADDR)
+    response = await client.sendSMJson("examples/testDigitalOut.json")
+    print(response)
+    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+    build_path = "client/" + dirname + "/build/"
+    source_path = "client/" + dirname + "/source/"
+    Path(build_path).mkdir(parents=True)
+    Path(source_path).mkdir(parents=True)
+    count_binary = 0
+    count_source = 0
+    for binary in response["binary"]:
+        count_binary += 1
+        data = binary["fileContent"].encode('ascii')
+        data = base64.b64decode(binary["fileContent"])
+        async with async_open(build_path + binary["filename"], "wb") as f:
+            await f.write(data)
+
+    for source in response["source"]:
+        count_source += 1
+        async with async_open(source_path + source["filename"] + "." + source["extension"], "w") as f:
+            await f.write(source["fileContent"])
+
     assert count_binary > 0 and count_source > 0
