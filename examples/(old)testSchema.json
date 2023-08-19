@@ -256,27 +256,27 @@
         "btn1": {
             "type": "Button",
             "parameters": {
-              "pin": 10,
+              "pin": "10",
               "mode": "BUTTON_PULLDOWN"
             }
           },
           "btn2": {
             "type": "Button",
             "parameters": {
-              "pin": 11,
+              "pin": "11",
               "mode": "BUTTON_PULLDOWN"
             }
           },
           "diod1": {
             "type": "LED",
             "parameters": {
-              "pin": 12
+              "pin": "6"
             }
           },
           "diod2": {
             "type": "LED",
             "parameters": {
-              "pin": 13
+              "pin": "5"
             }
           }
     },

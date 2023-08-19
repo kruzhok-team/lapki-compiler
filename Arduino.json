@@ -326,6 +326,27 @@
                     }
                 },
                 "singletone": "False"
+            },
+
+            "AnalogOut": {
+                "description": "Класс для установки значения на аналоговые пины",
+                "img": "",
+                "signals": {},
+                "methods": {
+                    "write": {
+                        "img": "",
+                        "parameters": {
+                            "value": {
+                                "img": "",
+                                "type": "int",
+                                "description": "Значение, которое будет установлено на аналоговые пин."
+                            }
+                        },
+                        "description": "Установить значения на аналоговый пин"
+                    }
+                },
+                "variables": {},
+                "singletone": "False"
             }
         }
     }
