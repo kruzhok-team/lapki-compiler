@@ -103,7 +103,7 @@ class CJsonParser:
             case "AnalogIn":
                 signals.append(
                     f"\n\t{component.name}.read();")
-
+    
     @staticmethod
     async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
         includes = []
@@ -368,7 +368,9 @@ class CJsonParser:
                     if component.type not in types:
                         signals.append("SERIAL_NO_DATA_RECEIVED")
                         signals.append("SERIAL_RECEIVED_BYTE")
-
+                case "Timer":
+                    if component.type not in types:
+                        signals.append(f"{component.name}_timeout")
         return signals
 
     @staticmethod
