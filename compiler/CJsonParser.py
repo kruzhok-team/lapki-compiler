@@ -103,7 +103,7 @@ class CJsonParser:
             case "AnalogIn":
                 signals.append(
                     f"\n\t{component.name}.read();")
-    
+
     @staticmethod
     async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
         includes = []
@@ -359,7 +359,7 @@ class CJsonParser:
         return x, y, w, h
 
     @staticmethod
-    def addSignals(components: list[Component]) -> list[str]:
+    def addSignals(components: list[Component], player_signals: list[str]) -> list[str]:
         types: set[str] = set()
         signals: list[str] = []
         for component in components:
@@ -369,7 +369,7 @@ class CJsonParser:
                         signals.append("SERIAL_NO_DATA_RECEIVED")
                         signals.append("SERIAL_RECEIVED_BYTE")
                 case "Timer":
-                    if component.type not in types:
+                    if component.type not in types and f"{component.name}_timeout" not in player_signals:
                         signals.append(f"{component.name}_timeout")
         return signals
 
@@ -417,7 +417,7 @@ class CJsonParser:
                     "notes": notes,
                     "startNode": startNode,
                     "playerSignals": [*player_signals.keys(),
-                                      *CJsonParser.addSignals(components)]}
+                                      *CJsonParser.addSignals(components, player_signals)]}
         except KeyError as e:
             await RequestError(f"There isn't key('{e.args[0]}') ").dropConnection(ws)
             await Logger.logException()

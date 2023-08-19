@@ -1,0 +1,87 @@
+{
+    "states": {
+      "n0": {
+        "name": "add",
+        "events": [
+            {
+                "trigger": {
+                    "component": "System",
+                    "method": "onEnter"
+                },
+                "do": [
+                    {
+                        "component": "timer",
+                        "method": "start",
+                        "args": {
+                            "interval": "5000"
+                        }
+                    }
+                ]
+            },
+            {
+                "trigger": {
+                    "component": "timer",
+                    "method": "timeout"
+                },
+                "do": [
+                    {
+                        "component": "serial",
+                        "method": "println",
+                        "args": {
+                            "value": "\"shift start\""
+                        }
+                    },
+
+                    {
+                        "component": "shift",
+                        "method": "shift",
+                        "args": {
+                            "value": "1000"
+                        }
+                    }
+                ]
+            }
+        ],
+        "bounds": {
+            "x": 296,
+            "y": 464,
+            "height": 95,
+            "width": 450
+        }
+      }
+    },
+  
+    "initialState": "n0",
+  
+    "transitions": [],
+  
+    "components": {
+        "shift": {
+            "type": "ShiftRegister",
+            "parameters": {
+                "dataPin": "12",
+                "clockPin": "13",
+                "bitOrder": "MSBFIRST"
+            }
+        },
+
+        "serial": {
+            "type": "QHsmSerial",
+            "parameters": {
+                "baud": "9600"
+            }
+        },
+
+        "timer": {
+            "type": "Timer",
+            "parameters": {}
+        }
+    },
+    "compilerSettings": {
+        "filename": "ExampleSketch",
+        "compiler": "arduino-cli",
+        "flags": ["-b", "arduino:avr:uno"]
+    },
+    "platform": "ArduinoUno",
+    "parameters": {}
+}
