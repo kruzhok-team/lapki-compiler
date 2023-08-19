@@ -189,7 +189,7 @@ class CJsonParser:
         type: str = condition_dict["type"]
         if type in list(CJsonParser.operatorAlias.keys()):
             values = []
-            for value in condition_dict["values"]:
+            for value in condition_dict["value"]:
                 values.append(await CJsonParser.getCondition(value, compiler=compiler))
             result = f" {CJsonParser.operatorAlias[type]} ".join(
                 map(str, values))
@@ -221,10 +221,9 @@ class CJsonParser:
             arr_args = []
             if "args" in action.keys():
                 for act in list(action["args"].values()):
-                    if act is str:
+                    if type(act) is str:
                         arr_args.append(act)
-                    elif act is dict:
-                        print(f'{act["component"]}.{act["method"]}')
+                    elif type(act) is dict:
                         arr_args.append(f'{act["component"]}.{act["method"]}')
             args = "(" + ",".join(map(str, arr_args)) + ")" + \
                 CJsonParser.delimeter[compiler]
@@ -253,8 +252,8 @@ class CJsonParser:
             player_signals[name] = {}
             player_signals[name]["guard"] = guard
             player_signals[name]["component_name"] = transition["trigger"]["component"]
-            if "conditions" in transition.keys() and "type" in transition["conditions"]:
-                root = transition["conditions"]
+            if "condition" in transition.keys() and transition["condition"] is not None:
+                root = transition["condition"]
                 condition = await CJsonParser.getCondition(root, compiler)
             else:
                 condition = "true"
@@ -294,10 +293,8 @@ class CJsonParser:
                     arr_action = []
                     for arg in list(event["do"][i]["args"].values()):
                         if type(arg) is str:
-                            print(arg)
                             arr_action.append(arg)
                         elif type(arg) is dict:
-                            print(f'{arg["component"]}.{arg["method"]}')
                             arr_action.append(
                                 f'{arg["component"]}.{arg["method"]}')
                     actions += ','.join(map(str, arr_action))

@@ -4,8 +4,10 @@
         "name": "diod1",
         "events": [],
         "bounds": {
-          "x": 296,
-          "y": 464
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
       "n1": {
@@ -28,8 +30,10 @@
             }
         ],
         "bounds": {
-          "x": 196,
-          "y": 364
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
       "n2": {
@@ -50,8 +54,10 @@
         ],
         "parent": "n0",
         "bounds": {
-          "x": 96,
-          "y": 264
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
   
@@ -74,8 +80,10 @@
         ],
         "parent": "n0",
         "bounds": {
-          "x": 765,
-          "y": 134
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
       "n4": {
@@ -97,8 +105,10 @@
         ],
         "parent": "n1",
         "bounds": {
-          "x": 96,
-          "y": 264
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
   
@@ -121,8 +131,10 @@
         ],
         "parent": "n1",
         "bounds": {
-          "x": 765,
-          "y": 134
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       }
     },
@@ -142,13 +154,13 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions":
+        "condition":
         {
           "type" : "or",
-          "values": [
+          "value": [
             {
               "type": "equals",
-              "values": [
+              "value": [
                 {
                   "type" : "value",
                   "value" : 1
@@ -161,10 +173,10 @@
             },
             {
               "type" : "and",
-              "values": [
+              "value": [
                 {
                   "type": "notEquals",
-                  "values": [
+                  "value": [
                     {
                       "type": "value",
                       "value": 3
@@ -174,11 +186,6 @@
                       "value" : 4
                     }
                   ]
-                },
-                {
-                  "type": "component",
-                  "component": "btn1",
-                  "method": "clicked"
                 }
               ]
             }
@@ -206,7 +213,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -221,7 +228,7 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -236,7 +243,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -251,7 +258,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -266,7 +273,7 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       }
     ],
@@ -275,27 +282,27 @@
         "btn1": {
             "type": "Button",
             "parameters": {
-              "pin": 10,
+              "pin": "10",
               "mode": "BUTTON_PULLDOWN"
             }
           },
           "btn2": {
             "type": "Button",
             "parameters": {
-              "pin": 11,
+              "pin": "11",
               "mode": "BUTTON_PULLDOWN"
             }
           },
           "diod1": {
             "type": "LED",
             "parameters": {
-              "pin": 12
+              "pin": "12"
             }
           },
           "diod2": {
             "type": "LED",
             "parameters": {
-              "pin": 13
+              "pin": "13"
             }
           }
     },
@@ -303,5 +310,8 @@
         "filename": "ExampleSketch",
         "compiler": "arduino-cli",
         "flags": ["-b", "arduino:avr:uno"]
-    }
+    },
+
+    "platform": "ArduinoUno",
+    "parameters": {}
 }

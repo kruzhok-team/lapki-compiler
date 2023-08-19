@@ -7,6 +7,8 @@ except ImportError:
 
 
 class JsonConverter:
+    """Класс для экспорта в берлогу.
+    """
 
     def __init__(self, ws) -> None:
         self.ws = ws
@@ -35,16 +37,16 @@ class JsonConverter:
             else:
                 if trig.guard == "true":
                     transition = {
-                                    "@source": trig.source,
-                                    "@target": trig.target,
-                                    "y:EdgeLabel": f"{trig.name}/{trig.action}\n"
-                                }
+                        "@source": trig.source,
+                        "@target": trig.target,
+                        "y:EdgeLabel": f"{trig.name}/{trig.action}\n"
+                    }
                 else:
                     transition = {
                         "@source": trig.source,
                         "@target": trig.target,
                         "y:EdgeLabel": f"{trig.name}/\n[{trig.guard}]\n{trig.action}"
-                        }
+                    }
                 self.transitions.append(transition)
         events.append("\n".join(["\nexit/", state.exit]))
         return "".join(events)
@@ -88,11 +90,11 @@ class JsonConverter:
                     await self.getEvents(state)
                 ],
                 "y:Geometry": {
-                        "@x": state.x,
-                        "@y": state.y,
-                        "@width": state.width,
-                        "@height": state.height
-                    }
+                    "@x": state.x,
+                    "@y": state.y,
+                    "@width": state.width,
+                    "@height": state.height
+                }
             }
 
         return xmlstate
@@ -120,23 +122,23 @@ class JsonConverter:
 
     async def addInitialState(self, initial_state: str):
         self.transitions.append(
-                        {
-                            "@source": "",
-                            "@target": initial_state,
-                            "y:EdgeLabel": ""
-                        }
+            {
+                "@source": "",
+                "@target": initial_state,
+                "y:EdgeLabel": ""
+            }
         )
-    
+
     async def parse(self, states: list[State], initial_state: str) -> str:
         data = {"graphml": {
-                    "@xmlns": "http://graphml.graphdrawing.org/xmlns",
-                    "@xmlns:y": "http://www.yworks.com/xml/graphml",
-                    "graph": await self.getStates(states),
-                    }
-                }
-        
+            "@xmlns": "http://graphml.graphdrawing.org/xmlns",
+            "@xmlns:y": "http://www.yworks.com/xml/graphml",
+            "graph": await self.getStates(states),
+        }
+        }
+
         await self.addInitialState(initial_state)
         data["graphml"]["graph"]["edge"] = self.transitions
         result = xmltodict.unparse(data, pretty=True)
-        
+
         return result

@@ -24,7 +24,7 @@
                         "component": "serial",
                         "method": "println",
                         "args": {
-                            "value": "\"TurnOn!\""
+                            "value": "\"High!\""
                         }
                     }
                 ]
@@ -48,16 +48,13 @@
                 "do": [
                     {
                         "component": "digitalOut",
-                        "method": "setPWM",
-                        "args": {
-                            "value": "125"
-                        }
+                        "method": "low"
                     },
                     {
                         "component": "serial",
                         "method": "println",
                         "args": {
-                            "value": "\"PWM!\""    
+                            "value": "\"Low!\""    
                         }
                     }
                 ]

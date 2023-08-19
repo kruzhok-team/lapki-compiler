@@ -12,12 +12,14 @@ except ImportError:
     Returns:
         _type_: _description_
 """
+
+
 class GraphmlParser:
     platforms = {}
-    
+
     def __init__(self, platform: str, ws):
         pass
-    
+
     systemSignalsAlias = {
         "entry": "onEnter",
         "exit": "onExit"
@@ -31,7 +33,7 @@ class GraphmlParser:
         ">=": "greaterOrEqual",
         "<=": "lessOrEqual"
     }
-    
+
     @staticmethod
     def _getArgs(component: str, method: str, args: list[str], platform: str):
         """
@@ -44,9 +46,8 @@ class GraphmlParser:
         for i in range(len(args)):
             # Можно сделать проверку значений и типов
             result[keys[i]] = args[i]
-        
+
         return result
-        
 
     @staticmethod
     async def initPlatform(filename: str, platform: str):
@@ -61,6 +62,7 @@ class GraphmlParser:
                 data = await f.read()
                 json_data: dict = json.loads(data)
             GraphmlParser.platforms[platform] = json_data["platform"][platform]
+
     @staticmethod
     async def getParentNode(group_node: dict) -> dict:
         return {
@@ -78,7 +80,8 @@ class GraphmlParser:
         states_dict[state["@id"]] = {}
         states_dict[state["@id"]]["type"] = node_type
         try:
-            states_dict[state["@id"]]["name"] = state["data"][node_type]["y:NodeLabel"][0]
+            states_dict[state["@id"]
+                        ]["name"] = state["data"][node_type]["y:NodeLabel"][0]
         except TypeError:
             pass
 
@@ -133,12 +136,13 @@ class GraphmlParser:
             bracket_pos = action[1].find("(")
             method = action[1][:bracket_pos]
             action_dict["method"] = method
-            #Переделать
+            # Переделать
 
             if bracket_pos != -1:
                 args = action[1][bracket_pos+1:-1].split(",")
             if args != ['']:
-                action_dict["args"] = GraphmlParser._getArgs(component, method, args, platform)
+                action_dict["args"] = GraphmlParser._getArgs(
+                    component, method, args, platform)
             else:
                 action_dict["args"] = {}
 
@@ -168,7 +172,7 @@ class GraphmlParser:
         else:
             return {"type": "value",
                     "value": value}
-        
+
     @staticmethod
     async def getCondition(condition: str) -> dict:
         result = {}
@@ -205,7 +209,7 @@ class GraphmlParser:
     async def getNodeId(id: str) -> str:
         pos = id.rfind(":")
         node_id = id[pos + 1:]
-        
+
         return node_id
 
     @staticmethod
@@ -243,9 +247,8 @@ class GraphmlParser:
         result: list[dict] = []
         for action in actions:
             result.append(await GraphmlParser._parseAction(action, platform))
-            
-        return result
 
+        return result
 
     @staticmethod
     async def getTransitions(triggers: dict, statesDict: dict, platform: str) -> tuple[list, str]:
@@ -269,8 +272,8 @@ class GraphmlParser:
                     "component": component,
                     "method": method
                 }
-                
-                transition["conditions"] = await GraphmlParser.getCondition(condition)
+
+                transition["condition"] = await GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
                 transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)

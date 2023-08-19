@@ -41,8 +41,10 @@
         },
         "parent": "n0",
         "bounds": {
-          "x": 96,
-          "y": 264
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
   
@@ -60,8 +62,10 @@
         },
         "parent": "n0",
         "bounds": {
-          "x": 765,
-          "y": 134
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
       "diod2_on": {
@@ -78,8 +82,10 @@
         },
         "parent": "n1",
         "bounds": {
-          "x": 96,
-          "y": 264
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
         }
       },
   
@@ -118,7 +124,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions":
+        "condition":
         {
           "type" : "or",
           "values": [
@@ -181,7 +187,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -196,7 +202,7 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -211,7 +217,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -226,7 +232,7 @@
           "component": "btn1",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       },
       {
@@ -241,7 +247,7 @@
           "component": "btn2",
           "method": "clicked"
         },
-        "conditions": {},
+        "condition": null,
         "do":[]
       }
     ],
@@ -278,5 +284,8 @@
         "filename": "ExampleSketch",
         "compiler": "arduino-cli",
         "flags": ["-b", "arduino:avr:uno"]
-     }
+     },
+
+    "platform": "ArduinoUno",
+    "parameters": {}
   }
