@@ -43,6 +43,10 @@ class CJsonParser:
 
     @staticmethod
     def initComponent(type: str, name: str, parameters: dict, filename: str):
+        """
+            Функция, которая в зависимости от компонента
+            возвращает код его инициализации.
+        """
         match type:
             case 'Timer':
                 return f"\n{type} {name} = {type}(the_{filename}, {name}_timeout_SIG);"
@@ -93,14 +97,15 @@ class CJsonParser:
 
         return None
 
-    # @staticmethod
-    # def actionInMain(component: Component, signals: list[str]):
-    #     match component.type:
-    #         case "PWM":
-    #             signals.append(f"{component.name}.write({','.join(map(str, list(component.parameters.values())))});")
+    @staticmethod
+    def actionInMain(component: Component, signals: list[str]) -> None:
+        match component.type:
+            case "AnalogIn":
+                signals.append(
+                    f"\n\t{component.name}.read();")
 
     @staticmethod
-    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path):
+    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
         includes = []
         variables = []
         setup = []
@@ -108,13 +113,14 @@ class CJsonParser:
         types = []
         setup_variables: list[str] = []
         check_signals = []
+
         for component in components:
             components_types[component.name] = component.type
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
                 types.append(component.type)
 
-            # CJsonParser.actionInMain(component, check_signals)
+            CJsonParser.actionInMain(component, check_signals)
             setup_variable = CJsonParser.setupVariables(
                 component.name, component.type)
             if setup_variable:

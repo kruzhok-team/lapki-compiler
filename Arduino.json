@@ -316,7 +316,13 @@
                         "description": "Сигнал вызывается, когда меняется значение на пине."
                     }
                 },
-
+                "parameters": {
+                    "pin": {
+                        "img": "",
+                        "type": "uint8_t",
+                        "description": "Пин, с которого будут считываться данные."
+                    }
+                },
                 "methods": {},
                 "variables": {
                     "value": {
@@ -346,6 +352,27 @@
                     }
                 },
                 "variables": {},
+                "singletone": "False"
+            },
+
+            "AnalogIn": {
+                "description": "Класс для получения значения с аналогового пина",
+                "img": "",
+                "signals": {},
+                "methods": {},
+                "parameters": {
+                    "pin": {
+                        "img": "",
+                        "type": "uint8_t",
+                        "description": "Пин, с которого будут считываться данные."
+                    }
+                },
+                "variables": {
+                    "value": {
+                        "type": "int",
+                        "description": "Данные, считанные с аналогового пина"
+                    }
+                },
                 "singletone": "False"
             }
         }
