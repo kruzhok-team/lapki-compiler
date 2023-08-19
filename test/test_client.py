@@ -113,7 +113,7 @@ async def test_berlogaExport():
     response = await client.exportBerlogaScheme("compiler/schemas/berlogaScheme.json")
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
-    async with async_open(path + "berlogaScheme.xml", "w") as f:
+    async with async_open(path + "berlogaScheme.graphml", "w") as f:
         await f.write(response)
 
     await client.ws.close()

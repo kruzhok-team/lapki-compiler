@@ -113,16 +113,20 @@ class GraphmlParser:
                     component = command[0]
                     method = command[1][:-1]
                     new_events.append({
-                        "component": component,
-                        "method": method,
+                        "trigger": {
+                            "component": component,
+                            "method": method,
+                        },
                         "do": []
                     })
                     current_dict = new_events[i]["do"]
                 else:
                     current_event = ev[:-1].replace(' ', '')
                     new_events.append({
-                        "component": "System",
-                        "method": GraphmlParser.systemSignalsAlias[current_event],
+                        "trigger": {
+                            "component": "System",
+                            "method": GraphmlParser.systemSignalsAlias[current_event],
+                        },
                         "do": []
                     })
                     current_dict = new_events[i]["do"]
@@ -166,16 +170,18 @@ class GraphmlParser:
             component = command[0]
             method = command[1]
             return {"type": "component",
-                    "component": component,
-                    "method": method,
-                    "args": {}}
+                    "value": {
+                        "component": component,
+                        "method": method,
+                        "args": {}
+                    }}
         else:
             return {"type": "value",
                     "value": value}
 
     @staticmethod
-    async def getCondition(condition: str) -> dict:
-        result = {}
+    async def getCondition(condition: str) -> dict | None:
+        result = None
         if condition != "":
             condition = condition.replace("[", "").replace("]", "")
             condition = condition.split()
@@ -185,7 +191,7 @@ class GraphmlParser:
 
             result = {
                 "type": GraphmlParser.operatorAlias[operator],
-                "values": [lval, rval]
+                "value": [lval, rval]
             }
 
         return result
@@ -278,6 +284,7 @@ class GraphmlParser:
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
                 transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)
                 transition["do"] = actions
+                transition["color"] = "#22a4f5"
                 transitions.append(transition)
             except AttributeError as e:
                 initial_state = trigger["@target"]
@@ -293,10 +300,10 @@ class GraphmlParser:
         h = geometry['@height']
 
         return {
-            "x": int(float(x)),
-            "y": int(float(y)),
-            "w": int(float(w)),
-            "h": int(float(h))
+            "x": int(float(y)) // 2,
+            "y": int(float(x)) // 2,
+            "width": int(float(h)),
+            "height": int(float(w))
         }
 
     @staticmethod
@@ -312,7 +319,7 @@ class GraphmlParser:
             new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
             geometry = await GraphmlParser.getGeometry(state, node_type)
             states_dict[state["@id"]]["geometry"] = geometry
-            new_state["bounds"] = {"x": geometry["x"], "y": geometry["y"]}
+            new_state["bounds"] = geometry
             parent = await GraphmlParser.getParentName(state, states_dict)
             if parent != "":
                 new_state["parent"] = parent
@@ -347,4 +354,6 @@ class GraphmlParser:
         return {"states": states,
                 "initialState": initial_state,
                 "transitions": transitions,
-                "components": components}
+                "components": components,
+                "platform": "Berloga",
+                "parameters": {}}

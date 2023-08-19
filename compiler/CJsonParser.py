@@ -197,8 +197,8 @@ class CJsonParser:
         elif type == "value":
             return str(condition_dict["value"])
         elif type == "component":
-            component = condition_dict["component"] + "."
-            method = condition_dict["method"]
+            component = condition_dict["value"]["component"] + "."
+            method = condition_dict["value"]["method"]
 
             # В Берлоге в условиях используются
             # только числа и поля класса!
@@ -344,8 +344,8 @@ class CJsonParser:
         x = state["bounds"]["x"]
         y = state["bounds"]["y"]
         try:
-            w = state["bounds"]["w"]
-            h = state["bounds"]["h"]
+            w = state["bounds"]["width"]
+            h = state["bounds"]["height"]
         except KeyError:
             w = 100
             h = 100

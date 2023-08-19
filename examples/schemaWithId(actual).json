@@ -186,6 +186,13 @@
                       "value" : 4
                     }
                   ]
+                },
+                {
+                  "type": "component",
+                  "value": {
+                    "component": "btn1",
+                    "method": "clicked"
+                  }
                 }
               ]
             }

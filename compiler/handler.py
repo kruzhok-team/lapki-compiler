@@ -146,7 +146,6 @@ class Handler:
                 response["result"] = "OK"
                 build_path = ''.join([BUILD_DIRECTORY, dirname, "build/"])
                 source_path = ''.join([BUILD_DIRECTORY, dirname])
-                print(result.stdout)
                 async for path in AsyncPath(build_path).rglob("*"):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
