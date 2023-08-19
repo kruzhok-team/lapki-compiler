@@ -31,10 +31,10 @@
             }
         ],
         "bounds": {
-            "x": 296,
-            "y": 464,
             "height": 95,
-            "width": 450
+            "width": 450,
+            "x": 296,
+            "y": 464
         }
       },
       "n1": {
@@ -64,10 +64,10 @@
             }
         ],
         "bounds": {
-            "x": 196,
-            "y": 364,
             "height": 95,
-            "width": 450
+            "width": 450,
+            "x": 196,
+            "y": 364
         }
       }
     },
@@ -87,7 +87,6 @@
           "component": "timer",
           "method": "timeout"
         },
-        "condition": null,
         "do":[]
       },
       {
@@ -102,7 +101,6 @@
           "component": "timer",
           "method": "timeout"
         },
-        "condition": null,
         "do":[]
       }
     ],
@@ -127,11 +125,7 @@
             }
         }
     },
-    "compilerSettings": {
-        "filename": "ExampleSketch",
-        "compiler": "arduino-cli",
-        "flags": ["-b", "arduino:avr:uno"]
-    },
-    "platform": "ArduinoUno",
-    "parameters": {}
+
+    "parameters": {},
+    "platform": "ArduinoUno"
 }

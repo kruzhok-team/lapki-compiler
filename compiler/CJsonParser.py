@@ -221,7 +221,6 @@ class CJsonParser:
             arr_args = []
             if "args" in action.keys():
                 for act in list(action["args"].values()):
-                    print(act)
                     if act is str:
                         arr_args.append(act)
                     elif act is dict:
@@ -229,7 +228,6 @@ class CJsonParser:
                         arr_args.append(f'{act["component"]}.{act["method"]}')
             args = "(" + ",".join(map(str, arr_args)) + ")" + \
                 CJsonParser.delimeter[compiler]
-            print(args)
             result.append("".join([component, method, args]))
 
         return "\n".join(result)

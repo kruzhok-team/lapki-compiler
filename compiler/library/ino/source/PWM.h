@@ -7,6 +7,7 @@ class PWM {
     public:
         PWM(uint8_t pin);
         void write(int value);
+        void PWMtone(unsigned int frequency, unsigned long duration);
 };
 
 #endif

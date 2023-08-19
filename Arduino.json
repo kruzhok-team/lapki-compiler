@@ -13,14 +13,13 @@
                         "clicked": {
                             "img" : "",
                             "description" : "Return > 0 if the button is clicked, or 0 if not."
-                        },
-                        "будет еще": {}
+                        }
                     },
                     "parameters": {
-                        "buttonPin" : {
+                        "pin" : {
                             "img" : "",
                             "type": "uint8_t",
-                            "description" : "buttonPin  sets the pin that this switch is connected to"
+                            "description" : "sets the pin that this switch is connected to"
                         },
                         "buttonMode" : {
                             "img" : "",
@@ -29,7 +28,7 @@
                         }
                     },
                     "variables" : {},
-                    "methods" : {"что-то еще": ""},
+                    "methods" : {},
                     "singletone" : "False"
 
                 },
@@ -39,15 +38,10 @@
                     "img": "",
                     "signals": {},
                     "parameters": {
-                        "ledPin" : {
+                        "pin" : {
                             "img" : "",
                             "type": "uint8_t",
-                            "description" : "ledPin the pin connected to this LED"
-                        },
-                        "buttonMode" : {
-                            "img" : "",
-                            "type": "uint8_t",
-                            "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
+                            "description" : "pin - the pin connected to this LED"
                         }
                     },
                     "variables" : {},
