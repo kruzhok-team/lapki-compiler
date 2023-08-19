@@ -278,6 +278,54 @@
                 },
                 "variables": {},
                 "singletone": "False"
+            },
+
+            "DigitalOut": {
+                "description": "Класс для подачи LOW, HIGH на пин",
+                "img": "",
+                "signals": {},
+                "parameters": {
+                    "pin": {
+                        "img": "",
+                        "type": "uint8_t",
+                        "description": "Пин, на который будет подаваться сигнал."
+                    }
+                },
+                "methods": {
+                    "low": {
+                        "img": "",
+                        "parameters": {},
+                        "description": "Подать LOW на пин."
+                    },
+                    "high": {
+                        "img": "",
+                        "parameters": {},
+                        "description": "Подать HIGH на пин."
+                    }
+                },
+                "variables": {},
+                "singletone": "False"
+            },
+
+            "DigitalIn": {
+                "description": "Класс для считывания сигнала с пина",
+                "img": "",
+                "signals": {
+                    "isChanged": {
+                        "img": "",
+                        "description": "Сигнал вызывается, когда меняется значение на пине."
+                    }
+                },
+
+                "methods": {},
+                "variables": {
+                    "value": {
+                        "img": "",
+                        "type": "int",
+                        "description": "Текущее значение на пине."
+                    }
+                },
+                "singletone": "False"
             }
         }
     }

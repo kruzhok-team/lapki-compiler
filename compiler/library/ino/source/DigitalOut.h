@@ -7,7 +7,6 @@ class DigitalOut {
         void high();
         void low();
         void init();
-        void setPWM(int val);
         
         uint8_t pin;
 };

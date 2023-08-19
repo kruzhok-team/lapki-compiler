@@ -15,7 +15,3 @@ void DigitalOut::low() {
 void DigitalOut::init() {
     pinMode(pin, OUTPUT);    
 }
-
-void DigitalOut::setPWM(int value) {
-    analogWrite(pin, value);
-}
