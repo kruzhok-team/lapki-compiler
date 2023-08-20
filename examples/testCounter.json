@@ -117,6 +117,11 @@
       "type": "Counter"
     }
   },
+  "compilerSettings": {
+        "filename": "ExampleSketch",
+        "compiler": "arduino-cli",
+        "flags": ["-b", "arduino:avr:uno"]
+  },
   "parameters": {},
   "platform": "ArduinoUno"
 }

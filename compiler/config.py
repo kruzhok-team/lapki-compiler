@@ -11,3 +11,4 @@ LIBRARY_PATH = os.path.join(MODULE_PATH, "library/")
 # LIBRARY_BINARY_PATH = os.path.join(MODULE_PATH, "library/")
 SCHEMA_DIRECTORY = BASE_DIRECTORY + "schemas/"
 LOG_PATH = BASE_DIRECTORY + "logs.log"  # Замените на нужную папку
+MAX_MSG_SIZE = 1024 * 50  # Максимальный размер сообщения от клиента.

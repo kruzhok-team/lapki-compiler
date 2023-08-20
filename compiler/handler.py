@@ -13,7 +13,7 @@ try:
     from .Compiler import Compiler
     from .JsonConverter import JsonConverter
     from .RequestError import RequestError
-    from .config import BUILD_DIRECTORY
+    from .config import BUILD_DIRECTORY, MAX_MSG_SIZE
     from .wrapper import to_async
     from .Logger import Logger
 
@@ -24,7 +24,7 @@ except ImportError:
     from compiler.Compiler import Compiler
     from compiler.JsonConverter import JsonConverter
     from compiler.RequestError import RequestError
-    from compiler.config import BUILD_DIRECTORY
+    from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
     from compiler.wrapper import to_async
     from compiler.Logger import Logger
 
@@ -45,7 +45,7 @@ class Handler:
 
     @staticmethod
     async def main(request):
-        ws = web.WebSocketResponse(autoclose=False)
+        ws = web.WebSocketResponse(autoclose=False, max_msg_size=MAX_MSG_SIZE)
         await ws.prepare(request)
         await Logger.logger.info(request)
         async for msg in ws:
@@ -69,7 +69,8 @@ class Handler:
     @staticmethod
     async def handle_ws_compile(request, ws=None):
         if ws is None:
-            ws = web.WebSocketResponse(autoclose=False)
+            ws = web.WebSocketResponse(
+                autoclose=False, max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
@@ -177,7 +178,7 @@ class Handler:
 
     @staticmethod
     async def handle_ws_compile_source(request):
-        ws = web.WebSocketResponse()
+        ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
         await ws.prepare(request)
         data = json.loads(await ws.receive_json())
         await Logger.logger.info(data)
@@ -233,7 +234,7 @@ class Handler:
     @staticmethod
     async def handle_berloga_import(request, ws=None):
         if ws is None:
-            ws = web.WebSocketResponse()
+            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
         await Logger.logger.info("XML received!")
@@ -255,7 +256,7 @@ class Handler:
     @staticmethod
     async def handle_berloga_export(request, ws=None):
         if ws is None:
-            ws = web.WebSocketResponse()
+            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         schema = json.loads(await ws.receive_json())
         await Logger.logger.info(schema)
