@@ -334,6 +334,6 @@
             "parameters": {}
         }
     },
-    "platform": "ArduinoUno",
+    "platform": "BearlogaDefend",
     "parameters": {}
 }

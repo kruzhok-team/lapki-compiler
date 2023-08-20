@@ -355,5 +355,5 @@ class GraphmlParser:
                 "initialState": initial_state,
                 "transitions": transitions,
                 "components": components,
-                "platform": "Berloga",
+                "platform": "BearlogaDefend",
                 "parameters": {}}

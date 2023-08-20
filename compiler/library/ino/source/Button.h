@@ -39,7 +39,7 @@ class Button
 
     // Public Member
     uint8_t ID;
-
+    int value;
     // Methods
     void pullup(uint8_t buttonMode);
     void pulldown();

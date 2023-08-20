@@ -29,7 +29,7 @@
 LED::LED(uint8_t ledPin)
 {
   pin = ledPin;
-  status = LOW;
+  value = LOW;
   pinMode(pin, OUTPUT);
 }
 
@@ -42,7 +42,7 @@ LED::LED(uint8_t ledPin)
 */
 bool LED::getState()
 {
-  return status;
+  return value;
 }
 
 /*
@@ -53,7 +53,7 @@ bool LED::getState()
 void LED::on(void)
 {
   digitalWrite(pin, HIGH);
-  status = true;
+  value = true;
 }
 
 /*
@@ -64,7 +64,7 @@ void LED::on(void)
 void LED::off(void)
 {
   digitalWrite(pin, LOW);
-  status = false;
+  value = false;
 }
 
 /*
@@ -75,7 +75,7 @@ void LED::off(void)
 */
 void LED::toggle(void)
 {
-  status ? off() : on();
+  value ? off() : on();
 }
 
 /*
@@ -108,7 +108,7 @@ void LED::blink(unsigned int time, byte times)
 void LED::setValue(byte val)
 {
   analogWrite(pin, val);
-  status = (val <= 127) ? false : true;
+  value = (val <= 127) ? false : true;
 }
 
 /*

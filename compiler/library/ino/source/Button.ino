@@ -107,7 +107,7 @@ bool Button::scan(void)
 {
   unsigned long now = millis();
   int sample = digitalRead(pin);
-
+  value = sample;
   if (sample != bitRead(state, SAMPLE))
     debounceStartTime = now;                                            // Invalidate debounce timer (i.e. we bounced)
 

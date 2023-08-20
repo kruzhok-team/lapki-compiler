@@ -26,7 +26,7 @@ class LED
 {
   public:
     LED(uint8_t ledPin);
-
+    
     bool getState();
     void on();
     void off();
@@ -36,9 +36,9 @@ class LED
     void setValue(byte val);
     void fadeIn(unsigned int time);
     void fadeOut(unsigned int time);
+    bool value;
 
   private:
-    bool status;
     uint8_t pin;
 };
 

@@ -27,7 +27,13 @@
                             "description" : "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor"
                         }
                     },
-                    "variables" : {},
+                    "variables" : {
+                        "value": {
+                            "img": "",
+                            "type": "int",
+                            "description": "Текущее значение на пине"
+                        }
+                    },
                     "methods" : {},
                     "singletone" : "False"
 
@@ -44,7 +50,13 @@
                             "description" : "pin - the pin connected to this LED"
                         }
                     },
-                    "variables" : {},
+                    "variables" : {
+                        "value": {
+                            "img": "",
+                            "type": "int",
+                            "description": "Текущее значение на пине"
+                        }
+                    },
                     "methods" : {
                         "on": {
                             "img" : "",
