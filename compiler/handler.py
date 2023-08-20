@@ -267,15 +267,15 @@ class Handler:
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
-        schema = json.loads(await ws.receive_json())
+        schema = json.loads(await ws.receive_str())
         await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
             states_with_id = {}
-            
+
             for state in sm["states"]:
-                states_with_id[state.name] = state    
-            
+                states_with_id[state.name] = state
+
             converter = JsonConverter(ws)
             xml = await converter.parse(states_with_id, sm["startNode"])
         except KeyError as e:
