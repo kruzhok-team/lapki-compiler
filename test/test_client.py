@@ -105,6 +105,8 @@ async def test_berlogaImport():
 
     await client.ws.close()
 
+    assert response != "null"
+
 
 @pytest.mark.asyncio
 async def test_berlogaExport():
@@ -117,6 +119,8 @@ async def test_berlogaExport():
         await f.write(response)
 
     await client.ws.close()
+
+    assert response != None
 
 
 @pytest.mark.asyncio

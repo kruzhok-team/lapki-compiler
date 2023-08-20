@@ -27,11 +27,11 @@ class JsonConverter:
                 exit/
         """
         events: list[str] = []
-        events.append("\n".join(["\nentry/", state.entry]))
+        events.append("\n".join(["entry/", state.entry]))
         for trig in state.trigs:
             trig.name = trig.name.replace('_', '.')
             if trig.type == "internal":
-                event = "\n".join([f"\n{trig.name}/", f"{trig.action}"])
+                event = "\n".join([f"{trig.name}/", f"{trig.action}"])
 
                 events.append(event)
             else:
@@ -48,7 +48,7 @@ class JsonConverter:
                         "y:EdgeLabel": f"{trig.name}/\n[{trig.guard}]\n{trig.action}"
                     }
                 self.transitions.append(transition)
-        events.append("\n".join(["\nexit/", state.exit]))
+        events.append("\n".join(["exit/", state.exit]))
         return "".join(events)
 
     async def _recursiveGetStates(self, state: State, graph: dict) -> dict:

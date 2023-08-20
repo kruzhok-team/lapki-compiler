@@ -12,12 +12,10 @@
 			<data>
 				<y:GroupNode>
 					<y:NodeLabel>Бой</y:NodeLabel>
-					<y:NodeLabel>
-entry/
-
+					<y:NodeLabel>entry/
 exit/
 </y:NodeLabel>
-					<y:Geometry x="-298" y="534" width="100" height="100"></y:Geometry>
+					<y:Geometry x="267" y="-149" width="697" height="870"></y:Geometry>
 				</y:GroupNode>
 			</data>
 			<graph>
@@ -25,13 +23,11 @@ exit/
 					<data>
 						<y:GenericNode>
 							<y:NodeLabel>Сближение</y:NodeLabel>
-							<y:NodeLabel>
-entry/
+							<y:NodeLabel>entry/
 МодульДвижения.ДвигатьсяКЦели()
-
 exit/
 </y:NodeLabel>
-							<y:Geometry x="-300" y="686" width="100" height="100"></y:Geometry>
+							<y:Geometry x="343" y="-150" width="163" height="766"></y:Geometry>
 						</y:GenericNode>
 					</data>
 				</node>
@@ -39,13 +35,11 @@ exit/
 					<data>
 						<y:GenericNode>
 							<y:NodeLabel>Атака</y:NodeLabel>
-							<y:NodeLabel>
-entry/
+							<y:NodeLabel>entry/
 ОружиеЦелевое.АтаковатьЦель()
-
 exit/
 </y:NodeLabel>
-							<y:Geometry x="-296" y="352" width="100" height="100"></y:Geometry>
+							<y:Geometry x="176" y="-148" width="163" height="766"></y:Geometry>
 						</y:GenericNode>
 					</data>
 				</node>
@@ -55,17 +49,14 @@ exit/
 			<data>
 				<y:GenericNode>
 					<y:NodeLabel>Скан</y:NodeLabel>
-					<y:NodeLabel>
-entry/
+					<y:NodeLabel>entry/
 Сенсор.ПоискВрагаПоДистанции(мин)
-
 Сенсор.ЦельПолучена/
 МодульДвижения.ЗадатьКоординатуВверх(34)
-
 exit/
 Сенсор.ОстановкаПоиска()
 </y:NodeLabel>
-					<y:Geometry x="-2363" y="870" width="100" height="100"></y:Geometry>
+					<y:Geometry x="435" y="-1182" width="340" height="766"></y:Geometry>
 				</y:GenericNode>
 			</data>
 		</node>
@@ -73,12 +64,10 @@ exit/
 			<data>
 				<y:GenericNode>
 					<y:NodeLabel>Состояние</y:NodeLabel>
-					<y:NodeLabel>
-entry/
-
+					<y:NodeLabel>entry/
 exit/
 </y:NodeLabel>
-					<y:Geometry x="-1154" y="506" width="100" height="100"></y:Geometry>
+					<y:Geometry x="253" y="-577" width="100" height="350"></y:Geometry>
 				</y:GenericNode>
 			</data>
 		</node>

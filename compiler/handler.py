@@ -56,9 +56,9 @@ class Handler:
                         await ws.close()
                     case 'arduino':
                         await Handler.handle_ws_compile(request, ws)
-                    case 'importBerloga':
+                    case 'berlogaImport':
                         await Handler.handle_berloga_import(request, ws)
-                    case 'exportBerloga':
+                    case 'berlogaExport':
                         await Handler.handle_berloga_export(request, ws)
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 print('ws connection closed with exception %s' %
@@ -240,16 +240,14 @@ class Handler:
         await Logger.logger.info("XML received!")
         try:
             response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="Берлога/Защита пасеки")
+            await Logger.logger.info("Converted!")
+            await ws.send_str(json.dumps(response, ensure_ascii=False))
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
-            return ws
         except Exception:
             await Logger.logException()
             await RequestError("Something went wrong!").dropConnection(ws)
-            return ws
-        await Logger.logger.info("Converted!")
-        await ws.send_json(response)
 
         return ws
 

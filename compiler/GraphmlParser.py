@@ -4,9 +4,10 @@ from aiofile import async_open
 
 try:
     from .config import SCHEMA_DIRECTORY
+    from .Logger import Logger
 except ImportError:
     from compiler.config import SCHEMA_DIRECTORY
-
+    from compiler.Logger import Logger
 """
     This class gets Berloga-graphml and returns States, Components, Transitions
     Returns:
@@ -102,7 +103,9 @@ class GraphmlParser:
     @staticmethod
     async def getEvents(state: dict, node_type: str, platform: str) -> list[dict[str, dict]]:
         str_events: str = state["data"][node_type]["y:NodeLabel"][1]
+        print('here')
         events: list[str] = str_events.split("\n")
+        print(events)
         new_events: list[dict[str, list[dict] | dict[str, str]]] = []
         current_event: str = ""
         i = 0
@@ -131,13 +134,18 @@ class GraphmlParser:
                     })
                     current_dict = new_events[i]["do"]
                 i += 1
+                print('here1')
                 continue
 
             action_dict = {}
             action = ev.split(".")
             component = action[0]
+            print('here2')
             action_dict["component"] = component
+            print(action)
+            print(ev)
             bracket_pos = action[1].find("(")
+            print('here3')
             method = action[1][:bracket_pos]
             action_dict["method"] = method
             # Переделать
@@ -149,7 +157,7 @@ class GraphmlParser:
                     component, method, args, platform)
             else:
                 action_dict["args"] = {}
-
+            print('here3')
             current_dict.append(action_dict)
         return new_events
 
@@ -308,24 +316,28 @@ class GraphmlParser:
 
     @staticmethod
     async def createStates(flattenStates: list[dict], states_dict: dict, platform: str) -> dict:
-        states = {}
-        for state in flattenStates:
-            if state["@id"] == '':
-                continue
-            new_state = {}
-            id = await GraphmlParser.getNodeId(state["@id"])
-            node_type = states_dict[state["@id"]]["type"]
-            new_state["name"] = states_dict[state["@id"]]["name"]
-            new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
-            geometry = await GraphmlParser.getGeometry(state, node_type)
-            states_dict[state["@id"]]["geometry"] = geometry
-            new_state["bounds"] = geometry
-            parent = await GraphmlParser.getParentName(state, states_dict)
-            if parent != "":
-                new_state["parent"] = parent
-            states[id] = new_state
+        try:
+            states = {}
+            for state in flattenStates:
+                if state["@id"] == '':
+                    continue
+                new_state = {}
+                id = await GraphmlParser.getNodeId(state["@id"])
+                node_type = states_dict[state["@id"]]["type"]
+                new_state["name"] = states_dict[state["@id"]]["name"]
+                print(state)
+                new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
+                geometry = await GraphmlParser.getGeometry(state, node_type)
+                states_dict[state["@id"]]["geometry"] = geometry
+                new_state["bounds"] = geometry
+                parent = await GraphmlParser.getParentName(state, states_dict)
+                if parent != "":
+                    new_state["parent"] = parent
+                states[id] = new_state
 
-        return states
+            return states
+        except Exception:
+            await Logger.logException()
 
     @staticmethod
     async def getComponents(platform: str) -> dict:
@@ -341,19 +353,22 @@ class GraphmlParser:
 
     @staticmethod
     async def parse(unprocessed_xml: str, filename: str, platform: str):
-        xml = xmltodict.parse(unprocessed_xml)
-        await GraphmlParser.initPlatform(filename, platform)
-        graph = xml["graphml"]["graph"]
-        nodes = graph["node"]
-        triggers = graph["edge"]
-        components = await GraphmlParser.getComponents(platform)
-        flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes)
-        states = await GraphmlParser.createStates(flattenStates, states_dict, platform)
-        transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict, platform)
+        try:
+            xml = xmltodict.parse(unprocessed_xml)
+            await GraphmlParser.initPlatform(filename, platform)
+            graph = xml["graphml"]["graph"]
+            nodes = graph["node"]
+            triggers = graph["edge"]
+            components = await GraphmlParser.getComponents(platform)
+            flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes)
+            states = await GraphmlParser.createStates(flattenStates, states_dict, platform)
+            transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict, platform)
 
-        return {"states": states,
-                "initialState": initial_state,
-                "transitions": transitions,
-                "components": components,
-                "platform": "BearlogaDefend",
-                "parameters": {}}
+            return {"states": states,
+                    "initialState": initial_state,
+                    "transitions": transitions,
+                    "components": components,
+                    "platform": "BearlogaDefend",
+                    "parameters": {}}
+        except Exception:
+            await Logger.logException()
