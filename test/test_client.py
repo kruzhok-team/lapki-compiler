@@ -97,11 +97,12 @@ async def test_sendArduinoSMJson():
 async def test_berlogaImport():
     client = Client()
     await client.doConnect(f"{BASE_ADDR}/berloga/import")
-    response = await client.importBerlogaScheme("compiler/schemas/Autoborder_with_actions.graphml")
+    # response = await client.importBerlogaScheme("compiler/schemas/Autoborder_with_actions.graphml")
+    response = await client.importBerlogaScheme("compiler/schemas/berlogaScheme.graphml")
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
     async with async_open(path + "berlogaScheme.json", "w") as f:
-        await f.write(response)
+        await f.write(json.dumps(response["source"][0]["fileContent"], indent=4, ensure_ascii=False))
 
     await client.ws.close()
 

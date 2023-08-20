@@ -241,7 +241,18 @@ class Handler:
         try:
             response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="Берлога/Защита пасеки")
             await Logger.logger.info("Converted!")
-            await ws.send_str(json.dumps(response, ensure_ascii=False))
+            await ws.send_json(
+                {
+                    "result": "OK",
+                    "stdout": "",
+                    "stderr": "",
+                    "source": [{
+                        "filename": "Autoborder_1234",
+                        "extension": ".json",
+                        "fileContent": response
+                    }],
+                    "binary": []
+                })
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
@@ -260,8 +271,13 @@ class Handler:
         await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
+            states_with_id = {}
+            
+            for state in sm["states"]:
+                states_with_id[state.name] = state    
+            
             converter = JsonConverter(ws)
-            xml = await converter.parse(sm["states"], sm["startNode"])
+            xml = await converter.parse(states_with_id, sm["startNode"])
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)

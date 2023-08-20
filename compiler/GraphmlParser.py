@@ -72,7 +72,7 @@ class GraphmlParser:
         }
 
     @staticmethod
-    async def addStateToDict(state: dict, states_dict: dict) -> None:
+    async def addStateToDict(state: dict, states_dict: dict, parent: str) -> None:
         if 'y:GenericNode' in state["data"]:
             node_type = 'y:GenericNode'
         else:
@@ -80,6 +80,7 @@ class GraphmlParser:
 
         states_dict[state["@id"]] = {}
         states_dict[state["@id"]]["type"] = node_type
+        states_dict[state["@id"]]["parent"] = parent
         try:
             states_dict[state["@id"]
                         ]["name"] = state["data"][node_type]["y:NodeLabel"][0]
@@ -87,15 +88,15 @@ class GraphmlParser:
             pass
 
     @staticmethod
-    async def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
+    async def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}, nparent='') -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
         for node in xml:
             if "graph" in node.keys():
                 parent = await GraphmlParser.getParentNode(node)
                 states.append(parent)
-                await GraphmlParser.addStateToDict(parent, states_dict)
-                await GraphmlParser.getFlattenStates(node["graph"]["node"], states, states_dict)
+                await GraphmlParser.addStateToDict(parent, states_dict, parent=nparent)
+                await GraphmlParser.getFlattenStates(node["graph"]["node"], states, states_dict, nparent=parent["@id"])
             else:
-                await GraphmlParser.addStateToDict(node, states_dict)
+                await GraphmlParser.addStateToDict(node, states_dict, parent=nparent)
                 states.append(node)
 
         return states, states_dict
@@ -103,9 +104,7 @@ class GraphmlParser:
     @staticmethod
     async def getEvents(state: dict, node_type: str, platform: str) -> list[dict[str, dict]]:
         str_events: str = state["data"][node_type]["y:NodeLabel"][1]
-        print('here')
         events: list[str] = str_events.split("\n")
-        print(events)
         new_events: list[dict[str, list[dict] | dict[str, str]]] = []
         current_event: str = ""
         i = 0
@@ -134,18 +133,13 @@ class GraphmlParser:
                     })
                     current_dict = new_events[i]["do"]
                 i += 1
-                print('here1')
                 continue
 
             action_dict = {}
             action = ev.split(".")
             component = action[0]
-            print('here2')
             action_dict["component"] = component
-            print(action)
-            print(ev)
             bracket_pos = action[1].find("(")
-            print('here3')
             method = action[1][:bracket_pos]
             action_dict["method"] = method
             # Переделать
@@ -157,19 +151,14 @@ class GraphmlParser:
                     component, method, args, platform)
             else:
                 action_dict["args"] = {}
-            print('here3')
             current_dict.append(action_dict)
         return new_events
 
     @staticmethod
     async def getParentName(state: dict, states_dict: dict) -> str:
         id: str = state["@id"]
-        pos = id.rfind(":")
-        parent = ""
-        if pos != -1:
-            parent = id[:pos-1]
 
-        return parent
+        return states_dict[id]["parent"]
 
     @staticmethod
     async def checkValueType(value: str) -> dict:
@@ -325,7 +314,6 @@ class GraphmlParser:
                 id = await GraphmlParser.getNodeId(state["@id"])
                 node_type = states_dict[state["@id"]]["type"]
                 new_state["name"] = states_dict[state["@id"]]["name"]
-                print(state)
                 new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
                 geometry = await GraphmlParser.getGeometry(state, node_type)
                 states_dict[state["@id"]]["geometry"] = geometry

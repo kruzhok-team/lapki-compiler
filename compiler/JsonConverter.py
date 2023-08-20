@@ -7,7 +7,8 @@ except ImportError:
 
 
 class JsonConverter:
-    """Класс для экспорта в берлогу.
+    """
+        Класс для экспорта в берлогу.
     """
 
     def __init__(self, ws) -> None:
@@ -51,9 +52,9 @@ class JsonConverter:
         events.append("\n".join(["exit/", state.exit]))
         return "".join(events)
 
-    async def _recursiveGetStates(self, state: State, graph: dict) -> dict:
+    async def _recursiveGetStates(self, state: State, graph: dict, parent: str = '') -> dict:
         xmlstate = {
-            "@id": state.id,
+            "@id": f"{state.id}",
             "data": {}
         }
 
@@ -62,7 +63,7 @@ class JsonConverter:
                 node_type = "y:GroupNode"
                 xmlstate["data"][node_type] = {
                     "y:NodeLabel": [
-                        state.name,
+                        f"{state.name}",
                         await self.getEvents(state)
                     ],
                     "y:Geometry": {
@@ -75,9 +76,8 @@ class JsonConverter:
 
                 xmlstate["graph"] = {}
                 xmlstate["graph"]["node"] = []
-
                 for child in state.childs:
-                    xmlstate["graph"]["node"].append(await self._recursiveGetStates(child, xmlstate["graph"]))
+                    xmlstate["graph"]["node"].append(await self._recursiveGetStates(child, xmlstate["graph"], parent=f"{state.id}::"))
             else:
                 for child in state.childs:
                     graph["node"].append(await self._recursiveGetStates(child, graph))
@@ -86,7 +86,7 @@ class JsonConverter:
             node_type = "y:GenericNode"
             xmlstate["data"][node_type] = {
                 "y:NodeLabel": [
-                    state.name,
+                    f"{state.name}",
                     await self.getEvents(state)
                 ],
                 "y:Geometry": {
@@ -129,11 +129,12 @@ class JsonConverter:
             }
         )
 
-    async def parse(self, states: list[State], initial_state: str) -> str:
+    async def parse(self, states: dict[str, State], initial_state: str) -> str:
+        self.states = states
         data = {"graphml": {
             "@xmlns": "http://graphml.graphdrawing.org/xmlns",
             "@xmlns:y": "http://www.yworks.com/xml/graphml",
-            "graph": await self.getStates(states),
+            "graph": await self.getStates(list(states.values())),
         }
         }
 
