@@ -239,7 +239,7 @@ class Handler:
         unprocessed_xml = await ws.receive_str()
         await Logger.logger.info("XML received!")
         try:
-            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="Берлога/Защита пасеки")
+            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="BearlogaDefend")
             await Logger.logger.info("Converted!")
             await ws.send_json(
                 {
