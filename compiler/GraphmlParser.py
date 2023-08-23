@@ -223,9 +223,9 @@ class GraphmlParser:
         c2_x = x2 + (w2 // 2)
         c2_y = y2 + (h2 // 2)
 
-        nx = (c1_x + c2_x) // 2
+        nx = (c1_x + c2_x) // 3
 
-        ny = (c1_y + c2_y) // 2
+        ny = (c1_y + c2_y) // 3
 
         if (nx, ny) in used_coordinates:
             ny += 200
@@ -328,6 +328,7 @@ class GraphmlParser:
         w = geometry["width"]
         x = geometry["x"] - p_x
         y = geometry["y"] - p_y
+
         if p_y != 0:
             y += 300
             x += 200
