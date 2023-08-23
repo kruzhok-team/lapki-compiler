@@ -72,18 +72,17 @@ class GraphmlParser:
         }
 
     @staticmethod
-    async def addStateToDict(state: dict, states_dict: dict, parent: str) -> None:
+    def addStateToDict(state: dict, states_dict: dict, parent: str) -> None:
         if 'y:GenericNode' in state["data"]:
             node_type = 'y:GenericNode'
         else:
             node_type = 'y:GroupNode'
-
+        
         states_dict[state["@id"]] = {}
         states_dict[state["@id"]]["type"] = node_type
         states_dict[state["@id"]]["parent"] = parent
         try:
-            states_dict[state["@id"]
-                        ]["name"] = state["data"][node_type]["y:NodeLabel"][0]
+            states_dict[state["@id"]]["name"] = state["data"][node_type]["y:NodeLabel"][0]
         except TypeError:
             pass
 
@@ -93,12 +92,11 @@ class GraphmlParser:
             if "graph" in node.keys():
                 parent = await GraphmlParser.getParentNode(node)
                 states.append(parent)
-                await GraphmlParser.addStateToDict(parent, states_dict, parent=nparent)
+                GraphmlParser.addStateToDict(parent, states_dict, parent=nparent)        
                 await GraphmlParser.getFlattenStates(node["graph"]["node"], states, states_dict, nparent=parent["@id"])
             else:
-                await GraphmlParser.addStateToDict(node, states_dict, parent=nparent)
+                GraphmlParser.addStateToDict(node, states_dict, parent=nparent)
                 states.append(node)
-
         return states, states_dict
 
     @staticmethod
@@ -212,7 +210,6 @@ class GraphmlParser:
     async def getNodeId(id: str) -> str:
         pos = id.rfind(":")
         node_id = id[pos + 1:]
-
         return node_id
 
     @staticmethod
@@ -348,10 +345,9 @@ class GraphmlParser:
             nodes = graph["node"]
             triggers = graph["edge"]
             components = await GraphmlParser.getComponents(platform)
-            flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes)
+            flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes, states=[], states_dict={})
             states = await GraphmlParser.createStates(flattenStates, states_dict, platform)
             transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict, platform)
-
             return {"states": states,
                     "initialState": initial_state,
                     "transitions": transitions,
