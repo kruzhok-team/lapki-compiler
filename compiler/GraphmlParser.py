@@ -1,5 +1,6 @@
 import xmltodict
 import json
+import random
 from aiofile import async_open
 
 try:
@@ -20,6 +21,8 @@ class GraphmlParser:
 
     def __init__(self, platform: str, ws):
         pass
+
+    colors = ["#00a550", "#9999ff", "#faf74d", "#ffa500", "#5dded3"]
 
     systemSignalsAlias = {
         "entry": "onEnter",
@@ -77,12 +80,28 @@ class GraphmlParser:
             node_type = 'y:GenericNode'
         else:
             node_type = 'y:GroupNode'
-        
+
         states_dict[state["@id"]] = {}
         states_dict[state["@id"]]["type"] = node_type
         states_dict[state["@id"]]["parent"] = parent
+        if "y:Geometry" in state["data"][node_type]:
+            geometry = state["data"][node_type]["y:Geometry"]
+            states_dict[state["@id"]]["geometry"] = {
+                "x": int(float(geometry["@x"])),
+                "y": int(float(geometry["@y"])),
+                "width": int(float(geometry["@width"])),
+                "height": int(float(geometry["@height"]))
+            }
+        else:
+            states_dict[state["@id"]]["geometry"] = {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0
+            }
         try:
-            states_dict[state["@id"]]["name"] = state["data"][node_type]["y:NodeLabel"][0]
+            states_dict[state["@id"]
+                        ]["name"] = state["data"][node_type]["y:NodeLabel"][0]
         except TypeError:
             pass
 
@@ -92,10 +111,13 @@ class GraphmlParser:
             if "graph" in node.keys():
                 parent = await GraphmlParser.getParentNode(node)
                 states.append(parent)
-                GraphmlParser.addStateToDict(parent, states_dict, parent=nparent)        
+                GraphmlParser.addStateToDict(
+                    parent, states_dict, parent=nparent)
                 await GraphmlParser.getFlattenStates(node["graph"]["node"], states, states_dict, nparent=parent["@id"])
+
             else:
-                GraphmlParser.addStateToDict(node, states_dict, parent=nparent)
+                GraphmlParser.addStateToDict(
+                    node, states_dict, parent=nparent)
                 states.append(node)
         return states, states_dict
 
@@ -192,16 +214,23 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    async def calculateEdgePosition(source_position: dict, target_position: dict, used_coordinates: list) -> dict[str, int]:
+    def calculateEdgePosition(source_position: dict, target_position: dict, used_coordinates: list) -> dict[str, int]:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
 
-        nx = x1 + w1 // 2
-        ny = (y1 + y2 + h2) // 2
+        c1_x = x1 + (w1 // 2)
+        c1_y = y1 + (h1 // 2)
+        c2_x = x2 + (w2 // 2)
+        c2_y = y2 + (h2 // 2)
 
-        while (nx, ny) in used_coordinates:
-            ny += 100
-            nx += 100
+        nx = (c1_x + c2_x) // 2
+
+        ny = (c1_y + c2_y) // 2
+
+        if (nx, ny) in used_coordinates:
+            ny += 200
+            nx += 200
+
         used_coordinates.append((nx, ny))
         return {"x": nx, "y": ny}
 
@@ -276,9 +305,10 @@ class GraphmlParser:
                 transition["condition"] = await GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
-                transition["position"] = await GraphmlParser.calculateEdgePosition(source_geometry, target_geometry, used_coordinates)
+                transition["position"] = GraphmlParser.calculateEdgePosition(
+                    source_geometry, target_geometry, used_coordinates)
                 transition["do"] = actions
-                transition["color"] = "#22a4f5"
+                transition["color"] = random.choice(GraphmlParser.colors)
                 transitions.append(transition)
             except AttributeError as e:
                 initial_state = trigger["@target"]
@@ -286,18 +316,27 @@ class GraphmlParser:
         return transitions, initial_state
 
     @staticmethod
-    async def getGeometry(state: dict, type: str) -> dict:
-        geometry = state["data"][type]["y:Geometry"]
-        x = geometry['@x']
-        y = geometry['@y']
-        w = geometry['@width']
-        h = geometry['@height']
+    async def getGeometry(id: str, states_dict: dict) -> dict:
+        p_geometry = states_dict[states_dict[id]["parent"]]["geometry"]
+
+        p_x = p_geometry["x"]
+        p_y = p_geometry["y"]
+
+        geometry = states_dict[id]["geometry"]
+
+        h = geometry["height"]
+        w = geometry["width"]
+        x = geometry["x"] - p_x
+        y = geometry["y"] - p_y
+        if p_y != 0:
+            y += 300
+            x += 200
 
         return {
-            "x": int(float(y)) // 2,
-            "y": int(float(x)) // 2,
-            "width": int(float(h)),
-            "height": int(float(w))
+            "x": int(float(x)),
+            "y": int(float(y)),
+            "width": int(float(w)),
+            "height": int(float(h))
         }
 
     @staticmethod
@@ -312,7 +351,7 @@ class GraphmlParser:
                 node_type = states_dict[state["@id"]]["type"]
                 new_state["name"] = states_dict[state["@id"]]["name"]
                 new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
-                geometry = await GraphmlParser.getGeometry(state, node_type)
+                geometry = await GraphmlParser.getGeometry(state["@id"], states_dict)
                 states_dict[state["@id"]]["geometry"] = geometry
                 new_state["bounds"] = geometry
                 parent = await GraphmlParser.getParentName(state, states_dict)
