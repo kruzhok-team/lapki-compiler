@@ -75,6 +75,14 @@ class GraphmlParser:
         }
 
     @staticmethod
+    def randColor() -> str:
+        """
+        Gen hex-color;
+        """
+        def r(): return random.randint(0, 255)
+        return '#%02X%02X%02X' % (r(), r(), r())
+
+    @staticmethod
     def addStateToDict(state: dict, states_dict: dict, parent: str) -> None:
         if 'y:GenericNode' in state["data"]:
             node_type = 'y:GenericNode'
@@ -308,7 +316,7 @@ class GraphmlParser:
                 transition["position"] = GraphmlParser.calculateEdgePosition(
                     source_geometry, target_geometry, used_coordinates)
                 transition["do"] = actions
-                transition["color"] = random.choice(GraphmlParser.colors)
+                transition["color"] = GraphmlParser.randColor()
                 transitions.append(transition)
             except AttributeError as e:
                 initial_state = trigger["@target"]
@@ -353,7 +361,7 @@ class GraphmlParser:
                 new_state["name"] = states_dict[state["@id"]]["name"]
                 new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
                 geometry = await GraphmlParser.getGeometry(state["@id"], states_dict)
-                states_dict[state["@id"]]["geometry"] = geometry
+                # states_dict[state["@id"]]["geometry"] = geometry
                 new_state["bounds"] = geometry
                 parent = await GraphmlParser.getParentName(state, states_dict)
                 if parent != "":
