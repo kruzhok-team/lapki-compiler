@@ -231,13 +231,13 @@ class GraphmlParser:
         c2_x = x2 + (w2 // 2)
         c2_y = y2 + (h2 // 2)
 
-        nx = (c1_x + c2_x) // 3
+        nx = (x1 + x2) // 2
 
-        ny = (c1_y + c2_y) // 3
+        ny = (y1 + y2) // 2
 
         if (nx, ny) in used_coordinates:
-            ny += 200
-            nx += 200
+            ny += 150
+            nx += 150
 
         used_coordinates.append((nx, ny))
         return {"x": nx, "y": ny}

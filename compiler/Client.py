@@ -48,7 +48,6 @@ class Client:
             }
             i = 0
             for g in globs:
-                print(g)
                 for file in path.glob(g):
                     if file.is_file():
                         request["source"].append({})

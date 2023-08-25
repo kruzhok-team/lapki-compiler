@@ -94,12 +94,10 @@ class Handler:
                                                              filename=filename,
                                                              compiler=compiler,
                                                              path=path)
-                    write_to_cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"],
+                    await CppFileWriter(sm_name=filename, start_node=sm["startNode"],
                                                                start_action="", states=sm["states"],
                                                                notes=sm["notes"],
-                                                               player_signal=sm["playerSignals"]).write_to_file)
-                    await Logger.logger.info("Parsed and wrote to cpp")
-                    await write_to_cpp_file(path, extension)
+                                                               player_signal=sm["playerSignals"]).write_to_file(path, extension)
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     libraries = [*libraries, *Compiler.c_default_libraries]
@@ -112,9 +110,8 @@ class Handler:
                     path += filename + "/"
                     await AsyncPath(path).mkdir(parents=True)
                     sm = await CJsonParser.parseStateMachine(data, ws, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
-                    write_to_cpp_file = to_async(CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="",
-                                                               states=sm["states"], notes=sm["notes"], player_signal=sm["playerSignals"]).write_to_file)
-                    await write_to_cpp_file(path, "ino")
+                    await CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="",
+                                                               states=sm["states"], notes=sm["notes"], player_signal=sm["playerSignals"]).write_to_file(path, "ino")
                     await Logger.logger.info("Parsed and wrote to ino")
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)

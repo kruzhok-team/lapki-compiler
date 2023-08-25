@@ -143,7 +143,6 @@ class CJsonParser:
                                                              signal=name)
             check_signals.append(check)
 
-        print(check_signals)
         match compiler:
             case "g++" | "gcc":
                 setup_function = '\n\t'.join(["\nvoid setup(){",
