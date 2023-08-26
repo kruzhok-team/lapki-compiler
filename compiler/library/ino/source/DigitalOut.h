@@ -4,11 +4,13 @@
 class DigitalOut {
     public:
         DigitalOut(uint8_t _pin);
-        void high();
-        void low();
+        void on();
+        void off();
         void init();
-        
+        void toggle();
+
         uint8_t pin;
+        uint8_t value;
 };
 
 #endif

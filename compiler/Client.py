@@ -33,7 +33,7 @@ class Client:
         async with async_open(path, 'r') as req:
             data = json.loads(await req.read())
 
-        await self.ws.send_json(json.dumps(data))
+        await self.ws.send_str(json.dumps(data, ensure_ascii=False))
         response = await self.ws.receive_str()
 
         return response

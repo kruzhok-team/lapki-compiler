@@ -304,18 +304,24 @@
                     }
                 },
                 "methods": {
-                    "low": {
+                    "off": {
                         "img": "",
                         "parameters": {},
                         "description": "Подать LOW на пин."
                     },
-                    "high": {
+                    "on": {
                         "img": "",
                         "parameters": {},
                         "description": "Подать HIGH на пин."
                     }
                 },
-                "variables": {},
+                "variables": {
+                    "value": {
+                        "img": "",
+                        "type": "uint8_t",
+                        "description": "Текущее значение на пине"
+                    }
+                },
                 "singletone": "False"
             },
 

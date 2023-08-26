@@ -18,7 +18,7 @@
                     },
                     {
                         "component": "digitalOut",
-                        "method": "high"
+                        "method": "on"
                     },
                     {
                         "component": "serial",
@@ -48,13 +48,25 @@
                 "do": [
                     {
                         "component": "digitalOut",
-                        "method": "low"
+                        "method": "off"
                     },
                     {
                         "component": "serial",
                         "method": "println",
                         "args": {
                             "value": "\"Low!\""    
+                        }
+                    },
+                    {
+                        "component": "digitalOut",
+                        "method": "toggle",
+                        "args": {}
+                    },
+                    {
+                        "component": "serial",
+                        "method": "println",
+                        "args": {
+                            "value": "\"Toggle!!\""    
                         }
                     }
                 ]
