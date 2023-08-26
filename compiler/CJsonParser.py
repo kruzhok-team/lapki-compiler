@@ -50,8 +50,6 @@ class CJsonParser:
         match type:
             case 'Timer':
                 return f"\n{type} {name} = {type}(the_{filename}, {name}_timeout_SIG);"
-            case 'QHsmSerial':
-                return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))}, the_{filename});"
             case _:
                 return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))});"
 
@@ -64,11 +62,16 @@ class CJsonParser:
             str: специчиная для данного компонента проверка сигнала
         """
         match type:
-            case 'Button':
-                return '\n\t\t'.join([f"\n\t{name}.scan();\
-                        \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});\n\t"]) + "\n\t}"
+            # case 'Button':
+            #         return \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});\n\t"]) + "\n\t}"
             case "Timer":
                 return f"\n\t{name}.timeout();"
+            # case "QHsmSerial":
+            #  }"   if not checked:
+            #         return '\n\t\t'.join([f"\n\t{name}.readByte();\
+            #                 \n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});\n\t"]) + "\n\t}"
+            #     else:
+            #         return '\n\t\t'.join([f"\n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});\n\t"]) + "\n\t
             case _:
                 return '\n\t\t'.join([f"\n\t\n\tif({triggers['guard']})", "{", f"SIMPLE_DISPATCH(the_{filename}, {signal});"]) + "\n\t}"
 
@@ -103,6 +106,10 @@ class CJsonParser:
             case "AnalogIn":
                 signals.append(
                     f"\n\t{component.name}.read();")
+            case "Button":
+                signals.append(f"\n\t{component.name}.scan();")
+            case "QHsmSerial":
+                signals.append(f"\n\t{component.name}.readByte();")
 
     @staticmethod
     async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
@@ -132,7 +139,7 @@ class CJsonParser:
         notes = []
 
         class_filename = filename[0].upper() + filename[1:]
-
+            
         for name in triggers.keys():
             component_name = triggers[name]["component_name"]
             component_type = components_types[component_name]
@@ -363,10 +370,6 @@ class CJsonParser:
         signals: list[str] = []
         for component in components:
             match component.type:
-                case "QHsmSerial":
-                    if component.type not in types:
-                        signals.append("SERIAL_NO_DATA_RECEIVED")
-                        signals.append("SERIAL_RECEIVED_BYTE")
                 case "Timer":
                     if component.type not in types and f"{component.name}_timeout" not in player_signals:
                         signals.append(f"{component.name}_timeout")

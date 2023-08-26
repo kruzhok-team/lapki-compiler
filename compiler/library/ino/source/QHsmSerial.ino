@@ -1,19 +1,20 @@
 #include "QHsmSerial.h"
 
-QHsmSerial::QHsmSerial(unsigned long baud, QHsm* qhsm){
-  _qhsm = qhsm;
+QHsmSerial::QHsmSerial(unsigned long baud){
   _baud = baud;
   lastByte = -1;
 }
 
+bool QHsmSerial::byteReceived(){
+  return lastByte != -1; 
+}
+
+bool QHsmSerial::noByteReceived(){
+  return lastByte == -1; 
+}
+
 void QHsmSerial::readByte(){
   lastByte = Serial.read();
-  if(lastByte == -1){
-    SIGNAL_DISPATCH(_qhsm, SERIAL_NO_DATA_RECEIVED_SIG);
-  }
-  else{
-    SIGNAL_DISPATCH(_qhsm, SERIAL_RECEIVED_BYTE_SIG);
-  }
 }
 
 void QHsmSerial::print(char msg[]){

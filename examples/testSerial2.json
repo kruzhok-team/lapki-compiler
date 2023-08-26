@@ -1,0 +1,70 @@
+{
+    "states": {
+      "n0": {
+        "name": "PrintData",
+        "events": [
+            {
+                "trigger": {
+                    "component": "serial",
+                    "method": "byteReceived"
+                },
+                "do": [
+                    {
+                        "component": "serial",
+                        "method": "println",
+                        "args": {
+                            "value": {
+                                "component": "serial",
+                                "method": "lastByte"
+                            }
+                        }
+                    }
+                ]
+            },
+
+            {
+                "trigger": {
+                    "component": "serial",
+                    "method": "noByteReceived"
+                },
+                "do": [
+                    {
+                        "component": "serial",
+                        "method": "println",
+                        "args": {
+                            "value": "\"NoData!\""
+                        }
+                    }
+                ]
+            }
+        ],
+        "bounds": {
+            "x": 196,
+            "y": 364,
+            "height": 95,
+            "width": 450
+        }
+    }
+    },
+  
+    "initialState": "n0",
+  
+    "transitions": [],
+  
+    "components": {
+        "serial": {
+            "type": "QHsmSerial",
+            "parameters": {
+                "baud": "9600"
+            }
+        }
+    },
+    "compilerSettings": {
+        "filename": "ExampleSketch",
+        "compiler": "arduino-cli",
+        "flags": ["-b", "arduino:avr:uno"]
+    },
+
+    "platform": "ArduinoUno",
+    "parameters": {}
+}

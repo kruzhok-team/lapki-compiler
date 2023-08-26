@@ -5,7 +5,7 @@
 
 class QHsmSerial {
     public:
-        QHsmSerial(unsigned long baud,  QHsm* qhsm);
+        QHsmSerial(unsigned long baud);
         void init();
         void readByte();
 
@@ -13,11 +13,11 @@ class QHsmSerial {
         void print(int value);
         void println(char value[]);
         void println(int value);
-        
+        bool byteReceived();
+        bool noByteReceived();
+
         int lastByte;
         unsigned long _baud;
-        QHsm* _qhsm;
-
 };
 
 #endif
