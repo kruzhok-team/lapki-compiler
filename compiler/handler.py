@@ -202,8 +202,11 @@ class Handler:
             path = ''.join([dirname, file.name, file.extension])
             async with async_open(path, 'w') as f:
                 await f.write(file.content)
-
-        build_files = await Compiler.getBuildFiles(libraries=[], compiler=compiler, directory=dirname)
+        if compiler in ["g++", "gcc"]:
+            platform = "cpp"
+        else:
+            platform = "arduino"
+        build_files = await Compiler.getBuildFiles(libraries=[], compiler=compiler, directory=dirname, platform=platform)
         result = await Compiler.compile(base_dir=dirname, build_files=build_files, flags=flags, compiler=compiler)
         response = {
             "result": "OK",

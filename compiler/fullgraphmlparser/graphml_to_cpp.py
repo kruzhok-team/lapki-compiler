@@ -38,7 +38,7 @@ class CppFileWriter:
     notes_dict = {}
     f = None
     all_signals = []
-
+    userFlag = False  # Флаг на наличие кода для класса User
     def __init__(self, sm_name: str, start_node: str, start_action: str, states: List[State], notes: List[Dict[str, Any]], player_signal: List[str]):
         self.sm_name = sm_name
         self.player_signal = player_signal
@@ -46,12 +46,16 @@ class CppFileWriter:
         notes_mapping = [('Code for h-file', 'raw_h_code'),
                          ('Declare variable in h-file', "declare_h_code"),
                          ('Code for cpp-file', 'raw_cpp_code'),
-         ('Constructor fields', 'constructor_fields'),
-         ('State fields', 'state_fields'),
-         ('Constructor code', 'constructor_code'),
-         ('Event fields', 'event_fields')]
+                         ('Constructor fields', 'constructor_fields'),
+                         ('State fields', 'state_fields'),
+                         ('Constructor code', 'constructor_code'),
+                         ('Event fields', 'event_fields'),
+                         ('User variables for h-file', 'user_variables_h'),
+                         ('User methods for h-file', 'user_methods_h'),
+                         ('User variables for c-file', 'user_variables_c'),
+                         ('User methods for c-file', 'user_methods_c')]
+        
         self.notes_dict = {key: '' for _, key in notes_mapping}
-
         for note in notes:
             for prefix, key in notes_mapping:
                 if note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
@@ -78,10 +82,46 @@ class CppFileWriter:
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
                 await self._insert_string('//End of c code from diagram\n\n\n')
             self.f = None
+        async with async_open(os.path.join(folder, 'User.h'), "w") as f:
+            self.f = f
+            await self._insert_file_template('user_preamble_h.txt')
+            
+            if self.notes_dict['user_variables_h']:
+                await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
+                self.userFlag = True
+            if self.notes_dict['user_methods_c']:
+                await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
+                self.userFlag = True
+            await self._insert_file_template('user_footer_h.txt')
 
+        async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
+            self.f = f
+
+            if self.notes_dict['user_variables_h']:
+                await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
+
+            if self.notes_dict['user_methods_h']:
+                await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
+
+
+        async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
+            self.f = f
+            await self._insert_file_template('user_preamble_c.txt')
+            
+            await self._insert_string('// Start variables\n')
+            if self.notes_dict['user_variables_c']:
+                await self._insert_string('\n'.join(self.notes_dict['user_variables_c'].split('\n')[1:]) + '\n')
+            await self._insert_string('// end variables\n')
+            
+            if self.notes_dict['user_methods_c']:
+                await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
+        
         async with async_open(os.path.join(folder, '%s.h' % self.sm_name), 'w') as f:
             self.f = f
+                
             await self._insert_file_template('preamble_h.txt')
+            if self.userFlag:
+                await self._insert_string('#include "User.h"\n')
             if self.notes_dict['raw_h_code']:
                 await self._insert_string('//Start of h code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_h_code'].split('\n')[1:]) + '\n')
@@ -130,7 +170,7 @@ class CppFileWriter:
                 await self._insert_string('//End of h code from diagram\n\n\n')
             await self._insert_file_template('footer_h.txt')
             self.f = None
-
+    
     async def _write_constructor(self):
         await self._write_full_line_comment('.$define${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
         await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
