@@ -1,4 +1,5 @@
 import sys
+from aiopath import AsyncPath
 from aiologger.handlers.files import AsyncFileHandler
 from aiologger.loggers.json import JsonLogger
 from aiologger.levels import LogLevel
@@ -14,7 +15,9 @@ class Logger:
     logger: JsonLogger
 
     @staticmethod
-    def init_logger():
+    async def init_logger():
+        await AsyncPath(LOG_PATH[:LOG_PATH.rfind('/')]).mkdir(parents=True, exist_ok=True)
+        await AsyncPath(LOG_PATH).touch(exist_ok=True)
         Logger.logger = JsonLogger(name="logger", level=LogLevel.DEBUG,
                                    serializer_kwargs={"ensure_ascii": False})
 
