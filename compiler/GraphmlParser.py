@@ -61,6 +61,7 @@ class GraphmlParser:
         Если такая платформа уже была инициализирована,
         повторной инициализации не происходит.
         """
+        await Logger.logger.info(f"{SCHEMA_DIRECTORY}{filename}.json")
         if platform not in GraphmlParser.platforms.keys():
             async with async_open(f"{SCHEMA_DIRECTORY}{filename}.json", "r") as f:
                 data = await f.read()

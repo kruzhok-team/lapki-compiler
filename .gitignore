@@ -5,3 +5,4 @@ server/2*
 result
 .vscode
 logs.log
+*config.py

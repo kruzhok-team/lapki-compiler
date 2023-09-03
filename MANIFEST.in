@@ -1,2 +1,3 @@
 recursive-include compiler/library **
 recursive-include compiler/fullgraphmlparser/templates **
+recursive-include compiler/schemas **
