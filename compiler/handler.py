@@ -1,10 +1,11 @@
 import json
 import base64
+import aiohttp
+import time
 from datetime import datetime
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
-import aiohttp
 
 try:
     from .GraphmlParser import GraphmlParser
@@ -95,9 +96,9 @@ class Handler:
                                                              compiler=compiler,
                                                              path=path)
                     await CppFileWriter(sm_name=filename, start_node=sm["startNode"],
-                                                               start_action="", states=sm["states"],
-                                                               notes=sm["notes"],
-                                                               player_signal=sm["playerSignals"]).write_to_file(path, extension)
+                                        start_action="", states=sm["states"],
+                                        notes=sm["notes"],
+                                        player_signal=sm["playerSignals"]).write_to_file(path, extension)
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
                     libraries = [*libraries, *Compiler.c_default_libraries]
@@ -111,7 +112,7 @@ class Handler:
                     await AsyncPath(path).mkdir(parents=True)
                     sm = await CJsonParser.parseStateMachine(data, ws, filename=filename, compiler=compiler, path=f"{path}{filename}.ino")
                     await CppFileWriter(sm_name=filename, start_node=sm["startNode"], start_action="",
-                                                               states=sm["states"], notes=sm["notes"], player_signal=sm["playerSignals"]).write_to_file(path, "ino")
+                                        states=sm["states"], notes=sm["notes"], player_signal=sm["playerSignals"]).write_to_file(path, "ino")
                     await Logger.logger.info("Parsed and wrote to ino")
                     components = await CJsonParser.getComponents(data["components"])
                     libraries = await CJsonParser.getLibraries(components)
@@ -268,6 +269,7 @@ class Handler:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         schema = json.loads(await ws.receive_str())
+        filename = await ws.receive()
         await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
@@ -277,14 +279,25 @@ class Handler:
                 states_with_id[state.name] = state
 
             converter = JsonConverter(ws)
+
             xml = await converter.parse(states_with_id, sm["startNode"])
+            t = f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
+
+            await ws.send_json(
+                {
+                    "filename": f"Robot_{t}",
+                    "extension": "graphml",
+                    "fileContent": xml
+                })
+            await Logger.logger.info("Converted!")
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
             return ws
-        await Logger.logger.info("Converted!")
-        await ws.send_str(xml)
-
+        except Exception:
+            await Logger.logException()
+            await RequestError(f"Something went wrong {e.args[0]}").dropConnection(ws)
+            return ws
         return ws
 
     @staticmethod
