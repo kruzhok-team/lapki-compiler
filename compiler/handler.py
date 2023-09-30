@@ -75,7 +75,7 @@ class Handler:
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
-            data: dict = json.loads(await ws.receive_str())
+            data: dict = await ws.receive_json()
             await Logger.logger.info(data)
             compiler_settings = data["compilerSettings"]
             compiler = compiler_settings["compiler"]
@@ -294,7 +294,7 @@ class Handler:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
             return ws
-        except Exception:
+        except Exception as e:
             await Logger.logException()
             await RequestError(f"Something went wrong {e.args[0]}").dropConnection(ws)
             return ws

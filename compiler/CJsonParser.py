@@ -26,7 +26,6 @@ class Labels(Enum):
 
 
 class CJsonParser:
-    # Переделать под не-статический
     delimeter = {
         "Berloga": "",
         "arduino-cli": ";",
@@ -49,11 +48,13 @@ class CJsonParser:
     def initComponent(type: str, name: str, parameters: dict, filename: str):
         """
             Функция, которая в зависимости от компонента
-            возвращает код его инициализации.
+            возвращает код его инициализации в h-файле.
         """
         match type:
             case 'Timer':
                 return f"\n{type} {name} = {type}(the_{filename}, {name}_timeout_SIG);"
+            case 'QHsmSerial':
+                return ""
             case _:
                 return f"\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))});"
 
@@ -95,10 +96,10 @@ class CJsonParser:
         return libraries
 
     @staticmethod
-    def setupVariables(name: str, type: str) -> str | None:
+    def setupVariables(name: str, type: str, parameters: dict) -> str | None:
         match type:
             case "QHsmSerial":
-                return f"{name}.init();"
+                return f"{name}::init({', '.join(map(str, list(parameters.values())))});"
             case "DigitalOut":
                 return f"{name}.init();"
 
@@ -113,7 +114,7 @@ class CJsonParser:
             case "Button":
                 signals.append(f"\n\t{component.name}.scan();")
             case "QHsmSerial":
-                signals.append(f"\n\t{component.name}.readByte();")
+                signals.append(f"\n\tQHsmSerial::read();")
 
     @staticmethod
     async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
@@ -130,10 +131,10 @@ class CJsonParser:
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
                 types.append(component.type)
-
+                
             CJsonParser.actionInMain(component, check_signals)
             setup_variable = CJsonParser.setupVariables(
-                component.name, component.type)
+                component.name, component.type, component.parameters)
             if setup_variable:
                 setup_variables.append(setup_variable)
             variables.append(CJsonParser.initComponent(component.type,
@@ -141,7 +142,6 @@ class CJsonParser:
                                                        component.parameters,
                                                        filename))
         notes = []
-
         class_filename = filename[0].upper() + filename[1:]
             
         for name in triggers.keys():
@@ -233,7 +233,7 @@ class CJsonParser:
         result: list[str] = []
         for action in actions:
             component = action["component"]
-            if component == "User":
+            if component == "User" or component == "QHsmSerial":
                 method = "::" + action["method"]
             else:
                 method = "." + action["method"]
@@ -258,7 +258,11 @@ class CJsonParser:
         i = 0
         for transition in transitions:
             if transition["trigger"]["component"] != "User":
-                guard = ''.join([transition["trigger"]["component"], '.',
+                if transition["trigger"]["component"] == "QHsmSerial":
+                    guard = ''.join([transition["trigger"]["component"], '::',
+                                transition["trigger"]["method"], '('])
+                else:
+                    guard = ''.join([transition["trigger"]["component"], '.',
                                 transition["trigger"]["method"], '('])
                 arr_args = []
                 if "args" in transition["trigger"].keys():
@@ -330,7 +334,7 @@ class CJsonParser:
 
             actions = ""
             for i in range(len(event["do"])):
-                if component != "User":
+                if component != "User" and component != "QHsmSerial":
                     actions += event["do"][i]["component"] + \
                             '.' + event["do"][i]["method"] + '('
                 else:
@@ -365,7 +369,10 @@ class CJsonParser:
                 id += 1
             else:
                 eventname = component + '_' + method
-                guard = ''.join([component, '.', method, "()"])
+                if component == "QHsmSerial":
+                    guard = ''.join([component, '::', method, "()"])
+                else:
+                    guard = ''.join([component, '.', method, "()"])
                 event_signals[eventname] = {}
                 event_signals[eventname]["guard"] = guard
                 event_signals[eventname]["component_name"] = trigger["component"]
@@ -523,7 +530,7 @@ class CJsonParser:
             components = await CJsonParser.getComponents(json_data["components"])
             user_signals = []
             if compiler in ["arduino-cli", "g++", "gcc"]:
-                notes = await CJsonParser.createNotes(components, filename, player_signals, compiler=compiler, path=path)
+                notes = await CJsonParser.createNotes(components, filename, triggers=player_signals, compiler=compiler, path=path)
                 if "User" in list(json_data.keys()):
                     user_notes, user_signals = CJsonParser.createUserCode(json_data["User"])
                     notes = [*notes, *user_notes]

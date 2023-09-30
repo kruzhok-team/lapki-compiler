@@ -16,7 +16,8 @@ class Client:
         async with async_open(path, 'r') as req:
             json_data: str = await req.read()
 
-        await self.ws.send_str(json_data)
+        await self.ws.send_str("ArduinoUno")
+        await self.ws.send_json(json_data)
         response = await self.ws.receive_json()
 
         return response
@@ -34,7 +35,8 @@ class Client:
             data = json.loads(await req.read())
 
         await self.ws.send_str(json.dumps(data, ensure_ascii=False))
-        response = await self.ws.receive_str()
+        await self.ws.send_str("Autoborder")
+        response = (await self.ws.receive_json())["fileContent"]
 
         return response
 
