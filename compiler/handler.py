@@ -269,7 +269,7 @@ class Handler:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         schema = json.loads(await ws.receive_str())
-        filename = await ws.receive()
+        filename = await ws.receive_str()
         await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
@@ -282,10 +282,9 @@ class Handler:
 
             xml = await converter.parse(states_with_id, sm["startNode"])
             t = f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
-
             await ws.send_json(
                 {
-                    "filename": f"Robot_{t}",
+                    "filename": f"{filename}_{t}",
                     "extension": "graphml",
                     "fileContent": xml
                 })

@@ -15,7 +15,6 @@ class JsonConverter:
         self.ws = ws
         self.transitions: list[dict] = []
 
-    
     async def getEvents(self, state: State) -> str:
         """
             Функция формирует события в состоянии и действия при их наступлении.
@@ -85,11 +84,11 @@ class JsonConverter:
 
         else:
             node_type = "y:GenericNode"
-            
+
             if state.parent:
                 state.x += state.parent.x
                 state.y += state.parent.y
-            
+
             xmlstate["data"][node_type] = {
                 "y:NodeLabel": [
                     f"{state.name}",
