@@ -21,7 +21,7 @@
                         "method": "on"
                     },
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": "\"High!\""
@@ -51,7 +51,7 @@
                         "method": "off"
                     },
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": "\"Low!\""    
@@ -63,7 +63,7 @@
                         "args": {}
                     },
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": "\"Toggle!!\""    
@@ -122,7 +122,7 @@
             "parameters": {}
         },
 
-        "serial": {
+        "QHsmSerial": {
             "type": "QHsmSerial",
             "parameters": {
                 "baud": "9600"

@@ -167,7 +167,7 @@ class Handler:
             await RequestError(f"Invalid request, there isn't '{e.args[0]}' key.").dropConnection(ws)
             await ws.close()
             return ws
-        except Exception:
+        except Exception as e:
             await Logger.logException()
             await RequestError("Something went wrong").dropConnection(ws)
             await ws.close()
@@ -233,14 +233,22 @@ class Handler:
         return ws
 
     @staticmethod
+    def calculateBearlogaId() -> str:
+        return f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
+
+    @staticmethod
     async def handle_berloga_import(request, ws=None):
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
+        filename = await ws.receive_str()
+
+        subplatform = filename.split('_')
+
         await Logger.logger.info("XML received!")
         try:
-            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="BearlogaDefend")
+            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform=f"BearlogaDefend")
             await Logger.logger.info("Converted!")
             await ws.send_json(
                 {
@@ -248,7 +256,7 @@ class Handler:
                     "stdout": "",
                     "stderr": "",
                     "source": [{
-                        "filename": "Autoborder_1234",
+                        "filename": "",
                         "extension": ".json",
                         "fileContent": response
                     }],
@@ -257,7 +265,7 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
-        except Exception:
+        except Exception as e:
             await Logger.logException()
             await RequestError("Something went wrong!").dropConnection(ws)
 

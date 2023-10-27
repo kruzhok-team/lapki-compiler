@@ -25,7 +25,7 @@
                 },
                 "do": [
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": {
@@ -58,7 +58,7 @@
             }
         },
 
-        "serial": {
+        "QHsmSerial": {
             "type": "QHsmSerial",
             "parameters": {
                 "baud": "9600"
