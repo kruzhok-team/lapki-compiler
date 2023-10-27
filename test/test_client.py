@@ -71,7 +71,7 @@ async def test_berlogaImport():
     client = Client()
     await client.doConnect(f"{BASE_ADDR}/berloga/import")
     # response = await client.importBerlogaScheme("compiler/schemas/Autoborder_with_actions.graphml")
-    response = await client.importBerlogaScheme("../compiler/schemas/berlogaScheme.graphml", "Autoborder")
+    response = await client.importBerlogaScheme("compiler/schemas/berlogaScheme.graphml", "Autoborder_12314124")
     print(response)
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)

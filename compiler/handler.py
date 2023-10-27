@@ -242,13 +242,13 @@ class Handler:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
-        filename = await ws.receive_str()
+        filename_without_extension = await ws.receive_str()
 
-        subplatform = filename.split('_')
+        subplatform = filename_without_extension.split('_')[0]
 
         await Logger.logger.info("XML received!")
         try:
-            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform=f"BearlogaDefend")
+            response = await GraphmlParser.parse(unprocessed_xml, platform=f"BearlogaDefend-{subplatform}")
             await Logger.logger.info("Converted!")
             await ws.send_json(
                 {
@@ -256,7 +256,7 @@ class Handler:
                     "stdout": "",
                     "stderr": "",
                     "source": [{
-                        "filename": "",
+                        "filename": f"{subplatform}_{Handler.calculateBearlogaId()}",
                         "extension": ".json",
                         "fileContent": response
                     }],
@@ -289,10 +289,10 @@ class Handler:
             converter = JsonConverter(ws)
 
             xml = await converter.parse(states_with_id, sm["startNode"])
-            t = f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
+
             await ws.send_json(
                 {
-                    "filename": f"{filename}_{t}",
+                    "filename": f"{filename}_{Handler.calculateBearlogaId()}",
                     "extension": "graphml",
                     "fileContent": xml
                 })

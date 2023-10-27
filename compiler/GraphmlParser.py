@@ -6,9 +6,11 @@ from aiofile import async_open
 try:
     from .config import SCHEMA_DIRECTORY
     from .Logger import Logger
+    from .PlatformManager import PlatformManager
 except ImportError:
     from compiler.config import SCHEMA_DIRECTORY
     from compiler.Logger import Logger
+    from compiler.PlatformManager import PlatformManager
 """
     This class gets Berloga-graphml and returns States, Components, Transitions
     Returns:
@@ -17,7 +19,6 @@ except ImportError:
 
 
 class GraphmlParser:
-    platforms = {}
 
     def __init__(self, platform: str, ws):
         pass
@@ -44,29 +45,14 @@ class GraphmlParser:
             функция, которая формирует аргументы в виде 
             объекта с учетом контекста платформы
         """
-        nmethod: dict = GraphmlParser.platforms[platform]["components"][component]["methods"][method]
-        keys = list(nmethod["parameters"].keys())
+        nmethod: dict = PlatformManager.getPlatform(
+            platform)["components"][component]["methods"][method]
+        params = nmethod["parameters"]
         result = {}
         for i in range(len(args)):
             # Можно сделать проверку значений и типов
-            result[keys[i]] = args[i]
-
+            result[params[i]["name"]] = args[i]
         return result
-
-    @staticmethod
-    async def initPlatform(filename: str, platform: str):
-        """ 
-        Функция для загрузки платформ (компонентов, сигналов)
-        Принимает на вход название платформы
-        Если такая платформа уже была инициализирована,
-        повторной инициализации не происходит.
-        """
-        await Logger.logger.info(f"{SCHEMA_DIRECTORY}{filename}.json")
-        if platform not in GraphmlParser.platforms.keys():
-            async with async_open(f"{SCHEMA_DIRECTORY}{filename}.json", "r") as f:
-                data = await f.read()
-                json_data: dict = json.loads(data)
-            GraphmlParser.platforms[platform] = json_data["platform"][platform]
 
     @staticmethod
     async def getParentNode(group_node: dict) -> dict:
@@ -181,6 +167,7 @@ class GraphmlParser:
             else:
                 action_dict["args"] = {}
             current_dict.append(action_dict)
+
         return new_events
 
     @staticmethod
@@ -372,11 +359,12 @@ class GraphmlParser:
             return states
         except Exception:
             await Logger.logException()
+            return dict({})
 
     @staticmethod
     async def getComponents(platform: str) -> dict:
         result = {}
-        components = GraphmlParser.platforms[platform]["components"].keys()
+        components = PlatformManager.getPlatform(platform)["components"]
 
         for component in components:
             result[component] = {}
@@ -386,10 +374,9 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    async def parse(unprocessed_xml: str, filename: str, platform: str):
+    async def parse(unprocessed_xml: str, platform: str):
         try:
             xml = xmltodict.parse(unprocessed_xml)
-            await GraphmlParser.initPlatform(filename, platform)
             graph = xml["graphml"]["graph"]
             nodes = graph["node"]
             triggers = graph["edge"]
