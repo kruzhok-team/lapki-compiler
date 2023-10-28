@@ -388,7 +388,7 @@ class GraphmlParser:
                     "initialState": initial_state,
                     "transitions": transitions,
                     "components": components,
-                    "platform": "BearlogaDefend",
+                    "platform": platform,
                     "parameters": {}}
         except Exception:
             await Logger.logException()
