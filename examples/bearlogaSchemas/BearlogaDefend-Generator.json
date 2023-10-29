@@ -1,0 +1,173 @@
+{
+   "states": {
+      "n0": {
+         "name": "Скан",
+         "events": [
+            {
+               "trigger": {
+                  "component": "System",
+                  "method": "onEnter"
+               },
+               "do": [
+                  {
+                     "component": "Сенсор",
+                     "method": "ПоискСоюзникаПоУрону",
+                     "args": {
+                        "Направление поиска": "макс"
+                     }
+                  }
+               ]
+            },
+            {
+               "trigger": {
+                  "component": "System",
+                  "method": "onExit"
+               },
+               "do": [
+                  {
+                     "component": "Сенсор",
+                     "method": "ОстановкаПоиска",
+                     "args": {}
+                  }
+               ]
+            }
+         ],
+         "bounds": {
+            "x": 255,
+            "y": 290,
+            "width": 411,
+            "height": 304
+         }
+      },
+      "n1": {
+         "name": "Помощь",
+         "events": [
+            {
+               "trigger": {
+                  "component": "System",
+                  "method": "onEnter"
+               },
+               "do": [
+                  {
+                     "component": "МодульДвижения",
+                     "method": "ДвигатьсяКЦели",
+                     "args": {}
+                  },
+                  {
+                     "component": "Зарядка",
+                     "method": "Активация",
+                     "args": {}
+                  }
+               ]
+            },
+            {
+               "trigger": {
+                  "component": "System",
+                  "method": "onExit"
+               },
+               "do": [
+                  {
+                     "component": "Зарядка",
+                     "method": "Стоп",
+                     "args": {}
+                  }
+               ]
+            }
+         ],
+         "bounds": {
+            "x": 253,
+            "y": -179,
+            "width": 588,
+            "height": 304
+         }
+      }
+   },
+   "initialState": "n0",
+   "transitions": [
+      {
+         "source": "n0",
+         "target": "n1",
+         "trigger": {
+            "component": "Сенсор",
+            "method": "ЦельПолучена"
+         },
+         "condition": null,
+         "position": {
+            "x": -764,
+            "y": 299
+         },
+         "do": [],
+         "color": "#39794B"
+      },
+      {
+         "source": "n1",
+         "target": "n0",
+         "trigger": {
+            "component": "Зарядка",
+            "method": "ЦельВышлаИзЗоныДействия"
+         },
+         "condition": null,
+         "position": {
+            "x": -614,
+            "y": 449
+         },
+         "do": [],
+         "color": "#033AF7"
+      },
+      {
+         "source": "n1",
+         "target": "n0",
+         "trigger": {
+            "component": "АнализаторЦели",
+            "method": "ЦельУничтожена"
+         },
+         "condition": null,
+         "position": {
+            "x": -614,
+            "y": 449
+         },
+         "do": [],
+         "color": "#6C64ED"
+      }
+   ],
+   "components": {
+      "Сенсор": {
+         "type": "Сенсор",
+         "parameters": {}
+      },
+      "АнализаторЦели": {
+         "type": "АнализаторЦели",
+         "parameters": {}
+      },
+      "МодульДвижения": {
+         "type": "МодульДвижения",
+         "parameters": {}
+      },
+      "Самодиагностика": {
+         "type": "Самодиагностика",
+         "parameters": {}
+      },
+      "СвязьСБазой": {
+         "type": "СвязьСБазой",
+         "parameters": {}
+      },
+      "Таймер": {
+         "type": "Таймер",
+         "parameters": {}
+      },
+      "Счётчик": {
+         "type": "Счётчик",
+         "parameters": {}
+      },
+      "Зарядка": {
+         "type": "Зарядка",
+         "parameters": {}
+      },
+      "Самоуничтожение": {
+         "type": "Самоуничтожение",
+         "parameters": {}
+      }
+   },
+   "platform": "BearlogaDefend-Generator",
+   "parameters": {}
+}

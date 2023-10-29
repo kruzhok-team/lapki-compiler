@@ -32,7 +32,6 @@ class PlatformManager:
             except Exception as e:
                 print(
                     f"Во время обработки файла '{path}' произошла ошибка! {e}")
-                await Logger.logException()
 
         print(
             f"Были найдены платформы: {list(PlatformManager.platforms.keys())}")

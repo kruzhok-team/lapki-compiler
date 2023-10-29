@@ -1,7 +1,14 @@
 import pytest
+import json
+
+
 from compiler.CJsonParser import CJsonParser, Labels
 from compiler.SourceFile import SourceFile
-import json
+from compiler.GraphmlParser import GraphmlParser
+from compiler.Logger import Logger
+from compiler.PlatformManager import PlatformManager
+from compiler.config import SCHEMA_DIRECTORY
+
 pytest_plugins = ('pytest_asyncio',)
 
 
@@ -9,88 +16,50 @@ pytest_plugins = ('pytest_asyncio',)
 async def test_getfiles():
     with open('examples/ExampleRequestSource.json', 'r') as f:
         data = json.load(f)
-    
+
     files = await CJsonParser.getFiles(data["source"])
-    assert files == [SourceFile("cpp_example", "cpp", "*code here*"), SourceFile("cpp_example", "hpp", "*code here*")]
-    
-# @pytest.mark.asyncio
-# async def test_createUser():
-#     userData = {"User": {
-#                     "functions": {
-#                         "printMyValue": {
-#                             "returnType": "void",
-#                             "args": {
-#                                 "value": {
-#                                     "type": "char[]"
-#                                 }
-#                             },
-#                             "code": "Serial.println(value);"
-#                         }
-#                     },
-
-#                     "variables": {
-#                         "myVariable": {
-#                             "type": "int",
-#                             "value": "1000"
-#                         }
-#                      },
-
-#                     "signals": ["mySignal"]
-#                  }
-#                 },
-#     assertData = [
-#                     Labels.USER_VAR_H.value + "\nstatic int myVariable;",
-#                     Labels.USER_FUNC_H.value + "\nstatic void printMyValue(char[] value);",
-#                     Labels.USER_VAR_C.value + "\nint User::myVariable = 1000;",
-#                     Labels.USER_FUNC_C.value + "\nstatic void User::printMyValue(char[] value){\n\tSerial.println(value);\n}",
-#     ]
-    
-#     assertSisgnals = ["mySignal"]
-    
-#     notes, signals = CJsonParser.createUserCode(userData)
-
-#     assert notes == assertData
-#     assert signals == assertSisgnals
+    assert files == [SourceFile("cpp_example", "cpp", "*code here*"),
+                     SourceFile("cpp_example", "hpp", "*code here*")]
 
 
-@pytest.mark.parametrize("function, expected", 
+@pytest.mark.parametrize("function, expected",
                          [pytest.param(
-                            {
-                                    "printMyValue": {
-                                        "returnType": "void",
-                                        "args": {
-                                            "value": {
-                                                "type": "char[]"
-                                            }
-                                        },
-                                        "code": "Serial.println(value);"
-                                    }
-                            }, 
-                            ("\nstatic void printMyValue(char value[]);",
-                             "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}")),
+                             {
+                                 "printMyValue": {
+                                     "returnType": "void",
+                                     "args": {
+                                         "value": {
+                                             "type": "char[]"
+                                         }
+                                     },
+                                     "code": "Serial.println(value);"
+                                 }
+                             },
+                             ("\nstatic void printMyValue(char value[]);",
+                                 "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}")),
                           pytest.param(
-                            {
-                                    "printMyValue": {
-                                        "returnType": "void",
-                                        "args": {
-                                            "value": {
-                                                "type": "char[]"
-                                            }
-                                        },
-                                        "code": "Serial.println(value);"
-                                    },
-                                    "myFunction": {
-                                        "returnType": "void",
-                                        "args": {
-                                            "value": {
-                                                "type": "char[]"
-                                            }
-                                        },
-                                        "code": "Serial.print(\"bla\");"
-                                    },
-                            }, 
-                            ("\nstatic void printMyValue(char value[]);\n\nstatic void myFunction(char value[]);",
-                            "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}\n\nvoid User::myFunction(char value[]){\nSerial.print(\"bla\");\n}")),
+                             {
+                                 "printMyValue": {
+                                     "returnType": "void",
+                                     "args": {
+                                         "value": {
+                                             "type": "char[]"
+                                         }
+                                     },
+                                     "code": "Serial.println(value);"
+                                 },
+                                 "myFunction": {
+                                     "returnType": "void",
+                                     "args": {
+                                         "value": {
+                                             "type": "char[]"
+                                         }
+                                     },
+                                     "code": "Serial.print(\"bla\");"
+                                 },
+                             },
+                             ("\nstatic void printMyValue(char value[]);\n\nstatic void myFunction(char value[]);",
+                                 "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}\n\nvoid User::myFunction(char value[]){\nSerial.print(\"bla\");\n}")),
                           pytest.param({}, ("", ""))]
                          )
 def test_getUserFunctions(function, expected):
@@ -100,12 +69,38 @@ def test_getUserFunctions(function, expected):
 
 @pytest.mark.parametrize("variables, expected", [
     pytest.param({
-                    "myVariable": {
-                        "type": "int",
-                        "value": "1000"
-                    }
-                 }, ("\nstatic int myVariable;", "\nint User::myVariable = 1000;"))    
+        "myVariable": {
+            "type": "int",
+            "value": "1000"
+        }
+    }, ("\nstatic int myVariable;", "\nint User::myVariable = 1000;"))
 ])
 def test_getUserVariable(variables, expected):
     result = CJsonParser.getUserVariables(variables)
     assert result == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path, platform", [
+    pytest.param("examples/bearlogaSchemas/Autoborder_638330223036439120.graphml",
+                 "BearlogaDefend-Autoborder", id="Autoborder"),
+    pytest.param("examples/bearlogaSchemas/Generator_638331191524332730.graphml",
+                 "BearlogaDefend-Generator", id="Generator"),
+    pytest.param("examples/bearlogaSchemas/Smoker_638331191988353340.graphml",
+                 "BearlogaDefend-Smoker", id="Smoker"),
+    pytest.param("examples/bearlogaSchemas/Stapler_638331190677085090.graphml",
+                 "BearlogaDefend-Stapler", id="Stapler"),
+])
+async def test_graphhmlParser(path: str, platform: str):
+    await Logger.init_logger()
+    await PlatformManager.initPlatform(SCHEMA_DIRECTORY)
+    with open(path, 'r') as f:
+        unprocessed_xml = f.read()
+
+    parsed_graphml = await GraphmlParser.parse(
+        unprocessed_xml=unprocessed_xml, platform=platform)
+
+    with open(f"examples/bearlogaSchemas/{platform}.json", "w") as f:
+        json.dump(parsed_graphml, f, ensure_ascii=False, indent=3)
+
+    assert parsed_graphml["states"] is not None
