@@ -60,11 +60,11 @@ class GraphmlParser:
         # Здесб мы отделяем данные о супер-ноде от ее под-графа
         # Необходимое содержимое data: {y:GroupNode: { y:NodeLabel: [название состояния, ивенты],
         #                                              y:Geometry: {@y, @x, @width, @height} } }
-        
+
         for data in group_node["data"]:
             if "y:ProxyAutoBoundsNode" in data.keys():
                 data_node_with_info = data["y:ProxyAutoBoundsNode"]["y:Realizers"]
-        
+
         return {
             '@id': group_node["@id"],
             'data': data_node_with_info
