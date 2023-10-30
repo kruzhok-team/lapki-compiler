@@ -48,16 +48,6 @@ DEFAULT_TRANSITION_DATA = {
                 "@verticalTextPosition": "bottom",
                 "@visible": "false",
                 "@xml:space": "preserve",
-                "y:PreferredPlacementDescriptor": {
-                    "@angle": "0.0",
-                    "@angleOffsetOnRightSide": "0",
-                    "@angleReference": "absolute",
-                    "@angleRotationOnRightSide": "co",
-                    "@distance": "-1.0",
-                    "@placement": "center",
-                    "@side": "on_edge",
-                    "@sideReference": "relative_to_edge_flow"
-                }
         }
     }
 }
@@ -359,6 +349,24 @@ class JsonConverter:
             }
         )
 
+    def addNodePreferredToEdgeLabels(self, xml: str) -> str:
+        unprocessed = xml
+        label = "</y:EdgeLabel>"
+        edge_label_pos = unprocessed.find(label)
+        temp = ""
+        preffered = '\n<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" placement="center" side="on_edge" sideReference="relative_to_edge_flow" />\n'
+        # last_position = -1
+        while (edge_label_pos != -1):
+            temp += unprocessed[:edge_label_pos] + preffered + \
+                unprocessed[edge_label_pos: edge_label_pos + len(label)]
+            unprocessed = unprocessed[edge_label_pos + len(label):]
+            # last_position = edge_label_pos
+            edge_label_pos = unprocessed.find(label)
+
+        temp += unprocessed
+
+        return temp
+
     async def parse(self, states: dict[str, State], initial_state: str) -> str:
         try:
             self.states = states
@@ -441,7 +449,8 @@ class JsonConverter:
 
             await self.addInitialState(initial_state)
             data["graphml"]["graph"]["edge"] = self.transitions
-            result = xmltodict.unparse(data, pretty=True)
+            result = self.addNodePreferredToEdgeLabels(
+                xmltodict.unparse(data, pretty=True))
 
             return result
         except Exception:
