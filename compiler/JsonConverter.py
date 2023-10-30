@@ -1,5 +1,6 @@
 import xmltodict
-from pprint import pprint
+import re
+
 from copy import deepcopy
 
 try:
@@ -22,11 +23,11 @@ DEFAULT_TRANSITION_DATA = {
                 "@color": "#000000",
                 "@type": "line",
                 "@width": "1.0"
-                },
+        },
         "y:Arrows": {
                 "@source": "none",
                 "@target": "standard"
-                },
+        },
         "y:EdgeLabel": {
                 "#text": "",
                 "@alignment": "center",
@@ -47,17 +48,17 @@ DEFAULT_TRANSITION_DATA = {
                 "@verticalTextPosition": "bottom",
                 "@visible": "false",
                 "@xml:space": "preserve",
-                # "y:PreferredPlacementDescriptor": {
-                #     "@angle": "0.0",
-                #     "@angleOffsetOnRightSide": "0",
-                #     "@angleReference": "absolute",
-                #     "@angleRotationOnRightSide": "co",
-                #     "@distance": "-1.0",
-                #     "@placement": "center",
-                #     "@side": "on_edge",
-                #     "@sideReference": "relative_to_edge_flow"
-                # }
+                "y:PreferredPlacementDescriptor": {
+                    "@angle": "0.0",
+                    "@angleOffsetOnRightSide": "0",
+                    "@angleReference": "absolute",
+                    "@angleRotationOnRightSide": "co",
+                    "@distance": "-1.0",
+                    "@placement": "center",
+                    "@side": "on_edge",
+                    "@sideReference": "relative_to_edge_flow"
                 }
+        }
     }
 }
 
@@ -98,11 +99,8 @@ class JsonConverter:
                     "data": deepcopy(DEFAULT_TRANSITION_DATA)
                 }
                 if trig.guard == "true":
-                    pprint(transition["data"])
                     transition["data"]["y:PolyLineEdge"]["y:EdgeLabel"][
                         "#text"] = f"{trig.name}/{trig.action}\n"
-                    print("\n\n\n")
-                    pprint(transition["data"])
                 else:
                     transition["data"]["y:PolyLineEdge"]["y:EdgeLabel"][
                         "#text"] = f"{trig.name}/\n[{trig.guard}]\n{trig.action}"
@@ -364,86 +362,89 @@ class JsonConverter:
     async def parse(self, states: dict[str, State], initial_state: str) -> str:
         try:
             self.states = states
-            data = {"graphml": {
-                "@xmlns": "http://graphml.graphdrawing.org/xmlns",
-                "@xmlns:java": "http://www.yworks.com/xml/yfiles-common/1.0/java",
-                "@xmlns:sys": "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0",
-                "@xmlns:x": "http://www.yworks.com/xml/yfiles-common/markup/2.0",
-                "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                "@xmlns:y": "http://www.yworks.com/xml/graphml",
-                "@xmlns:yed": "http://www.yworks.com/xml/yed/3",
-                "@yed:schemaLocation": "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
-                "@entryPosition": "-1573.862 1010.069",
-                "key": [
-                    {
-                        "@attr.name": "Description",
-                        "@attr.type": "string",
-                        "@for": "graph",
-                        "@id": "d0"
-                    },
-                    {
-                        "@for": "port",
-                        "@id": "d1",
-                        "@yfiles.type": "portgraphics"
-                    },
-                    {
-                        "@for": "port",
-                        "@id": "d2",
-                        "@yfiles.type": "portgeometry"
-                    },
-                    {
-                        "@for": "port",
-                        "@id": "d3",
-                        "@yfiles.type": "portuserdata"
-                    },
-                    {
-                        "@attr.name": "url",
-                        "@attr.type": "string",
-                        "@for": "node",
-                        "@id": "d4"
-                    },
-                    {
-                        "@attr.name": "description",
-                        "@attr.type": "string",
-                        "@for": "node",
-                        "@id": "d5"
-                    },
-                    {
-                        "@for": "node",
-                        "@id": "d6",
-                        "@yfiles.type": "nodegraphics"
-                    },
-                    {
-                        "@for": "graphml",
-                        "@id": "d7",
-                        "@yfiles.type": "resources"
-                    },
-                    {
-                        "@attr.name": "url",
-                        "@attr.type": "string",
-                        "@for": "edge",
-                        "@id": "d8"
-                    },
-                    {
-                        "@attr.name": "description",
-                        "@attr.type": "string",
-                        "@for": "edge",
-                        "@id": "d9"
-                    },
-                    {
-                        "@for": "edge",
-                        "@id": "d10",
-                        "@yfiles.type": "edgegraphics"
-                    }
-                ],
-                "graph": await self.getStates(list(states.values())),
-            }
+            data = {
+                "graphml": {
+                    "@xmlns": "http://graphml.graphdrawing.org/xmlns",
+                    "@xmlns:java": "http://www.yworks.com/xml/yfiles-common/1.0/java",
+                    "@xmlns:sys": "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0",
+                    "@xmlns:x": "http://www.yworks.com/xml/yfiles-common/markup/2.0",
+                    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                    "@xmlns:y": "http://www.yworks.com/xml/graphml",
+                    "@xmlns:yed": "http://www.yworks.com/xml/yed/3",
+                    "@yed:schemaLocation": "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
+                    "@entryPosition": "-1573.862 1010.069",
+                    "key": [
+                        {
+                            "@attr.name": "Description",
+                            "@attr.type": "string",
+                            "@for": "graph",
+                            "@id": "d0"
+                        },
+                        {
+                            "@for": "port",
+                            "@id": "d1",
+                            "@yfiles.type": "portgraphics"
+                        },
+                        {
+                            "@for": "port",
+                            "@id": "d2",
+                            "@yfiles.type": "portgeometry"
+                        },
+                        {
+                            "@for": "port",
+                            "@id": "d3",
+                            "@yfiles.type": "portuserdata"
+                        },
+                        {
+                            "@attr.name": "url",
+                            "@attr.type": "string",
+                            "@for": "node",
+                            "@id": "d4"
+                        },
+                        {
+                            "@attr.name": "description",
+                            "@attr.type": "string",
+                            "@for": "node",
+                            "@id": "d5"
+                        },
+                        {
+                            "@for": "node",
+                            "@id": "d6",
+                            "@yfiles.type": "nodegraphics"
+                        },
+                        {
+                            "@for": "graphml",
+                            "@id": "d7",
+                            "@yfiles.type": "resources"
+                        },
+                        {
+                            "@attr.name": "url",
+                            "@attr.type": "string",
+                            "@for": "edge",
+                            "@id": "d8"
+                        },
+                        {
+                            "@attr.name": "description",
+                            "@attr.type": "string",
+                            "@for": "edge",
+                            "@id": "d9"
+                        },
+                        {
+                            "@for": "edge",
+                            "@id": "d10",
+                            "@yfiles.type": "edgegraphics"
+                        }
+                    ],
+                    "graph": await self.getStates(list(states.values())),
+                }
             }
 
             await self.addInitialState(initial_state)
             data["graphml"]["graph"]["edge"] = self.transitions
-            result = xmltodict.unparse(data, pretty=True)
+            result = self.addNodePreferredToEdgeLabels(
+                xmltodict.unparse(data, pretty=True))
+
             return result
-        except Exception as e:
+        except Exception:
             await Logger.logException()
             return ""

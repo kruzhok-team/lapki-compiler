@@ -355,8 +355,6 @@ class GraphmlParser:
                 id = await GraphmlParser.getNodeId(state["@id"])
                 node_type = states_dict[state["@id"]]["type"]
                 new_state["name"] = states_dict[state["@id"]]["name"]
-                print(states_dict[state["@id"]]["name"])
-                print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
                 new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
                 geometry = await GraphmlParser.getGeometry(state["@id"], states_dict)
                 # states_dict[state["@id"]]["geometry"] = geometry
@@ -364,8 +362,6 @@ class GraphmlParser:
                 parent = await GraphmlParser.getParentName(state, states_dict)
                 if parent != "":
                     new_state["parent"] = parent
-                print(new_state)
-                print("---------------------------")
                 states[id] = new_state
 
             return states

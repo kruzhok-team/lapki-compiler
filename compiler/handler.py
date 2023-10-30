@@ -62,8 +62,7 @@ class Handler:
                     case 'berlogaExport':
                         await Handler.handle_berloga_export(request, ws)
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                print('ws connection closed with exception %s' %
-                      ws.exception())
+                pass
 
         return ws
 

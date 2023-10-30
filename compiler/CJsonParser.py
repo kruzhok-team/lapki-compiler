@@ -240,7 +240,6 @@ class CJsonParser:
         result: list[str] = []
         for action in actions:
             component = action["component"]
-            print(component)
             if component == "User" or component == "QHsmSerial":
                 method = "::" + action["method"]
             else:
@@ -266,7 +265,6 @@ class CJsonParser:
         i = 0
         for transition in transitions:
             if transition["trigger"]["component"] != "User":
-                print(transition["trigger"]["component"])
                 if transition["trigger"]["component"] == "QHsmSerial":
                     guard = ''.join([transition["trigger"]["component"], '::',
                                      transition["trigger"]["method"], '('])
@@ -341,7 +339,6 @@ class CJsonParser:
             component = trigger["component"]
             method = trigger["method"]
 
-            print(component)
             actions = ""
             for i in range(len(event["do"])):
                 if component != "User" and event["do"][i]["component"] != "QHsmSerial":
@@ -367,7 +364,6 @@ class CJsonParser:
                                     f'{arg["component"]}.{arg["method"]}')
                     actions += ','.join(map(str, arr_action))
                 actions += ")" + CJsonParser.delimeter[compiler] + "\n"
-            print(actions)
             if component == "System":
                 system_signals[method] = actions
             elif component == "User":
@@ -390,7 +386,6 @@ class CJsonParser:
                 event_signals[eventname] = {}
                 event_signals[eventname]["guard"] = guard
                 event_signals[eventname]["component_name"] = trigger["component"]
-                print(actions)
                 trig = Trigger(name=eventname, type="internal", source=statename,
                                target="", action=actions, id=id,
                                points=[])
