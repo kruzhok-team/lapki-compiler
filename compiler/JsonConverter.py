@@ -441,8 +441,7 @@ class JsonConverter:
 
             await self.addInitialState(initial_state)
             data["graphml"]["graph"]["edge"] = self.transitions
-            result = self.addNodePreferredToEdgeLabels(
-                xmltodict.unparse(data, pretty=True))
+            result = xmltodict.unparse(data, pretty=True)
 
             return result
         except Exception:
