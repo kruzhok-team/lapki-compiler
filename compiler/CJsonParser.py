@@ -222,12 +222,15 @@ class CJsonParser:
             # В Берлоге в условиях используются
             # только числа и поля класса!
             args = ""
-            # if compiler != "Berloga":
-            if True:
-                arr_args = []
-                if args in condition_dict.keys():
-                    arr_args = list(condition_dict["args"].values())
-                args = "(" + ",".join(map(str, arr_args)) + ")"
+            arr_args = []
+
+            if args in condition_dict.keys():
+                arr_args = list(condition_dict["args"].values())
+
+                if len(arr_args) > 0:
+                    args = "(" + ",".join(map(str, arr_args)) + ")"
+                elif compiler != "BearlogaDefend":
+                    args = "()"
 
             return "".join([component, method, args])
         return "true"

@@ -282,7 +282,6 @@ class Handler:
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
             states_with_id = {}
-
             for state in sm["states"]:
                 states_with_id[state.name] = state
 
