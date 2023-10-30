@@ -62,8 +62,7 @@ class Handler:
                     case 'berlogaExport':
                         await Handler.handle_berloga_export(request, ws)
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                print('ws connection closed with exception %s' %
-                      ws.exception())
+                pass
 
         return ws
 
@@ -167,7 +166,7 @@ class Handler:
             await RequestError(f"Invalid request, there isn't '{e.args[0]}' key.").dropConnection(ws)
             await ws.close()
             return ws
-        except Exception:
+        except Exception as e:
             await Logger.logException()
             await RequestError("Something went wrong").dropConnection(ws)
             await ws.close()
@@ -233,14 +232,22 @@ class Handler:
         return ws
 
     @staticmethod
+    def calculateBearlogaId() -> str:
+        return f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
+
+    @staticmethod
     async def handle_berloga_import(request, ws=None):
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
+        filename_without_extension = await ws.receive_str()
+
+        subplatform = filename_without_extension.split('_')[0]
+
         await Logger.logger.info("XML received!")
         try:
-            response = await GraphmlParser.parse(unprocessed_xml, filename="Berloga", platform="BearlogaDefend")
+            response = await GraphmlParser.parse(unprocessed_xml, platform=f"BearlogaDefend-{subplatform}")
             await Logger.logger.info("Converted!")
             await ws.send_json(
                 {
@@ -248,7 +255,7 @@ class Handler:
                     "stdout": "",
                     "stderr": "",
                     "source": [{
-                        "filename": "Autoborder_1234",
+                        "filename": f"{subplatform}_{Handler.calculateBearlogaId()}",
                         "extension": ".json",
                         "fileContent": response
                     }],
@@ -257,7 +264,7 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError(f"There isn't key {e.args[0]}").dropConnection(ws)
-        except Exception:
+        except Exception as e:
             await Logger.logException()
             await RequestError("Something went wrong!").dropConnection(ws)
 
@@ -269,23 +276,21 @@ class Handler:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
         schema = json.loads(await ws.receive_str())
-        filename = await ws.receive()
+        filename = await ws.receive_str()
         await Logger.logger.info(schema)
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
             states_with_id = {}
-
             for state in sm["states"]:
                 states_with_id[state.name] = state
 
             converter = JsonConverter(ws)
 
             xml = await converter.parse(states_with_id, sm["startNode"])
-            t = f"{(time.time() + 62135596800) * 10000000:f}".split(".")[0]
 
             await ws.send_json(
                 {
-                    "filename": f"Robot_{t}",
+                    "filename": f"{filename}_{Handler.calculateBearlogaId()}",
                     "extension": "graphml",
                     "fileContent": xml
                 })

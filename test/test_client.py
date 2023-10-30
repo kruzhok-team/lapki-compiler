@@ -49,7 +49,7 @@ async def test_sendMultifileProject():
 async def test_sendArduino():
     client = Client()
     await client.doConnect(f'{BASE_ADDR}/source')
-    req = await client.sendMultiFileProject("examples/ExampleSketch", "arduino-cli", ["-b", "arduino:avr:uno", "ExampleSketch.ino"], ["*.ino"])
+    req = await client.sendMultiFileProject("../examples/ExampleSketch/", "arduino-cli", ["-b", "arduino:avr:uno", "ExampleSketch.ino"], ["*.ino"])
     result = await client.ws.receive_json()
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
@@ -65,12 +65,14 @@ async def test_sendArduino():
 
     assert count != 0
 
+
 @pytest.mark.asyncio
 async def test_berlogaImport():
     client = Client()
     await client.doConnect(f"{BASE_ADDR}/berloga/import")
     # response = await client.importBerlogaScheme("compiler/schemas/Autoborder_with_actions.graphml")
-    response = await client.importBerlogaScheme("compiler/schemas/berlogaScheme.graphml")
+    response = await client.importBerlogaScheme("compiler/schemas/berlogaScheme.graphml", "Autoborder_12314124")
+    print(response)
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
     async with async_open(path + "berlogaScheme.json", "w") as f:
@@ -78,7 +80,7 @@ async def test_berlogaImport():
 
     await client.ws.close()
 
-    assert response != "null"
+    assert response["source"][0]["fileContent"] != None and response["source"][0]["fileContent"] != "null"
 
 
 @pytest.mark.asyncio
@@ -201,6 +203,7 @@ async def test_Serial():
 
     assert count_binary > 0 and count_source > 0
 
+
 @pytest.mark.asyncio
 async def test_Serial2():
     client = Client()
@@ -227,6 +230,7 @@ async def test_Serial2():
             await f.write(source["fileContent"])
 
     assert count_binary > 0 and count_source > 0
+
 
 @pytest.mark.asyncio
 async def test_PWM():
@@ -422,7 +426,8 @@ async def test_ShiftOut():
             await f.write(source["fileContent"])
 
     assert count_binary > 0 and count_source > 0
-    
+
+
 @pytest.mark.asyncio
 async def test_User():
     client = Client()

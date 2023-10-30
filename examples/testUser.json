@@ -43,6 +43,12 @@
         "timer": {
             "type": "Timer",
             "parameters": {}
+        },
+        "QHsmSerial": {
+            "type": "QHsmSerial",
+            "parameters": {
+                "baud": 9600
+            }
         }
     },
 
@@ -55,7 +61,7 @@
                         "type": "char[]"
                     }
                 },
-                "code": "Serial.println(value);"
+                "code": "QHsmSerial::println(value);"
             }
         },
 

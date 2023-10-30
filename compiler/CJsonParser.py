@@ -131,7 +131,7 @@ class CJsonParser:
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
                 types.append(component.type)
-                
+
             CJsonParser.actionInMain(component, check_signals)
             setup_variable = CJsonParser.setupVariables(
                 component.name, component.type, component.parameters)
@@ -143,7 +143,7 @@ class CJsonParser:
                                                        filename))
         notes = []
         class_filename = filename[0].upper() + filename[1:]
-            
+
         for name in triggers.keys():
             component_name = triggers[name]["component_name"]
             component_type = components_types[component_name]
@@ -172,8 +172,10 @@ class CJsonParser:
                                              "\tloop();",
                                              "}"]) + "\n}"
                 CJsonParser.appendNote(Labels.H, "".join(variables), notes)
-                CJsonParser.appendNote(Labels.H_INCLUDE, "".join(includes), notes)
-                CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function, main_function]), notes)
+                CJsonParser.appendNote(
+                    Labels.H_INCLUDE, "".join(includes), notes)
+                CJsonParser.appendNote(Labels.CPP, "\n\n".join(
+                    [setup_function, loop_function, main_function]), notes)
 
             case "arduino-cli":
                 setup_function = '\n\t'.join(["\nvoid setup(){",
@@ -185,8 +187,10 @@ class CJsonParser:
                 loop_function = ''.join(
                     ["\nvoid loop(){", *check_signals, "\n}"])
                 CJsonParser.appendNote(Labels.H, "".join(variables), notes)
-                CJsonParser.appendNote(Labels.H_INCLUDE, "".join(includes), notes)
-                CJsonParser.appendNote(Labels.CPP, "\n\n".join([setup_function, loop_function]), notes)
+                CJsonParser.appendNote(
+                    Labels.H_INCLUDE, "".join(includes), notes)
+                CJsonParser.appendNote(Labels.CPP, "\n\n".join(
+                    [setup_function, loop_function]), notes)
         return notes
 
     @staticmethod
@@ -218,12 +222,15 @@ class CJsonParser:
             # В Берлоге в условиях используются
             # только числа и поля класса!
             args = ""
-            # if compiler != "Berloga":
-            if True:
-                arr_args = []
-                if args in condition_dict.keys():
-                    arr_args = list(condition_dict["args"].values())
-                args = "(" + ",".join(map(str, arr_args)) + ")"
+            arr_args = []
+
+            if args in condition_dict.keys():
+                arr_args = list(condition_dict["args"].values())
+
+                if len(arr_args) > 0:
+                    args = "(" + ",".join(map(str, arr_args)) + ")"
+                elif compiler != "BearlogaDefend":
+                    args = "()"
 
             return "".join([component, method, args])
         return "true"
@@ -260,10 +267,10 @@ class CJsonParser:
             if transition["trigger"]["component"] != "User":
                 if transition["trigger"]["component"] == "QHsmSerial":
                     guard = ''.join([transition["trigger"]["component"], '::',
-                                transition["trigger"]["method"], '('])
+                                     transition["trigger"]["method"], '('])
                 else:
                     guard = ''.join([transition["trigger"]["component"], '.',
-                                transition["trigger"]["method"], '('])
+                                     transition["trigger"]["method"], '('])
                 arr_args = []
                 if "args" in transition["trigger"].keys():
                     arr_args = list(transition["trigger"]["args"].values())
@@ -284,13 +291,13 @@ class CJsonParser:
                     condition = "true"
                 if "do" in transition.keys():
                     action = await CJsonParser.getActions(transition["do"],
-                                                        compiler)
+                                                          compiler)
                 else:
                     action = ""
                 trig["trigger"] = Trigger(name=name, source=transition["source"],
-                                        target=transition["target"], id=i,
-                                        type="external", guard=condition,
-                                        action=action, points=[])
+                                          target=transition["target"], id=i,
+                                          type="external", guard=condition,
+                                          action=action, points=[])
 
                 result.append(trig)
                 i += 1
@@ -303,10 +310,10 @@ class CJsonParser:
                     condition = "true"
                 if "do" in transition.keys():
                     action = await CJsonParser.getActions(transition["do"],
-                                                        compiler)
+                                                          compiler)
                 else:
                     action = ""
-                trig = Trigger(name=name, 
+                trig = Trigger(name=name,
                                source=transition["source"],
                                target=transition["target"], id=i,
                                type="external", guard=condition,
@@ -326,7 +333,7 @@ class CJsonParser:
             "onEnter": "",
             "onExit": ""
         }
-        user_events= {}
+        user_events = {}
         for event in events:
             trigger = event["trigger"]
             component = trigger["component"]
@@ -334,12 +341,12 @@ class CJsonParser:
 
             actions = ""
             for i in range(len(event["do"])):
-                if component != "User" and component != "QHsmSerial":
+                if component != "User" and event["do"][i]["component"] != "QHsmSerial":
                     actions += event["do"][i]["component"] + \
-                            '.' + event["do"][i]["method"] + '('
+                        '.' + event["do"][i]["method"] + '('
                 else:
                     actions += event["do"][i]["component"] + \
-                            '::' + event["do"][i]["method"] + '('
+                        '::' + event["do"][i]["method"] + '('
                 if "args" in event["do"][i].keys():
                     arr_action = []
                     for arg in list(event["do"][i]["args"].values()):
@@ -349,19 +356,22 @@ class CJsonParser:
                             else:
                                 arr_action.append(arg)
                         elif type(arg) is dict:
-                            arr_action.append(
-                                f'{arg["component"]}.{arg["method"]}')
+                            if arg["component"] == "QHsmSerial":
+                                arr_action.append(
+                                    f'{arg["component"]}::{arg["method"]}')
+                            else:
+                                arr_action.append(
+                                    f'{arg["component"]}.{arg["method"]}')
                     actions += ','.join(map(str, arr_action))
                 actions += ")" + CJsonParser.delimeter[compiler] + "\n"
-
             if component == "System":
                 system_signals[method] = actions
             elif component == "User":
                 eventname = "User_" + method
-                trig = Trigger(name=eventname, 
+                trig = Trigger(name=eventname,
                                type="internal",
                                source=statename,
-                               target="", 
+                               target="",
                                action=actions,
                                id=id,
                                points=[])
@@ -376,7 +386,6 @@ class CJsonParser:
                 event_signals[eventname] = {}
                 event_signals[eventname]["guard"] = guard
                 event_signals[eventname]["component_name"] = trigger["component"]
-
                 trig = Trigger(name=eventname, type="internal", source=statename,
                                target="", action=actions, id=id,
                                points=[])
@@ -429,15 +438,15 @@ class CJsonParser:
                 case "Timer":
                     if component.type not in types and f"{component.name}_timeout" not in player_signals:
                         signals.append(f"{component.name}_timeout")
-        return signals    
-    
+        return signals
+
     @staticmethod
     def getUserFunctions(functions: dict[str, dict]) -> tuple[str, str]:
         h = []
         c = []
         for func_name in list(functions.keys()):
             return_type = functions[func_name]["returnType"]
-            
+
             args = []
             for arg in list(functions[func_name]["args"].keys()):
                 name = arg
@@ -448,17 +457,18 @@ class CJsonParser:
                     name = name + "[]"
                 args.append(f"{arg_type} {name}")
             args = ', '.join(args)
-            code =  functions[func_name]["code"]
+            code = functions[func_name]["code"]
             h.append(f"\nstatic {return_type} {func_name}({args});")
-            c.append(f"\n{return_type} User::{func_name}({args})" + "{" + f"\n{code}" + "\n}")
-        
+            c.append(f"\n{return_type} User::{func_name}({args})" +
+                     "{" + f"\n{code}" + "\n}")
+
         return ('\n'.join(h), '\n'.join(c))
-    
+
     @staticmethod
     def getUserVariables(variables: dict[str, dict[str, str]]) -> str:
         h = []
         c = []
-        
+
         for variable_name in list(variables.keys()):
             vtype = variables[variable_name]["type"]
             val = variables[variable_name]["value"]
@@ -467,12 +477,12 @@ class CJsonParser:
             if pos != -1:
                 vtype = vtype[:pos]
                 variable_name = variable_name + "[]"
-            
+
             h.append(f"\nstatic {vtype} {variable_name};")
             c.append(f"\n{vtype} User::{variable_name} = {val};")
-            
+
         return ('\n'.join(h), '\n'.join(c))
-    
+
     @staticmethod
     def createUserCode(user_data: dict) -> tuple[list[str], list[str]]:
         notes = []
@@ -481,19 +491,18 @@ class CJsonParser:
             CJsonParser.appendNote(Labels.USER_FUNC_H, functions[0], notes)
             CJsonParser.appendNote(Labels.USER_FUNC_C, functions[1], notes)
         variables = CJsonParser.getUserVariables(user_data["variables"])
-        
+
         if variables != ("", ""):
             CJsonParser.appendNote(Labels.USER_VAR_H, variables[0], notes)
             CJsonParser.appendNote(Labels.USER_VAR_C, variables[1], notes)
-        
+
         signals = []
-        
+
         for signal in user_data["signals"]:
             signals.append("User_" + signal)
-        
+
         return notes, signals
-            
-            
+
     @staticmethod
     async def parseStateMachine(json_data: dict, ws, filename="", compiler="", path=None):
         try:
@@ -516,8 +525,9 @@ class CJsonParser:
 
                 x, y, w, h = await CJsonParser.getGeometry(state)
                 proccesed_states[statename] = State(name=state["name"], type="state",
-                                                    actions="", 
-                                                    trigs=[*list(events.values()), *list(user_events.values())],
+                                                    actions="",
+                                                    trigs=[
+                                                        *list(events.values()), *list(user_events.values())],
                                                     entry=on_enter, exit=on_exit,
                                                     id=statename, new_id=[
                                                         statename],
@@ -532,7 +542,8 @@ class CJsonParser:
             if compiler in ["arduino-cli", "g++", "gcc"]:
                 notes = await CJsonParser.createNotes(components, filename, triggers=player_signals, compiler=compiler, path=path)
                 if "User" in list(json_data.keys()):
-                    user_notes, user_signals = CJsonParser.createUserCode(json_data["User"])
+                    user_notes, user_signals = CJsonParser.createUserCode(
+                        json_data["User"])
                     notes = [*notes, *user_notes]
             else:
                 notes = []

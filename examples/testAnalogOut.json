@@ -32,7 +32,7 @@
                         }
                     },
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": {
@@ -88,7 +88,7 @@
                         }
                     },
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": {
@@ -160,7 +160,7 @@
             "parameters": {}
         },
 
-        "serial": {
+        "QHsmSerial": {
             "type": "QHsmSerial",
             "parameters": {
                 "baud": "9600"

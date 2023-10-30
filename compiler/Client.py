@@ -14,19 +14,20 @@ class Client:
 
     async def sendSMJson(self, path: str) -> dict:
         async with async_open(path, 'r') as req:
-            json_data: str = await req.read()
-
-        await self.ws.send_str("ArduinoUno")
+            json_data: str = json.loads(await req.read())
+        print(json_data)
+        # await self.ws.send_str("ArduinoUno")
         await self.ws.send_json(json_data)
         response = await self.ws.receive_json()
 
         return response
 
-    async def importBerlogaScheme(self, path):
+    async def importBerlogaScheme(self, path: str, robot: str):
         async with async_open(path, 'r') as req:
             data = await req.read()
 
         await self.ws.send_str(data)
+        await self.ws.send_str(robot)
         response = json.loads(await self.ws.receive_str())
         return response
 

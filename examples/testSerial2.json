@@ -5,16 +5,16 @@
         "events": [
             {
                 "trigger": {
-                    "component": "serial",
+                    "component": "QHsmSerial",
                     "method": "byteReceived"
                 },
                 "do": [
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": {
-                                "component": "serial",
+                                "component": "QHsmSerial",
                                 "method": "lastByte"
                             }
                         }
@@ -24,12 +24,12 @@
 
             {
                 "trigger": {
-                    "component": "serial",
+                    "component": "QHsmSerial",
                     "method": "noByteReceived"
                 },
                 "do": [
                     {
-                        "component": "serial",
+                        "component": "QHsmSerial",
                         "method": "println",
                         "args": {
                             "value": "\"NoData!\""
@@ -52,7 +52,7 @@
     "transitions": [],
   
     "components": {
-        "serial": {
+        "QHsmSerial": {
             "type": "QHsmSerial",
             "parameters": {
                 "baud": "9600"
