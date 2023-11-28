@@ -286,7 +286,7 @@ class Handler:
 
             converter = JsonConverter(ws)
 
-            xml = await converter.parse(states_with_id, sm["startNode"])
+            xml = await converter.parse(states_with_id, schema["initialState"])
 
             await ws.send_json(
                 {

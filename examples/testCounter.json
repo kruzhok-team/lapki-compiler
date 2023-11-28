@@ -68,7 +68,13 @@
       }
     }
   },
-  "initialState": "n0",
+  "initialState": {
+    "target": "n0",
+    "position": {
+      "x": -38,
+      "y": 274
+    }
+  },
   "transitions": [
     {
       "color": "#F29727",
@@ -118,9 +124,9 @@
     }
   },
   "compilerSettings": {
-        "filename": "ExampleSketch",
-        "compiler": "arduino-cli",
-        "flags": ["-b", "arduino:avr:uno"]
+    "filename": "ExampleSketch",
+    "compiler": "arduino-cli",
+    "flags": ["-b", "arduino:avr:uno"]
   },
   "parameters": {},
   "platform": "ArduinoUno"

@@ -71,7 +71,7 @@ async def test_berlogaImport():
     client = Client()
     await client.doConnect(f"{BASE_ADDR}/berloga/import")
     # response = await client.importBerlogaScheme("compiler/schemas/Autoborder_with_actions.graphml")
-    response = await client.importBerlogaScheme("compiler/schemas/berlogaScheme.graphml", "Autoborder_12314124")
+    response = await client.importBerlogaScheme("examples/bearlogaSchemas/Autoborder_638330223036439120.graphml", "Autoborder_12314124")
     print(response)
     path = "client/" + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + "/"
     Path(path).mkdir(parents=True)
@@ -95,7 +95,7 @@ async def test_berlogaExport():
 
     await client.ws.close()
 
-    assert response != None
+    assert response != None and response != ''
 
 
 @pytest.mark.asyncio

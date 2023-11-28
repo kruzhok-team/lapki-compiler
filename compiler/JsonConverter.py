@@ -1,5 +1,4 @@
 import xmltodict
-import re
 
 from copy import deepcopy
 
@@ -367,10 +366,13 @@ class JsonConverter:
 
         return temp
 
-    async def parse(self, states: dict[str, State], initial_state: str) -> str:
+    async def parse(self, states: dict[str, State], initial_state) -> str:
         try:
             self.states = states
-            data = {
+            init_position = initial_state["position"]
+            init_pos_x = str(init_position["x"]).replace('.', ',')
+            init_pos_y = str(init_position["y"]).replace('.', ',')
+            data: dict = {
                 "graphml": {
                     "@xmlns": "http://graphml.graphdrawing.org/xmlns",
                     "@xmlns:java": "http://www.yworks.com/xml/yfiles-common/1.0/java",
@@ -380,7 +382,7 @@ class JsonConverter:
                     "@xmlns:y": "http://www.yworks.com/xml/graphml",
                     "@xmlns:yed": "http://www.yworks.com/xml/yed/3",
                     "@yed:schemaLocation": "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
-                    "@entryPosition": "-1573.862 1010.069",
+                    "@entryPosition": f"{init_pos_x} {init_pos_y}",
                     "key": [
                         {
                             "@attr.name": "Description",
@@ -447,7 +449,7 @@ class JsonConverter:
                 }
             }
 
-            await self.addInitialState(initial_state)
+            await self.addInitialState(initial_state["target"])
             data["graphml"]["graph"]["edge"] = self.transitions
             result = self.addNodePreferredToEdgeLabels(
                 xmltodict.unparse(data, pretty=True))

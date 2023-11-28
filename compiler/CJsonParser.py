@@ -465,7 +465,7 @@ class CJsonParser:
         return ('\n'.join(h), '\n'.join(c))
 
     @staticmethod
-    def getUserVariables(variables: dict[str, dict[str, str]]) -> str:
+    def getUserVariables(variables: dict[str, dict[str, str]]) -> tuple[str, str]:
         h = []
         c = []
 
@@ -547,7 +547,7 @@ class CJsonParser:
                     notes = [*notes, *user_notes]
             else:
                 notes = []
-            startNode = proccesed_states[json_data["initialState"]].id
+            startNode = proccesed_states[json_data["initialState"]["target"]].id
             proccesed_states = await CJsonParser.addTransitionsToStates([*transitions, *user_transitions], proccesed_states)
             proccesed_states = await CJsonParser.addParentsAndChilds(states, proccesed_states, global_state)
             return {"states": [global_state, *list(proccesed_states.values())],

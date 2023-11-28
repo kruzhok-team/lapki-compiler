@@ -169,7 +169,13 @@
       }
     }
   },
-  "initialState": "n3",
+  "initialState": {
+    "target": "n3",
+    "position": {
+      "x": 20,
+      "y": 30
+    }
+  },
   "transitions": [
     {
       "color": "#22a4f5",

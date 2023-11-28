@@ -3,11 +3,14 @@ import json
 import random
 from aiofile import async_open
 
+
 try:
     from .config import SCHEMA_DIRECTORY
     from .Logger import Logger
     from .PlatformManager import PlatformManager
+    from .fullgraphmlparser.stateclasses import State
 except ImportError:
+    from compiler.fullgraphmlparser.stateclasses import State
     from compiler.config import SCHEMA_DIRECTORY
     from compiler.Logger import Logger
     from compiler.PlatformManager import PlatformManager
@@ -395,8 +398,17 @@ class GraphmlParser:
             flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes, states=[], states_dict={})
             states = await GraphmlParser.createStates(flattenStates, states_dict, platform)
             transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict, platform)
+            obj_initial_state = states[initial_state]
+            init_x = obj_initial_state["bounds"]["x"] - 100
+            init_y = obj_initial_state["bounds"]["y"] - 100
             return {"states": states,
-                    "initialState": initial_state,
+                    "initialState": {
+                        "target": initial_state,
+                        "position": {
+                            "x": init_x,
+                            "y": init_y
+                        }
+                    },
                     "transitions": transitions,
                     "components": components,
                     "platform": platform,
