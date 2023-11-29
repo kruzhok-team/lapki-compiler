@@ -13,7 +13,7 @@
 
   "reportMissingImports": true,
   "typeCheckingMode": "strict",
-  "reportMissingTypeStubs": true,
+  "reportMissingTypeStubs": false,
 
   "pythonVersion": "3.10",
   "pythonPlatform": "Linux",
