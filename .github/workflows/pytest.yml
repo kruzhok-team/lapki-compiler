@@ -1,4 +1,4 @@
-name: typecheck
+name: tests
 
 on: [push, pull_request]
 
