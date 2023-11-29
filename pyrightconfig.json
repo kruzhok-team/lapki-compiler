@@ -1,0 +1,20 @@
+{
+  "include": [
+    "compiler"
+  ],
+  
+  "exclude": [
+    "**/__pycache__",
+    ".mypy_cache",
+    "**/fullgraphmlparser",
+    "**/library",
+    "**schemas",
+  ],
+
+  "reportMissingImports": true,
+  "typeCheckingMode": "strict",
+  "reportMissingTypeStubs": true,
+
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Linux",
+}
