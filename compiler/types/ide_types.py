@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from typing import Literal, TypeAlias, Optional
 from collections.abc import Mapping, Sequence
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 
 
 Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
+Compiler: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
 
 
 class IDESchemaValidationError(Exception):
@@ -79,12 +80,20 @@ class Condition(BaseModel):
 @dataclass
 class Transition(BaseModel):
     color: str
-    condition: Optional[Condition]
     source: str
     target: str
     position: Point
     trigger: Trigger
     do: Sequence[Action]
+    condition: Optional[Condition] = None
+
+    @field_validator('color')
+    @classmethod
+    def isColor(cls, v: str) -> str:
+        if not v.startswith('#') or len(v) != 6:
+            raise IDESchemaValidationError(f'{v} - не является цветом!')
+
+        return v
 
 
 @dataclass
@@ -96,7 +105,7 @@ class Component(BaseModel):
 @dataclass
 class CompilerSettings(BaseModel):
     filename: str
-    compiler: str
+    compiler: Compiler
     flags: Sequence[str]
 
 
@@ -109,14 +118,11 @@ class IdeFormat(BaseModel):
     platform: Platform
     parameters: Mapping[str, str]
 
-    class Config:
-        require_by_default = False
-
     @model_validator(mode='after')
     def is_compiler_settings_required(self):
-        if self.platform == 'ArduinoUno' and self.compilerSettings == None:
+        if self.platform == 'ArduinoUno' and self.compilerSettings is None:
             raise IDESchemaValidationError('Отсутствуют настройки компилятора!')
-        if self.platform == 'BearlogaDefend' and self.compilerSettings != None:
+        if self.platform == 'BearlogaDefend' and self.compilerSettings is not None:
             raise IDESchemaValidationError(
                 'Для данной платформы не требуются настройки компилятора!')
         return self

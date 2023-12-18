@@ -134,7 +134,13 @@
          }
       }
    },
-   "initialState": "n3",
+   "initialState": {
+      "target": "n3",
+      "position": {
+         "x": 155,
+         "y": 190
+      }
+   },
    "transitions": [
       {
          "source": "n0",
@@ -149,7 +155,7 @@
             "y": 84
          },
          "do": [],
-         "color": "#C9B544"
+         "color": "#3B79A3"
       },
       {
          "source": "n0",
@@ -164,7 +170,7 @@
             "y": 234
          },
          "do": [],
-         "color": "#4F2BAC"
+         "color": "#CF8EBA"
       },
       {
          "source": "n3",
@@ -195,7 +201,7 @@
             "y": -51
          },
          "do": [],
-         "color": "#C6C26E"
+         "color": "#A6840F"
       },
       {
          "source": "n3",
@@ -210,7 +216,7 @@
             "y": 197
          },
          "do": [],
-         "color": "#A27C00"
+         "color": "#3BA9DE"
       },
       {
          "source": "n1",
@@ -225,7 +231,7 @@
             "y": -104
          },
          "do": [],
-         "color": "#D90345"
+         "color": "#81EA55"
       },
       {
          "source": "n2",
@@ -240,7 +246,7 @@
             "y": 46
          },
          "do": [],
-         "color": "#62D050"
+         "color": "#D1678C"
       }
    ],
    "components": {

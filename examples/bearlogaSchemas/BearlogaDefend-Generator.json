@@ -82,7 +82,13 @@
          }
       }
    },
-   "initialState": "n0",
+   "initialState": {
+      "target": "n0",
+      "position": {
+         "x": 155,
+         "y": 190
+      }
+   },
    "transitions": [
       {
          "source": "n0",
@@ -97,7 +103,7 @@
             "y": 299
          },
          "do": [],
-         "color": "#39794B"
+         "color": "#A24495"
       },
       {
          "source": "n1",
@@ -112,7 +118,7 @@
             "y": 449
          },
          "do": [],
-         "color": "#033AF7"
+         "color": "#D59CAB"
       },
       {
          "source": "n1",
@@ -127,7 +133,7 @@
             "y": 449
          },
          "do": [],
-         "color": "#6C64ED"
+         "color": "#764315"
       }
    ],
    "components": {
