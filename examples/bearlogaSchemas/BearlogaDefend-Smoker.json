@@ -135,7 +135,13 @@
          "parent": "n1"
       }
    },
-   "initialState": "n0",
+   "initialState": {
+      "target": "n0",
+      "position": {
+         "x": 155,
+         "y": 190
+      }
+   },
    "transitions": [
       {
          "source": "n0",
@@ -150,7 +156,7 @@
             "y": -73
          },
          "do": [],
-         "color": "#3BC4FC"
+         "color": "#F23F8C"
       },
       {
          "source": "n1",
@@ -165,7 +171,7 @@
             "y": -140
          },
          "do": [],
-         "color": "#C1D386"
+         "color": "#FB9F24"
       },
       {
          "source": "n1",
@@ -180,7 +186,7 @@
             "y": 10
          },
          "do": [],
-         "color": "#7D008E"
+         "color": "#73929B"
       },
       {
          "source": "n2",
@@ -195,7 +201,7 @@
             "y": -280
          },
          "do": [],
-         "color": "#E30F75"
+         "color": "#CF711A"
       },
       {
          "source": "n3",
@@ -210,7 +216,7 @@
             "y": -130
          },
          "do": [],
-         "color": "#2298D3"
+         "color": "#49D985"
       }
    ],
    "components": {

@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import subprocess
 
+from compiler.handler import Handler
 from compiler.config import SERVER_PORT
 
 pytest_plugins = ('pytest_asyncio',)

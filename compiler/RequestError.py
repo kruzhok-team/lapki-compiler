@@ -9,13 +9,13 @@ class RequestError:
     async def dropConnection(self, ws: web.WebSocketResponse):
         if (not ws.closed):
             await ws.send_json(
-                    {
-                        "result": self.error,
-                        "return code": '',
-                        "stdout": '',
-                        "stderr": '',
-                        "binary": [],
-                        "source": []
-                    }
+                {
+                    "result": self.error,
+                    "return code": '',
+                    "stdout": '',
+                    "stderr": '',
+                    "binary": [],
+                    "source": []
+                }
             )
             await ws.close()

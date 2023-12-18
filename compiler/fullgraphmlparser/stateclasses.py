@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import Any, List, Tuple, Optional, Dict, Sequence
 
 """
    Class Trigger describes Triggers of uml-diagrams
@@ -71,8 +71,18 @@ class State:
     height: int = 0
 
     def __str__(self) -> str:
-    
+
         if self.parent is not None:
             return f"{self.name, self.parent.name, ', '.join([child.name for child in self.childs]) }"
         else:
             return f"{self.name}, parent: None, {', '.join([child.name for child in self.childs])}"
+
+
+@dataclass
+class StateMachine:
+    name: str
+    start_node: str
+    start_action: str
+    notes: Dict[str, Any]
+    states: Sequence[State]
+    signals: Sequence[str]
