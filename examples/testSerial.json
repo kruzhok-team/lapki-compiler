@@ -139,6 +139,7 @@
     "QHsmSerial": {
       "type": "QHsmSerial",
       "parameters": {
+        "label": "nig",
         "baud": "9600"
       }
     }

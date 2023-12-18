@@ -198,6 +198,8 @@ class CJsonParser:
         result = []
 
         for component_name in components:
+            if 'label' in components[component_name]["parameters"]:
+                del components[component_name]["parameters"]['label']
             result.append(Component(
                 component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
 
