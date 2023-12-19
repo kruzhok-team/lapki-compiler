@@ -200,6 +200,8 @@ class CJsonParser:
         for component_name in components:
             if 'label' in components[component_name]["parameters"]:
                 del components[component_name]["parameters"]['label']
+            if 'labelColor' in components[component_name]["parameters"]:
+                del components[component_name]["parameters"]['labelColor']
             result.append(Component(
                 component_name, type=components[component_name]["type"], parameters=components[component_name]["parameters"]))
 
