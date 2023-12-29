@@ -102,5 +102,5 @@ async def test_graphhmlParser(path: str, platform: str):
 
     with open(f"examples/bearlogaSchemas/{platform}.json", "w") as f:
         json.dump(parsed_graphml, f, ensure_ascii=False, indent=3)
-
+    
     assert parsed_graphml["states"] is not None

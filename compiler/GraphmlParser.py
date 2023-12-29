@@ -280,9 +280,10 @@ class GraphmlParser:
                                     }]
         """
         result: list[dict] = []
+        print(actions)
         for action in actions:
             result.append(await GraphmlParser._parseAction(action, platform))
-
+        print(result)
         return result
 
     @staticmethod
@@ -299,16 +300,21 @@ class GraphmlParser:
                 label = trigger["data"]["y:PolyLineEdge"]["y:EdgeLabel"]["#text"]
                 # condition может содержать условие, условия и действия, действия и пустую строку
                 event, condition = label.split("/")
-                t = condition.strip().split('\n')
-                condition = t[0]
-                actions = t[1:]
+                t: list[str] = condition.strip().split('\n')
+                if len(t) > 0 and t[0].startswith('['):
+                    condition = t[0]
+                    actions = t[1:]
+                else:
+                    condition = ''
+                    if '' in t:
+                        t.remove('')
+                    actions = t
                 actions = await GraphmlParser.getActions(actions, platform)
                 component, method = event.split(".")
                 transition["trigger"] = {
                     "component": component,
                     "method": method
                 }
-
                 transition["condition"] = await GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
@@ -319,7 +325,9 @@ class GraphmlParser:
                 transitions.append(transition)
             except (AttributeError, KeyError):
                 initial_state = trigger["@target"]
-
+            # except Exception:
+            #   await Logger.logException()
+        print(transitions, initial_state)
         return transitions, initial_state
 
     @staticmethod
