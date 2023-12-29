@@ -280,10 +280,8 @@ class GraphmlParser:
                                     }]
         """
         result: list[dict] = []
-        print(actions)
         for action in actions:
             result.append(await GraphmlParser._parseAction(action, platform))
-        print(result)
         return result
 
     @staticmethod
@@ -325,9 +323,6 @@ class GraphmlParser:
                 transitions.append(transition)
             except (AttributeError, KeyError):
                 initial_state = trigger["@target"]
-            # except Exception:
-            #   await Logger.logException()
-        print(transitions, initial_state)
         return transitions, initial_state
 
     @staticmethod
