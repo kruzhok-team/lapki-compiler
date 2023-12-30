@@ -1,7 +1,10 @@
 import xmltodict
-import json
 import random
+from collections import defaultdict
+from typing import Literal, TypeAlias
 from aiofile import async_open
+
+Point: TypeAlias = dict[Literal['x', 'y'], int]
 
 
 try:
@@ -19,6 +22,8 @@ except ImportError:
     Returns:
         _type_: _description_
 """
+
+TRANSTIONS_DISTANCE = 75
 
 
 class GraphmlParser:
@@ -187,7 +192,7 @@ class GraphmlParser:
         return states_dict[id]["parent"]
 
     @staticmethod
-    async def checkValueType(value: str) -> dict:
+    def checkValueType(value: str) -> dict:
         if "." in value:
             command = value.split(".")
             component = command[0]
@@ -203,14 +208,14 @@ class GraphmlParser:
                     "value": value}
 
     @staticmethod
-    async def getCondition(condition: str) -> dict | None:
+    def getCondition(condition: str) -> dict | None:
         result = None
         if condition != "":
             condition = condition.replace("[", "").replace("]", "")
             condition = condition.split()
-            lval = await GraphmlParser.checkValueType(condition[0])
+            lval = GraphmlParser.checkValueType(condition[0])
             operator = condition[1]
-            rval = await GraphmlParser.checkValueType(condition[2])
+            rval = GraphmlParser.checkValueType(condition[2])
 
             result = {
                 "type": GraphmlParser.operatorAlias[operator],
@@ -220,24 +225,38 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    def calculateEdgePosition(source_position: dict, target_position: dict, used_coordinates: list) -> dict[str, int]:
+    def calculateEdgePosition(count_actions: int, count_condtions: int, source_position: dict, target_position: dict, used_coordinates: defaultdict[tuple[float, float], Point]) -> dict[str, int]:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
 
-        c1_x = x1 + (w1 // 2)
-        c1_y = y1 + (h1 // 2)
-        c2_x = x2 + (w2 // 2)
-        c2_y = y2 + (h2 // 2)
+        nx = (x1 + x2) // 10 + (300 * (1 + count_condtions + count_actions))
 
-        nx = (x1 + x2) // 2
+        ny = (y1 + y2) // 1.1 // 2.5 * (1 + count_actions + count_condtions)
+        for coord in list(used_coordinates.keys()):
+            if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
+                if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
+                    ny += 200 * used_coordinates[coord]['x']
+                    used_coordinates[coord]['x'] += 1
+                nx += 200 * used_coordinates[coord]['y']
+                used_coordinates[coord]['y'] += 1
+                print('hereeey')
+                break
+            if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
+                if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
+                    nx += 200 * used_coordinates[coord]['y']
+                    used_coordinates[coord]['y'] += 1
+                ny += 200 * used_coordinates[coord]['x']
+                used_coordinates[coord]['x'] += 1
+                print('hereeex')
+                break
+        print(nx, ny)
+        print('----------')
+        # if ny in used_coordinates[:][1]:
+        #    ny += 150
+        #   nx += 150
 
-        ny = (y1 + y2) // 2
-
-        if (nx, ny) in used_coordinates:
-            ny += 150
-            nx += 150
-
-        used_coordinates.append((nx, ny))
+        used_coordinates[(nx, ny)]['x'] += 1
+        used_coordinates[(nx, ny)]['y'] += 1
         return {"x": nx, "y": ny}
 
     # Get n0::n1::n2 str and return n2
@@ -288,7 +307,8 @@ class GraphmlParser:
     async def getTransitions(triggers: list[dict], statesDict: dict, platform: str) -> tuple[list, str]:
         transitions = []
         initial_state = ""
-        used_coordinates: list[tuple[int, int]] = []
+        used_coordinates: defaultdict[tuple[float, float],
+                                      Point] = defaultdict(lambda: {'x': 1, 'y': 1})
         for trigger in triggers:
             transition = {}
             try:
@@ -313,15 +333,22 @@ class GraphmlParser:
                     "component": component,
                     "method": method
                 }
-                transition["condition"] = await GraphmlParser.getCondition(condition)
+                transition["condition"] = GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
-                transition["position"] = GraphmlParser.calculateEdgePosition(
-                    source_geometry, target_geometry, used_coordinates)
+                transition["position"] = GraphmlParser.calculateEdgePosition(len(actions), 1 if condition else 0,
+                                                                             source_geometry, target_geometry, used_coordinates)
+                # transition['position'] = {
+                #     'x': int(
+                #         float(trigger["data"]["y:PolyLineEdge"]["y:Path"]["@sx"])) * 0.5 + 400,
+                #     'y': int(
+                #         float(trigger["data"]["y:PolyLineEdge"]["y:Path"]["@sy"])) * 4 + 20
+                # }
                 transition["do"] = actions
                 transition["color"] = GraphmlParser.randColor()
                 transitions.append(transition)
             except (AttributeError, KeyError):
+                print('heereeee')
                 initial_state = trigger["@target"]
         return transitions, initial_state
 
