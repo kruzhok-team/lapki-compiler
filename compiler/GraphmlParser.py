@@ -192,7 +192,7 @@ class GraphmlParser:
         return states_dict[id]["parent"]
 
     @staticmethod
-    async def checkValueType(value: str) -> dict:
+    def checkValueType(value: str) -> dict:
         if "." in value:
             command = value.split(".")
             component = command[0]
@@ -208,14 +208,14 @@ class GraphmlParser:
                     "value": value}
 
     @staticmethod
-    async def getCondition(condition: str) -> dict | None:
+    def getCondition(condition: str) -> dict | None:
         result = None
         if condition != "":
             condition = condition.replace("[", "").replace("]", "")
             condition = condition.split()
-            lval = await GraphmlParser.checkValueType(condition[0])
+            lval = GraphmlParser.checkValueType(condition[0])
             operator = condition[1]
-            rval = await GraphmlParser.checkValueType(condition[2])
+            rval = GraphmlParser.checkValueType(condition[2])
 
             result = {
                 "type": GraphmlParser.operatorAlias[operator],
@@ -225,19 +225,17 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    def calculateEdgePosition(source_position: dict, target_position: dict, used_coordinates: defaultdict[tuple[float, float], Point]) -> dict[str, int]:
+    def calculateEdgePosition(count_actions: int, count_condtions: int, source_position: dict, target_position: dict, used_coordinates: defaultdict[tuple[float, float], Point]) -> dict[str, int]:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
 
-        nx = (x1 + x2) // 10 + 300
+        nx = (x1 + x2) // 10 + (300 * (1 + count_condtions + count_actions))
 
-        ny = (y1 + y2) // 1.1 // 2.5
-        print(nx, ny)
-
+        ny = (y1 + y2) // 1.1 // 2.5 * (1 + count_actions + count_condtions)
         for coord in list(used_coordinates.keys()):
             if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
                 if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
-                    ny += 100 * used_coordinates[coord]['x']
+                    ny += 200 * used_coordinates[coord]['x']
                     used_coordinates[coord]['x'] += 1
                 nx += 200 * used_coordinates[coord]['y']
                 used_coordinates[coord]['y'] += 1
@@ -247,7 +245,7 @@ class GraphmlParser:
                 if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
                     nx += 200 * used_coordinates[coord]['y']
                     used_coordinates[coord]['y'] += 1
-                ny += 50 * used_coordinates[coord]['x']
+                ny += 200 * used_coordinates[coord]['x']
                 used_coordinates[coord]['x'] += 1
                 print('hereeex')
                 break
@@ -335,11 +333,11 @@ class GraphmlParser:
                     "component": component,
                     "method": method
                 }
-                transition["condition"] = await GraphmlParser.getCondition(condition)
+                transition["condition"] = GraphmlParser.getCondition(condition)
                 source_geometry = statesDict[trigger["@source"]]["geometry"]
                 target_geometry = statesDict[trigger["@target"]]["geometry"]
-                transition["position"] = GraphmlParser.calculateEdgePosition(
-                    source_geometry, target_geometry, used_coordinates)
+                transition["position"] = GraphmlParser.calculateEdgePosition(len(actions), 1 if condition else 0,
+                                                                             source_geometry, target_geometry, used_coordinates)
                 # transition['position'] = {
                 #     'x': int(
                 #         float(trigger["data"]["y:PolyLineEdge"]["y:Path"]["@sx"])) * 0.5 + 400,
@@ -350,6 +348,7 @@ class GraphmlParser:
                 transition["color"] = GraphmlParser.randColor()
                 transitions.append(transition)
             except (AttributeError, KeyError):
+                print('heereeee')
                 initial_state = trigger["@target"]
         return transitions, initial_state
 
