@@ -360,7 +360,7 @@ class GraphmlParser:
         p_y = p_geometry["y"]
 
         geometry = states_dict[id]["geometry"]
-
+        print(id, geometry)
         h = geometry["height"]
         w = geometry["width"]
         x = geometry["x"] - p_x
