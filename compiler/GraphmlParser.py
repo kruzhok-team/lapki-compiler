@@ -59,15 +59,13 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    async def getParentNode(group_node: dict) -> dict:
-        # Здесб мы отделяем данные о супер-ноде от ее под-графа
-        # Необходимое содержимое data: {y:GroupNode: { y:NodeLabel: [название состояния, ивенты],
-        #                                              y:Geometry: {@y, @x, @width, @height} } }
-
+    def getParentNode(group_node: dict) -> dict:
+        """Здесь мы отделяем данные о супер-ноде от ее под-графа
+        Необходимое содержимое data: {y:GroupNode: { y:NodeLabel: [название состояния, ивенты],
+                                                     y:Geometry: {@y, @x, @width, @height} } }"""
         for data in group_node["data"]:
             if "y:ProxyAutoBoundsNode" in data.keys():
                 data_node_with_info = data["y:ProxyAutoBoundsNode"]["y:Realizers"]
-
         return {
             '@id': group_node["@id"],
             'data': data_node_with_info
@@ -87,7 +85,6 @@ class GraphmlParser:
             node_type = 'y:GenericNode'
         else:
             node_type = 'y:GroupNode'
-
         states_dict[state["@id"]] = {}
         states_dict[state["@id"]]["type"] = node_type
         states_dict[state["@id"]]["parent"] = parent
@@ -113,14 +110,15 @@ class GraphmlParser:
             pass
 
     @staticmethod
-    async def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}, nparent: str | None = None) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
+    def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}, nparent: str | None = None) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
         for node in xml:
             if "graph" in node.keys():
-                parent = await GraphmlParser.getParentNode(node)
+                parent = GraphmlParser.getParentNode(node)
                 states.append(parent)
                 GraphmlParser.addStateToDict(
                     parent, states_dict, parent=nparent)
-                await GraphmlParser.getFlattenStates(node["graph"]["node"], states, states_dict, nparent=parent["@id"])
+                GraphmlParser.getFlattenStates(
+                    node["graph"]["node"], states, states_dict, nparent=parent["@id"])
 
             else:
                 GraphmlParser.addStateToDict(
@@ -129,7 +127,7 @@ class GraphmlParser:
         return states, states_dict
 
     @staticmethod
-    async def getEvents(state: dict, node_type: str, platform: str) -> list[dict[str, dict]]:
+    def getEvents(state: dict, node_type: str, platform: str) -> list[dict[str, dict]]:
         str_events: str = state["data"][node_type]["y:NodeLabel"][1]["#text"]
         events: list[str] = str_events.split("\n")
         new_events: list[dict[str, list[dict] | dict[str, str]]] = []
@@ -161,7 +159,6 @@ class GraphmlParser:
                     current_dict = new_events[i]["do"]
                 i += 1
                 continue
-
             action_dict = {}
             action = ev.split(".")
             component = action[0]
@@ -169,7 +166,6 @@ class GraphmlParser:
             bracket_pos = action[1].find("(")
             method = action[1][:bracket_pos]
             action_dict["method"] = method
-            # Переделать
             if bracket_pos != -1:
                 args = action[1][bracket_pos+1:-1].split(",")
             if args != ['']:
@@ -181,9 +177,8 @@ class GraphmlParser:
         return new_events
 
     @staticmethod
-    async def getParentName(state: dict, states_dict: dict) -> str | None:
+    def getParentName(state: dict, states_dict: dict) -> str | None:
         id: str = state["@id"]
-
         return states_dict[id]["parent"]
 
     @staticmethod
@@ -216,40 +211,26 @@ class GraphmlParser:
                 "type": GraphmlParser.operatorAlias[operator],
                 "value": [lval, rval]
             }
-
         return result
 
     @staticmethod
     def calculateEdgePosition(count_actions: int, count_condtions: int, source_position: dict, target_position: dict, used_coordinates: defaultdict[tuple[float, float], Point]) -> dict[str, int]:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
-
         nx: int = (x1 * 1.25 + x2) // 2 + (100 * (1 + count_condtions + count_actions))
         ny: int = (y1 + y2) // 2 + (100 * (1 + count_condtions + count_actions))
-
         for coord in list(used_coordinates.keys()):
             if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
                 if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
                     nx = int(nx * (1 + 0.15 * used_coordinates[coord]
                                    ['x'])) + 130 * (used_coordinates[coord]['y'] - 1)
                     used_coordinates[coord]['x'] += 1
-                # Надо красиво это расписать
-                # diff = nx - int(nx * (1 + 0.1 * used_coordinates[coord]['y']))
-                # if diff < DIFF_THRESHHOLD:
-                #     nx += DIFF_THRESHHOLD
-                # else:
-                    # nx += diff
                 ny = int(ny * (1 + 0.15 * used_coordinates[coord]['y'])
                          ) + 25 * (used_coordinates[coord]['x'] - 1)
                 used_coordinates[coord]['y'] += 1
                 break
             if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
                 if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
-                    # diff = nx - int(nx * (1 + 0.1 * used_coordinates[coord]['y']))
-                    # if diff < DIFF_THRESHHOLD:
-                    # nx += DIFF_THRESHHOLD
-                    # else:
-                    # nx += diff
                     ny = int(
                         ny * (1 + 0.15 * used_coordinates[coord]['y'])) + 25 * (used_coordinates[coord]['y'] - 1)
                     used_coordinates[coord]['y'] += 1
@@ -257,45 +238,14 @@ class GraphmlParser:
                          ['x'])) + 130 * (used_coordinates[coord]['x'] - 1)
                 used_coordinates[coord]['x'] += 1
                 break
-
-        # nx = (x1 + x2) // 10 + (300 * (1 + count_condtions + count_actions))
-
-        # ny = (y1 + y2) // 1.1 // 2.5 * (1 + count_actions + count_condtions)
-        # for coord in list(used_coordinates.keys()):
-        #     if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
-        #         if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
-        #             ny += 200 * used_coordinates[coord]['x']
-        #             used_coordinates[coord]['x'] += 1
-        #         nx += 200 * used_coordinates[coord]['y']
-        #         used_coordinates[coord]['y'] += 1
-        #         break
-        #     if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
-        #         if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
-        #             nx += 200 * used_coordinates[coord]['y']
-        #             used_coordinates[coord]['y'] += 1
-        #         ny += 200 * used_coordinates[coord]['x']
-        #         used_coordinates[coord]['x'] += 1
-        #         break
-        # if ny in used_coordinates[:][1]:
-        #    ny += 150
-        #   nx += 150
-
         used_coordinates[(nx, ny)]['x'] += 1
         used_coordinates[(nx, ny)]['y'] += 1
         return {"x": nx, "y": ny}
 
-    # Get n0::n1::n2 str and return n2
-    # @staticmethod
-    # async def getNodeId(id: str) -> str:
-    #    pos = id.rfind(":")
-    #    node_id = id[pos + 1:]
-    #    return node_id
-
     @staticmethod
-    async def _parseAction(action: str, platform) -> dict:
+    def _parseAction(action: str, platform) -> dict:
         component, method = action.split('.')
         call_pos = method.find('(')
-        # Переделать
         args = method[call_pos + 1:-1].split(',')
         method = method[:call_pos]
         if args == [""]:
@@ -309,7 +259,7 @@ class GraphmlParser:
         }
 
     @staticmethod
-    async def getActions(actions: list[str], platform) -> list[dict]:
+    def getActions(actions: list[str], platform) -> list[dict]:
         """Функция получает список действий и возвращает их в нотации IDE Lapki.
 
         Args:
@@ -325,7 +275,7 @@ class GraphmlParser:
         """
         result: list[dict] = []
         for action in actions:
-            result.append(await GraphmlParser._parseAction(action, platform))
+            result.append(GraphmlParser._parseAction(action, platform))
         return result
 
     @staticmethod
@@ -352,7 +302,7 @@ class GraphmlParser:
                     if '' in t:
                         t.remove('')
                     actions = t
-                actions = await GraphmlParser.getActions(actions, platform)
+                actions = GraphmlParser.getActions(actions, platform)
                 component, method = event.split(".")
                 transition["trigger"] = {
                     "component": component,
@@ -363,37 +313,25 @@ class GraphmlParser:
                 target_geometry = statesDict[trigger["@target"]]["new_geometry"]
                 transition["position"] = GraphmlParser.calculateEdgePosition(len(actions), 1 if condition else 0,
                                                                              source_geometry, target_geometry, used_coordinates)
-                # transition['position'] = {
-                #     'x': int(
-                #         float(trigger["data"]["y:PolyLineEdge"]["y:Path"]["@sx"])) * 0.5 + 400,
-                #     'y': int(
-                #         float(trigger["data"]["y:PolyLineEdge"]["y:Path"]["@sy"])) * 4 + 20
-                # }
                 transition["do"] = actions
                 transition["color"] = GraphmlParser.randColor()
                 transitions.append(transition)
             except (AttributeError, KeyError):
-                print('heereeee')
                 initial_state = trigger["@target"]
         return transitions, initial_state
 
     @staticmethod
-    async def getGeometry(id: str, states_dict: dict) -> dict:
+    def getGeometry(id: str, states_dict: dict) -> dict:
         parent = states_dict[id]["parent"]
         current_parent = parent
         p_x = 0
         p_y = 0
 
         if parent is not None:
-            #    while current_parent is not None:
-            #        print("cur in cycle: ", current_parent)
             p_geometry = states_dict[current_parent]["geometry"]
             p_x += p_geometry['x']
             p_y += p_geometry['y']
-        #        current_parent = states_dict[current_parent]['parent']
         geometry = states_dict[id]["geometry"]
-        print("Parent: ", states_dict[id]["parent"], id)
-        print("Parent geometry:", p_x, p_y)
         h = geometry["height"]
         w = geometry["width"]
         x = geometry["x"] - p_x
@@ -403,17 +341,13 @@ class GraphmlParser:
             if x < 0:
                 x = 100
             if y > 0:
-                print('here')
                 y = -50  # TODO Зависимость от количества триггеров
-        print(x, y)
-
         states_dict[id]['new_geometry'] = {
             "x": int(float(x)),
             "y": -int(float(y)),
             "width": int(float(w)),
             "height": int(float(h))
         }
-
         return {
             "x": int(float(x)),
             "y": -int(float(y)),
@@ -422,37 +356,31 @@ class GraphmlParser:
         }
 
     @staticmethod
-    async def createStates(flattenStates: list[dict], states_dict: dict, platform: str) -> dict:
-        try:
-            states = {}
-            for state in flattenStates:
-                if state["@id"] == '':
-                    continue
-                new_state = {}
-                id = state["@id"]
-                node_type = states_dict[state["@id"]]["type"]
-                new_state["name"] = states_dict[state["@id"]]["name"]
-                new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
-                geometry = await GraphmlParser.getGeometry(state["@id"], states_dict)
-                # states_dict[state["@id"]]["geometry"] = geometry
-                new_state["bounds"] = geometry
-                parent = await GraphmlParser.getParentName(state, states_dict)
-                if parent is not None and parent != '':
-                    new_state["parent"] = parent
-                states[id] = new_state
+    def createStates(flattenStates: list[dict], states_dict: dict, platform: str) -> dict:
+        states = {}
+        for state in flattenStates:
+            if state["@id"] == '':
+                continue
+            new_state = {}
+            id = state["@id"]
+            node_type = states_dict[state["@id"]]["type"]
+            new_state["name"] = states_dict[state["@id"]]["name"]
+            new_state["events"] = GraphmlParser.getEvents(state, node_type, platform)
+            geometry = GraphmlParser.getGeometry(state["@id"], states_dict)
+            new_state["bounds"] = geometry
+            parent = GraphmlParser.getParentName(state, states_dict)
+            if parent is not None and parent != '':
+                new_state["parent"] = parent
+            states[id] = new_state
 
-            return states
-        except Exception:
-            await Logger.logException()
-            return dict({})
+        return states
 
     @staticmethod
-    async def getComponents(platform: str) -> dict:
+    def getComponents(platform: str) -> dict:
         result = {}
         components = PlatformManager.getPlatform(platform)
         if components is not None:
             components = components["components"]
-
             for component in components:
                 result[component] = {}
                 result[component]["type"] = component
@@ -468,10 +396,12 @@ class GraphmlParser:
             graph = xml["graphml"]["graph"]
             nodes = graph["node"]
             triggers = graph["edge"]
-            components = await GraphmlParser.getComponents(platform)
-            flattenStates, states_dict = await GraphmlParser.getFlattenStates(nodes, states=[], states_dict={})
-            states = await GraphmlParser.createStates(flattenStates, states_dict, platform)
-            transitions, initial_state = await GraphmlParser.getTransitions(triggers, states_dict, platform)
+            components = GraphmlParser.getComponents(platform)
+            flattenStates, states_dict = GraphmlParser.getFlattenStates(
+                nodes, states=[], states_dict={})
+            states = GraphmlParser.createStates(flattenStates, states_dict, platform)
+            transitions, initial_state = GraphmlParser.getTransitions(
+                triggers, states_dict, platform)
             obj_initial_state = states[initial_state]
             init_x = obj_initial_state["bounds"]["x"] - 100
             init_y = obj_initial_state["bounds"]["y"] - 100
