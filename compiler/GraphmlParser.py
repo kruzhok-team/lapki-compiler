@@ -87,7 +87,7 @@ class GraphmlParser:
         return '#%02X%02X%02X' % (r(), r(), r())
 
     @staticmethod
-    def addStateToDict(state: dict, states_dict: dict, parent: str) -> None:
+    def addStateToDict(state: dict, states_dict: dict, parent: str | None) -> None:
         if 'y:GenericNode' in state["data"]:
             node_type = 'y:GenericNode'
         else:
@@ -118,7 +118,7 @@ class GraphmlParser:
             pass
 
     @staticmethod
-    async def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}, nparent='') -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
+    async def getFlattenStates(xml: list[dict], states: list = [], states_dict: dict[str, dict[str, str]] = {}, nparent: str | None = None) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
         for node in xml:
             if "graph" in node.keys():
                 parent = await GraphmlParser.getParentNode(node)
@@ -186,7 +186,7 @@ class GraphmlParser:
         return new_events
 
     @staticmethod
-    async def getParentName(state: dict, states_dict: dict) -> str:
+    async def getParentName(state: dict, states_dict: dict) -> str | None:
         id: str = state["@id"]
 
         return states_dict[id]["parent"]
@@ -239,7 +239,6 @@ class GraphmlParser:
                     used_coordinates[coord]['x'] += 1
                 nx += 200 * used_coordinates[coord]['y']
                 used_coordinates[coord]['y'] += 1
-                print('hereeey')
                 break
             if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
                 if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
@@ -247,10 +246,7 @@ class GraphmlParser:
                     used_coordinates[coord]['y'] += 1
                 ny += 200 * used_coordinates[coord]['x']
                 used_coordinates[coord]['x'] += 1
-                print('hereeex')
                 break
-        print(nx, ny)
-        print('----------')
         # if ny in used_coordinates[:][1]:
         #    ny += 150
         #   nx += 150
@@ -260,11 +256,11 @@ class GraphmlParser:
         return {"x": nx, "y": ny}
 
     # Get n0::n1::n2 str and return n2
-    @staticmethod
-    async def getNodeId(id: str) -> str:
-        pos = id.rfind(":")
-        node_id = id[pos + 1:]
-        return node_id
+    # @staticmethod
+    # async def getNodeId(id: str) -> str:
+    #    pos = id.rfind(":")
+    #    node_id = id[pos + 1:]
+    #    return node_id
 
     @staticmethod
     async def _parseAction(action: str, platform) -> dict:
@@ -312,8 +308,8 @@ class GraphmlParser:
         for trigger in triggers:
             transition = {}
             try:
-                transition["source"] = await GraphmlParser.getNodeId(trigger["@source"])
-                transition["target"] = await GraphmlParser.getNodeId(trigger["@target"])
+                transition["source"] = trigger["@source"]
+                transition["target"] = trigger["@target"]
 
                 label = trigger["data"]["y:PolyLineEdge"]["y:EdgeLabel"]["#text"]
                 # condition может содержать условие, условия и действия, действия и пустую строку
@@ -355,20 +351,25 @@ class GraphmlParser:
     @staticmethod
     async def getGeometry(id: str, states_dict: dict) -> dict:
         parent = states_dict[id]["parent"]
-        p_geometry = states_dict[states_dict[id]["parent"]]["geometry"]
+        current_parent = parent
+        p_x = 0
+        p_y = 0
 
-        p_x = p_geometry["x"]
-        p_y = p_geometry["y"]
-
+        if parent is not None:
+            #    while current_parent is not None:
+            #        print("cur in cycle: ", current_parent)
+            p_geometry = states_dict[current_parent]["geometry"]
+            p_x += p_geometry['x']
+            p_y += p_geometry['y']
+        #        current_parent = states_dict[current_parent]['parent']
         geometry = states_dict[id]["geometry"]
-        print(id, geometry)
-        print("Parent: ", states_dict[id]["parent"], type(states_dict[id]["parent"]))
+        print("Parent: ", states_dict[id]["parent"], id)
         print("Parent geometry:", p_x, p_y)
         h = geometry["height"]
         w = geometry["width"]
         x = geometry["x"] - p_x
         y = geometry["y"] - p_y
-        if p_y != 0 and parent != '':
+        if p_y != 0 and parent is not None:
             y -= 300
             if x < 0:
                 x = 100
@@ -376,6 +377,7 @@ class GraphmlParser:
                 print('here')
                 y = -50  # TODO Зависимость от количества триггеров
         print(x, y)
+
         return {
             "x": int(float(x)),
             "y": -int(float(y)),
@@ -391,7 +393,7 @@ class GraphmlParser:
                 if state["@id"] == '':
                     continue
                 new_state = {}
-                id = await GraphmlParser.getNodeId(state["@id"])
+                id = state["@id"]
                 node_type = states_dict[state["@id"]]["type"]
                 new_state["name"] = states_dict[state["@id"]]["name"]
                 new_state["events"] = await GraphmlParser.getEvents(state, node_type, platform)
@@ -399,7 +401,7 @@ class GraphmlParser:
                 # states_dict[state["@id"]]["geometry"] = geometry
                 new_state["bounds"] = geometry
                 parent = await GraphmlParser.getParentName(state, states_dict)
-                if parent != "":
+                if parent is not None and parent != '':
                     new_state["parent"] = parent
                 states[id] = new_state
 
