@@ -2,19 +2,12 @@ import xmltodict
 import random
 from collections import defaultdict
 from typing import Literal, TypeAlias
-from aiofile import async_open
-
-Point: TypeAlias = dict[Literal['x', 'y'], int]
 
 
 try:
-    from .config import SCHEMA_DIRECTORY
     from .Logger import Logger
     from .PlatformManager import PlatformManager
-    from .fullgraphmlparser.stateclasses import State
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import State
-    from compiler.config import SCHEMA_DIRECTORY
     from compiler.Logger import Logger
     from compiler.PlatformManager import PlatformManager
 """
@@ -23,7 +16,9 @@ except ImportError:
         _type_: _description_
 """
 
+Point: TypeAlias = dict[Literal['x', 'y'], int]
 TRANSTIONS_DISTANCE = 75
+DIFF_THRESHHOLD = 150
 
 
 class GraphmlParser:
@@ -229,24 +224,58 @@ class GraphmlParser:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
 
-        nx = (x1 + x2) // 10 + (300 * (1 + count_condtions + count_actions))
+        nx: int = (x1 * 1.25 + x2) // 2 + (100 * (1 + count_condtions + count_actions))
+        ny: int = (y1 + y2) // 2 + (100 * (1 + count_condtions + count_actions))
 
-        ny = (y1 + y2) // 1.1 // 2.5 * (1 + count_actions + count_condtions)
         for coord in list(used_coordinates.keys()):
             if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
                 if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
-                    ny += 200 * used_coordinates[coord]['x']
+                    nx = int(nx * (1 + 0.15 * used_coordinates[coord]
+                                   ['x'])) + 130 * (used_coordinates[coord]['y'] - 1)
                     used_coordinates[coord]['x'] += 1
-                nx += 200 * used_coordinates[coord]['y']
+                # Надо красиво это расписать
+                # diff = nx - int(nx * (1 + 0.1 * used_coordinates[coord]['y']))
+                # if diff < DIFF_THRESHHOLD:
+                #     nx += DIFF_THRESHHOLD
+                # else:
+                    # nx += diff
+                ny = int(ny * (1 + 0.15 * used_coordinates[coord]['y'])
+                         ) + 25 * (used_coordinates[coord]['x'] - 1)
                 used_coordinates[coord]['y'] += 1
                 break
             if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
                 if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
-                    nx += 200 * used_coordinates[coord]['y']
+                    # diff = nx - int(nx * (1 + 0.1 * used_coordinates[coord]['y']))
+                    # if diff < DIFF_THRESHHOLD:
+                    # nx += DIFF_THRESHHOLD
+                    # else:
+                    # nx += diff
+                    ny = int(
+                        ny * (1 + 0.15 * used_coordinates[coord]['y'])) + 25 * (used_coordinates[coord]['y'] - 1)
                     used_coordinates[coord]['y'] += 1
-                ny += 200 * used_coordinates[coord]['x']
+                nx = int(nx * (1 + 0.15 * used_coordinates[coord]
+                         ['x'])) + 130 * (used_coordinates[coord]['x'] - 1)
                 used_coordinates[coord]['x'] += 1
                 break
+
+        # nx = (x1 + x2) // 10 + (300 * (1 + count_condtions + count_actions))
+
+        # ny = (y1 + y2) // 1.1 // 2.5 * (1 + count_actions + count_condtions)
+        # for coord in list(used_coordinates.keys()):
+        #     if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
+        #         if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
+        #             ny += 200 * used_coordinates[coord]['x']
+        #             used_coordinates[coord]['x'] += 1
+        #         nx += 200 * used_coordinates[coord]['y']
+        #         used_coordinates[coord]['y'] += 1
+        #         break
+        #     if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
+        #         if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
+        #             nx += 200 * used_coordinates[coord]['y']
+        #             used_coordinates[coord]['y'] += 1
+        #         ny += 200 * used_coordinates[coord]['x']
+        #         used_coordinates[coord]['x'] += 1
+        #         break
         # if ny in used_coordinates[:][1]:
         #    ny += 150
         #   nx += 150
@@ -330,8 +359,8 @@ class GraphmlParser:
                     "method": method
                 }
                 transition["condition"] = GraphmlParser.getCondition(condition)
-                source_geometry = statesDict[trigger["@source"]]["geometry"]
-                target_geometry = statesDict[trigger["@target"]]["geometry"]
+                source_geometry = statesDict[trigger["@source"]]["new_geometry"]
+                target_geometry = statesDict[trigger["@target"]]["new_geometry"]
                 transition["position"] = GraphmlParser.calculateEdgePosition(len(actions), 1 if condition else 0,
                                                                              source_geometry, target_geometry, used_coordinates)
                 # transition['position'] = {
@@ -377,6 +406,13 @@ class GraphmlParser:
                 print('here')
                 y = -50  # TODO Зависимость от количества триггеров
         print(x, y)
+
+        states_dict[id]['new_geometry'] = {
+            "x": int(float(x)),
+            "y": -int(float(y)),
+            "width": int(float(w)),
+            "height": int(float(h))
+        }
 
         return {
             "x": int(float(x)),
