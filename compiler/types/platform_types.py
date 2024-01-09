@@ -31,6 +31,7 @@ class Component(BaseModel):
     img: str
     signals: Dict[str, Signal]
     variables: Dict[str, Variable]
+    methods: Dict[str, Method]
 
 
 class Platform(BaseModel):
