@@ -354,6 +354,7 @@ class GraphmlParser:
 
     @staticmethod
     async def getGeometry(id: str, states_dict: dict) -> dict:
+        parent = states_dict[id]["parent"]
         p_geometry = states_dict[states_dict[id]["parent"]]["geometry"]
 
         p_x = p_geometry["x"]
@@ -361,18 +362,23 @@ class GraphmlParser:
 
         geometry = states_dict[id]["geometry"]
         print(id, geometry)
+        print("Parent: ", states_dict[id]["parent"], type(states_dict[id]["parent"]))
+        print("Parent geometry:", p_x, p_y)
         h = geometry["height"]
         w = geometry["width"]
         x = geometry["x"] - p_x
         y = geometry["y"] - p_y
-
-        if p_y != 0:
-            y += 300
-            x += 200
-
+        if p_y != 0 and parent != '':
+            y -= 300
+            if x < 0:
+                x = 100
+            if y > 0:
+                print('here')
+                y = -50  # TODO Зависимость от количества триггеров
+        print(x, y)
         return {
             "x": int(float(x)),
-            "y": int(float(y)),
+            "y": -int(float(y)),
             "width": int(float(w)),
             "height": int(float(h))
         }
