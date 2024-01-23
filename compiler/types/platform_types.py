@@ -17,8 +17,8 @@ class Variable(BaseModel):
 
 
 class Parameter(BaseModel):
-    name: str
-    type: Optional[ParameterType | List[str]]
+    description: str
+    type: ParameterType | List[str]
 
 
 class Method(BaseModel):
@@ -32,6 +32,7 @@ class Component(BaseModel):
     signals: Dict[str, Signal]
     variables: Dict[str, Variable]
     methods: Dict[str, Method]
+    parameters: Dict[str, Parameter]
 
 
 class Platform(BaseModel):

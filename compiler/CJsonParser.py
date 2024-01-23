@@ -1,22 +1,31 @@
 from enum import Enum
-from typing import Optional
+from typing import Dict, List, Optional
 from aiohttp.web import WebSocketResponse
 
+from compiler.types.platform_types import Platform
+
 try:
+    from .types.ide_types import State, Event, Argument
     from .SourceFile import SourceFile
-    from .fullgraphmlparser.stateclasses import State, Trigger, StateMachine
+    from .fullgraphmlparser.stateclasses import Trigger, StateMachine, ParserState
     from .component import Component
     from .Logger import Logger
     from .RequestError import RequestError
-    from .types.ide_types import IdeFormat
+    from .types.ide_types import IdeStateMachine
 except ImportError:
+    from compiler.types.ide_types import State, Event, Argument
     from compiler.SourceFile import SourceFile
-    from compiler.fullgraphmlparser.stateclasses import State, Trigger, StateMachine
+    from compiler.fullgraphmlparser.stateclasses import Trigger, StateMachine, ParserState
     from compiler.component import Component
     from compiler.Logger import Logger
     from compiler.RequestError import RequestError
-    from compiler.types.ide_types import IdeFormat
+    from compiler.types.ide_types import IdeStateMachine
 
+class ParserException(Exception):
+    ...
+
+class StateMachineValidatorException(Exception):
+    ...
 
 class Labels(Enum):
     H_INCLUDE = 'Code for h-file'
@@ -28,6 +37,36 @@ class Labels(Enum):
     USER_FUNC_H = 'User methods for h-file'
     USER_FUNC_C = 'User methods for c-file'
 
+class StateMachineValidator:
+    
+    def __init__(self, data: IdeStateMachine, platform: Platform) -> None:
+        self.data = data
+        self.platform = platform
+    
+    def validateComponents(self) -> bool:
+        """
+        Функция проверяет соответствие компонентов указанной платформе
+        """
+        component_types = list(self.platform.components.keys())
+        for component_id in self.data.components:
+            component = self.data.components[component_id]
+            if component.type in component_types:
+                parameters = list(self.platform.components[component.type].parameters.keys())
+                for parameter_id in component.parameters:
+                    if parameter_id in parameters:
+                        continue
+                    raise StateMachineValidatorException(f'Component({component_id}):\
+                        unknown parameter {parameter_id} in platform {self.platform.name}')
+            raise StateMachineValidatorException(f'Component({component_id}):\
+                unknown component {component.type} in platform {self.platform.name}')
+        
+        return True
+
+    def validateArgs(self, component: Component, method: str, args: Dict[str, Argument | str]) -> bool:
+        ...
+
+    def validate(self, event: Event) -> bool:
+        ...
 
 class CJsonParser:
     delimeter = {
@@ -60,7 +99,7 @@ class CJsonParser:
             case 'QHsmSerial':
                 return ''
             case _:
-                return f'\n{type} {name} = {type}({', '.join(map(str, list(parameters.values())))});'
+                return f'\n{type} {name} = {type}({", ".join(map(str, list(parameters.values())))});'
 
     @staticmethod
     def specificCheckComponentSignal(type: str, name: str, triggers: dict, filename: str, signal: str) -> str:
@@ -121,7 +160,7 @@ class CJsonParser:
                 signals.append(f'\n\tQHsmSerial::read();')
 
     @staticmethod
-    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str, path) -> list:
+    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str) -> list:
         includes = []
         variables = []
         setup = []
@@ -329,7 +368,7 @@ class CJsonParser:
         return result, player_signals, user_transitions
 
     @staticmethod
-    async def getEvents(events: list[dict[str, dict[str, str] | str]], statename: str, compiler: str) -> tuple[dict[str, Trigger], dict[str, str], dict[str, str], dict[str, Trigger]]:
+    async def getEvents(events: List[Event], state_id: str, platform: Platform, components: Dict[str, Component]) -> tuple[dict[str, Trigger], dict[str, str], dict[str, str], dict[str, Trigger]]:
         result = {}
         id = 0
         event_signals = {}
@@ -337,15 +376,17 @@ class CJsonParser:
             'onEnter': '',
             'onExit': ''
         }
+        components_names = components.keys()
         user_events = {}
         for event in events:
-            trigger = event['trigger']
-            component = trigger['component']
-            method = trigger['method']
-
+            trigger = event.trigger
+            component = trigger.component
+            method = trigger.method
             actions = ''
             for i in range(len(event['do'])):
-                if component != 'User' and event['do'][i]['component'] != 'QHsmSerial':
+                # TODO: Сюда надо подкрутить платформу
+                do_component = event.do[i].component
+                if component != 'User' and platform.components[do_component]:
                     actions += event['do'][i]['component'] + \
                         '.' + event['do'][i]['method'] + '('
                 else:
@@ -419,19 +460,6 @@ class CJsonParser:
                 transition['trigger'])
 
         return new_states
-
-    @staticmethod
-    async def getGeometry(state: dict) -> tuple[int, int, int, int]:
-        x = state['bounds']['x']
-        y = state['bounds']['y']
-        try:
-            w = state['bounds']['width']
-            h = state['bounds']['height']
-        except KeyError:
-            w = 100
-            h = 100
-
-        return x, y, w, h
 
     @staticmethod
     def addSignals(components: list[Component], player_signals: list[str]) -> list[str]:
@@ -508,40 +536,52 @@ class CJsonParser:
         return notes, signals
 
     @staticmethod
-    async def parseStateMachine(json_data: IdeFormat, ws: WebSocketResponse, path: Optional[str] = None) -> StateMachine:
-        global_state = State(name='global', type='group',
+    async def parseStateMachine(data: IdeStateMachine, ws: WebSocketResponse, platform: Platform, class_name: Optional[str] = None) -> StateMachine:
+        """ Цель данной функции - перевод машины состояний из формата Lapki IDE в формат, 
+        принимаемый библиотекой fullgraphmlparser.
+
+        Используется как для Arduino, так и для Берлоги
+        
+        Args:
+            json_data (IdeStateMachine): начальные данные
+            ws (WebSocketResponse): вебсокет для вызова ошибок
+            class_name (Optional[str], optional): название класса
+        """
+        # Создаем главное, корневое состояние, которое является parent всем состояниям 
+        global_state = ParserState(name='global', type='group',
                              actions='', trigs=[],
                              entry='', exit='',
                              id='global', new_id=['global'],
                              parent=None, childs=[])
-        states = json_data.states
+        states = data.states
+        proccesed_states: Dict[str, ParserState] = {}
+        event_signals = {} # TODO: выяснить что за тип
         
-        proccesed_states = {}
-        event_signals = {}
-        for statename in states:
-            state = json_data.states[statename]
-            events, new_event_signals, system_signals, user_events = await CJsonParser.getEvents(state.events, statename, compiler = json_data.platform)
+        # Инициализация и первичная обработка состояний, не включающая указание родителя.
+        for state_id in states:
+            state = data.states[state_id]
+            bounds = state.bounds
+            events, new_event_signals, system_signals, user_events = await CJsonParser.getEvents(state.events, state_id, platform, data.components)
             event_signals = dict(
                 list(new_event_signals.items()) + list(event_signals.items()))
 
             on_enter = system_signals['onEnter']
             on_exit = system_signals['onExit']
 
-            x, y, w, h = await CJsonParser.getGeometry(state)
-            proccesed_states[statename] = State(name=state['name'], type='state',
+            proccesed_states[state_id] = ParserState(name=state.name, type='state',
                                                 actions='',
                                                 trigs=[
                                                     *list(events.values()), *list(user_events.values())],
                                                 entry=on_enter, exit=on_exit,
-                                                id=statename, new_id=[
-                                                    statename],
+                                                id=state_id, new_id=[
+                                                    state_id],
                                                 parent=None, childs=[],
-                                                x=x, y=y,
-                                                width=w, height=h)
+                                                x=bounds.x, y=bounds.y,
+                                                width=bounds.width, height=bounds.height)
         transitions, player_signals, user_transitions = await CJsonParser.getTransitions(json_data['transitions'], compiler)
         player_signals = dict(
             list(player_signals.items()) + list(event_signals.items()))
-        components = await CJsonParser.getComponents(json_data['components'])
+        components = await CJsonParser.getComponents(data.components)
         user_signals = []
         if compiler in ['arduino-cli', 'g++', 'gcc']:
             notes = await CJsonParser.createNotes(components, filename, triggers=player_signals, compiler=compiler, path=path)

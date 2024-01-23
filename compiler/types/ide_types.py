@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, TypeAlias, Optional
-from collections.abc import Mapping, Sequence
+from typing import Literal, TypeAlias, Optional, List, Dict
 
 from pydantic import BaseModel, model_validator, field_validator
 
@@ -43,19 +42,19 @@ class Argument(BaseModel):
 class Action(BaseModel):
     component: str
     method: str
-    args: Mapping[str, Argument | str]
+    args: Dict[str, Argument | str]
 
 
 @dataclass
 class Event(BaseModel):
     trigger: Trigger
-    do: Sequence[Action]
+    do: List[Action]
 
 
 @dataclass
 class State(BaseModel):
     name: str
-    events: Sequence[Event]
+    events: List[Event]
     bounds: Bounds
 
 
@@ -74,7 +73,7 @@ class Variable(BaseModel):
 @dataclass
 class Condition(BaseModel):
     type: str
-    value: Variable | Sequence["Condition"]
+    value: Variable | List["Condition"]
 
 
 @dataclass
@@ -84,7 +83,7 @@ class Transition(BaseModel):
     target: str
     position: Point
     trigger: Trigger
-    do: Sequence[Action]
+    do: List[Action]
     condition: Optional[Condition] = None
 
     @field_validator('color')
@@ -99,24 +98,24 @@ class Transition(BaseModel):
 @dataclass
 class Component(BaseModel):
     type: str
-    parameters: Mapping[str, str]
+    parameters: Dict[str, str]
 
 
 @dataclass
 class CompilerSettings(BaseModel):
     filename: str
     compiler: Compiler
-    flags: Sequence[str]
+    flags: List[str]
 
 
-class IdeFormat(BaseModel):
-    states: Mapping[str, State]
+class IdeStateMachine(BaseModel):
+    states: Dict[str, State]
     initialState: InitialState
-    transitions: Sequence[Transition]
-    components: Mapping[str, Component]
+    transitions: List[Transition]
+    components: Dict[str, Component]
     compilerSettings: Optional[CompilerSettings] = None
     platform: Platform
-    parameters: Mapping[str, str]
+    parameters: Dict[str, str]
 
     @model_validator(mode='after')
     def is_compiler_settings_required(self):

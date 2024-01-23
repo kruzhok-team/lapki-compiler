@@ -2,10 +2,17 @@ import json
 from aiopath import AsyncPath
 from aiofile import async_open
 
+from compiler.types.platform_types import UnprocessedPlatform
+
 try:
-    from Logger import Logger
+    from .Logger import Logger
+    from .types.platform_types import Platform
 except ImportError:
-    from compiler.Logger import Logger
+    from compiler.types.platform_types import Platform
+
+
+class PlatformException(Exception):
+    ...
 
 
 class PlatformManager:
@@ -15,9 +22,8 @@ class PlatformManager:
         какое-то время.
     """
 
-    platforms: dict[str, dict] = {}
+    platforms: dict[str, Platform] = {}
 
-    # TODO: Валидация через pydantic
     @staticmethod
     async def initPlatform(path_to_schemas_dir: str) -> None:
         print(f"Поиск схем в папке '{path_to_schemas_dir}'...")
@@ -25,9 +31,9 @@ class PlatformManager:
             try:
                 async with async_open(path, 'r') as f:
                     unprocessed_platform_data = await f.read()
-                platform_data = json.loads(unprocessed_platform_data)
-                platform_id = list(platform_data["platform"].keys())[0]
-                platform = platform_data["platform"][platform_id]
+                platform_data = UnprocessedPlatform(**json.loads(unprocessed_platform_data))
+                platform_id = list(platform_data.platform.keys())[0]
+                platform = platform_data.platform[platform_id]
                 PlatformManager.platforms[platform_id] = platform
             except Exception as e:
                 print(
@@ -37,5 +43,8 @@ class PlatformManager:
             f"Были найдены платформы: {list(PlatformManager.platforms.keys())}")
 
     @staticmethod
-    def getPlatform(platform: str) -> dict | None:
-        return PlatformManager.platforms.get(platform)
+    def getPlatform(platform_id: str) -> Platform:
+        platform = PlatformManager.platforms.get(platform_id)
+        if platform is None:
+            raise PlatformException(f'Unsupported platform {platform_id}')
+        return platform

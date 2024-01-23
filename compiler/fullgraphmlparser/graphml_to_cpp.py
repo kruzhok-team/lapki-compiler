@@ -6,10 +6,10 @@ from collections import defaultdict
 from typing import List, Tuple
 from aiofile import async_open
 try:
-    from .stateclasses import State, Trigger, StateMachine
+    from .stateclasses import ParserState, Trigger, StateMachine
     from .graphml import *
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import State, Trigger, StateMachine
+    from compiler.fullgraphmlparser.stateclasses import ParserState, Trigger, StateMachine
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -230,7 +230,7 @@ class CppFileWriter:
             async for line in input_file:
                 await self._insert_string(str(line))
 
-    async def _write_states_definitions_recursively(self, state: State, state_path: str):
+    async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
         state_comment = '/*.${' + state_path + '} '
         state_comment = state_comment + '.' * (76 - len(state_comment)) + '*/\n'
@@ -320,7 +320,7 @@ class CppFileWriter:
             if trigger.name not in self.all_signals:
                 self.all_signals.append(trigger.name)
 
-    async def _write_states_declarations_recursively(self, state: State):
+    async def _write_states_declarations_recursively(self, state: ParserState):
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.id)
         for child_state in state.childs:
             await self._write_states_declarations_recursively(child_state)

@@ -1,17 +1,10 @@
 import xmltodict
-import json
 import random
-from aiofile import async_open
-
 
 try:
-    from .config import SCHEMA_DIRECTORY
     from .Logger import Logger
     from .PlatformManager import PlatformManager
-    from .fullgraphmlparser.stateclasses import State
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import State
-    from compiler.config import SCHEMA_DIRECTORY
     from compiler.Logger import Logger
     from compiler.PlatformManager import PlatformManager
 """

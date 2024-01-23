@@ -54,7 +54,7 @@ class Trigger:
 
 
 @dataclass
-class State:
+class ParserState:
     name: str
     type: str
     actions: str
@@ -63,8 +63,8 @@ class State:
     exit: str
     id: str
     new_id: List[str]
-    parent: Optional['State']
-    childs: List['State']
+    parent: Optional['ParserState']
+    childs: List['ParserState']
     x: int = 0
     y: int = 0
     width: int = 0
@@ -84,5 +84,5 @@ class StateMachine:
     start_node: str
     start_action: str
     notes: Dict[str, Any]
-    states: Sequence[State]
+    states: Sequence[ParserState]
     signals: Sequence[str]
