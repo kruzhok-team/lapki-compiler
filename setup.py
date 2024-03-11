@@ -8,7 +8,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     # python_requires=">=3.10",
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'lapki-compiler = compiler.main:sync_main'
         ],

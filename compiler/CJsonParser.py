@@ -1,25 +1,19 @@
 from enum import Enum
 from typing import Dict, List, Optional
 from aiohttp.web import WebSocketResponse
+from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
 
 from compiler.types.platform_types import Platform
 
 try:
-    from .types.ide_types import State, Event, Argument
+    from .types.ide_types import State, Event, Argument, Component
     from .SourceFile import SourceFile
-    from .fullgraphmlparser.stateclasses import Trigger, StateMachine, ParserState
-    from .component import Component
-    from .Logger import Logger
-    from .RequestError import RequestError
-    from .types.ide_types import IdeStateMachine
+    from .fullgraphmlparser.stateclasses import ParserTrigger, StateMachine, ParserState
+    from .types.ide_types import IdeStateMachine, Trigger
 except ImportError:
-    from compiler.types.ide_types import State, Event, Argument
     from compiler.SourceFile import SourceFile
-    from compiler.fullgraphmlparser.stateclasses import Trigger, StateMachine, ParserState
-    from compiler.component import Component
-    from compiler.Logger import Logger
-    from compiler.RequestError import RequestError
-    from compiler.types.ide_types import IdeStateMachine
+    from compiler.fullgraphmlparser.stateclasses import ParserTrigger, StateMachine, ParserState
+    from compiler.types.ide_types import IdeStateMachine, State, Event, Argument, Component, Trigger
 
 class ParserException(Exception):
     ...
@@ -87,8 +81,8 @@ class CJsonParser:
         'and': '&&'
     }
 
-    @staticmethod
-    def initComponent(type: str, name: str, parameters: dict, filename: str):
+    
+    def initComponent(self, type: str, name: str, parameters: dict, filename: str):
         '''
             Функция, которая в зависимости от компонента
             возвращает код его инициализации в h-файле.
@@ -101,7 +95,7 @@ class CJsonParser:
             case _:
                 return f'\n{type} {name} = {type}({", ".join(map(str, list(parameters.values())))});'
 
-    @staticmethod
+    
     def specificCheckComponentSignal(type: str, name: str, triggers: dict, filename: str, signal: str) -> str:
         '''Функция для специфичных проверок сигналов. Так, например, для
         проверки состояния кнопки необходимо предварительно вызвать функцию scan
@@ -123,14 +117,14 @@ class CJsonParser:
             case _:
                 return '\n\t\t'.join([f'\n\t\n\tif({triggers['guard']})', '{', f'SIMPLE_DISPATCH(the_{filename}, {signal});']) + '\n\t}'
 
-    @staticmethod
-    def appendNote(label: Labels, content: str, notes: list):
+    
+    def appendNote(self, label: Labels, content: str, notes: list):
         notes.append({'y:UMLNoteNode':
                       {'y:NodeLabel':
                        {'#text': f'{label.value}: {content}'}}})
 
-    @staticmethod
-    async def getLibraries(components) -> list[str]:
+    
+    def getLibraries(self, components) -> list[str]:
         libraries = []
         for component in components:
             if component.type not in libraries:
@@ -138,8 +132,8 @@ class CJsonParser:
 
         return libraries
 
-    @staticmethod
-    def setupVariables(name: str, type: str, parameters: dict) -> str | None:
+    
+    def setupVariables(self, name: str, type: str, parameters: dict) -> str | None:
         match type:
             case 'QHsmSerial':
                 return f'{name}::init({', '.join(map(str, list(parameters.values())))});'
@@ -148,8 +142,8 @@ class CJsonParser:
 
         return None
 
-    @staticmethod
-    def actionInMain(component: Component, signals: list[str]) -> None:
+    
+    def actionInMain(self, component: Component, signals: list[str]) -> None:
         match component.type:
             case 'AnalogIn':
                 signals.append(
@@ -159,8 +153,8 @@ class CJsonParser:
             case 'QHsmSerial':
                 signals.append(f'\n\tQHsmSerial::read();')
 
-    @staticmethod
-    async def createNotes(components: list[Component], filename: str, triggers: dict, compiler: str) -> list:
+    
+    def createNotes(self, components: list[Component], filename: str, triggers: dict, compiler: str) -> list:
         includes = []
         variables = []
         setup = []
@@ -236,8 +230,8 @@ class CJsonParser:
                     [setup_function, loop_function]), notes)
         return notes
 
-    @staticmethod
-    async def getComponents(components: list) -> list[Component]:
+    
+    def getComponents(self, components: list) -> list[Component]:
         result = []
 
         for component_name in components:
@@ -246,8 +240,8 @@ class CJsonParser:
 
         return result
 
-    @staticmethod
-    async def getCondition(condition_dict: dict, compiler: str, condition: list = []) -> str:
+    
+    def getCondition(self, condition_dict: dict, compiler: str, condition: list = []) -> str:
         type: str = condition_dict['type']
         if type in list(CJsonParser.operatorAlias.keys()):
             values = []
@@ -278,8 +272,8 @@ class CJsonParser:
             return ''.join([component, method, args])
         return 'true'
 
-    @staticmethod
-    async def getActions(actions: list[dict], compiler: str) -> str:
+    
+    def getActions(self, actions: list[dict], compiler: str) -> str:
         result: list[str] = []
         for action in actions:
             component = action['component']
@@ -300,8 +294,8 @@ class CJsonParser:
 
         return '\n'.join(result)
 
-    @staticmethod
-    async def getTransitions(transitions: list[dict], compiler: str):
+    
+    def getTransitions(self, transitions: list[dict], compiler: str):
         result = []
         user_transitions = []
         player_signals = {}
@@ -366,56 +360,53 @@ class CJsonParser:
                 })
                 i += 1
         return result, player_signals, user_transitions
-
-    @staticmethod
-    async def getEvents(events: List[Event], state_id: str, platform: Platform, components: Dict[str, Component]) -> tuple[dict[str, Trigger], dict[str, str], dict[str, str], dict[str, Trigger]]:
-        result = {}
+    # tuple[dict[str, ParserTrigger], dict[str, str], dict[str, str], dict[str, ParserTrigger]]:
+    def getEvents(self, events: List[Event], compiler: str, state_id: str) -> Events:
+        result: Dict[EventName, ParserTrigger] = {}
         id = 0
-        event_signals = {}
-        system_signals = {
+        event_signals: Dict[EventName, EventSignal] = {}
+        system_signals: Dict[DefaultActions, str] = {
             'onEnter': '',
-            'onExit': ''
+            'onExit': '',
         }
-        components_names = components.keys()
-        user_events = {}
+        user_events: Dict[EventName, ParserTrigger] = {}
         for event in events:
-            trigger = event.trigger
+            trigger: Trigger = event.trigger
             component = trigger.component
             method = trigger.method
             actions = ''
-            for i in range(len(event['do'])):
-                # TODO: Сюда надо подкрутить платформу
-                do_component = event.do[i].component
-                if component != 'User' and platform.components[do_component]:
-                    actions += event['do'][i]['component'] + \
-                        '.' + event['do'][i]['method'] + '('
+            for i in range(len(event.do)):
+                if component != 'User':
+                    actions += event.do[i].component + \
+                        '.' + event.do[i].method + '('
                 else:
-                    actions += event['do'][i]['component'] + \
-                        '::' + event['do'][i]['method'] + '('
-                if 'args' in event['do'][i].keys():
-                    arr_action = []
-                    for arg in list(event['do'][i]['args'].values()):
+                    actions += event.do[i].component + \
+                        '::' + event.do[i].method + '('
+                args: Dict[str, Argument | str] | None = event.do[i].args
+                if args is not None:
+                    arr_action: List[str] = []
+                    for arg in list(args.values()):
                         if type(arg) is str:
-                            if event['do'][i]['component'] == 'User' and event['do'][i]['method'] == 'emit':
+                            if event.do[i].component == 'User' and event.do[i].method == 'emit':
                                 arr_action.append(f'User_{arg}_SIG')
                             else:
                                 arr_action.append(arg)
-                        elif type(arg) is dict:
-                            if arg['component'] == 'QHsmSerial':
+                        elif type(arg) is Argument:
+                            if arg.component == 'QHsmSerial':
                                 arr_action.append(
-                                    f'{arg['component']}::{arg['method']}')
+                                    f'{arg.component}::{arg.method}')
                             else:
                                 arr_action.append(
-                                    f'{arg['component']}.{arg['method']}')
+                                    f'{arg.component}.{arg.method}')
                     actions += ','.join(map(str, arr_action))
                 actions += ')' + CJsonParser.delimeter[compiler] + '\n'
-            if component == 'System':
+            if component == 'System' and (method == 'onEnter' or method == 'onExit'):
                 system_signals[method] = actions
             elif component == 'User':
                 eventname = 'User_' + method
-                trig = Trigger(name=eventname,
+                trig = ParserTrigger(name=eventname,
                                type='internal',
-                               source=statename,
+                               source=state_id,
                                target='',
                                action=actions,
                                id=id,
@@ -428,18 +419,19 @@ class CJsonParser:
                     guard = ''.join([component, '::', method, '()'])
                 else:
                     guard = ''.join([component, '.', method, '()'])
-                event_signals[eventname] = {}
-                event_signals[eventname]['guard'] = guard
-                event_signals[eventname]['component_name'] = trigger['component']
-                trig = Trigger(name=eventname, type='internal', source=statename,
+                event_signals[eventname] = EventSignal(guard=guard, component_name=trigger.component)
+                trig = ParserTrigger(name=eventname, type='internal', source=state_id,
                                target='', action=actions, id=id,
                                points=[])
                 id += 1
                 result[eventname] = trig
-        return (result, event_signals, system_signals, user_events)
+        return Events(events=result, 
+                      signals=event_signals, 
+                      system_events=system_signals, 
+                      user_events=user_events)
 
-    @staticmethod
-    async def addParentsAndChilds(states, processed_states, global_state):
+    
+    def addParentsAndChilds(self, states, processed_states, global_state):
         result = processed_states.copy()
         for statename in states:
             state = states[statename]
@@ -452,8 +444,8 @@ class CJsonParser:
 
         return result
 
-    @staticmethod
-    async def addTransitionsToStates(transitions, states):
+    
+    def addTransitionsToStates(self, transitions, states):
         new_states = states.copy()
         for transition in transitions:
             new_states[transition['trigger'].source].trigs.append(
@@ -461,8 +453,8 @@ class CJsonParser:
 
         return new_states
 
-    @staticmethod
-    def addSignals(components: list[Component], player_signals: list[str]) -> list[str]:
+    
+    def addSignals(self, components: list[Component], player_signals: list[str]) -> list[str]:
         types: set[str] = set()
         signals: list[str] = []
         for component in components:
@@ -472,8 +464,8 @@ class CJsonParser:
                         signals.append(f'{component.name}_timeout')
         return signals
 
-    @staticmethod
-    def getUserFunctions(functions: dict[str, dict]) -> tuple[str, str]:
+    
+    def getUserFunctions(self, functions: dict[str, dict]) -> tuple[str, str]:
         h = []
         c = []
         for func_name in list(functions.keys()):
@@ -496,8 +488,8 @@ class CJsonParser:
 
         return ('\n'.join(h), '\n'.join(c))
 
-    @staticmethod
-    def getUserVariables(variables: dict[str, dict[str, str]]) -> tuple[str, str]:
+    
+    def getUserVariables(self, variables: dict[str, dict[str, str]]) -> tuple[str, str]:
         h = []
         c = []
 
@@ -515,8 +507,8 @@ class CJsonParser:
 
         return ('\n'.join(h), '\n'.join(c))
 
-    @staticmethod
-    def createUserCode(user_data: dict) -> tuple[list[str], list[str]]:
+    
+    def createUserCode(self, user_data: dict) -> tuple[list[str], list[str]]:
         notes = []
         functions = CJsonParser.getUserFunctions(user_data['functions'])
         if functions != ('', ''):
@@ -535,8 +527,8 @@ class CJsonParser:
 
         return notes, signals
 
-    @staticmethod
-    async def parseStateMachine(data: IdeStateMachine, ws: WebSocketResponse, platform: Platform, class_name: Optional[str] = None) -> StateMachine:
+    
+    def parseStateMachine(self, data: IdeStateMachine, ws: WebSocketResponse, platform: Platform, class_name: Optional[str] = None) -> StateMachine:
         """ Цель данной функции - перевод машины состояний из формата Lapki IDE в формат, 
         принимаемый библиотекой fullgraphmlparser.
 
@@ -555,15 +547,15 @@ class CJsonParser:
                              parent=None, childs=[])
         states = data.states
         proccesed_states: Dict[str, ParserState] = {}
-        event_signals = {} # TODO: выяснить что за тип
-        
+        event_signals: Dict[str, EventSignal] = {}
         # Инициализация и первичная обработка состояний, не включающая указание родителя.
+        compiler: str = 'Bearloga'
+        if data.compilerSettings is not None:
+            compiler = data.compilerSettings.compiler
         for state_id in states:
-            state = data.states[state_id]
-            bounds = state.bounds
-            events, new_event_signals, system_signals, user_events = await CJsonParser.getEvents(state.events, state_id, platform, data.components)
-            event_signals = dict(
-                list(new_event_signals.items()) + list(event_signals.items()))
+            state: State = data.states[state_id]
+            events, new_event_signals, system_signals, user_events = self.getEvents(state.events, compiler, state_id)
+            event_signals = new_event_signals | event_signals
 
             on_enter = system_signals['onEnter']
             on_exit = system_signals['onExit']
@@ -575,10 +567,8 @@ class CJsonParser:
                                                 entry=on_enter, exit=on_exit,
                                                 id=state_id, new_id=[
                                                     state_id],
-                                                parent=None, childs=[],
-                                                x=bounds.x, y=bounds.y,
-                                                width=bounds.width, height=bounds.height)
-        transitions, player_signals, user_transitions = await CJsonParser.getTransitions(json_data['transitions'], compiler)
+                                                parent=None, childs=[])
+        transitions, player_signals, user_transitions = self.getTransitions(data.transitions, compiler)
         player_signals = dict(
             list(player_signals.items()) + list(event_signals.items()))
         components = await CJsonParser.getComponents(data.components)
@@ -604,8 +594,8 @@ class CJsonParser:
             start_node=startNode
         )
 
-    @staticmethod
-    async def getFiles(json_data):
+    
+    def getFiles(self, json_data):
         files = []
 
         for data in json_data:

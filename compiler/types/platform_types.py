@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Dict, TypeAlias, Literal, List, Optional
+
+from pydantic import BaseModel
+
 
 ParameterType: TypeAlias = Literal['int', 'str', 'uint8_t', 'byte', 'unsigned int',
                                    'unsigned long', 'char[]', 'int | char[]']

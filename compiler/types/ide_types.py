@@ -42,7 +42,7 @@ class Argument(BaseModel):
 class Action(BaseModel):
     component: str
     method: str
-    args: Dict[str, Argument | str]
+    args: Optional[Dict[str, Argument | str]]
 
 
 @dataclass
@@ -88,7 +88,7 @@ class Transition(BaseModel):
 
     @field_validator('color')
     @classmethod
-    def isColor(cls, v: str) -> str:
+    def _isColor(cls, v: str) -> str:
         if not v.startswith('#') or len(v) != 6:
             raise IDESchemaValidationError(f'{v} - не является цветом!')
 

@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import Any, List, Tuple, Optional, Dict, Sequence
+from typing import Any, List, Tuple, Optional, Dict
 
 """
    Class Trigger describes Triggers of uml-diagrams
@@ -19,22 +19,15 @@ from typing import Any, List, Tuple, Optional, Dict, Sequence
 
 
 @dataclass
-class Trigger:
+class ParserTrigger:
     name: str
     source: str
     target: str
     action: str
     id: int
     points: List[Tuple[int, int]]
-    x: int = 0
-    y: int = 0
-    dx: int = 0
-    dy: int = 0
-    action_x: int = 0
-    action_y: int = 0
-    action_width: int = 0
-    type: str = "internal"
-    guard: str = ""
+    type: str = ''
+    guard: str = 'true'
 
 
 """
@@ -58,17 +51,13 @@ class ParserState:
     name: str
     type: str
     actions: str
-    trigs: List[Trigger]
+    trigs: List[ParserTrigger]
     entry: str
     exit: str
     id: str
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
-    x: int = 0
-    y: int = 0
-    width: int = 0
-    height: int = 0
 
     def __str__(self) -> str:
 
@@ -84,5 +73,5 @@ class StateMachine:
     start_node: str
     start_action: str
     notes: Dict[str, Any]
-    states: Sequence[ParserState]
-    signals: Sequence[str]
+    states: List[ParserState]
+    signals: List[str]
