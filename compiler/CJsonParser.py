@@ -1,8 +1,7 @@
 from enum import Enum
-from tkinter import Variable
 from typing import Dict, Iterable, List, Optional
 from aiohttp.web import WebSocketResponse
-from compiler.types.ide_types import Transition, Condition
+from compiler.types.ide_types import Action, Transition, Condition
 from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
 
 from compiler.types.platform_types import Platform
@@ -258,7 +257,7 @@ class CJsonParser:
             method = condition.value.method
 
             # В Берлоге в условиях используются
-
+            # только числа и поля класса!
             args = ''
             arr_args: List[str] = []
 
@@ -274,21 +273,21 @@ class CJsonParser:
         return 'true'
 
     
-    def getActions(self, actions: list[dict], compiler: str) -> str:
-        result: list[str] = []
+    def getActions(self, actions: List[Action], compiler: str) -> str:
+        result: List[str] = []
         for action in actions:
-            component = action['component']
+            component = action.component
             if component == 'User' or component == 'QHsmSerial':
-                method = '::' + action['method']
+                method = '::' + action.method
             else:
-                method = '.' + action['method']
-            arr_args = []
-            if 'args' in action.keys():
-                for act in list(action['args'].values()):
-                    if type(act) is str:
+                method = '.' + action.method
+            arr_args: List[str] = []
+            if action.args is not None:
+                for act in list(action.args.values()):
+                    if isinstance(act, str):
                         arr_args.append(act)
-                    elif type(act) is dict:
-                        arr_args.append(f'{act['component']}.{act['method']}')
+                    else:
+                        arr_args.append(f'{act.component}.{act.method}')
             args = '(' + ','.join(map(str, arr_args)) + ')' + \
                 CJsonParser.delimeter[compiler]
             result.append(''.join([component, method, args]))
