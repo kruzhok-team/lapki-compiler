@@ -1,29 +1,76 @@
+"""Legacy module that implements parsing Lapki IDE's internal JSON scheme."""
+
 from enum import Enum
-from typing import Dict, Iterable, List
-from compiler.types.ide_types import Action, IncludeStr, Transition, Condition
-from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
-from .fullgraphmlparser.stateclasses import ParserNote, ParserNoteNodeLabel, ParserNoteNodeContent
+from typing import Dict, Iterable, List, Set
+
+
 try:
-    from .types.ide_types import State, Event, Argument, Component
     from .SourceFile import SourceFile
-    from .fullgraphmlparser.stateclasses import ParserTrigger, StateMachine, ParserState
-    from .types.ide_types import IdeStateMachine, Trigger
+    from .fullgraphmlparser.stateclasses import (
+        ParserTrigger,
+        StateMachine,
+        ParserState,
+        ParserNote,
+        ParserNoteNodeLabel,
+        ParserNoteNodeContent
+    )
+    from .types.ide_types import (
+        IdeStateMachine,
+        State,
+        Event,
+        Argument,
+        Component,
+        Trigger,
+        Action,
+        IncludeStr,
+        Transition,
+        Condition
+    )
+    from .types.inner_types import (
+        DefaultActions,
+        EventName,
+        EventSignal,
+        Events
+    )
 except ImportError:
+    from compiler.types.inner_types import (
+        DefaultActions,
+        EventName,
+        EventSignal,
+        Events
+    )
     from compiler.SourceFile import SourceFile
-    from compiler.fullgraphmlparser.stateclasses import ParserTrigger, StateMachine, ParserState
-    from compiler.types.ide_types import IdeStateMachine, State, Event, Argument, Component, Trigger
+    from compiler.fullgraphmlparser.stateclasses import (
+        ParserTrigger,
+        StateMachine,
+        ParserState,
+        ParserNote,
+        ParserNoteNodeLabel,
+        ParserNoteNodeContent
+    )
+    from compiler.types.ide_types import (
+        IdeStateMachine,
+        State,
+        Event,
+        Argument,
+        Component,
+        Trigger,
+        Action,
+        IncludeStr,
+        Transition,
+        Condition
+    )
 
 
 class ParserException(Exception):
-    ...
+    """Error during parsing CJsonParsinge."""
 
-
-class StateMachineValidatorException(Exception):
     ...
 
 
 class Labels(Enum):
-    """В fullgraphmlparser для определения, куда вставлять код используют метки."""
+    """В fullgraphmlparser для определения, \
+        куда вставлять код используют метки."""
 
     H_INCLUDE = 'Code for h-file'
     H = 'Declare variable in h-file'
@@ -36,6 +83,8 @@ class Labels(Enum):
 
 
 class CJsonParser:
+    """Class for parsing Lapki IDE's internal JSON scheme."""
+
     delimeter = {
         'Berloga': '',
         'arduino-cli': ';',
@@ -54,23 +103,37 @@ class CJsonParser:
         'and': '&&'
     }
 
-    def initComponent(self, component_name: str, component: Component):
-        """
-            Функция, которая в зависимости от компонента
-            возвращает код его инициализации в h-файле.
-        """
+    def initComponent(self, component_name: str, component: Component) -> str:
+        """Функция, которая в зависимости от типа компонента\
+            возвращает код его инициализации в h-файле."""
         match component.type:
             case 'Timer':
-                return f'\n{type} {component_name} = {type}(the_sketch, {component_name}_timeout_SIG);'
+                return (f'\n{type} {component_name} = {type}'
+                        f'(the_sketch,{component_name}_timeout_SIG);')
             case 'QHsmSerial':
                 return ''
             case _:
-                return f'\n{type} {component_name} = {type}({", ".join(map(str, list(component.parameters.values())))});'
+                args = ', '.join(
+                    map
+                    (
+                        str,
+                        list(component.parameters.values())
+                    )
+                )
+                return (f'\n{type} {component_name} = {type}'
+                        f'({args});')
 
-    def specificCheckComponentSignal(self, component_type: str, component_name: str, trigger: EventSignal, signal: str) -> str:
+    def specificCheckComponentSignal(
+            self,
+            component_type: str,
+            component_name: str,
+            trigger: EventSignal,
+            signal: str) -> str:
         """
-        Функция для специфичных проверок сигналов. Так, например, для
-        проверки состояния кнопки необходимо предварительно вызвать функцию scan
+        Функция для специфичных проверок сигналов.
+
+        Так, например, для проверки состояния\
+            кнопки необходимо предварительно вызвать функцию scan
 
         Returns:
             str: специфичная для данного компонента проверка сигнала
@@ -79,7 +142,12 @@ class CJsonParser:
             case 'Timer':
                 return f'\n\t{component_name}.timeout();'
             case _:
-                return '\n\t\t'.join([f'\n\t\n\tif({trigger.guard})', '{', f'SIMPLE_DISPATCH(the_sketch, {signal});']) + '\n\t}'
+                return '\n\t\t'.join(
+                    [
+                        f'\n\t\n\tif({trigger.guard})',
+                        '{', f'SIMPLE_DISPATCH(the_sketch, {signal});'
+                    ]
+                ) + '\n\t}'
 
     def getNote(self, label: Labels, content: str) -> ParserNote:
         """Создать ParserNote на основе метки вставки, и кода для вставки."""
@@ -90,25 +158,33 @@ class CJsonParser:
             )
         )
 
-    def getLibraries(self, components: List[Component]) -> List[str]:
-        libraries = []
+    def getLibraries(self, components: List[Component]) -> Set[str]:
+        """Получить используемые типы компонентов."""
+        libraries: Set[str] = set()
         for component in components:
             if component.type not in libraries:
-                libraries.append(f'{component.type}')
+                libraries.add(f'{component.type}')
 
         return libraries
 
-    def setupVariables(self, component_name: str, component: Component) -> str | None:
+    def setupVariables(
+            self,
+            component_name: str,
+            component: Component) -> str | None:
         """Действия в функции setup."""
         match component.type:
             case 'QHsmSerial':
-                return f'{component_name}::init({", ".join(map(str, list(component.parameters.values())))});'
+                args = ', '.join(map(str, list(component.parameters.values())))
+                return f'{component_name}::init({args});'
             case 'DigitalOut':
                 return f'{component_name}.init();'
             case _:
                 return None
 
-    def actionInMain(self, component_name: str, component: Component) -> str | None:
+    def actionInMain(
+            self,
+            component_name: str,
+            component: Component) -> str | None:
         """Действия, которые должны происходить каждый тик."""
         match component.type:
             case 'AnalogIn':
@@ -116,14 +192,18 @@ class CJsonParser:
             case 'Button':
                 return f'\n\t{component_name}.scan();'
             case 'QHsmSerial':
-                return f'\n\tQHsmSerial::read();'
+                return '\n\tQHsmSerial::read();'
             case _:
                 return None
 
-    def createNotes(self, components: Dict[str, Component], triggers: Dict[EventName, EventSignal], compiler: str) -> List[ParserNote]:
+    def createNotes(
+            self,
+            components: Dict[str, Component],
+            triggers: Dict[EventName, EventSignal],
+            compiler: str) -> List[ParserNote]:
+        """Сгенерировать код для вставки."""
         includes: List[IncludeStr] = []
-        variables = []
-        setup = []
+        variables: List[str] = []  # Создание компонентов в h-файле
         components_types: Dict[str, str] = {}  # Название компонента -> его тип
         types: List[str] = []  # Типы, h-файлы которых уже есть в includes
         # Действия, которые будут добавлены в функцию setup
@@ -161,7 +241,6 @@ class CJsonParser:
         match compiler:
             case 'g++' | 'gcc':
                 setup_function = '\n\t'.join(['\nvoid setup(){',
-                                              *setup,
                                               '\n}'])
 
                 loop_function = ''.join(['\nvoid loop(){', *check_signals,
@@ -170,7 +249,7 @@ class CJsonParser:
                 main_function = '\n\t'.join(['\nint main(){',
                                             f'{class_filename}_ctor();',
                                              'QEvt event;',
-                                             f'QMsm_init(the_sketch, &event);',
+                                             'QMsm_init(the_sketch, &event);',
                                              'setup();',
                                              'while(true){',
                                              '\tloop();',
@@ -191,7 +270,7 @@ class CJsonParser:
                                               *setup_variables,
                                               f'{class_filename}_ctor();',
                                               'QEvt event;',
-                                              f'QMsm_init(the_sketch, &event);',
+                                              'QMsm_init(the_sketch, &event);',
                                               '\n}'])
                 loop_function = ''.join(
                     ['\nvoid loop(){', *check_signals, '\n}'])
@@ -211,6 +290,7 @@ class CJsonParser:
         return notes
 
     def getCondition(self, condition: Condition, compiler: str) -> str:
+        """Рекурсивная функция для генерации условий события."""
         if condition.type in list(CJsonParser.operatorAlias.keys()):
             values: List[str] = []
             if isinstance(condition.value, Iterable):
@@ -241,10 +321,12 @@ class CJsonParser:
         return 'true'
 
     def getActions(self, actions: List[Action], compiler: str) -> str:
+        """Генерация кода, который будет\
+            выполняться при наступлении события."""
         result: List[str] = []
         for action in actions:
             component = action.component
-            if component == 'User' or component == 'QHsmSerial':
+            if component == 'QHsmSerial':
                 method = '::' + action.method
             else:
                 method = '.' + action.method
