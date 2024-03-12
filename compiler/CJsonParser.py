@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Dict, List, Optional
+from tkinter import Variable
+from typing import Dict, Iterable, List, Optional
 from aiohttp.web import WebSocketResponse
 from compiler.types.ide_types import Transition, Condition
 from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
@@ -242,28 +243,27 @@ class CJsonParser:
         return result
 
     
-    def getCondition(self, condition_dict: Condition, compiler: str, condition: list = []) -> str:
-        type: str = condition_dict['type']
-        if type in list(CJsonParser.operatorAlias.keys()):
-            values = []
-            for value in condition_dict['value']:
-                values.append(await CJsonParser.getCondition(value, compiler=compiler))
-            result = f' {CJsonParser.operatorAlias[type]} '.join(
+    def getCondition(self, condition: Condition, compiler: str) -> str:
+        if condition.type in list(CJsonParser.operatorAlias.keys()):
+            values: List[str] = []
+            if isinstance(condition.value, Iterable):
+                for value in condition.value:
+                        values.append(self.getCondition(value, compiler=compiler))
+            return f' { CJsonParser.operatorAlias[condition.type] } '.join(
                 map(str, values))
-            return result
-        elif type == 'value':
-            return str(condition_dict['value'])
-        elif type == 'component':
-            component = condition_dict['value']['component'] + '.'
-            method = condition_dict['value']['method']
+        elif condition.type == 'value':
+            return str(condition.value)
+        elif condition.type == 'component' and not isinstance(condition.value, Iterable):
+            component = condition.value.component + '.'
+            method = condition.value.method
 
             # В Берлоге в условиях используются
-            # только числа и поля класса!
-            args = ''
-            arr_args = []
 
-            if args in condition_dict.keys():
-                arr_args = list(condition_dict['args'].values())
+            args = ''
+            arr_args: List[str] = []
+
+            if condition.value.args is not None:
+                arr_args = list(condition.value.args.values())
 
                 if len(arr_args) > 0:
                     args = '(' + ','.join(map(str, arr_args)) + ')'
@@ -300,8 +300,7 @@ class CJsonParser:
         result = []
         user_transitions = []
         player_signals: Dict[EventName, EventSignal] = {}
-        i = 0
-        for transition in transitions:
+        for i, transition in enumerate(transitions):
             if transition.trigger.component != 'User':
                 if transition.trigger.component == 'QHsmSerial':
                     guard = ''.join([transition.trigger.component, '::',
@@ -317,8 +316,6 @@ class CJsonParser:
 
                 eventname = ''.join([transition.trigger.component, '_',
                                 transition.trigger.method]) + '_'.join(arr_args)
-
-                trig = {}
                 player_signals[eventname] = EventSignal(
                     guard=guard,
                     component_name=transition.trigger.component
@@ -328,20 +325,17 @@ class CJsonParser:
                     condition = self.getCondition(root, compiler)
                 else:
                     condition = 'true'
-                if 'do' in transition.keys():
-                    action = await CJsonParser.getActions(transition['do'],
-                                                          compiler)
+                if transition.do != []:
+                    action = self.getActions(transition.do, compiler)
                 else:
                     action = ''
-                trig['trigger'] = Trigger(name=name, source=transition['source'],
-                                          target=transition['target'], id=i,
-                                          type='external', guard=condition,
-                                          action=action, points=[])
 
-                result.append(trig)
-                i += 1
+                result.append(ParserTrigger(name=eventname, source=transition.source,
+                                          target=transition.target, id=i,
+                                          type='external', guard=condition,
+                                          action=action, points=[]))
             else:
-                name = f'User_{transition['trigger']['method']}'
+                eventname = f'User_{transition['trigger']['method']}'
                 if 'condition' in transition.keys() and transition['condition'] is not None:
                     root = transition['condition']
                     condition = await CJsonParser.getCondition(root, compiler)
@@ -574,10 +568,10 @@ class CJsonParser:
         transitions, player_signals, user_transitions = self.getTransitions(data.transitions, compiler)
         player_signals = dict(
             list(player_signals.items()) + list(event_signals.items()))
-        components = await CJsonParser.getComponents(data.components)
+        components = CJsonParser.getComponents(data.components)
         user_signals = []
         if compiler in ['arduino-cli', 'g++', 'gcc']:
-            notes = await CJsonParser.createNotes(components, filename, triggers=player_signals, compiler=compiler, path=path)
+            notes = CJsonParser.createNotes(components, filename, triggers=player_signals, compiler=compiler, path=path)
             if 'User' in list(json_data.keys()):
                 user_notes, user_signals = CJsonParser.createUserCode(
                     json_data['User'])

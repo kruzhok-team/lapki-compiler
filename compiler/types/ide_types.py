@@ -1,8 +1,7 @@
-from dataclasses import dataclass
 from typing import Literal, TypeAlias, Optional, List, Dict
 
-from pydantic import BaseModel, model_validator, field_validator
-
+from pydantic import model_validator, field_validator
+from pydantic.dataclasses import dataclass
 
 Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
 Compiler: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
@@ -13,13 +12,13 @@ class IDESchemaValidationError(Exception):
 
 
 @dataclass
-class Point(BaseModel):
+class Point:
     x: float
     y: float
 
 
 @dataclass
-class Bounds(BaseModel):
+class Bounds:
     x: float
     y: float
     height: float
@@ -27,58 +26,59 @@ class Bounds(BaseModel):
 
 
 @dataclass
-class Argument(BaseModel):
+class Argument:
     component: str
     method: str
 
 
 @dataclass
-class Trigger(BaseModel):
+class Trigger:
     component: str
     method: str
     args: Optional[Dict[str, str]]
 
 
 @dataclass
-class Action(BaseModel):
+class Action:
     component: str
     method: str
     args: Optional[Dict[str, Argument | str]]
 
 
 @dataclass
-class Event(BaseModel):
+class Event:
     trigger: Trigger
     do: List[Action]
 
 
 @dataclass
-class State(BaseModel):
+class State:
     name: str
     events: List[Event]
     bounds: Bounds
 
 
 @dataclass
-class InitialState(BaseModel):
+class InitialState:
     target: str
     position: Point
 
 
 @dataclass
-class Variable(BaseModel):
+class Variable:
     component: str
     method: str
+    args: Optional[Dict[str, str]]
 
 
 @dataclass
-class Condition(BaseModel):
+class Condition:
     type: str
-    value: Variable | List["Condition"]
+    value: Variable | List['Condition']
 
 
 @dataclass
-class Transition(BaseModel):
+class Transition:
     color: str
     source: str
     target: str
@@ -97,19 +97,19 @@ class Transition(BaseModel):
 
 
 @dataclass
-class Component(BaseModel):
+class Component:
     type: str
     parameters: Dict[str, str]
 
 
 @dataclass
-class CompilerSettings(BaseModel):
+class CompilerSettings:
     filename: str
     compiler: Compiler
     flags: List[str]
 
 
-class IdeStateMachine(BaseModel):
+class IdeStateMachine:
     states: Dict[str, State]
     initialState: InitialState
     transitions: List[Transition]
