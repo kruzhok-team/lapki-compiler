@@ -57,6 +57,7 @@ class State:
     name: str
     events: List[Event]
     bounds: Bounds
+    parent: Optional[str]
 
 
 @dataclass
