@@ -5,6 +5,7 @@ from pydantic.dataclasses import dataclass
 
 Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
 Compiler: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
+IncludeStr: TypeAlias = str  # include "blabla.h"
 
 
 class IDESchemaValidationError(Exception):
@@ -84,7 +85,7 @@ class Transition:
     target: str
     position: Point
     trigger: Trigger
-    do: List[Action]
+    do: Optional[List[Action]]
     condition: Optional[Condition] = None
 
     @field_validator('color')

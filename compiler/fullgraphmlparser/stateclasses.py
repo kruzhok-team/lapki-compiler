@@ -25,7 +25,6 @@ class ParserTrigger:
     target: str
     action: str
     id: int
-    points: List[Tuple[int, int]]
     type: str = ''
     guard: str = 'true'
 
