@@ -1,25 +1,38 @@
+from typing import List, Optional
 
-from dataclasses import dataclass
-from typing import Any, List, Tuple, Optional, Dict
+from pydantic import Field, BaseModel
+from pydantic.dataclasses import dataclass
 
-"""
-   Class Trigger describes Triggers of uml-diagrams
-        name: name of trigger
-        type: internal or external
-        guard: text of trigger guard if any
-        source: source state of trigger (actual for external triggers)
-        target: target state of trigger (actual for external triggers)
-        action: action for this trigger if any
-        id: order number of internal trigger for better coordinates
-        x, y: start of trigger visual path
-        dx, dy: first relative movement of trigger visual path
-        points: other relative movements of trigger visual path
-        action_x, action_y, action_width: coordinates of trigger label
-"""
+
+class ParserNoteNodeContent(BaseModel):
+    text: str = Field(serialization_alias='#text')
+
+
+class ParserNoteNodeLabel(BaseModel):
+    nodeLabel: ParserNoteNodeContent = Field(serialization_alias='y:NodeLabel')
+
+
+class ParserNote(BaseModel):
+    umlNote: ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
 
 
 @dataclass
 class ParserTrigger:
+    """
+    Class Trigger describes Triggers of uml-diagrams
+            name: name of trigger
+            type: internal or external
+            guard: text of trigger guard if any
+            source: source state of trigger (actual for external triggers)
+            target: target state of trigger (actual for external triggers)
+            action: action for this trigger if any
+            id: order number of internal trigger for better coordinates
+            x, y: start of trigger visual path
+            dx, dy: first relative movement of trigger visual path
+            points: other relative movements of trigger visual path
+            action_x, action_y, action_width: coordinates of trigger label
+    """
+
     name: str
     source: str
     target: str
@@ -29,24 +42,23 @@ class ParserTrigger:
     guard: str = 'true'
 
 
-"""
-   class State describes state of uml-diagram and trigslates to qm format.
-   Fields:
-        name: name of state
-        type: state or choice
-        trigs: list of trigsitions from this state both external and internal
-        entry: action on entry event
-        exit: action on exit event
-        id: number of state
-        actions: raw_data for external actions
-        old_id: id of state in graphml
-        x, y: graphical coordinates
-        height, width: height and with of node
-"""
-
-
 @dataclass
 class ParserState:
+    """
+    class State describes state of uml-diagram and trigslates to qm format.
+    Fields:
+            name: name of state
+            type: state or choice
+            trigs: list of trigsitions from this state both external and internal
+            entry: action on entry event
+            exit: action on exit event
+            id: number of state
+            actions: raw_data for external actions
+            old_id: id of state in graphml
+            x, y: graphical coordinates
+            height, width: height and with of node
+    """
+
     name: str
     type: str
     actions: str
@@ -71,6 +83,6 @@ class StateMachine:
     name: str
     start_node: str
     start_action: str
-    notes: Dict[str, Any]
+    notes: List[ParserNote]
     states: List[ParserState]
     signals: List[str]

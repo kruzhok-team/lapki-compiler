@@ -6,10 +6,10 @@ from collections import defaultdict
 from typing import List, Tuple
 from aiofile import async_open
 try:
-    from .stateclasses import ParserState, Trigger, StateMachine
+    from .stateclasses import ParserState, ParserTrigger, StateMachine
     from .graphml import *
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import ParserState, Trigger, StateMachine
+    from compiler.fullgraphmlparser.stateclasses import ParserState, ParserTrigger, StateMachine
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -43,9 +43,8 @@ class CppFileWriter:
     def __init__(self, state_machine: StateMachine) -> None:
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
-
         notes_mapping = [('Code for h-file', 'raw_h_code'),
-                         ('Declare variable in h-file', "declare_h_code"),
+                         ('Declare variable in h-file', 'declare_h_code'),
                          ('Code for cpp-file', 'raw_cpp_code'),
                          ('Constructor fields', 'constructor_fields'),
                          ('State fields', 'state_fields'),
@@ -58,9 +57,10 @@ class CppFileWriter:
 
         self.notes_dict = {key: '' for _, key in notes_mapping}
         for note in state_machine.notes:
+            dict_note = note.model_dump(by_alias=True)
             for prefix, key in notes_mapping:
-                if note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
-                    self.notes_dict[key] = note['y:UMLNoteNode']['y:NodeLabel']['#text']
+                if dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
+                    self.notes_dict[key] = dict_note['y:UMLNoteNode']['y:NodeLabel']['#text']
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.states = state_machine.states
@@ -233,7 +233,8 @@ class CppFileWriter:
     async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
         state_comment = '/*.${' + state_path + '} '
-        state_comment = state_comment + '.' * (76 - len(state_comment)) + '*/\n'
+        state_comment = state_comment + '.' * \
+            (76 - len(state_comment)) + '*/\n'
         await self.f.write(state_comment)
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.id)
         await self._insert_string('    QState status_;\n')
@@ -266,7 +267,7 @@ class CppFileWriter:
             name_to_triggers[trigger.name].append(trigger)
             name_to_position[trigger.name] = i
 
-        triggers_merged: List[Tuple[str, List[Trigger]]] = sorted(
+        triggers_merged: List[Tuple[str, List[ParserTrigger]]] = sorted(
             [(name, name_to_triggers[name]) for name in name_to_triggers],
             key=lambda t: name_to_position[t[0]])
 
@@ -325,7 +326,7 @@ class CppFileWriter:
         for child_state in state.childs:
             await self._write_states_declarations_recursively(child_state)
 
-    async def _write_trigger(self, f, trigger: Trigger, state_path: str, event_name: str, offset=''):
+    async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, offset=''):
         if trigger.action and not trigger.type == 'choice_start':
             await self._insert_string('\n'.join(
                 [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n')

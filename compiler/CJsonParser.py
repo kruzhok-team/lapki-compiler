@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Optional
 from aiohttp.web import WebSocketResponse
 from compiler.types.ide_types import Action, IncludeStr, Transition, Condition
 from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
-
+from .fullgraphmlparser.stateclasses import ParserNote, ParserNoteNodeLabel, ParserNoteNodeContent
 try:
     from .types.ide_types import State, Event, Argument, Component
     from .SourceFile import SourceFile
@@ -84,6 +84,14 @@ class CJsonParser:
                       {'y:NodeLabel':
                        {'#text': f'{label.value}: {content}'}}})
 
+    def addNote(self, label: Labels, content: str) -> ParserNote:
+        return ParserNote(
+            umlNote=ParserNoteNodeLabel(
+                nodeLabel=ParserNoteNodeContent(
+                    text=f'{label.value}: {content}')
+            )
+        )
+
     def getLibraries(self, components) -> list[str]:
         libraries = []
         for component in components:
@@ -148,7 +156,6 @@ class CJsonParser:
             check = self.specificCheckComponentSignal(name=component_name,
                                                       type=component_type,
                                                       triggers=triggers[name],
-                                                      filename=filename,
                                                       signal=name)
             check_signals.append(check)
 

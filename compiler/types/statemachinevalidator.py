@@ -41,12 +41,13 @@ class StateMachineValidator:
                                                      Unknown source {transition.source}!')
 
     def _validateComponents(self, components: Dict[str, Component]) -> bool:
-        """Функция проверяет соответствие компонентов указанной платформе"""
+        """Функция проверяет соответствие компонентов указанной платформе."""
         component_types = list(self.platform.components.keys())
         for component_id in self.data.components:
             component = self.data.components[component_id]
             if component.type in component_types:
-                parameters = list(self.platform.components[component.type].parameters.keys())
+                parameters = list(
+                    self.platform.components[component.type].parameters.keys())
                 for parameter_id in component.parameters:
                     if parameter_id in parameters:
                         continue
