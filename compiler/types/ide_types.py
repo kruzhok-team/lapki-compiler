@@ -27,15 +27,16 @@ class Bounds(BaseModel):
 
 
 @dataclass
-class Trigger(BaseModel):
+class Argument(BaseModel):
     component: str
     method: str
 
 
 @dataclass
-class Argument(BaseModel):
+class Trigger(BaseModel):
     component: str
     method: str
+    args: Optional[Dict[str, str]]
 
 
 @dataclass
@@ -120,7 +121,8 @@ class IdeStateMachine(BaseModel):
     @model_validator(mode='after')
     def is_compiler_settings_required(self):
         if self.platform == 'ArduinoUno' and self.compilerSettings is None:
-            raise IDESchemaValidationError('Отсутствуют настройки компилятора!')
+            raise IDESchemaValidationError(
+                'Отсутствуют настройки компилятора!')
         if self.platform == 'BearlogaDefend' and self.compilerSettings is not None:
             raise IDESchemaValidationError(
                 'Для данной платформы не требуются настройки компилятора!')

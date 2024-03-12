@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Dict, List, Optional
 from aiohttp.web import WebSocketResponse
+from compiler.types.ide_types import Transition, Condition
 from compiler.types.inner_types import DefaultActions, EventName, EventSignal, Events
 
 from compiler.types.platform_types import Platform
@@ -241,7 +242,7 @@ class CJsonParser:
         return result
 
     
-    def getCondition(self, condition_dict: dict, compiler: str, condition: list = []) -> str:
+    def getCondition(self, condition_dict: Condition, compiler: str, condition: list = []) -> str:
         type: str = condition_dict['type']
         if type in list(CJsonParser.operatorAlias.keys()):
             values = []
@@ -295,35 +296,36 @@ class CJsonParser:
         return '\n'.join(result)
 
     
-    def getTransitions(self, transitions: list[dict], compiler: str):
+    def getTransitions(self, transitions: List[Transition], compiler: str):
         result = []
         user_transitions = []
-        player_signals = {}
+        player_signals: Dict[EventName, EventSignal] = {}
         i = 0
         for transition in transitions:
-            if transition['trigger']['component'] != 'User':
-                if transition['trigger']['component'] == 'QHsmSerial':
-                    guard = ''.join([transition['trigger']['component'], '::',
-                                     transition['trigger']['method'], '('])
+            if transition.trigger.component != 'User':
+                if transition.trigger.component == 'QHsmSerial':
+                    guard = ''.join([transition.trigger.component, '::',
+                                     transition.trigger.method, '('])
                 else:
-                    guard = ''.join([transition['trigger']['component'], '.',
-                                     transition['trigger']['method'], '('])
-                arr_args = []
-                if 'args' in transition['trigger'].keys():
-                    arr_args = list(transition['trigger']['args'].values())
+                    guard = ''.join([transition.trigger.component, '.',
+                                     transition.trigger.method, '('])
+                arr_args: List[str] = []
+                if transition.trigger.args is not None:
+                    arr_args = list(transition.trigger.args.values())
                     guard += ','.join(arr_args)
                 guard += ')'
 
-                name = ''.join([transition['trigger']['component'], '_',
-                                transition['trigger']['method']]) + '_'.join(arr_args)
+                eventname = ''.join([transition.trigger.component, '_',
+                                transition.trigger.method]) + '_'.join(arr_args)
 
                 trig = {}
-                player_signals[name] = {}
-                player_signals[name]['guard'] = guard
-                player_signals[name]['component_name'] = transition['trigger']['component']
-                if 'condition' in transition.keys() and transition['condition'] is not None:
-                    root = transition['condition']
-                    condition = await CJsonParser.getCondition(root, compiler)
+                player_signals[eventname] = EventSignal(
+                    guard=guard,
+                    component_name=transition.trigger.component
+                )
+                if transition.condition is not None:
+                    root: Condition = transition.condition
+                    condition = self.getCondition(root, compiler)
                 else:
                     condition = 'true'
                 if 'do' in transition.keys():
@@ -360,7 +362,7 @@ class CJsonParser:
                 })
                 i += 1
         return result, player_signals, user_transitions
-    # tuple[dict[str, ParserTrigger], dict[str, str], dict[str, str], dict[str, ParserTrigger]]:
+
     def getEvents(self, events: List[Event], compiler: str, state_id: str) -> Events:
         result: Dict[EventName, ParserTrigger] = {}
         id = 0
@@ -528,7 +530,7 @@ class CJsonParser:
         return notes, signals
 
     
-    def parseStateMachine(self, data: IdeStateMachine, ws: WebSocketResponse, platform: Platform, class_name: Optional[str] = None) -> StateMachine:
+    def parseStateMachine(self, data: IdeStateMachine, ws: WebSocketResponse, class_name: Optional[str] = None) -> StateMachine:
         """ Цель данной функции - перевод машины состояний из формата Lapki IDE в формат, 
         принимаемый библиотекой fullgraphmlparser.
 
@@ -554,20 +556,21 @@ class CJsonParser:
             compiler = data.compilerSettings.compiler
         for state_id in states:
             state: State = data.states[state_id]
-            events, new_event_signals, system_signals, user_events = self.getEvents(state.events, compiler, state_id)
-            event_signals = new_event_signals | event_signals
+            state_events: Events = self.getEvents(state.events, compiler, state_id)
+            event_signals = state_events.signals | event_signals
 
-            on_enter = system_signals['onEnter']
-            on_exit = system_signals['onExit']
-
+            on_enter = state_events.system_events['onEnter']
+            on_exit = state_events.system_events['onExit']
+            triggers: Dict[EventName, ParserTrigger] = state_events.events | state_events.user_events
             proccesed_states[state_id] = ParserState(name=state.name, type='state',
                                                 actions='',
-                                                trigs=[
-                                                    *list(events.values()), *list(user_events.values())],
-                                                entry=on_enter, exit=on_exit,
-                                                id=state_id, new_id=[
-                                                    state_id],
-                                                parent=None, childs=[])
+                                                trigs=list(triggers.values()),
+                                                entry=on_enter, 
+                                                exit=on_exit,
+                                                id=state_id,
+                                                new_id=[state_id],
+                                                parent=None,
+                                                childs=[])
         transitions, player_signals, user_transitions = self.getTransitions(data.transitions, compiler)
         player_signals = dict(
             list(player_signals.items()) + list(event_signals.items()))
