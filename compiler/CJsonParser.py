@@ -24,6 +24,8 @@ class StateMachineValidatorException(Exception):
 
 
 class Labels(Enum):
+    """В fullgraphmlparser для определения, куда вставлять код используют метки."""
+
     H_INCLUDE = 'Code for h-file'
     H = 'Declare variable in h-file'
     CPP = 'Code for cpp-file'
@@ -79,12 +81,7 @@ class CJsonParser:
             case _:
                 return '\n\t\t'.join([f'\n\t\n\tif({trigger.guard})', '{', f'SIMPLE_DISPATCH(the_sketch, {signal});']) + '\n\t}'
 
-    def appendNote(self, label: Labels, content: str, notes: list):
-        notes.append({'y:UMLNoteNode':
-                      {'y:NodeLabel':
-                       {'#text': f'{label.value}: {content}'}}})
-
-    def addNote(self, label: Labels, content: str) -> ParserNote:
+    def getNote(self, label: Labels, content: str) -> ParserNote:
         return ParserNote(
             umlNote=ParserNoteNodeLabel(
                 nodeLabel=ParserNoteNodeContent(
@@ -121,7 +118,7 @@ class CJsonParser:
             case _:
                 return None
 
-    def createNotes(self, components: Dict[str, Component], triggers: Dict[EventName, EventSignal], compiler: str) -> list:
+    def createNotes(self, components: Dict[str, Component], triggers: Dict[EventName, EventSignal], compiler: str) -> List[ParserNote]:
         includes: List[IncludeStr] = []
         variables = []
         setup = []
@@ -147,16 +144,16 @@ class CJsonParser:
             if setup_variable is not None:
                 setup_variables.append(setup_variable)
             variables.append(self.initComponent(component_name, component))
-        notes = []
+        notes: List[ParserNote] = []
         class_filename = 'Sketch'
 
-        for name in list(triggers.keys()):
-            component_name = triggers[name].component_name
+        for eventName in list(triggers.keys()):
+            component_name = triggers[eventName].component_name
             component_type = components_types[component_name]
-            check = self.specificCheckComponentSignal(name=component_name,
-                                                      type=component_type,
-                                                      triggers=triggers[name],
-                                                      signal=name)
+            check = self.specificCheckComponentSignal(component_name,
+                                                      component_type,
+                                                      triggers[eventName],
+                                                      eventName)
             check_signals.append(check)
 
         match compiler:
@@ -171,31 +168,44 @@ class CJsonParser:
                 main_function = '\n\t'.join(['\nint main(){',
                                             f'{class_filename}_ctor();',
                                              'QEvt event;',
-                                             f'QMsm_init(the_{filename}, &event);',
+                                             f'QMsm_init(the_sketch, &event);',
                                              'setup();',
                                              'while(true){',
                                              '\tloop();',
                                              '}']) + '\n}'
-                CJsonParser.appendNote(Labels.H, ''.join(variables), notes)
-                CJsonParser.appendNote(
-                    Labels.H_INCLUDE, ''.join(includes), notes)
-                CJsonParser.appendNote(Labels.CPP, '\n\n'.join(
-                    [setup_function, loop_function, main_function]), notes)
+                notes.extend(
+                    [
+                        self.getNote(Labels.H, ''.join(variables)),
+                        self.getNote(Labels.H_INCLUDE, ''.join(includes)),
+                        self.getNote(Labels.CPP, '\n\n'.join(
+                            [setup_function, loop_function, main_function]
+                        )
+                        ),
+                    ]
+                )
 
             case 'arduino-cli':
                 setup_function = '\n\t'.join(['\nvoid setup(){',
                                               *setup_variables,
                                               f'{class_filename}_ctor();',
                                               'QEvt event;',
-                                              f'QMsm_init(the_{filename}, &event);',
+                                              f'QMsm_init(the_sketch, &event);',
                                               '\n}'])
                 loop_function = ''.join(
                     ['\nvoid loop(){', *check_signals, '\n}'])
-                CJsonParser.appendNote(Labels.H, ''.join(variables), notes)
-                CJsonParser.appendNote(
-                    Labels.H_INCLUDE, ''.join(includes), notes)
-                CJsonParser.appendNote(Labels.CPP, '\n\n'.join(
-                    [setup_function, loop_function]), notes)
+
+                notes.extend(
+                    [
+                        self.getNote(Labels.H, ''.join(variables)),
+                        self.getNote(Labels.H_INCLUDE, ''.join(includes)),
+                        self.getNote(Labels.CPP, '\n\n'.join(
+                            [setup_function, loop_function]
+                        )
+                        ),
+                    ]
+                )
+            case _:
+                ...
         return notes
 
     def getCondition(self, condition: Condition, compiler: str) -> str:
