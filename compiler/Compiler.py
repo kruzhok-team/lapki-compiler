@@ -1,5 +1,5 @@
 import asyncio
-from typing import Set
+from typing import List, Set
 from aiopath import AsyncPath
 
 try:
@@ -39,22 +39,36 @@ class Compiler:
         return f"{LIBRARY_PATH}{platform}/"
 
     @staticmethod
-    async def getBuildFiles(libraries, compiler: str, directory: str, platform: str):
-        build_files = []
-        for glob in Compiler.supported_compilers[compiler]["extension"]:
+    async def getBuildFiles(
+            libraries: Set[str],
+            compiler: str,
+            directory: str,
+            platform: str) -> Set[str]:
+        build_files: Set[str] = set()
+        for glob in Compiler.supported_compilers[compiler]['extension']:
             async for file in AsyncPath(directory).glob(glob):
-                build_files.append(file.name)
+                build_files.add(file.name)
 
         match compiler:
-            case "gcc" | "g++":
+            case 'gcc' | 'g++':
                 for library in libraries:
-                    build_files.append(
-                        ''.join(["../", Compiler._path(platform), "/build/", library, '.o']))
-
+                    build_files.add(
+                        ''.join(
+                            [
+                                '../',
+                                Compiler._path(platform),
+                                '/build/',
+                                library,
+                                '.o'
+                            ]
+                        )
+                    )
+            case _:
+                ...
         return build_files
 
     @staticmethod
-    async def compile(base_dir: str, build_files: list, flags: list, compiler: str) -> CompilerResult:
+    async def compile(base_dir: str, build_files: Set[str], flags: list, compiler: str) -> CompilerResult:
         match compiler:
             case "g++" | "gcc":
                 await AsyncPath(base_dir + 'build/').mkdir(parents=True, exist_ok=True)
