@@ -1,3 +1,4 @@
+"""Module implements handling and processing requests."""
 import json
 import base64
 import time
@@ -29,7 +30,7 @@ except ImportError:
     from compiler.Compiler import CompilerResult
     from compiler.types.inner_types import CompilerResponse, File
     from compiler.types.ide_types import CompilerSettings
-    from .fullgraphmlparser.stateclasses import StateMachine
+    from compiler.fullgraphmlparser.stateclasses import StateMachine
     from compiler.types.ide_types import IdeStateMachine
     from compiler.GraphmlParser import GraphmlParser
     from compiler.CJsonParser import CJsonParser
@@ -42,15 +43,20 @@ except ImportError:
 
 
 class HandlerException(Exception):
+    """Errors during processing requests."""
+
     ...
 
 
 class Handler:
+    """Class for processing requests."""
+
     def __init__(self):
         pass
 
     @staticmethod
     async def readSourceFile(filename: str, extension: str, path: str) -> File:
+        """Read file by path."""
         async with async_open(f'{path}{filename}.{extension}', 'r') as f:
             data = await f.read()
         return File(
@@ -61,6 +67,7 @@ class Handler:
 
     @staticmethod
     async def main(request: web.Request) -> web.WebSocketResponse:
+        """Root handler, call other handlers."""
         ws = web.WebSocketResponse(autoclose=False, max_msg_size=MAX_MSG_SIZE)
         await ws.prepare(request)
         await Logger.logger.info(request)
@@ -93,6 +100,12 @@ class Handler:
     async def handle_ws_compile(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
+        """
+        Generate code from Lapki IDE's internal JSON scheme\
+            and compile it.
+
+        Send: CompilerResponse | RequestError
+        """
         if ws is None:
             ws = web.WebSocketResponse(
                 autoclose=False, max_msg_size=MAX_MSG_SIZE)
@@ -104,7 +117,7 @@ class Handler:
             await Logger.logger.info(data)
             compiler_settings: CompilerSettings | None = data.compilerSettings
             if compiler_settings is None:
-                raise Exception()
+                raise HandlerException('Internal error: never is reached.')
             compiler = compiler_settings.compiler
             flags: List[str] = compiler_settings.flags
             dirname = str(datetime.now()) + '/'
@@ -222,7 +235,11 @@ class Handler:
 
     @staticmethod
     async def handle_ws_compile_source(request: web.Request):
-        # Супер-древний модуль, надо тестить.
+        """
+        Legacy handler for compiling from source.
+
+        Send: CompilerResponse | RequestError
+        """
         ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
         await ws.prepare(request)
         data = json.loads(await ws.receive_json())
@@ -297,12 +314,18 @@ class Handler:
 
     @staticmethod
     def calculateBearlogaId() -> str:
+        """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
     @staticmethod
     async def handle_berloga_import(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
+        """
+        Generate Lapki IDE's internal JSON scheme from yed-GraphMl.
+
+        Send: CompilerResponse | RequestError
+        """
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
@@ -344,6 +367,11 @@ class Handler:
     async def handle_berloga_export(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
+        """
+        Generate yed-GraphMl from Lapki IDE's internal JSON scheme.
+
+        Send: File | RequestError
+        """
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
@@ -351,17 +379,13 @@ class Handler:
         filename = await ws.receive_str()
         await Logger.logger.info(data)
         try:
-
             parser = CJsonParser()
-            sm = parser.parseStateMachine(data)
+            sm: StateMachine = parser.parseStateMachine(data)
             states_with_id = {}
             for state in sm.states:
                 states_with_id[state.name] = state
-
             converter = JsonConverter(ws)
-
-            xml = await converter.parse(states_with_id, data.initialState)
-
+            xml: str = await converter.parse(states_with_id, data.initialState)
             await ws.send_json(
                 {
                     'filename': f'{filename}_{Handler.calculateBearlogaId()}',
