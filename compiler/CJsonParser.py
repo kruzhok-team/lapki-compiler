@@ -120,7 +120,8 @@ class CJsonParser:
                         list(component.parameters.values())
                     )
                 )
-                return (f'\n{type} {component_name} = {type}'
+                return (f'\n{component.type} {component_name}'
+                        f'= {component.type}'
                         f'({args});')
 
     def _specificCheckComponentSignal(

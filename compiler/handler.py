@@ -90,7 +90,8 @@ class Handler:
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
-            data = IdeStateMachine(**await ws.receive_json())
+            a = await ws.receive_str()
+            data = IdeStateMachine(**json.loads(a))
             await Logger.logger.info(data)
             compiler_settings: CompilerSettings | None = data.compilerSettings
             if compiler_settings is None:
@@ -112,7 +113,7 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
+                    build_files = await Compiler.getBuildFiles(libraries, compiler, path, platform)
                     await Compiler.includeLibraryFiles(libraries, dirname, '.h', platform)
                     await Logger.logger.info(f'{libraries} included')
                 case 'arduino-cli':
@@ -123,10 +124,8 @@ class Handler:
                     sm = parser.parseStateMachine(data)
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    libraries = libraries.union(
-                        libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
-                    await Compiler.includeLibraryFiles(libraries, dirname, '.h', platform)
+                    build_files = await Compiler.getBuildFiles(libraries, compiler, path, platform)
+                    await Compiler.includeLibraryFiles(libraries.union(Compiler.c_default_libraries), dirname, '.h', platform)
                     await Compiler.includeLibraryFiles(libraries, dirname, '.ino', platform)
                     await Compiler.includeLibraryFiles(
                         Compiler.c_default_libraries,
@@ -168,7 +167,7 @@ class Handler:
                 response.source.append(await Handler.readSourceFile('sketch', extension, source_path))
                 response.source.append(await Handler.readSourceFile('sketch', 'h', source_path))
             await Logger.logger.info(response)
-            await ws.send_json(response)
+            await ws.send_json(response.model_dump())
         except KeyError as e:
             await Logger.logger.error(f'Invalid request, there isn\'t {e.args[0]} key.')
             await RequestError(f'Invalid request, there isn\'t {e.args[0]} key.').dropConnection(ws)

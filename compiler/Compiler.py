@@ -17,7 +17,7 @@ class CompilerResult:
 
 
 class Compiler:
-    c_default_libraries = set('qhsm')
+    c_default_libraries = set(['qhsm'])
 
     supported_compilers = {"gcc": {
         "extension": ["*\.c", "*\.cpp"],

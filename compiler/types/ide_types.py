@@ -1,6 +1,6 @@
 from typing import Literal, TypeAlias, Optional, List, Dict
 
-from pydantic import model_validator, field_validator
+from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
 Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
@@ -36,14 +36,14 @@ class Argument:
 class Trigger:
     component: str
     method: str
-    args: Optional[Dict[str, str]]
+    args: Optional[Dict[str, str]] = None
 
 
 @dataclass
 class Action:
     component: str
     method: str
-    args: Optional[Dict[str, Argument | str]]
+    args: Optional[Dict[str, Argument | str]] = None
 
 
 @dataclass
@@ -57,7 +57,7 @@ class State:
     name: str
     events: List[Event]
     bounds: Bounds
-    parent: Optional[str]
+    parent: Optional[str] = None
 
 
 @dataclass
@@ -70,7 +70,7 @@ class InitialState:
 class Variable:
     component: str
     method: str
-    args: Optional[Dict[str, str]]
+    args: Optional[Dict[str, str]] = None
 
 
 @dataclass
@@ -86,7 +86,7 @@ class Transition:
     target: str
     position: Point
     trigger: Trigger
-    do: Optional[List[Action]]
+    do: Optional[List[Action]] = None
     condition: Optional[Condition] = None
 
     @field_validator('color')
@@ -110,8 +110,7 @@ class CompilerSettings:
     compiler: Compiler
     flags: List[str]
 
-
-class IdeStateMachine:
+class IdeStateMachine(BaseModel):
     states: Dict[str, State]
     initialState: InitialState
     transitions: List[Transition]

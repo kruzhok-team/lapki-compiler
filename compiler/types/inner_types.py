@@ -2,6 +2,7 @@
 
 from typing import List, Literal, Dict, TypeAlias
 
+from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from ..fullgraphmlparser.stateclasses import ParserTrigger
@@ -19,8 +20,7 @@ class File:
     fileContent: str
 
 
-@dataclass
-class CompilerResponse:
+class CompilerResponse(BaseModel):
     result: str
     return_code: int
     stdout: str

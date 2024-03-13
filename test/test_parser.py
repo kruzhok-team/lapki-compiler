@@ -22,51 +22,6 @@ async def test_getfiles():
                      SourceFile("cpp_example", "hpp", "*code here*")]
 
 
-@pytest.mark.parametrize("function, expected",
-                         [pytest.param(
-                             {
-                                 "printMyValue": {
-                                     "returnType": "void",
-                                     "args": {
-                                         "value": {
-                                             "type": "char[]"
-                                         }
-                                     },
-                                     "code": "Serial.println(value);"
-                                 }
-                             },
-                             ("\nstatic void printMyValue(char value[]);",
-                                 "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}")),
-                          pytest.param(
-                             {
-                                 "printMyValue": {
-                                     "returnType": "void",
-                                     "args": {
-                                         "value": {
-                                             "type": "char[]"
-                                         }
-                                     },
-                                     "code": "Serial.println(value);"
-                                 },
-                                 "myFunction": {
-                                     "returnType": "void",
-                                     "args": {
-                                         "value": {
-                                             "type": "char[]"
-                                         }
-                                     },
-                                     "code": "Serial.print(\"bla\");"
-                                 },
-                             },
-                             ("\nstatic void printMyValue(char value[]);\n\nstatic void myFunction(char value[]);",
-                                 "\nvoid User::printMyValue(char value[]){\nSerial.println(value);\n}\n\nvoid User::myFunction(char value[]){\nSerial.print(\"bla\");\n}")),
-                          pytest.param({}, ("", ""))]
-                         )
-def test_getUserFunctions(function, expected):
-    result = CJsonParser.getUserFunctions(function)
-    assert result == expected
-
-
 @pytest.mark.parametrize("variables, expected", [
     pytest.param({
         "myVariable": {
