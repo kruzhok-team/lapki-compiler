@@ -80,7 +80,7 @@ class Handler:
                         await ws.close()
                     case 'arduino':
                         # Я не понимаю, у pyright какие-то проблемы
-                        # с асинхронными функциями
+                        # с моими асинхронными функциями
                         # type: ignore
                         await Handler.handle_ws_compile(request, ws)
                     case 'berlogaImport':

@@ -4,7 +4,7 @@ from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
 Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
-Compiler: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
+SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
 IncludeStr: TypeAlias = str  # include "blabla.h"
 
 
@@ -107,8 +107,9 @@ class Component:
 @dataclass
 class CompilerSettings:
     filename: str
-    compiler: Compiler
+    compiler: SupportedCompilers
     flags: List[str]
+
 
 class IdeStateMachine(BaseModel):
     states: Dict[str, State]
