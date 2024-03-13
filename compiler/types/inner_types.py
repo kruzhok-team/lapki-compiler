@@ -1,7 +1,8 @@
 """Module implements inner compiler's types."""
 
-from dataclasses import dataclass
-from typing import Literal, Dict, TypeAlias
+from typing import List, Literal, Dict, TypeAlias
+
+from pydantic.dataclasses import dataclass
 
 from ..fullgraphmlparser.stateclasses import ParserTrigger
 
@@ -9,6 +10,27 @@ DefaultComponents = Literal['System']
 DefaultActions = Literal['onEnter', 'onExit']
 
 EventName: TypeAlias = str
+
+
+@dataclass
+class File:
+    filename: str
+    extension: str
+    fileContent: str
+
+
+@dataclass
+class CompilerResponse:
+    result: str
+    return_code: int
+    stdout: str
+    stderr: str
+    binary: List[File]
+    source: List[File]
+
+    def __str__(self) -> str:
+        return (f'Response: {self.result}, {self.return_code},'
+                f'{self.stdout}, {self.stderr},{len(self.binary)}')
 
 
 @dataclass

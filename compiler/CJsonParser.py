@@ -158,7 +158,7 @@ class CJsonParser:
             )
         )
 
-    def _getLibraries(self, components: List[Component]) -> Set[str]:
+    def getLibraries(self, components: List[Component]) -> Set[str]:
         """Получить используемые типы компонентов."""
         libraries: Set[str] = set()
         for component in components:

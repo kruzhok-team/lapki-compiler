@@ -1,4 +1,5 @@
 import sys
+
 from aiopath import AsyncPath
 from aiologger.handlers.files import AsyncFileHandler
 from aiologger.loggers.json import JsonLogger

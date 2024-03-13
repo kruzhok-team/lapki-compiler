@@ -1,18 +1,21 @@
 import json
 import base64
-import time
 import aiohttp
-
-from typing import Optional
+import time
+from typing import Optional, Set
 from datetime import datetime
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 
+from compiler.types.ide_types import CompilerSettings
+from compiler.types.inner_types import CompilerResponse, File
+
 
 try:
+    from .fullgraphmlparser.stateclasses import StateMachine
     from .types.ws_types import Message
-    from .types.ide_types import IdeFormat
+    from .types.ide_types import IdeStateMachine
     from .GraphmlParser import GraphmlParser
     from .CJsonParser import CJsonParser
     from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
@@ -23,8 +26,9 @@ try:
     from .Logger import Logger
 
 except ImportError:
+    from .fullgraphmlparser.stateclasses import StateMachine
     from compiler.types.ws_types import Message
-    from compiler.types.ide_types import IdeFormat
+    from compiler.types.ide_types import IdeStateMachine
     from compiler.GraphmlParser import GraphmlParser
     from compiler.CJsonParser import CJsonParser
     from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
@@ -44,14 +48,14 @@ class Handler:
         pass
 
     @staticmethod
-    async def readSourceFile(filename: str, extension: str, path: str) -> dict[str, str]:
+    async def readSourceFile(filename: str, extension: str, path: str) -> File:
         async with async_open(f'{path}{filename}.{extension}', 'r') as f:
             data = await f.read()
-        return {
-            'filename': filename,
-            'extension': extension,
-            'fileContent': data
-        }
+        return File(
+            filename=filename,
+            extension=extension,
+            fileContent=data
+        )
 
     @staticmethod
     async def main(request: web.Request) -> web.WebSocketResponse:
@@ -61,7 +65,7 @@ class Handler:
         async for msg in ws:
             await Logger.logger.info(msg)
             if msg.type == aiohttp.WSMsgType.TEXT:
-                processed_msg: Message = msg.data
+                processed_msg = msg.data
                 match processed_msg:
                     case 'close':
                         await ws.close()
@@ -86,9 +90,9 @@ class Handler:
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
-            data: IdeFormat = IdeFormat(**await ws.receive_json())
+            data = IdeStateMachine(**await ws.receive_json())
             await Logger.logger.info(data)
-            compiler_settings = data.compilerSettings
+            compiler_settings: CompilerSettings | None = data.compilerSettings
             if compiler_settings is None:
                 raise Exception()
             compiler = compiler_settings.compiler
@@ -97,37 +101,32 @@ class Handler:
             dirname = dirname.replace(' ', '_')
             path = BUILD_DIRECTORY + dirname
             extension = Compiler.supported_compilers[compiler]['extension'][0]
+            parser = CJsonParser()
+            components = list(data.components.values())
+            libraries: Set[str] = parser.getLibraries(components)
             match compiler:
                 case 'g++' | 'gcc':
                     platform = 'cpp'
                     await AsyncPath(path).mkdir(parents=True)
-                    sm = await CJsonParser.parseStateMachine(data, ws,
-                                                             filename='sketch',
-                                                             compiler=compiler,
-                                                             path=path)
-                    await CppFileWriter(sm_name=filename, start_node=sm['startNode'],
-                                        start_action='', states=sm['states'],
-                                        notes=sm['notes'],
-                                        player_signal=sm['playerSignals']).write_to_file(path, extension)
-                    components = await CJsonParser.getComponents(data['components'])
-                    libraries = await CJsonParser.getLibraries(components)
-                    libraries = [*libraries, *Compiler.c_default_libraries]
+                    sm: StateMachine = parser.parseStateMachine(data)
+                    await CppFileWriter(sm).write_to_file(path, extension)
+                    libraries = libraries.union(
+                        libraries, Compiler.c_default_libraries)
                     build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
                     await Compiler.includeLibraryFiles(libraries, dirname, '.h', platform)
                     await Logger.logger.info(f'{libraries} included')
                 case 'arduino-cli':
                     platform = 'ino'
-                    dirname += filename + '/'
-                    path += filename + '/'
+                    dirname += 'sketch/'
+                    path += 'sketch/'
                     await AsyncPath(path).mkdir(parents=True)
-                    sm = await CJsonParser.parseStateMachine(data, ws, filename=filename, compiler=compiler, path=f'{path}{filename}.ino')
-                    await CppFileWriter(sm_name=filename, start_node=sm['startNode'], start_action='',
-                                        states=sm['states'], notes=sm['notes'], player_signal=sm['playerSignals']).write_to_file(path, 'ino')
+                    sm = parser.parseStateMachine(data)
+                    await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    components = await CJsonParser.getComponents(data['components'])
-                    libraries = await CJsonParser.getLibraries(components)
+                    libraries = libraries.union(
+                        libraries, Compiler.c_default_libraries)
                     build_files = await Compiler.getBuildFiles(libraries=libraries, compiler=compiler, directory=path, platform=platform)
-                    await Compiler.includeLibraryFiles([*libraries, *Compiler.c_default_libraries], dirname, '.h', platform)
+                    await Compiler.includeLibraryFiles(libraries, dirname, '.h', platform)
                     await Compiler.includeLibraryFiles(libraries, dirname, '.ino', platform)
                     await Compiler.includeLibraryFiles(
                         Compiler.c_default_libraries,
@@ -142,39 +141,37 @@ class Handler:
                     return ws
 
             result = await Compiler.compile(base_dir=path, build_files=build_files, flags=flags, compiler=compiler)
-            response = {
-                'result': 'NOTOK',
-                'return code': result.return_code,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'binary': [],
-                'source': []
-            }
+            response = CompilerResponse(
+                result='NOTOK',
+                return_code=result.return_code,
+                stdout=result.stdout,
+                stderr=result.stderr,
+                binary=[],
+                source=[]
+            )
 
             if result.return_code == 0:
-                response['result'] = 'OK'
+                response.result = 'OK'
                 build_path = ''.join([BUILD_DIRECTORY, dirname, 'build/'])
                 source_path = ''.join([BUILD_DIRECTORY, dirname])
                 async for path in AsyncPath(build_path).rglob('*'):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
-                            fileinfo = {}
-                            extensions = path.suffixes
-                            filename = path.name.split('.')[0]
-                            fileinfo['filename'] = filename
-                            fileinfo['extension'] = ''.join(extensions)
-                            b64_data = base64.b64encode(binary)
-                            fileinfo['fileContent'] = b64_data.decode('ascii')
-                            response['binary'].append(fileinfo)
+                            b64_data: bytes = base64.b64encode(binary)
+                            response.binary.append(File(
+                                filename=path.name.split('.')[0],
+                                extension=''.join(path.suffixes),
+                                fileContent=b64_data.decode('ascii'),
+                            ))
 
-                response['source'].append(await Handler.readSourceFile(filename, extension, source_path))
-                response['source'].append(await Handler.readSourceFile(filename, 'h', source_path))
-            await Logger.logger.info(f'Response: {response['result'], response['return code'], response['stdout'], response['stderr'], len(response['binary'])}')
+                response.source.append(await Handler.readSourceFile('sketch', extension, source_path))
+                response.source.append(await Handler.readSourceFile('sketch', 'h', source_path))
+            await Logger.logger.info(response)
             await ws.send_json(response)
         except KeyError as e:
-            await Logger.logger.error(f'Invalid request, there isn't '{e.args[0]}' key.')
-            await RequestError(f'Invalid request, there isn't '{e.args[0]}' key.').dropConnection(ws)
+            await Logger.logger.error(f'Invalid request, there isn\'t {e.args[0]} key.')
+            await RequestError(f'Invalid request, there isn\'t {e.args[0]} key.').dropConnection(ws)
             await ws.close()
             return ws
         except Exception as e:
@@ -185,7 +182,7 @@ class Handler:
         return ws
 
     @staticmethod
-    async def handle_ws_compile_source(request):
+    async def handle_ws_compile_source(request):  # type: ignore
         ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
         await ws.prepare(request)
         data = json.loads(await ws.receive_json())
@@ -194,21 +191,20 @@ class Handler:
             source = data['source']
             flags = data['compilerSettings']['flags']
             compiler = data['compilerSettings']['compiler']
-
         except KeyError as e:
-            await RequestError(f'Invalid request, there isn't key {e.args[0]}').dropConnection(ws)
+            await RequestError(f'Invalid request, there isn\'t key {e.args[0]}').dropConnection(ws)
         if compiler not in Compiler.supported_compilers:
             await Logger.logger.error(f'Unsupported compiler {compiler}.')
             await RequestError(f'Unsupported compiler {compiler}.\
                 Supported compilers: {Compiler.supported_compilers.keys()}').dropConnection(ws)
 
         dirname = BUILD_DIRECTORY + str(datetime.now()) + '/'
-
+        parser = CJsonParser()
         if compiler == 'arduino-cli':
             dirname += source[0]['filename'] + '/'
 
         await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files = await CJsonParser.getFiles(source)
+        files = parser.getFiles(source)
         for file in files:
             path = ''.join([dirname, file.name, file.extension])
             async with async_open(path, 'w') as f:
@@ -274,7 +270,7 @@ class Handler:
                 })
         except KeyError as e:
             await Logger.logException()
-            await RequestError(f'There isn't key {e.args[0]}').dropConnection(ws)
+            await RequestError(f'There isn\'t key {e.args[0]}').dropConnection(ws)
         except Exception as e:
             await Logger.logException()
             await RequestError('Something went wrong!').dropConnection(ws)
@@ -282,22 +278,24 @@ class Handler:
         return ws
 
     @staticmethod
-    async def handle_berloga_export(request, ws=None):
+    async def handle_berloga_export(request, ws: Optional[web.WebSocketResponse] = None):
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
-        schema = json.loads(await ws.receive_str())
+        data = IdeStateMachine(**await ws.receive_str())
         filename = await ws.receive_str()
-        await Logger.logger.info(schema)
+        await Logger.logger.info(data)
         try:
-            sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler='Berloga')
+
+            parser = CJsonParser()
+            sm = parser.parseStateMachine(data)
             states_with_id = {}
-            for state in sm['states']:
+            for state in sm.states:
                 states_with_id[state.name] = state
 
             converter = JsonConverter(ws)
 
-            xml = await converter.parse(states_with_id, schema['initialState'])
+            xml = await converter.parse(states_with_id, data.initialState)
 
             await ws.send_json(
                 {
@@ -308,7 +306,7 @@ class Handler:
             await Logger.logger.info('Converted!')
         except KeyError as e:
             await Logger.logException()
-            await RequestError(f'There isn't key {e.args[0]}').dropConnection(ws)
+            await RequestError(f'There isn\'t key {e.args[0]}').dropConnection(ws)
             return ws
         except Exception as e:
             await Logger.logException()

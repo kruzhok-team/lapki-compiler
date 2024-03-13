@@ -3,10 +3,10 @@ import xmltodict
 from copy import deepcopy
 
 try:
-    from compiler.fullgraphmlparser.stateclasses import State
+    from compiler.fullgraphmlparser.stateclasses import ParserState
     from compiler.Logger import Logger
 except ImportError:
-    from .fullgraphmlparser.stateclasses import State
+    from .fullgraphmlparser.stateclasses import ParserState
     from .Logger import Logger
 
 DEFAULT_TRANSITION_DATA = {
@@ -61,12 +61,12 @@ class JsonConverter:
         self.ws = ws
         self.transitions: list[dict] = []
 
-    async def getEvents(self, state: State) -> str:
+    async def getEvents(self, state: ParserState) -> str:
         """
             Функция формирует события в состоянии и действия при их наступлении.
             Также формирует список переходов self.transitions.
 
-            Вход: State
+            Вход: ParserState
             Пример возвращаемого значения:
                 entry/
                 ОружиеЦелевое.АтаковатьЦель();
@@ -97,7 +97,7 @@ class JsonConverter:
         events.append("\n".join(["exit/", state.exit]))
         return "".join(events)
 
-    async def _recursiveGetStates(self, state: State, graph: dict, parent: str = '') -> dict:
+    async def _recursiveGetStates(self, state: ParserState, graph: dict, parent: str = '') -> dict:
         xmlstate = {
             "@id": f"{state.id}",
             "data": [
@@ -175,7 +175,7 @@ class JsonConverter:
                             "y:Shape": {
                                 "@type": "roundrectangle"
                             },
-                            "y:State": {
+                            "y:ParserState": {
                                 "@closed": "false",
                                 "@closedHeight": "50.0",
                                 "@closedWidth": "50.0",
@@ -296,7 +296,7 @@ class JsonConverter:
 
         return xmlstate
 
-    async def getStates(self, states: list[State]) -> dict:
+    async def getStates(self, states: list[ParserState]) -> dict:
         graph = {
             "@edgedefault": "directed",
             "@id": "G",
@@ -366,7 +366,7 @@ class JsonConverter:
 
         return temp
 
-    async def parse(self, states: dict[str, State], initial_state) -> str:
+    async def parse(self, states: dict[str, ParserState], initial_state) -> str:
         try:
             self.states = states
             init_position = initial_state["position"]

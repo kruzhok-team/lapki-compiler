@@ -1,4 +1,5 @@
 import asyncio
+from typing import Set
 from aiopath import AsyncPath
 
 try:
@@ -16,41 +17,42 @@ class CompilerResult:
 
 
 class Compiler:
-    c_default_libraries = ["qhsm"]
-    
+    c_default_libraries = set('qhsm')
+
     supported_compilers = {"gcc": {
-                                "extension": ["*\.c", "*\.cpp"],
-                                "flags": ["-c", "-std=", "-Wall"]},
-                           "g++": {
-                                "extension": ["*.cpp", "*.c"],
-                                "flags": ["-c", "-std=", "-Wall"]},
-                           "arduino-cli": {"extension": ["ino"],
-                                           "flags": ["-b", "avr:arduino:uno"]
-                                           }}
-    
-    @staticmethod 
+        "extension": ["*\.c", "*\.cpp"],
+        "flags": ["-c", "-std=", "-Wall"]},
+        "g++": {
+        "extension": ["*.cpp", "*.c"],
+        "flags": ["-c", "-std=", "-Wall"]},
+        "arduino-cli": {"extension": ["ino"],
+                        "flags": ["-b", "avr:arduino:uno"]
+                        }}
+
+    @staticmethod
     def checkFlags(flags, compiler):
         # TODO
         pass
-    
+
     @staticmethod
     def _path(platform: str):
         return f"{LIBRARY_PATH}{platform}/"
-    
+
     @staticmethod
     async def getBuildFiles(libraries, compiler: str, directory: str, platform: str):
         build_files = []
         for glob in Compiler.supported_compilers[compiler]["extension"]:
             async for file in AsyncPath(directory).glob(glob):
                 build_files.append(file.name)
-        
+
         match compiler:
             case "gcc" | "g++":
                 for library in libraries:
-                    build_files.append(''.join(["../", Compiler._path(platform), "/build/", library, '.o']))
-        
+                    build_files.append(
+                        ''.join(["../", Compiler._path(platform), "/build/", library, '.o']))
+
         return build_files
-               
+
     @staticmethod
     async def compile(base_dir: str, build_files: list, flags: list, compiler: str) -> CompilerResult:
         match compiler:
@@ -69,6 +71,19 @@ class Compiler:
                               str(stderr.decode('utf-8')))
 
     @staticmethod
-    async def includeLibraryFiles(libraries : list[str], target_directory : str, extension: str, platform: str):
-        paths_to_libs = [''.join([f"{Compiler._path(platform)}source/", library, extension]) for library in libraries]
-        await asyncio.create_subprocess_exec("cp", *paths_to_libs, target_directory, cwd=BUILD_DIRECTORY)
+    async def includeLibraryFiles(
+            libraries: Set[str],
+            target_directory: str,
+            extension: str,
+            platform: str) -> None:
+        """Функция, которая копирует все необходимые файлы библиотек."""
+        paths_to_libs = [''.join(
+            [
+                f'{Compiler._path(platform)}source/',
+                library,
+                extension]
+        ) for library in libraries]
+        await asyncio.create_subprocess_exec('cp',
+                                             *paths_to_libs,
+                                             target_directory,
+                                             cwd=BUILD_DIRECTORY)
