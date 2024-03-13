@@ -15,17 +15,24 @@ class Signal(BaseModel):
 class Variable(BaseModel):
     img: str
     description: str
-    type: Optional[ParameterType]
+    type: Optional[ParameterType] = None
 
 
-class Parameter(BaseModel):
+class ClassParameter(BaseModel):
+    type: ParameterType
     description: str
-    type: ParameterType | List[str]
+
+
+class MethodParameter(BaseModel):
+    description: Optional[str] = None
+    name: str
+    type: Optional[ParameterType | List[str]] = None
 
 
 class Method(BaseModel):
     img: str
-    parameters: List[Parameter]
+    parameters: List[MethodParameter] = {}
+    description: str
 
 
 class Component(BaseModel):
@@ -34,15 +41,14 @@ class Component(BaseModel):
     signals: Dict[str, Signal]
     variables: Dict[str, Variable]
     methods: Dict[str, Method]
-    parameters: Dict[str, Parameter]
+    parameters: Dict[str, ClassParameter]
 
 
 class Platform(BaseModel):
     name: str
     components: Dict[str, Component]
-    parameters: Dict[str, Parameter]
-    variables: Dict[str, Variable]
-    singletone: bool
+    variables: Dict[str, Variable] = {}
+    singletone: bool = False
 
 
 class UnprocessedPlatform(BaseModel):
