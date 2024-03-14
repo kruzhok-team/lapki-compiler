@@ -3,6 +3,7 @@
 from enum import Enum
 from typing import Dict, Iterable, List, Set
 
+from compiler.types.ide_types import Bounds
 from compiler.types.inner_types import File
 
 
@@ -533,7 +534,14 @@ class CJsonParser:
                                    actions='', trigs=[],
                                    entry='', exit='',
                                    id='global', new_id=['global'],
-                                   parent=None, childs=[])
+                                   parent=None, childs=[],
+                                   bounds=Bounds(
+                                       x=0,
+                                       y=0,
+                                       height=0,
+                                       width=0
+                                   )
+                                   )
         states: Dict[str, State] = data.states
         proccesed_states: Dict[str, ParserState] = {}
         event_signals: Dict[EventName, EventSignal] = {}
@@ -552,17 +560,19 @@ class CJsonParser:
             on_exit = state_events.system_events['onExit']
             triggers: Dict[EventName,
                            ParserTrigger] = state_events.events
-            proccesed_states[state_id] = ParserState(name=state.name,
-                                                     type='state',
-                                                     actions='',
-                                                     trigs=list(
-                                                         triggers.values()),
-                                                     entry=on_enter,
-                                                     exit=on_exit,
-                                                     id=state_id,
-                                                     new_id=[state_id],
-                                                     parent=None,
-                                                     childs=[])
+            proccesed_states[state_id] = ParserState(
+                bounds=state.bounds,
+                name=state.name,
+                type='state',
+                actions='',
+                trigs=list(
+                    triggers.values()),
+                entry=on_enter,
+                exit=on_exit,
+                id=state_id,
+                new_id=[state_id],
+                parent=None,
+                childs=[])
         transitions, player_signals = self._getTransitions(
             data.transitions, compiler)
         player_signals: Dict[EventName,

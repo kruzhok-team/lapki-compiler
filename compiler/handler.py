@@ -82,6 +82,7 @@ class Handler:
                         # type: ignore
                         await Handler.handle_ws_compile(request, ws)
                     case 'berlogaImport':
+                        # type: ignore
                         await Handler.handle_berloga_import(request, ws)
                     case 'berlogaExport':
                         await Handler.handle_berloga_export(request, ws)

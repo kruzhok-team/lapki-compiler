@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import Field, BaseModel
 from pydantic.dataclasses import dataclass
 
+from compiler.types.ide_types import Bounds, IdeStateMachine
+
 
 class ParserNoteNodeContent(BaseModel):
     text: str = Field(serialization_alias='#text')
@@ -58,7 +60,6 @@ class ParserState:
             x, y: graphical coordinates
             height, width: height and with of node
     """
-
     name: str
     type: str
     actions: str
@@ -69,9 +70,9 @@ class ParserState:
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
+    bounds: Bounds
 
     def __str__(self) -> str:
-
         if self.parent is not None:
             return f"{self.name, self.parent.name, ', '.join([child.name for child in self.childs]) }"
         else:

@@ -1,78 +1,84 @@
-import xmltodict
-
+"""Convert Lapki IDE's internal scheme to yed-GraphMl."""
+from typing import Any, Dict, List
 from copy import deepcopy
 
+import xmltodict
+from aiohttp.web import WebSocketResponse
+
+
 try:
+    from compiler.types.ide_types import InitialState, Point
     from compiler.fullgraphmlparser.stateclasses import ParserState
     from compiler.Logger import Logger
 except ImportError:
+    from .types.ide_types import InitialState, Point
     from .fullgraphmlparser.stateclasses import ParserState
     from .Logger import Logger
 
 DEFAULT_TRANSITION_DATA = {
     '@key': 'd10',
     'y:PolyLineEdge': {
-            'y:Path': {
-                '@sx': '0',
-                '@sy': '0',
-                '@tx': '0',
-                '@ty': '0'
-            },
+        'y:Path': {
+            '@sx': '0',
+            '@sy': '0',
+            '@tx': '0',
+            '@ty': '0'
+        },
         'y:LineStyle': {
-                '@color': '#000000',
-                '@type': 'line',
-                '@width': '1.0'
+            '@color': '#000000',
+            '@type': 'line',
+            '@width': '1.0'
         },
         'y:Arrows': {
-                '@source': 'none',
-                '@target': 'standard'
+            '@source': 'none',
+            '@target': 'standard'
         },
         'y:EdgeLabel': {
-                '#text': '',
-                '@alignment': 'center',
-                '@backgroundColor': '#F5F5F5',
-                '@configuration': 'AutoFlippingLabel',
-                '@distance': '2.0',
-                '@fontFamily': 'Dialog',
-                '@fontSize': '12',
-                '@fontStyle': 'plain',
-                '@hasLineColor': 'false',
-                '@horizontalTextPosition': 'center',
-                '@iconTextGap': '4',
-                '@modelName': 'centered',
-                '@modelPosition': 'center',
-                '@preferredPlacement': 'center_on_edge',
-                '@ratio': '5.0',
-                '@textColor': '#000000',
-                '@verticalTextPosition': 'bottom',
-                '@visible': 'false',
-                '@xml:space': 'preserve',
+            '#text': '',
+            '@alignment': 'center',
+            '@backgroundColor': '#F5F5F5',
+            '@configuration': 'AutoFlippingLabel',
+            '@distance': '2.0',
+            '@fontFamily': 'Dialog',
+            '@fontSize': '12',
+            '@fontStyle': 'plain',
+            '@hasLineColor': 'false',
+            '@horizontalTextPosition': 'center',
+            '@iconTextGap': '4',
+            '@modelName': 'centered',
+            '@modelPosition': 'center',
+            '@preferredPlacement': 'center_on_edge',
+            '@ratio': '5.0',
+            '@textColor': '#000000',
+            '@verticalTextPosition': 'bottom',
+            '@visible': 'false',
+            '@xml:space': 'preserve',
         }
     }
 }
 
 
 class JsonConverter:
-    '''
-        Класс для экспорта в берлогу.
-    '''
+    """Класс для экспорта в берлогу."""
 
-    def __init__(self, ws) -> None:
+    def __init__(self, ws: WebSocketResponse) -> None:
         self.ws = ws
-        self.transitions: list[dict] = []
+        self.transitions: List[Dict[str, Any]] = []
 
-    async def getEvents(self, state: ParserState) -> str:
-        '''
-            Функция формирует события в состоянии и действия при их наступлении.
-            Также формирует список переходов self.transitions.
+    def _getEvents(self, state: ParserState) -> str:
+        """
+        Функция формирует события в состоянии и действия\
+            при их наступлении.
 
-            Вход: ParserState
-            Пример возвращаемого значения:
-                entry/
-                ОружиеЦелевое.АтаковатьЦель();
+        Также формирует список переходов self.transitions.
 
-                exit/
-        '''
+        Вход: ParserState
+        Пример возвращаемого значения:
+            entry/
+            ОружиеЦелевое.АтаковатьЦель();
+
+            exit/
+        """
         events: list[str] = []
         events.append('\n'.join(['entry/', state.entry]))
         for trig in state.trigs:
@@ -82,7 +88,7 @@ class JsonConverter:
 
                 events.append(event)
             else:
-                transition: dict = {
+                transition: Dict[str, Any] = {
                     '@source': trig.source,
                     '@target': trig.target,
                     'data': deepcopy(DEFAULT_TRANSITION_DATA)
@@ -92,13 +98,16 @@ class JsonConverter:
                         '#text'] = f'{trig.name}/{trig.action}\n'
                 else:
                     transition['data']['y:PolyLineEdge']['y:EdgeLabel'][
-                        '#text'] = f'{trig.name}/\n[{trig.guard}]\n{trig.action}'
+                        '#text'] = f'{trig.name}/\n\
+                            [{trig.guard}]\n{trig.action}'
                 self.transitions.append(transition)
         events.append('\n'.join(['exit/', state.exit]))
         return ''.join(events)
 
-    async def _recursiveGetStates(self, state: ParserState, graph: dict, parent: str = '') -> dict:
-        xmlstate = {
+    def _recursiveGetStates(self,
+                            state: ParserState,
+                            graph: Dict[str, Any]) -> Dict[str, Any]:
+        xmlstate: Dict[str, Any] = {
             '@id': f'{state.id}',
             'data': [
                 {
@@ -137,7 +146,7 @@ class JsonConverter:
                                     '@textColor': '#000000',
                                     '@verticalTextPosition': 'bottom',
                                     '@visible': 'true',
-                                    '@width': state.width,
+                                    '@width': state.bounds.width,
                                     '@x': '0',
                                     '@xml:space': 'preserve',
                                     '@y': '0',
@@ -159,18 +168,18 @@ class JsonConverter:
                                     '@textColor': '#000000',
                                     '@verticalTextPosition': 'bottom',
                                     '@visible': 'true',
-                                    '@width': state.width,
+                                    '@width': state.bounds.width,
                                     '@x': '0',
                                     '@xml:space': 'preserve',
                                     '@y': '0',
-                                    '#text': await self.getEvents(state)
+                                    '#text': self._getEvents(state)
                                 },
                             ],
                             'y:Geometry': {
-                                '@x': state.x,
-                                '@y': state.y,
-                                '@width': state.width,
-                                '@height': state.height
+                                '@x': state.bounds.x,
+                                '@y': state.bounds.y,
+                                '@width': state.bounds.width,
+                                '@height': state.bounds.height
                             },
                             'y:Shape': {
                                 '@type': 'roundrectangle'
@@ -213,19 +222,24 @@ class JsonConverter:
                     '@id': f':{state.id}'
                 }
 
-                xmlstate['graph']['node'] = []
+                xmlstate['graph']['node'] = []  # type: ignore
                 for child in state.childs:
-                    xmlstate['graph']['node'].append(await self._recursiveGetStates(child, xmlstate['graph'], parent=f'{state.id}::'))
+                    xmlstate['graph']['node'].append(
+                        self._recursiveGetStates(child, xmlstate['graph']))
             else:
                 for child in state.childs:
-                    graph['node'].append(await self._recursiveGetStates(child, graph))
+                    graph['node'].append(self._recursiveGetStates(
+                        child,
+                        graph
+                    )
+                    )
 
         else:
             node_type = 'y:GenericNode'
 
             if state.parent:
-                state.x += state.parent.x
-                state.y += state.parent.y
+                state.bounds.x += state.parent.bounds.x
+                state.bounds.y += state.parent.bounds.y
 
             xmlstate['data'][0][node_type] = {
                 'y:NodeLabel': [
@@ -233,7 +247,8 @@ class JsonConverter:
                         '@alignment': 'center',
                         '@autoSizePolicy': 'node_width',
                         '@backgroundColor': '#B7C9E3',
-                        '@configuration': 'com.yworks.entityRelationship.label.name',
+                        '@configuration': 'com.yworks.\
+                            entityRelationship.label.name',
                         '@fontFamily': 'Dialog',
                         '@fontSize': '15',
                         '@fontStyle': 'bold',
@@ -246,7 +261,7 @@ class JsonConverter:
                         '@textColor': '#000000',
                         '@verticalTextPosition': 'bottom',
                         '@visible': 'true',
-                        '@width': state.width,
+                        '@width': state.bounds.width,
                         '@x': '0',
                         '@xml:space': 'preserve',
                         '@y': '0',
@@ -256,12 +271,13 @@ class JsonConverter:
                         '@alignment': 'left',
                         '@autoSizePolicy': 'content',
                         '@backgroundColor': '#B7C9E3',
-                        '@configuration': 'com.yworks.entityRelationship.label.name',
+                        '@configuration': 'com.yworks.\
+                            entityRelationship.label.name',
                         '@fontFamily': 'Consolas',
                         '@fontSize': '15',
                         '@fontStyle': 'Plain',
                         '@hasLineColor': 'false',
-                        '@height': state.height,
+                        '@height': state.bounds.height,
                         '@horizontalTextPosition': 'center',
                         '@iconTextGap': '4',
                         '@modelName': 'custom',
@@ -269,18 +285,18 @@ class JsonConverter:
                         '@textColor': '#000000',
                         '@verticalTextPosition': 'bottom',
                         '@visible': 'true',
-                        '@width': state.width,
+                        '@width': state.bounds.width,
                         '@x': '0',
                         '@xml:space': 'preserve',
                         '@y': '0',
-                        '#text': await self.getEvents(state)
+                        '#text': self._getEvents(state)
                     },
                 ],
                 'y:Geometry': {
-                    '@x': state.x,
-                    '@y': state.y,
-                    '@width': state.width,
-                    '@height': state.height
+                    '@x': state.bounds.x,
+                    '@y': state.bounds.y,
+                    '@width': state.bounds.width,
+                    '@height': state.bounds.height
                 },
                 'y:Fill': {
                     '@color': '#E8EEF7',
@@ -296,8 +312,8 @@ class JsonConverter:
 
         return xmlstate
 
-    async def getStates(self, states: list[ParserState]) -> dict:
-        graph = {
+    def _getStates(self, states: List[ParserState]) -> Dict[str, Any]:
+        graph: Dict[str, Any] = {
             '@edgedefault': 'directed',
             '@id': 'G',
             'data': {
@@ -310,7 +326,8 @@ class JsonConverter:
                     'data': {
                         '@key': 'd6',
                         'y:GenericNode': {
-                            '@configuration': 'com.yworks.bpmn.Event.withShadow',
+                            '@configuration': ('com.yworks.bpmn.'
+                                               'Event.withShadow'),
                             'y:NodeLabel': {},
                             'y:Fill': {
                                 '@color': '#333333',
@@ -333,13 +350,14 @@ class JsonConverter:
                 }
             ]
         }
-        graph['node'].append(await self._recursiveGetStates(states[0], graph=graph))
-        # TODO: Придумать как исправить костыль для удаления глобального состояния
+        graph['node'].append(self._recursiveGetStates(
+            states[0],
+            graph=graph))
         graph['node'] = graph['node'][:-1]
 
         return graph
 
-    async def addInitialState(self, initial_state: str):
+    def _addInitialState(self, initial_state: str):
         self.transitions.append(
             {
                 '@source': '',
@@ -348,12 +366,16 @@ class JsonConverter:
             }
         )
 
-    def addNodePreferredToEdgeLabels(self, xml: str) -> str:
+    def _addNodePreferredToEdgeLabels(self, xml: str) -> str:
         unprocessed = xml
         label = '</y:EdgeLabel>'
         edge_label_pos = unprocessed.find(label)
         temp = ''
-        preffered = '\n<y:PreferredPlacementDescriptor angle='0.0' angleOffsetOnRightSide='0' angleReference='absolute' angleRotationOnRightSide='co' distance='-1.0' placement='center' side='on_edge' sideReference='relative_to_edge_flow' />\n'
+        preffered = '\n<y:PreferredPlacementDescriptor \
+            \ngle="0.0" angleOffsetOnRightSide="0"\
+            angleReference="absolute" angleRotationOnRightSide="co" \
+                distance="-1.0" placement="center" side="on_edge"\
+                    sideReference="relative_to_edge_flow" />\n'
         # last_position = -1
         while (edge_label_pos != -1):
             temp += unprocessed[:edge_label_pos] + preffered + \
@@ -366,22 +388,32 @@ class JsonConverter:
 
         return temp
 
-    async def parse(self, states: dict[str, ParserState], initial_state) -> str:
+    async def parse(
+        self,
+        states: Dict[str, ParserState],
+        initial_state: InitialState
+    ) -> str:
+        """Convert states to yed-Graphml."""
         try:
             self.states = states
-            init_position = initial_state['position']
-            init_pos_x = str(init_position['x']).replace('.', ',')
-            init_pos_y = str(init_position['y']).replace('.', ',')
-            data: dict = {
+            init_position: Point = initial_state.position
+            init_pos_x = str(init_position.x).replace('.', ',')
+            init_pos_y = str(init_position.y).replace('.', ',')
+            data: Dict[str, Any] = {
                 'graphml': {
                     '@xmlns': 'http://graphml.graphdrawing.org/xmlns',
-                    '@xmlns:java': 'http://www.yworks.com/xml/yfiles-common/1.0/java',
-                    '@xmlns:sys': 'http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0',
-                    '@xmlns:x': 'http://www.yworks.com/xml/yfiles-common/markup/2.0',
+                    '@xmlns:java': 'http://www.yworks.com/xml/\
+                        yfiles-common/1.0/java',
+                    '@xmlns:sys': 'http://www.yworks.com/xml/yfiles-common/\
+                        markup/primitives/2.0',
+                    '@xmlns:x': 'http://www.yworks.com/xml/\
+                        yfiles-common/markup/2.0',
                     '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
                     '@xmlns:y': 'http://www.yworks.com/xml/graphml',
                     '@xmlns:yed': 'http://www.yworks.com/xml/yed/3',
-                    '@yed:schemaLocation': 'http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd',
+                    '@yed:schemaLocation': 'http://graphml.graphdrawing.org/\
+                        xmlns http://www.yworks.com/xml/schema/graphml/1.1/\
+                            ygraphml.xsd',
                     '@entryPosition': f'{init_pos_x} {init_pos_y}',
                     'key': [
                         {
@@ -445,13 +477,13 @@ class JsonConverter:
                             '@yfiles.type': 'edgegraphics'
                         }
                     ],
-                    'graph': await self.getStates(list(states.values())),
+                    'graph': self._getStates(list(states.values())),
                 }
             }
 
-            await self.addInitialState(initial_state['target'])
+            self._addInitialState(initial_state.target)
             data['graphml']['graph']['edge'] = self.transitions
-            result = self.addNodePreferredToEdgeLabels(
+            result = self._addNodePreferredToEdgeLabels(
                 xmltodict.unparse(data, pretty=True))
 
             return result
