@@ -11,7 +11,6 @@ from aiofile import async_open
 from aiopath import AsyncPath
 
 try:
-    from .SourceFile import SourceFile
     from .Compiler import CompilerResult
     from .types.inner_types import CompilerResponse, File
     from .types.ide_types import CompilerSettings
@@ -26,7 +25,6 @@ try:
     from .config import BUILD_DIRECTORY, MAX_MSG_SIZE
     from .Logger import Logger
 except ImportError:
-    from compiler.SourceFile import SourceFile
     from compiler.Compiler import CompilerResult
     from compiler.types.inner_types import CompilerResponse, File
     from compiler.types.ide_types import CompilerSettings
@@ -268,11 +266,11 @@ class Handler:
             dirname += source[0]['filename'] + '/'
 
         await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[SourceFile] = parser.getFiles(source)
+        files: List[File] = parser.getFiles(source)
         for file in files:
-            path = ''.join([dirname, file.name, file.extension])
+            path = ''.join([dirname, file.filename, file.extension])
             async with async_open(path, 'w') as f:
-                await f.write(file.content)
+                await f.write(file.fileContent)
         if compiler in ['g++', 'gcc']:
             platform = 'cpp'
         else:

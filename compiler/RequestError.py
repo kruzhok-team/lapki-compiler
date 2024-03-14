@@ -1,21 +1,26 @@
+"""Module implements sending errors."""
+
 from aiohttp import web
+from compiler.types.inner_types import CompilerResponse
 
 
 class RequestError:
+    """Error during processing response."""
 
-    def __init__(self, _error):
-        self.error = _error
+    def __init__(self, _error: str):
+        self.error: str = _error
 
-    async def dropConnection(self, ws: web.WebSocketResponse):
+    async def dropConnection(self, ws: web.WebSocketResponse) -> None:
+        """Drop connection and send error."""
         if (not ws.closed):
             await ws.send_json(
-                {
-                    "result": self.error,
-                    "return code": '',
-                    "stdout": '',
-                    "stderr": '',
-                    "binary": [],
-                    "source": []
-                }
+                CompilerResponse(
+                    result=self.error,
+                    return_code=-2,
+                    stdout='',
+                    stderr='',
+                    binary=[],
+                    source=[]
+                ).model_dump()
             )
             await ws.close()

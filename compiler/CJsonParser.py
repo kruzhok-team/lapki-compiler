@@ -3,9 +3,10 @@
 from enum import Enum
 from typing import Dict, Iterable, List, Set
 
+from compiler.types.inner_types import File
+
 
 try:
-    from .SourceFile import SourceFile
     from .fullgraphmlparser.stateclasses import (
         ParserTrigger,
         StateMachine,
@@ -39,7 +40,6 @@ except ImportError:
         EventSignal,
         Events
     )
-    from compiler.SourceFile import SourceFile
     from compiler.fullgraphmlparser.stateclasses import (
         ParserTrigger,
         StateMachine,
@@ -592,7 +592,7 @@ class CJsonParser:
         files = []
 
         for data in json_data:
-            files.append(SourceFile(
+            files.append(File(
                 data['filename'], data['extension'], data['fileContent']))
 
         return files
