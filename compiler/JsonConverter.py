@@ -1,4 +1,4 @@
-"""Convert Lapki IDE's internal scheme to yed-GraphMl."""
+"""Legacy module implements Lapki IDE's internal scheme to yed-GraphMl."""
 from typing import Any, Dict, List
 from copy import deepcopy
 
