@@ -140,7 +140,6 @@ class CJsonParser:
         Returns:
             str: специфичная для данного компонента проверка сигнала
         """
-        print(component_type)
         match component_type:
             case 'Timer':
                 return f'\n\t{component_name}.timeout();'
@@ -215,7 +214,6 @@ class CJsonParser:
 
         for component_name in components:
             component: Component = components[component_name]
-            print(component)
             components_types[component_name] = component.type
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
@@ -333,7 +331,6 @@ class CJsonParser:
         result: List[str] = []
         for action in actions:
             component = action.component
-            print(component)
             if component == 'QHsmSerial':
                 method = '::' + action.method
             else:
@@ -421,7 +418,6 @@ class CJsonParser:
             method = trigger.method
             actions = ''
             for i in range(len(event.do)):
-                print(component)
                 if event.do[i].component != 'QHsmSerial':
                     actions += event.do[i].component + \
                         '.' + event.do[i].method + '('
@@ -548,7 +544,6 @@ class CJsonParser:
                                        width=0
                                    )
                                    )
-        print(data.components)
         states: Dict[str, State] = data.states
         proccesed_states: Dict[str, ParserState] = {}
         event_signals: Dict[EventName, EventSignal] = {}

@@ -3,7 +3,9 @@ from typing import Literal, TypeAlias, Optional, List, Dict
 from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
-Platform: TypeAlias = Literal['BearlogaDefend', 'ArduinoUno']
+# Platform: TypeAlias = Literal['BearlogaDefend',
+#                               'ArduinoUno',
+#                               'BearlogaDefend-Autoborder']
 SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
 IncludeStr: TypeAlias = str  # include "blabla.h"
 
@@ -117,7 +119,7 @@ class IdeStateMachine(BaseModel):
     transitions: List[Transition]
     components: Dict[str, Component]
     compilerSettings: Optional[CompilerSettings] = None
-    platform: Platform
+    platform: str
     parameters: Dict[str, str]
 
     @model_validator(mode='after')

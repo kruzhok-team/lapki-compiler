@@ -1,7 +1,8 @@
 # type: ignore
 """Module implements parsing yed-Graphml."""
 import random
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeAlias, Literal
+from collections import defaultdict
 
 import xmltodict
 
@@ -84,7 +85,6 @@ class GraphmlParser:
         return '#%02X%02X%02X' % (r(), r(), r())
 
     @staticmethod
-
     def addStateToDict(state: dict, states_dict: dict, parent: str | None) -> None:
         if 'y:GenericNode' in state["data"]:
             node_type = 'y:GenericNode'
@@ -231,8 +231,10 @@ class GraphmlParser:
     def calculateEdgePosition(count_actions: int, count_condtions: int, source_position: dict, target_position: dict, used_coordinates: defaultdict[tuple[float, float], Point]) -> dict[str, int]:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
-        nx: int = (x1 * 1.25 + x2) // 2 + (100 * (1 + count_condtions + count_actions))
-        ny: int = (y1 + y2) // 2 + (100 * (1 + count_condtions + count_actions))
+        nx: int = (x1 * 1.25 + x2) // 2 + \
+            (100 * (1 + count_condtions + count_actions))
+        ny: int = (y1 + y2) // 2 + \
+            (100 * (1 + count_condtions + count_actions))
         for coord in list(used_coordinates.keys()):
             if ny < coord[1] + TRANSTIONS_DISTANCE and ny > coord[1] - TRANSTIONS_DISTANCE:
                 if nx < coord[0] + TRANSTIONS_DISTANCE and nx > coord[1] - TRANSTIONS_DISTANCE:
@@ -324,8 +326,10 @@ class GraphmlParser:
                     "method": method
                 }
                 transition["condition"] = GraphmlParser.getCondition(condition)
-                source_geometry = statesDict[trigger["@source"]]["new_geometry"]
-                target_geometry = statesDict[trigger["@target"]]["new_geometry"]
+                source_geometry = statesDict[trigger["@source"]
+                                             ]["new_geometry"]
+                target_geometry = statesDict[trigger["@target"]
+                                             ]["new_geometry"]
                 transition["position"] = GraphmlParser.calculateEdgePosition(len(actions), 1 if condition else 0,
                                                                              source_geometry, target_geometry, used_coordinates)
                 transition["do"] = actions
@@ -380,7 +384,8 @@ class GraphmlParser:
             id = state["@id"]
             node_type = states_dict[state["@id"]]["type"]
             new_state["name"] = states_dict[state["@id"]]["name"]
-            new_state["events"] = GraphmlParser.getEvents(state, node_type, platform)
+            new_state["events"] = GraphmlParser.getEvents(
+                state, node_type, platform)
             geometry = GraphmlParser.getGeometry(state["@id"], states_dict)
             new_state["bounds"] = geometry
             parent = GraphmlParser.getParentName(state, states_dict)
@@ -413,7 +418,8 @@ class GraphmlParser:
             components = GraphmlParser.getComponents(platform)
             flattenStates, states_dict = GraphmlParser.getFlattenStates(
                 nodes, states=[], states_dict={})
-            states = GraphmlParser.createStates(flattenStates, states_dict, platform)
+            states = GraphmlParser.createStates(
+                flattenStates, states_dict, platform)
             transitions, initial_state = GraphmlParser.getTransitions(
                 triggers, states_dict, platform)
             obj_initial_state = states[initial_state]
