@@ -279,7 +279,7 @@ class GraphmlParser:
         return result
 
     @staticmethod
-    async def getTransitions(triggers: list[dict], statesDict: dict, platform: str) -> tuple[list, str]:
+    def getTransitions(triggers: list[dict], statesDict: dict, platform: str) -> tuple[list, str]:
         transitions = []
         initial_state = ""
         used_coordinates: defaultdict[tuple[float, float],
