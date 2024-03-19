@@ -32,7 +32,7 @@ class PlatformManager:
         print(f'Поиск схем в папке "{path_to_schemas_dir}"...')
         async for path in AsyncPath(path_to_schemas_dir).glob('*json'):
             try:
-                async with async_open(path, 'r') as f:
+                async with async_open(file_specifier=path, mode='r') as f:
                     unprocessed_platform_data = await f.read()
                 platform_data = UnprocessedPlatform(
                     **json.loads(unprocessed_platform_data))

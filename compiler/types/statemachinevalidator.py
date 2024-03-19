@@ -1,20 +1,32 @@
-from typing import Dict, List
+"""Module implements validation Lapki IDE's scheme."""
+from typing import Dict
 
 try:
-    from .ide_types import IdeStateMachine, Event, Component, Argument
+    from .ide_types import (
+        IdeStateMachine,
+        Component,
+        Argument
+    )
     from .platform_types import Platform
 except ImportError:
-    from compiler.types.ide_types import IdeStateMachine, Event, Component, Argument
+    from compiler.types.ide_types import (
+        IdeStateMachine,
+        Component,
+        Argument
+    )
     from compiler.types.platform_types import Platform
 
 
 class StateMachineValidatorException(Exception):
+    """Validation error."""
+
     ...
 
 
 class StateMachineValidator:
     """
-    Класс для валидации схемы формата Lapki IDE
+    Класс для валидации схемы формата Lapki IDE.
+
     TODO:
     - Проверка аргументов методов
     - Проверка параметров компонентов
@@ -37,8 +49,12 @@ class StateMachineValidator:
                         self.data.states[transition.target]):
                     ...
             except KeyError:
-                raise StateMachineValidatorException(f'Transition validate error!\
-                                                     Unknown source {transition.source}!')
+                raise StateMachineValidatorException(
+                    'Transition validate error!'
+                    f'Unknown source {transition.source}!'
+                )
+
+        return True
 
     def _validateComponents(self, components: Dict[str, Component]) -> bool:
         """Функция проверяет соответствие компонентов указанной платформе."""
@@ -51,15 +67,26 @@ class StateMachineValidator:
                 for parameter_id in component.parameters:
                     if parameter_id in parameters:
                         continue
-                    raise StateMachineValidatorException(f'Component({component_id}):\
-                        unknown parameter {parameter_id} in platform {self.platform.name}')
-            raise StateMachineValidatorException(f'Component({component_id}):\
-                unknown component {component.type} in platform {self.platform.name}')
+                    raise StateMachineValidatorException(
+                        f'Component({component_id}):'
+                        f'unknown parameter {parameter_id}'
+                        f'in platform {self.platform.name}'
+                    )
+            raise StateMachineValidatorException(
+                f'Component({component_id}):'
+                f'unknown component {component.type}'
+                f'in platform {self.platform.name}'
+            )
 
         return True
 
-    def _validateArgs(self, component: Component, method: str, args: Dict[str, Argument | str]) -> bool:
+    def _validateArgs(
+            self,
+            component: Component,
+            method: str,
+            args: Dict[str, Argument | str]) -> bool:
         ...
 
     def validate(self) -> bool:
+        """Validate scheme."""
         return self._validateComponents(self.data.components)

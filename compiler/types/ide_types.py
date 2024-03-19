@@ -76,7 +76,7 @@ class Variable:
 @dataclass
 class Condition:
     type: str
-    value: Variable | List['Condition']
+    value: Variable | List['Condition'] | str
 
 
 @dataclass
@@ -92,7 +92,7 @@ class Transition:
     @field_validator('color')
     @classmethod
     def _isColor(cls, v: str) -> str:
-        if not v.startswith('#') or len(v) != 6:
+        if not v.startswith('#') or len(v) != 7:
             raise IDESchemaValidationError(f'{v} - не является цветом!')
 
         return v

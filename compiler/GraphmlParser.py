@@ -1,4 +1,5 @@
 # type: ignore
+"""Module implements parsing yed-Graphml."""
 import random
 from typing import Any, Dict, List
 
@@ -238,10 +239,10 @@ class GraphmlParser:
         x1, y1, w1, h1 = list(source_position.values())
         x2, y2, w2, h2 = list(target_position.values())
 
-        c1_x = x1 + (w1 // 2)
-        c1_y = y1 + (h1 // 2)
-        c2_x = x2 + (w2 // 2)
-        c2_y = y2 + (h2 // 2)
+        # c1_x = x1 + (w1 // 2)
+        # c1_y = y1 + (h1 // 2)
+        # c2_x = x2 + (w2 // 2)
+        # c2_y = y2 + (h2 // 2)
 
         nx = (x1 + x2) // 2
 
@@ -384,7 +385,7 @@ class GraphmlParser:
                 new_state['name'] = states_dict[state['@id']]['name']
                 new_state['events'] = GraphmlParser.getEvents(
                     state, node_type, platform)
-                geometry = GraphmlParser.gefrom .types.platform_types import Method, MethodParametertGeometry(state['@id'], states_dict)
+                geometry = GraphmlParser.getGeometry(state['@id'], states_dict)
                 # states_dict[state['@id']]['geometry'] = geometry
                 new_state['bounds'] = geometry
                 parent = GraphmlParser.getParentName(state, states_dict)
@@ -400,11 +401,9 @@ class GraphmlParser:
     @staticmethod
     def getComponents(platform: str) -> dict:
         result = {}
-        components = PlatformManager.getPlatform(platform)
-        if components is not None:
-            components = components['components']
-
-            for component in components:
+        platform_pbject = PlatformManager.getPlatform(platform)
+        if platform_pbject is not None:
+            for component in platform_pbject.components:
                 result[component] = {}
                 result[component]['type'] = component
                 result[component]['parameters'] = {}
@@ -422,7 +421,7 @@ class GraphmlParser:
             components = GraphmlParser.getComponents(platform)
             flattenStates, states_dict = GraphmlParser.getFlattenStates(
                 nodes, states=[], states_dict={})
-            states = GraphmlParser.createStates(
+            states = await GraphmlParser.createStates(
                 flattenStates, states_dict, platform)
             transitions, initial_state = GraphmlParser.getTransitions(
                 triggers, states_dict, platform)

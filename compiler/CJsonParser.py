@@ -87,7 +87,7 @@ class CJsonParser:
     """Class for parsing Lapki IDE's internal JSON scheme."""
 
     delimeter = {
-        'Berloga': '',
+        'Bearloga': '',
         'arduino-cli': ';',
         'gcc': ';',
         'g++': ';'
@@ -109,7 +109,7 @@ class CJsonParser:
             возвращает код его инициализации в h-файле."""
         match component.type:
             case 'Timer':
-                return (f'\n{type} {component_name} = {type}'
+                return (f'\nTimer {component_name} = Timer'
                         f'(the_sketch,{component_name}_timeout_SIG);')
             case 'QHsmSerial':
                 return ''
@@ -140,6 +140,7 @@ class CJsonParser:
         Returns:
             str: специфичная для данного компонента проверка сигнала
         """
+        print(component_type)
         match component_type:
             case 'Timer':
                 return f'\n\t{component_name}.timeout();'
@@ -214,6 +215,7 @@ class CJsonParser:
 
         for component_name in components:
             component: Component = components[component_name]
+            print(component)
             components_types[component_name] = component.type
             if component.type not in types:
                 includes.append(f'\n#include "{component.type}.h"')
@@ -234,10 +236,12 @@ class CJsonParser:
         for eventName in list(triggers.keys()):
             component_name = triggers[eventName].component_name
             component_type = components_types[component_name]
-            check = self._specificCheckComponentSignal(component_name,
-                                                       component_type,
-                                                       triggers[eventName],
-                                                       eventName)
+            check = self._specificCheckComponentSignal(
+                component_type,
+                component_name,
+                triggers[eventName],
+                eventName
+            )
             check_signals.append(check)
 
         match compiler:
@@ -295,7 +299,7 @@ class CJsonParser:
         """Рекурсивная функция для генерации условий события."""
         if condition.type in list(CJsonParser.operatorAlias.keys()):
             values: List[str] = []
-            if isinstance(condition.value, Iterable):
+            if isinstance(condition.value, list):
                 for value in condition.value:
                     values.append(self._getCondition(value, compiler=compiler))
             return f' { CJsonParser.operatorAlias[condition.type] } '.join(
@@ -329,6 +333,7 @@ class CJsonParser:
         result: List[str] = []
         for action in actions:
             component = action.component
+            print(component)
             if component == 'QHsmSerial':
                 method = '::' + action.method
             else:
@@ -416,7 +421,8 @@ class CJsonParser:
             method = trigger.method
             actions = ''
             for i in range(len(event.do)):
-                if component != 'QHSMSerial':
+                print(component)
+                if event.do[i].component != 'QHsmSerial':
                     actions += event.do[i].component + \
                         '.' + event.do[i].method + '('
                 else:
@@ -542,6 +548,7 @@ class CJsonParser:
                                        width=0
                                    )
                                    )
+        print(data.components)
         states: Dict[str, State] = data.states
         proccesed_states: Dict[str, ParserState] = {}
         event_signals: Dict[EventName, EventSignal] = {}

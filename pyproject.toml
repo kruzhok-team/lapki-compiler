@@ -32,6 +32,7 @@ flake8-pyproject = "^1.2.3"
 import-order-style="pep8"
 inline-quotes = "single"
 ignore=["D107", "W504"]
+exclude="**/fullgraphmlparser/**"
 
 [build-system]
 requires = ["poetry-core"]

@@ -337,7 +337,8 @@ class Handler:
         try:
             response = await GraphmlParser.parse(
                 unprocessed_xml,
-                f'BearlogaDefend-{subplatform}')
+                f'BearlogaDefend-{subplatform}'
+            )
             await Logger.logger.info('Converted!')
             await ws.send_json(
                 {

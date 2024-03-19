@@ -31,7 +31,7 @@ class MethodParameter(BaseModel):
 
 class Method(BaseModel):
     img: str
-    parameters: List[MethodParameter] = {}
+    parameters: List[MethodParameter] = []
     description: str
 
 
