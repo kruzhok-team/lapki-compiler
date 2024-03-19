@@ -278,7 +278,8 @@ class Handler:
         schema = json.loads(await ws.receive_str())
         filename = await ws.receive_str()
         await Logger.logger.info(schema)
-        schema['transitions'] = list(schema['transitions'].values())
+        if not isinstance(schema['transitions'], list):
+            schema['transitions'] = list(schema['transitions'].values())
         try:
             sm = await CJsonParser.parseStateMachine(schema, ws=ws, compiler="Berloga")
             states_with_id = {}
