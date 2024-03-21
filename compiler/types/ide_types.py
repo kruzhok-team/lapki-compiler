@@ -120,7 +120,7 @@ class IdeStateMachine(BaseModel):
     components: Dict[str, Component]
     compilerSettings: Optional[CompilerSettings] = None
     platform: str
-    parameters: Dict[str, str]
+    parameters: Optional[Dict[str, str]] = None
 
     @model_validator(mode='after')
     def is_compiler_settings_required(self):

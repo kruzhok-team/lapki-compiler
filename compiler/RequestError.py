@@ -8,7 +8,7 @@ class RequestError:
     """Error during processing response."""
 
     def __init__(self, _error: str):
-        self.error: str = _error
+        self.error = _error
 
     async def dropConnection(self, ws: web.WebSocketResponse) -> None:
         """Drop connection and send error."""

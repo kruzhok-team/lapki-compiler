@@ -21,6 +21,7 @@ class File:
 
 
 class CompilerResponse(BaseModel):
+    """Data, that compiler send."""
     result: str
     return_code: int
     stdout: str

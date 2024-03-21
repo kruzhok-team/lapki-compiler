@@ -6,7 +6,6 @@ from typing import List
 
 import aiohttp
 from aiofile import async_open
-from compiler.types.inner_types import CompilerResponse
 
 
 class Client:

@@ -1,5 +1,6 @@
 import json
 from time import gmtime, strftime
+import random
 import base64
 from pathlib import Path
 import subprocess
@@ -12,6 +13,13 @@ from compiler.config import SERVER_PORT
 pytest_plugins = ('pytest_asyncio',)
 
 BASE_ADDR = f'http://localhost:{SERVER_PORT}/ws'
+
+
+def getPath():
+    return ('client/' +
+            strftime('%Y-%m-%d %H:%M:%S', gmtime()) +
+            str(random.randint(0, 10000))
+            )
 
 
 @pytest.mark.asyncio
@@ -81,7 +89,8 @@ async def test_berlogaImport():
     # response = await client.importBerlogaScheme('compiler/schemas/Autoborder_with_actions.graphml')
     response = await client.importBerlogaScheme('examples/bearlogaSchemas/Autoborder_638330223036439120.graphml', 'Autoborder_12314124')
     print(response)
-    path = 'client/' + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+    path = 'client/' + strftime('%Y-%m-%d %H:%M:%S',
+                                gmtime()) + str(random.randint(0, 10000)) + '/'
     Path(path).mkdir(parents=True)
     async with async_open(path + 'berlogaScheme.json', 'w') as f:
         await f.write(json.dumps(response['source'][0]['fileContent'], indent=4, ensure_ascii=False))
@@ -96,7 +105,8 @@ async def test_berlogaExport():
     client = Client()
     await client.doConnect(f'{BASE_ADDR}/berloga/export')
     response = await client.exportBerlogaScheme('compiler/schemas/berlogaScheme.json')
-    path = 'client/' + strftime('%Y-%m-%d %H:%M:%S', gmtime()) + '/'
+    path = 'client/' + strftime('%Y-%m-%d %H:%M:%S',
+                                gmtime()) + str(random.randint(0, 10000)) + '/'
     Path(path).mkdir(parents=True)
     async with async_open(path + 'berlogaScheme.graphml', 'w') as f:
         await f.write(response)
@@ -112,9 +122,9 @@ async def test_sendSchemaWithId():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/schemaWithId(actual).json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -141,8 +151,9 @@ async def test_timerSchema():
     response = await client.sendSMJson('examples/testTimer.json')
     print(response)
     dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     for binary in response['binary']:
@@ -162,9 +173,9 @@ async def test_counterSchema():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testCounter.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -190,9 +201,9 @@ async def test_Serial():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testSerial.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -219,8 +230,9 @@ async def test_Serial2():
     response = await client.sendSMJson('examples/testSerial2.json')
     print(response)
     dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -246,9 +258,9 @@ async def test_PWM():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testPWM.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -274,9 +286,9 @@ async def test_digitalOut():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testDigitalOut.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -302,9 +314,9 @@ async def test_digitalIn():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testDigitalIn.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -330,9 +342,9 @@ async def test_blinker():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/arduino-blinker.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -358,9 +370,9 @@ async def test_analogOut():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testAnalogOut.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -386,9 +398,9 @@ async def test_analogIn():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testAnalogIn.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -414,9 +426,9 @@ async def test_ShiftOut():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testShiftOut.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0
@@ -442,9 +454,9 @@ async def test_User():
     await client.doConnect(BASE_ADDR)
     response = await client.sendSMJson('examples/testUser.json')
     print(response)
-    dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-    build_path = 'client/' + dirname + '/build/'
-    source_path = 'client/' + dirname + '/source/'
+    path = getPath()
+    build_path = path + '/build/'
+    source_path = path + '/source/'
     Path(build_path).mkdir(parents=True)
     Path(source_path).mkdir(parents=True)
     count_binary = 0

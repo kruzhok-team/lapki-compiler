@@ -33,8 +33,8 @@
             }
          ],
          "bounds": {
-            "x": 255,
-            "y": 290,
+            "x": -763,
+            "y": -534,
             "width": 411,
             "height": 304
          }
@@ -75,8 +75,8 @@
             }
          ],
          "bounds": {
-            "x": 253,
-            "y": -179,
+            "x": -765,
+            "y": -65,
             "width": 588,
             "height": 304
          }
@@ -85,8 +85,8 @@
    "initialState": {
       "target": "n0",
       "position": {
-         "x": 155,
-         "y": 190
+         "x": -863,
+         "y": -634
       }
    },
    "transitions": [
@@ -99,11 +99,11 @@
          },
          "condition": null,
          "position": {
-            "x": -764,
-            "y": 299
+            "x": -760.0,
+            "y": -200
          },
          "do": [],
-         "color": "#A24495"
+         "color": "#7EAAC7"
       },
       {
          "source": "n1",
@@ -114,11 +114,11 @@
          },
          "condition": null,
          "position": {
-            "x": -614,
-            "y": 449
+            "x": -760.0,
+            "y": -235
          },
          "do": [],
-         "color": "#D59CAB"
+         "color": "#2150C8"
       },
       {
          "source": "n1",
@@ -129,11 +129,11 @@
          },
          "condition": null,
          "position": {
-            "x": -614,
-            "y": 449
+            "x": -760.0,
+            "y": -265
          },
          "do": [],
-         "color": "#764315"
+         "color": "#D1D330"
       }
    ],
    "components": {

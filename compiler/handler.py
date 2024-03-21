@@ -9,6 +9,7 @@ import aiohttp
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
+from pydantic import ValidationError
 
 try:
     from .Compiler import CompilerResult
@@ -224,12 +225,15 @@ class Handler:
             await RequestError('Invalid request, there isnt'
                                f'{e.args[0]} key.').dropConnection(ws)
             await ws.close()
-            return ws
+        except ValidationError as e:
+            await Logger.logger.info(e.errors())
+            await RequestError(
+                f'Validation error: {e.errors()}'
+            ).dropConnection(ws)
         except Exception:
             await Logger.logException()
             await RequestError('Something went wrong').dropConnection(ws)
             await ws.close()
-            return ws
         return ws
 
     @staticmethod

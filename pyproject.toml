@@ -32,7 +32,36 @@ flake8-pyproject = "^1.2.3"
 import-order-style="pep8"
 inline-quotes = "single"
 ignore=["D107", "W504"]
-exclude="**/fullgraphmlparser/**"
+include = ["compiler"]
+exclude=[
+    "**/__pycache__",
+    ".mypy_cache",
+    "**/fullgraphmlparser",
+    "**/library",
+    "**/schemas",
+    "**/examples",
+    "**/types"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+
+[tool.pyright]
+include = ["compiler"]
+exclude = [
+    "**/__pycache__",
+    ".mypy_cache",
+    "**/fullgraphmlparser",
+    "**/library",
+    "**schemas",
+]
+reportMissingImports = "error"
+typeCheckingMode = "standard"
+reportUntypedFunctionDecorator = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+pythonVersion = "3.10"
+pythonPlatform = "Linux"
 
 [build-system]
 requires = ["poetry-core"]
