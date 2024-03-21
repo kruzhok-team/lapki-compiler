@@ -3,7 +3,7 @@ from time import gmtime, strftime
 import random
 import base64
 from pathlib import Path
-import subprocess
+import asyncio
 
 import pytest
 from compiler.Client import Client
@@ -106,6 +106,7 @@ async def test_berlogaExport():
     await client.ws.close()
 
     assert response is not None and response != ''
+
 
 @pytest.mark.asyncio
 async def test_timerSchema():
