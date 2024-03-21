@@ -1,5 +1,4 @@
 from typing import Literal, TypeAlias, Optional, List, Dict
-
 from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
@@ -104,6 +103,17 @@ class Transition:
 class Component:
     type: str
     parameters: Dict[str, str]
+
+    @field_validator('parameters')
+    @classmethod
+    def _deleteIdeParameters(cls, v: Dict[str, str]) -> Dict[str, str]:
+        ideParameters = ['label', 'color']
+        parameters = list(v.keys())
+        for ideParameter in ideParameters:
+            if ideParameter in parameters:
+                del v[ideParameter]
+
+        return v
 
 
 @dataclass
