@@ -23,4 +23,4 @@ jobs:
     - name: Running flake8
       run: |
         source ./.venv/bin/activate
-        flake8 cyberiadaml_py tests
+        flake8 ./compiler/
