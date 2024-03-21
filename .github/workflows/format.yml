@@ -1,4 +1,4 @@
-name: format
+name: flake8
 
 on: [push, pull_request]
 
@@ -17,8 +17,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install flake8
+        pip install poetry
+        python -m venv .venv
+        poetry install
     - name: Running flake8
       run: |
-        flake8 compiler test
+        source ./.venv/bin/activate
+        flake8 cyberiadaml_py tests
