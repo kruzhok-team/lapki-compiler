@@ -46,7 +46,13 @@
       }
     },
   
-    "initialState": "n0",
+    "initialState": {
+        "target": "n0",
+        "position": {
+            "x": 296,
+            "y": 464
+        }
+    },
   
     "transitions": [],
   

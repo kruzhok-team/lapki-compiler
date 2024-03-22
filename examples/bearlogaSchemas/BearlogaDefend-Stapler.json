@@ -19,13 +19,13 @@
             }
          ],
          "bounds": {
-            "x": 1092,
-            "y": -41,
+            "x": -175,
+            "y": 81,
             "width": 689,
             "height": 933
          }
       },
-      "n1": {
+      "n0::n1": {
          "name": "Сближение",
          "events": [
             {
@@ -50,14 +50,14 @@
             }
          ],
          "bounds": {
-            "x": 289,
-            "y": 525,
+            "x": 89,
+            "y": 75,
             "width": 411,
             "height": 194
          },
          "parent": "n0"
       },
-      "n2": {
+      "n0::n2": {
          "name": "Атака",
          "events": [
             {
@@ -87,8 +87,8 @@
             }
          ],
          "bounds": {
-            "x": 200,
-            "y": 30,
+            "x": 0,
+            "y": 570,
             "width": 588,
             "height": 194
          },
@@ -127,14 +127,20 @@
             }
          ],
          "bounds": {
-            "x": 255,
-            "y": 290,
+            "x": -1012,
+            "y": -250,
             "width": 411,
             "height": 304
          }
       }
    },
-   "initialState": "n3",
+   "initialState": {
+      "target": "n3",
+      "position": {
+         "x": -1112,
+         "y": -350
+      }
+   },
    "transitions": [
       {
          "source": "n0",
@@ -145,11 +151,11 @@
          },
          "condition": null,
          "position": {
-            "x": -594,
-            "y": 84
+            "x": -516.0,
+            "y": 15
          },
          "do": [],
-         "color": "#C9B544"
+         "color": "#CA0840"
       },
       {
          "source": "n0",
@@ -160,15 +166,15 @@
          },
          "condition": null,
          "position": {
-            "x": -444,
-            "y": 234
+            "x": -516.0,
+            "y": 44
          },
          "do": [],
-         "color": "#4F2BAC"
+         "color": "#841ECD"
       },
       {
          "source": "n3",
-         "target": "n2",
+         "target": "n0::n2",
          "trigger": {
             "component": "Сенсор",
             "method": "ЦельПолучена"
@@ -191,56 +197,56 @@
             ]
          },
          "position": {
-            "x": -594,
-            "y": -51
+            "x": -433.0,
+            "y": 360
          },
          "do": [],
-         "color": "#C6C26E"
+         "color": "#AD6234"
       },
       {
          "source": "n3",
-         "target": "n1",
+         "target": "n0::n1",
          "trigger": {
             "component": "Сенсор",
             "method": "ЦельПолучена"
          },
          "condition": null,
          "position": {
-            "x": -549,
-            "y": 197
+            "x": -488.0,
+            "y": 42
          },
          "do": [],
-         "color": "#A27C00"
+         "color": "#A6FD1C"
       },
       {
-         "source": "n1",
-         "target": "n2",
+         "source": "n0::n1",
+         "target": "n0::n2",
          "trigger": {
             "component": "ОружиеЦелевое",
             "method": "ЦельВошлаВЗонуАтаки"
          },
          "condition": null,
          "position": {
-            "x": -131,
-            "y": -104
+            "x": 155.0,
+            "y": 573
          },
          "do": [],
-         "color": "#D90345"
+         "color": "#88226B"
       },
       {
-         "source": "n2",
-         "target": "n1",
+         "source": "n0::n2",
+         "target": "n0::n1",
          "trigger": {
             "component": "ОружиеЦелевое",
             "method": "ЦельВышлаИзЗоныАтаки"
          },
          "condition": null,
          "position": {
-            "x": 19,
-            "y": 46
+            "x": 144.0,
+            "y": 636
          },
          "do": [],
-         "color": "#62D050"
+         "color": "#50F32A"
       }
    ],
    "components": {

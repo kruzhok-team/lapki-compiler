@@ -382,7 +382,8 @@
           "variables": {
             "value": {
               "type": "int",
-              "description": "Данные, считанные с аналогового пина"
+              "description": "Данные, считанные с аналогового пина",
+              "img": ""
             }
           },
           "singletone": false

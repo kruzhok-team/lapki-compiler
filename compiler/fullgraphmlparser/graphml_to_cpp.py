@@ -1,16 +1,15 @@
 import os.path
-import inspect 
+import inspect
 
 import re
 from collections import defaultdict
 from typing import List, Tuple
 from aiofile import async_open
-import aiofiles
 try:
-    from .stateclasses import State, Trigger
+    from .stateclasses import ParserState, ParserTrigger, StateMachine
     from .graphml import *
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import State, Trigger
+    from compiler.fullgraphmlparser.stateclasses import ParserState, ParserTrigger, StateMachine
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -33,18 +32,19 @@ def get_enum(text_labels: List[str]) -> str:
     enum = 'enum PlayerSignals {\nTICK_SEC_SIG = Q_USER_SIG,\n\n' + enum
     return enum
 
+
 class CppFileWriter:
     id_to_name = {}
     notes_dict = {}
     f = None
     all_signals = []
     userFlag = False  # Флаг на наличие кода для класса User
-    def __init__(self, sm_name: str, start_node: str, start_action: str, states: List[State], notes: List[Dict[str, Any]], player_signal: List[str]):
-        self.sm_name = sm_name
-        self.player_signal = player_signal
 
+    def __init__(self, state_machine: StateMachine) -> None:
+        self.sm_name = state_machine.name
+        self.player_signal = state_machine.signals
         notes_mapping = [('Code for h-file', 'raw_h_code'),
-                         ('Declare variable in h-file', "declare_h_code"),
+                         ('Declare variable in h-file', 'declare_h_code'),
                          ('Code for cpp-file', 'raw_cpp_code'),
                          ('Constructor fields', 'constructor_fields'),
                          ('State fields', 'state_fields'),
@@ -54,19 +54,20 @@ class CppFileWriter:
                          ('User methods for h-file', 'user_methods_h'),
                          ('User variables for c-file', 'user_variables_c'),
                          ('User methods for c-file', 'user_methods_c')]
-        
+
         self.notes_dict = {key: '' for _, key in notes_mapping}
-        for note in notes:
+        for note in state_machine.notes:
+            dict_note = note.model_dump(by_alias=True)
             for prefix, key in notes_mapping:
-                if note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
-                    self.notes_dict[key] = note['y:UMLNoteNode']['y:NodeLabel']['#text']
-        self.start_node = start_node
-        self.start_action = start_action
-        self.states = states
-        for state in states:
+                if dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
+                    self.notes_dict[key] = dict_note['y:UMLNoteNode']['y:NodeLabel']['#text']
+        self.start_node = state_machine.start_node
+        self.start_action = state_machine.start_action
+        self.states = state_machine.states
+        for state in self.states:
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
-                if trigger.guard:                
+                if trigger.guard:
                     trigger.guard = trigger.guard.strip()
 
     async def write_to_file(self, folder: str, extension: str):
@@ -85,7 +86,7 @@ class CppFileWriter:
         async with async_open(os.path.join(folder, 'User.h'), "w") as f:
             self.f = f
             await self._insert_file_template('user_preamble_h.txt')
-            
+
             if self.notes_dict['user_variables_h']:
                 await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
                 self.userFlag = True
@@ -103,22 +104,21 @@ class CppFileWriter:
             if self.notes_dict['user_methods_h']:
                 await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
 
-
         async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
             self.f = f
             await self._insert_file_template('user_preamble_c.txt')
-            
+
             await self._insert_string('// Start variables\n')
             if self.notes_dict['user_variables_c']:
                 await self._insert_string('\n'.join(self.notes_dict['user_variables_c'].split('\n')[1:]) + '\n')
             await self._insert_string('// end variables\n')
-            
+
             if self.notes_dict['user_methods_c']:
                 await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
-        
+
         async with async_open(os.path.join(folder, '%s.h' % self.sm_name), 'w') as f:
             self.f = f
-                
+
             await self._insert_file_template('preamble_h.txt')
             if self.userFlag:
                 await self._insert_string('#include "User.h"\n')
@@ -170,7 +170,7 @@ class CppFileWriter:
                 await self._insert_string('//End of h code from diagram\n\n\n')
             await self._insert_file_template('footer_h.txt')
             self.f = None
-    
+
     async def _write_constructor(self):
         await self._write_full_line_comment('.$define${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
         await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
@@ -223,17 +223,18 @@ class CppFileWriter:
 
     async def _insert_string(self, s: str):
         await self.f.write(re.sub('[ ]*\n', '\n',
-                       s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
+                                  s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
 
     async def _insert_file_template(self, filename: str):
         async with async_open(os.path.join(MODULE_PATH, 'templates', filename)) as input_file:
             async for line in input_file:
                 await self._insert_string(str(line))
 
-    async def _write_states_definitions_recursively(self, state: State, state_path: str):
+    async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
         state_comment = '/*.${' + state_path + '} '
-        state_comment = state_comment + '.' * (76 - len(state_comment)) + '*/\n'
+        state_comment = state_comment + '.' * \
+            (76 - len(state_comment)) + '*/\n'
         await self.f.write(state_comment)
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.id)
         await self._insert_string('    QState status_;\n')
@@ -244,14 +245,14 @@ class CppFileWriter:
         else:
             await self._insert_string('        /*.${' + state_path + '} */\n')
             await self._insert_string('        case Q_ENTRY_SIG: {\n')
-            await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')])  + '\n')
+            await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
 
             await self._insert_string('        /*.${' + state_path + '} */\n')
             await self._insert_string('        case Q_EXIT_SIG: {\n')
-            await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')])  + '\n')
+            await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
@@ -266,9 +267,9 @@ class CppFileWriter:
             name_to_triggers[trigger.name].append(trigger)
             name_to_position[trigger.name] = i
 
-        triggers_merged: List[Tuple[str, List[Trigger]]] = sorted(
+        triggers_merged: List[Tuple[str, List[ParserTrigger]]] = sorted(
             [(name, name_to_triggers[name]) for name in name_to_triggers],
-            key = lambda t: name_to_position[t[0]])
+            key=lambda t: name_to_position[t[0]])
 
         for event_name, triggers in triggers_merged:
             await self._insert_string('        /*.${%s::%s} */\n' % (state_path, event_name))
@@ -320,12 +321,12 @@ class CppFileWriter:
             if trigger.name not in self.all_signals:
                 self.all_signals.append(trigger.name)
 
-    async def _write_states_declarations_recursively(self, state: State):
+    async def _write_states_declarations_recursively(self, state: ParserState):
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.id)
         for child_state in state.childs:
             await self._write_states_declarations_recursively(child_state)
 
-    async def _write_trigger(self, f, trigger: Trigger, state_path: str, event_name: str, offset = ''):
+    async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, offset=''):
         if trigger.action and not trigger.type == 'choice_start':
             await self._insert_string('\n'.join(
                 [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n')
@@ -334,7 +335,8 @@ class CppFileWriter:
         elif trigger.type == 'external' or trigger.type == 'choice_result':
             await self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target)
         elif trigger.type == 'choice_start':
-            target_choice_node = next((s for s in self.states if s.id == trigger.target and s.type == 'choice'), None)
+            target_choice_node = next((s for s in self.states if s.id ==
+                                      trigger.target and s.type == 'choice'), None)
             assert target_choice_node
             assert len(target_choice_node.trigs) == 2
             triggers = target_choice_node.trigs

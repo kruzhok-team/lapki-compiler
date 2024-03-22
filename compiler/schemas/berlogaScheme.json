@@ -1,345 +1,278 @@
 {
-  "states": {
-    "n0": {
-      "name": "Бой",
-      "events": [
-        {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onEnter"
-          }
-        },
-        {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onExit"
-          }
-        }
-      ],
-      "bounds": {
-        "height": 145,
-        "width": 450,
-        "x": 267,
-        "y": -149
-      }
-    },
-    "n1": {
-      "parent": "n0",
-      "name": "Сближение",
-      "events": [
-        {
-          "do": [
-            {
-              "args": {},
-              "component": "МодульДвижения",
-              "method": "ДвигатьсяКЦели"
+    "states": {
+        "n0": {
+            "name": "Бой",
+            "events": [
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onEnter"
+                    },
+                    "do": []
+                },
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onExit"
+                    },
+                    "do": []
+                }
+            ],
+            "bounds": {
+                "x": 1337,
+                "y": 30,
+                "width": 515,
+                "height": 772
             }
-          ],
-          "trigger": {
-            "component": "System",
-            "method": "onEnter"
-          }
         },
-        {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onExit"
-          }
-        }
-      ],
-      "bounds": {
-        "height": 145,
-        "width": 450,
-        "x": 343,
-        "y": -150
-      }
-    },
-    "n2": {
-      "parent": "n0",
-      "name": "Атака",
-      "events": [
-        {
-          "do": [
-            {
-              "args": {},
-              "component": "ОружиеЦелевое",
-              "method": "АтаковатьЦель"
+        "n1": {
+            "name": "Сближение",
+            "events": [
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onEnter"
+                    },
+                    "do": [
+                        {
+                            "component": "МодульДвижения",
+                            "method": "ДвигатьсяКЦели",
+                            "args": {}
+                        }
+                    ]
+                },
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onExit"
+                    },
+                    "do": []
+                }
+            ],
+            "bounds": {
+                "x": 198,
+                "y": 445,
+                "width": 411,
+                "height": 194
+            },
+            "parent": "n0"
+        },
+        "n2": {
+            "name": "Атака",
+            "events": [
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onEnter"
+                    },
+                    "do": [
+                        {
+                            "component": "ОружиеЦелевое",
+                            "method": "АтаковатьЦель",
+                            "args": {}
+                        }
+                    ]
+                },
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onExit"
+                    },
+                    "do": []
+                }
+            ],
+            "bounds": {
+                "x": 202,
+                "y": 111,
+                "width": 411,
+                "height": 194
+            },
+            "parent": "n0"
+        },
+        "n3": {
+            "name": "Скан",
+            "events": [
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onEnter"
+                    },
+                    "do": [
+                        {
+                            "component": "Сенсор",
+                            "method": "ПоискВрагаПоДистанции",
+                            "args": {
+                                "Направление поиска": "мин"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "trigger": {
+                        "component": "System",
+                        "method": "onExit"
+                    },
+                    "do": [
+                        {
+                            "component": "Сенсор",
+                            "method": "ОстановкаПоиска",
+                            "args": {}
+                        }
+                    ]
+                }
+            ],
+            "bounds": {
+                "x": 255,
+                "y": 290,
+                "width": 411,
+                "height": 304
             }
-          ],
-          "trigger": {
-            "component": "System",
-            "method": "onEnter"
-          }
-        },
-        {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onExit"
-          }
         }
-      ],
-      "bounds": {
-        "height": 145,
-        "width": 450,
-        "x": 176,
-        "y": -148
-      }
     },
-    "n3": {
-      "name": "Скан",
-      "events": [
-        {
-          "do": [
-            {
-              "args": {
-                "Направление поиска": "мин"
-              },
-              "component": "Сенсор",
-              "method": "ПоискВрагаПоДистанции"
-            }
-          ],
-          "trigger": {
-            "component": "System",
-            "method": "onEnter"
-          }
-        },
-        {
-          "do": [
-            {
-              "args": {
-                "N": "34"
-              },
-              "component": "МодульДвижения",
-              "method": "ЗадатьКоординатуВверх"
-            }
-          ],
-          "trigger": {
-            "component": "Сенсор",
-            "method": "ЦельПолучена"
-          }
-        },
-        {
-          "do": [
-            {
-              "args": {},
-              "component": "Сенсор",
-              "method": "ОстановкаПоиска"
-            }
-          ],
-          "trigger": {
-            "component": "System",
-            "method": "onExit"
-          }
+    "initialState": {
+        "target": "n3",
+        "position": {
+            "x": 155,
+            "y": 190
         }
-      ],
-      "bounds": {
-        "height": 195,
-        "width": 450,
-        "x": 435,
-        "y": -1182
-      }
     },
-    "n4": {
-      "name": "Состояние",
-      "events": [
+    "transitions": [
         {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onEnter"
-          }
+            "source": "n0",
+            "target": "n3",
+            "trigger": {
+                "component": "АнализаторЦели",
+                "method": "ЦельПотеряна"
+            },
+            "condition": null,
+            "position": {
+                "x": -1327,
+                "y": 630
+            },
+            "do": [],
+            "color": "#49F5FD"
         },
         {
-          "do": [],
-          "trigger": {
-            "component": "System",
-            "method": "onExit"
-          }
-        }
-      ],
-      "bounds": {
-        "height": 145,
-        "width": 450,
-        "x": 253,
-        "y": -577
-      }
-    }
-  },
-  "initialState": {
-    "target": "n3",
-    "position": {
-      "x": 20,
-      "y": 30
-    }
-  },
-  "transitions": [
-    {
-      "color": "#22a4f5",
-      "condition": null,
-      "do": [],
-      "position": {
-        "x": 615,
-        "y": -283
-      },
-      "source": "n0",
-      "target": "n3",
-      "trigger": {
-        "component": "АнализаторЦели",
-        "method": "ЦельПотеряна"
-      }
-    },
-    {
-      "color": "#22a4f5",
-      "condition": {
-        "type": "less",
-        "value": [
-          {
-            "type": "component",
-            "value": {
-              "args": {},
-              "component": "Таймер",
-              "method": "ТекущееЗначениеТаймера"
-            }
-          },
-          {
-            "type": "value",
-            "value": "123"
-          }
-        ]
-      },
-      "do": [
-        {
-          "args": {
-            "N": "231"
-          },
-          "component": "Счётчик",
-          "method": "Прибавить"
+            "source": "n0",
+            "target": "n3",
+            "trigger": {
+                "component": "АнализаторЦели",
+                "method": "ЦельУничтожена"
+            },
+            "condition": {
+                "type": "less",
+                "value": [
+                    {
+                        "type": "component",
+                        "value": {
+                            "component": "Таймер",
+                            "method": "ТекущееЗначениеТаймера",
+                            "args": {}
+                        }
+                    },
+                    {
+                        "type": "value",
+                        "value": "123"
+                    }
+                ]
+            },
+            "position": {
+                "x": -1177,
+                "y": 780
+            },
+            "do": [
+                {
+                    "component": "АнализаторЦели",
+                    "method": "СбросЦели",
+                    "args": {}
+                }
+            ],
+            "color": "#2A7778"
         },
         {
-          "args": {},
-          "component": "ОружиеЦелевое",
-          "method": "АтаковатьЦель"
+            "source": "n3",
+            "target": "n1",
+            "trigger": {
+                "component": "Сенсор",
+                "method": "ЦельПолучена"
+            },
+            "condition": null,
+            "position": {
+                "x": -1328,
+                "y": 702
+            },
+            "do": [],
+            "color": "#FEEF0B"
+        },
+        {
+            "source": "n1",
+            "target": "n2",
+            "trigger": {
+                "component": "ОружиеЦелевое",
+                "method": "ЦельВошлаВЗонуАтаки"
+            },
+            "condition": null,
+            "position": {
+                "x": -786,
+                "y": 478
+            },
+            "do": [],
+            "color": "#C741C5"
+        },
+        {
+            "source": "n2",
+            "target": "n1",
+            "trigger": {
+                "component": "ОружиеЦелевое",
+                "method": "ЦельВышлаИзЗоныАтаки"
+            },
+            "condition": null,
+            "position": {
+                "x": -636,
+                "y": 628
+            },
+            "do": [],
+            "color": "#4799C3"
         }
-      ],
-      "position": {
-        "x": 715,
-        "y": -183
-      },
-      "source": "n0",
-      "target": "n3",
-      "trigger": {
-        "component": "АнализаторЦели",
-        "method": "ЦельУничтожена"
-      }
+    ],
+    "components": {
+        "Сенсор": {
+            "type": "Сенсор",
+            "parameters": {}
+        },
+        "АнализаторЦели": {
+            "type": "АнализаторЦели",
+            "parameters": {}
+        },
+        "МодульДвижения": {
+            "type": "МодульДвижения",
+            "parameters": {}
+        },
+        "Самодиагностика": {
+            "type": "Самодиагностика",
+            "parameters": {}
+        },
+        "СвязьСБазой": {
+            "type": "СвязьСБазой",
+            "parameters": {}
+        },
+        "Таймер": {
+            "type": "Таймер",
+            "parameters": {}
+        },
+        "Счётчик": {
+            "type": "Счётчик",
+            "parameters": {}
+        },
+        "ОружиеЦелевое": {
+            "type": "ОружиеЦелевое",
+            "parameters": {}
+        },
+        "СпособностьПочинка": {
+            "type": "СпособностьПочинка",
+            "parameters": {}
+        }
     },
-    {
-      "color": "#22a4f5",
-      "condition": null,
-      "do": [],
-      "position": {
-        "x": 605,
-        "y": -283
-      },
-      "source": "n3",
-      "target": "n1",
-      "trigger": {
-        "component": "Сенсор",
-        "method": "ЦельПолучена"
-      }
-    },
-    {
-      "color": "#22a4f5",
-      "condition": null,
-      "do": [],
-      "position": {
-        "x": 424,
-        "y": 234
-      },
-      "source": "n1",
-      "target": "n2",
-      "trigger": {
-        "component": "ОружиеЦелевое",
-        "method": "ЦельВошлаВЗонуАтаки"
-      }
-    },
-    {
-      "color": "#22a4f5",
-      "condition": null,
-      "do": [],
-      "position": {
-        "x": 257,
-        "y": 234
-      },
-      "source": "n2",
-      "target": "n1",
-      "trigger": {
-        "component": "ОружиеЦелевое",
-        "method": "ЦельВышлаИзЗоныАтаки"
-      }
-    }
-  ],
-  "components": {
-    "Сенсор": {
-      "parameters": {},
-      "type": "Сенсор"
-    },
-    "АнализаторЦели": {
-      "parameters": {},
-      "type": "АнализаторЦели"
-    },
-    "МодульДвижения": {
-      "parameters": {},
-      "type": "МодульДвижения"
-    },
-    "Самодиагностика": {
-      "parameters": {},
-      "type": "Самодиагностика"
-    },
-    "СвязьСБазой": {
-      "parameters": {},
-      "type": "СвязьСБазой"
-    },
-    "Таймер": {
-      "parameters": {},
-      "type": "Таймер"
-    },
-    "Счётчик": {
-      "parameters": {},
-      "type": "Счётчик"
-    },
-    "ОружиеЦелевое": {
-      "parameters": {},
-      "type": "ОружиеЦелевое"
-    },
-    "ОружиеМассовое": {
-      "parameters": {},
-      "type": "ОружиеМассовое"
-    },
-    "Заряд": {
-      "parameters": {},
-      "type": "Заряд"
-    },
-    "СпособностьПочинка": {
-      "parameters": {},
-      "type": "СпособностьПочинка"
-    },
-    "СпособностьНаМаксимум": {
-      "parameters": {},
-      "type": "СпособностьНаМаксимум"
-    },
-    "СпособностьСтруяДыма": {
-      "parameters": {},
-      "type": "СпособностьСтруяДыма"
-    },
-    "СпособностьСамоуничтожение": {
-      "parameters": {},
-      "type": "СпособностьСамоуничтожение"
-    }
-  },
-  "parameters": {},
-  "platform": "BearlogaDefend"
+    "platform": "BearlogaDefend",
+    "parameters": {}
 }
