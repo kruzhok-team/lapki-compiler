@@ -26,7 +26,7 @@ def getPath():
 #     client = Client()
 #     await client.doConnect(f'{BASE_ADDR}/source')
 #     req = await client.sendMultiFileProject(
-#         'examples/MultifilesExample',
+#         'examples/old/MultifilesExample',
 #         'g++',
 #         ['-std=c++2a'],
 #         ['*.cpp', '*.hpp']
@@ -54,7 +54,7 @@ def getPath():
 #     client = Client()
 #     await client.doConnect(f'{BASE_ADDR}/source')
 #     req = await client.sendMultiFileProject(
-#         '../examples/ExampleSketch/',
+#         '../examples/old/ExampleSketch/',
 #         'arduino-cli',
 #         ['-b', 'arduino:avr:uno', 'ExampleSketch.ino'],
 #         ['*.ino'])
@@ -79,7 +79,7 @@ async def test_berlogaImport():
     client = Client()
     await client.doConnect(f'{BASE_ADDR}/berloga/import')
     # response = await client.importBerlogaScheme('compiler/schemas/Autoborder_with_actions.graphml')
-    response = await client.importBerlogaScheme('examples/bearlogaSchemas/Autoborder_638330223036439120.graphml', 'Autoborder_12314124')
+    response = await client.importBerlogaScheme('examples/old/bearlogaSchemas/Autoborder_638330223036439120.graphml', 'Autoborder_12314124')
     print(response)
     path = 'client/' + strftime('%Y-%m-%d %H:%M:%S',
                                 gmtime()) + str(random.randint(0, 10000)) + '/'
@@ -112,7 +112,7 @@ async def test_berlogaExport():
 async def test_timerSchema():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testTimer.json')
+    response = await client.sendSMJson('examples/old/testTimer.json')
     print(response)
     dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
     path = getPath()
@@ -135,7 +135,7 @@ async def test_timerSchema():
 async def test_counterSchema():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testCounter.json')
+    response = await client.sendSMJson('examples/old/testCounter.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -163,7 +163,7 @@ async def test_counterSchema():
 async def test_Serial():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testSerial.json')
+    response = await client.sendSMJson('examples/old/testSerial.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -191,7 +191,7 @@ async def test_Serial():
 async def test_Serial2():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testSerial2.json')
+    response = await client.sendSMJson('examples/old/testSerial2.json')
     print(response)
     dirname = strftime('%Y-%m-%d %H:%M:%S', gmtime())
     path = getPath()
@@ -220,7 +220,7 @@ async def test_Serial2():
 async def test_PWM():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testPWM.json')
+    response = await client.sendSMJson('examples/old/testPWM.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -248,7 +248,7 @@ async def test_PWM():
 async def test_digitalOut():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testDigitalOut.json')
+    response = await client.sendSMJson('examples/old/testDigitalOut.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -276,7 +276,7 @@ async def test_digitalOut():
 async def test_digitalIn():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testDigitalIn.json')
+    response = await client.sendSMJson('examples/old/testDigitalIn.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -305,7 +305,7 @@ async def test_digitalIn():
 async def test_blinker():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/arduino-blinker.json')
+    response = await client.sendSMJson('examples/old/arduino-blinker.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -333,7 +333,7 @@ async def test_blinker():
 async def test_analogOut():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testAnalogOut.json')
+    response = await client.sendSMJson('examples/old/testAnalogOut.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -361,7 +361,7 @@ async def test_analogOut():
 async def test_analogIn():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testAnalogIn.json')
+    response = await client.sendSMJson('examples/old/testAnalogIn.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
@@ -389,7 +389,7 @@ async def test_analogIn():
 async def test_ShiftOut():
     client = Client()
     await client.doConnect(BASE_ADDR)
-    response = await client.sendSMJson('examples/testShiftOut.json')
+    response = await client.sendSMJson('examples/old/testShiftOut.json')
     print(response)
     path = getPath()
     build_path = path + '/build/'
