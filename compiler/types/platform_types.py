@@ -80,3 +80,4 @@ class Platform(BaseModel):
     visual: bool
     compilingSettings: CompilingSettings
     components: Dict[str, Component]
+    delimeter: str

@@ -5,9 +5,9 @@ from aiofile import async_open
 from aiopath import AsyncPath
 
 try:
-    from .types.platform_types import Platform, UnprocessedPlatform
+    from .types.platform_types import Platform
 except ImportError:
-    from compiler.types.platform_types import Platform, UnprocessedPlatform
+    from compiler.types.platform_types import Platform
 
 
 class PlatformException(Exception):
@@ -34,11 +34,12 @@ class PlatformManager:
             try:
                 async with async_open(file_specifier=path, mode='r') as f:
                     unprocessed_platform_data = await f.read()
-                platform_data = UnprocessedPlatform(
+                platform = Platform(
                     **json.loads(unprocessed_platform_data))
-                platform_id = list(platform_data.platform.keys())[0]
-                platform = platform_data.platform[platform_id]
-                PlatformManager.platforms[platform_id] = platform
+                if PlatformManager.platforms.get(platform.id, None) is None:
+                    PlatformManager.platforms[platform.id] = platform
+                else:
+                    print(f'Platform with id {platform.id} is already exists.')
             except Exception as e:
                 print(
                     f'Во время обработки файла "{path}" произошла ошибка! {e}')

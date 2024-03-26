@@ -1,6 +1,6 @@
 """Module implements inner compiler's types."""
 
-from typing import List, Literal, Dict, TypeAlias
+from typing import List, Literal, Dict, Optional, TypeAlias
 
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
@@ -11,6 +11,18 @@ DefaultComponents = Literal['System']
 DefaultActions = Literal['onEnter', 'onExit']
 
 EventName: TypeAlias = str
+
+
+@dataclass
+class InnerTrigger:
+    trigger: str
+    condition: Optional[str]
+
+
+@dataclass
+class InnerEvent:
+    trigger: InnerTrigger
+    actions: str
 
 
 @dataclass
