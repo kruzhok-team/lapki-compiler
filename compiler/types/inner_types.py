@@ -1,6 +1,6 @@
 """Module implements inner compiler's types."""
 
-from typing import List, Literal, Dict, TypeAlias
+from typing import List, Literal, Dict, Optional, TypeAlias
 
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
@@ -14,6 +14,18 @@ EventName: TypeAlias = str
 
 
 @dataclass
+class InnerTrigger:
+    trigger: str
+    condition: Optional[str]
+
+
+@dataclass
+class InnerEvent:
+    event: InnerTrigger
+    actions: str
+
+
+@dataclass
 class File:
     filename: str
     extension: str
@@ -22,6 +34,7 @@ class File:
 
 class CompilerResponse(BaseModel):
     """Data, that compiler send."""
+
     result: str
     return_code: int
     stdout: str

@@ -2,9 +2,6 @@ from typing import Literal, TypeAlias, Optional, List, Dict
 from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
-# Platform: TypeAlias = Literal['BearlogaDefend',
-#                               'ArduinoUno',
-#                               'BearlogaDefend-Autoborder']
 SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
 IncludeStr: TypeAlias = str  # include "blabla.h"
 
@@ -23,8 +20,8 @@ class Point:
 class Bounds:
     x: float
     y: float
-    height: float
-    width: float
+    height: Optional[float]
+    width: Optional[float]
 
 
 @dataclass
