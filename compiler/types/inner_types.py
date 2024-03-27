@@ -21,7 +21,7 @@ class InnerTrigger:
 
 @dataclass
 class InnerEvent:
-    trigger: InnerTrigger
+    event: InnerTrigger
     actions: str
 
 
@@ -34,6 +34,7 @@ class File:
 
 class CompilerResponse(BaseModel):
     """Data, that compiler send."""
+
     result: str
     return_code: int
     stdout: str

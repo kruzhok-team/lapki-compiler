@@ -20,8 +20,8 @@ class Point:
 class Bounds:
     x: float
     y: float
-    height: float
-    width: float
+    height: Optional[float]
+    width: Optional[float]
 
 
 @dataclass

@@ -1,9 +1,16 @@
-from typing import List, Optional
+from typing import List, Optional, Set, Protocol
 
 from pydantic import Field, BaseModel
 from pydantic.dataclasses import dataclass
 
 from compiler.types.ide_types import Bounds, IdeStateMachine
+
+
+class GeometryBounds(Protocol):
+    x: float
+    y: float
+    height: Optional[float]
+    width: Optional[float]
 
 
 class ParserNoteNodeContent(BaseModel):
@@ -70,7 +77,7 @@ class ParserState:
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
-    bounds: Bounds
+    bounds: GeometryBounds
 
     def __str__(self) -> str:
         if self.parent is not None:
@@ -86,4 +93,4 @@ class StateMachine:
     start_action: str
     notes: List[ParserNote]
     states: List[ParserState]
-    signals: List[str]
+    signals: Set[str]
