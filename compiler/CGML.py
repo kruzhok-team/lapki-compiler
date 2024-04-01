@@ -7,21 +7,24 @@ from copy import deepcopy
 from compiler.PlatformManager import PlatformManager
 from compiler.types.ide_types import Bounds
 from compiler.types.platform_types import Platform
-from compiler.types.inner_types import InnerEvent, InnerTrigger
+from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from cyberiadaml_py.types.elements import (
     CGMLElements,
     CGMLState,
-    CGMLTransition
+    CGMLTransition,
+    CGMLComponent
 )
 from fullgraphmlparser.stateclasses import (
     StateMachine,
     ParserState,
-    ParserTrigger
+    ParserTrigger,
+    ParserNote
 )
 
 TransitionId = str
 StateId = str
+ComponentId = str
 
 
 class CGMLException(Exception):
@@ -186,6 +189,7 @@ def __connect_parents_to_states(
     cgml_states: Dict[StateId, CGMLState],
     global_state: ParserState
 ) -> Dict[StateId, ParserState]:
+    """"""
     states_with_parents = deepcopy(parser_states)
 
     for state_id in cgml_states:
@@ -206,6 +210,7 @@ def __connect_parents_to_states(
 def __get_signals_set(
         states: List[ParserState],
         transitions: List[ParserTrigger]) -> Set[str]:
+    """Get signals set from all states and transitions."""
     signals = set()
     for state in states:
         for internal_trig in state.trigs:
@@ -215,6 +220,56 @@ def __get_signals_set(
         signals.add(transition.name)
 
     return signals
+
+
+def __parse_components(
+    components: List[CGMLComponent]
+) -> Dict[ComponentId, InnerComponent]:
+    """Parse component's parameters."""
+    inner_components: Dict[ComponentId, InnerComponent] = {}
+
+    for component in components:
+        parameters: List[str] = component.parameters.split('\n')
+        type = ''
+        parsed_parameters: Dict[str, str] = {}
+        for parameter in parameters:
+            parameter_name, value = list(map(
+                lambda val: val.strip(), parameter.split('/')))
+            if parameter_name is None or value is None:
+                raise CGMLException(
+                    'No name parameter or no value of parameter.')
+            match parameter_name:
+                case 'type':
+                    type = value
+                case 'labelColor' | 'label' | 'name' | 'description':
+                    ...
+                case _:
+                    parsed_parameters[parameter_name] = value
+        inner_components[component.id] = InnerComponent(
+            type,
+            parsed_parameters
+        )
+
+    return inner_components
+
+
+def __generate_init_components_code(
+        components: Dict[ComponentId, InnerComponent],
+        platform: Platform) -> List[ParserNote]:
+    notes: List[ParserNote] = []
+    for component_id in components:
+        component: InnerComponent = components[component_id]
+        type = component.type
+        platform_component = platform.components[type]
+        const_parameters = platform_component.constructorParameters
+
+    return notes
+
+
+def __generate_code(
+        platform: Platform,
+        components: List[CGMLComponent]) -> List[ParserNote]:
+    return []
 
 
 def parse(xml: str) -> StateMachine:
@@ -270,6 +325,11 @@ def parse(xml: str) -> StateMachine:
         list(states_with_parents.values()),
         transitions
     )
+
+    parsed_components = __parse_components(cgml_scheme.components)
+    notes: List[ParserNote] = []
+    # notes.extend()
+
     return StateMachine(
         start_node=start_node,
         name='sketch',
