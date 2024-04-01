@@ -1,10 +1,28 @@
 """Module for testing CGML.py file."""
 import json
+import shutil
+import time
+from pathlib import Path
+from contextlib import contextmanager
+
 import pytest
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
+from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.types.inner_types import InnerEvent, InnerTrigger
 from compiler.types.platform_types import Platform
-from compiler.CGML import __parse_actions
+from compiler.CGML import __parse_actions, parse
+
+pytest_plugins = ('pytest_asyncio',)
+
+
+@contextmanager
+def create_test_folder(path: str, wait_time: int):
+    try:
+        Path(path).mkdir()
+        yield
+    finally:
+        time.sleep(wait_time)
+        shutil.rmtree(path)
 
 
 @pytest.mark.parametrize(
@@ -74,3 +92,13 @@ def test_new_platform_creation(path: str):
 )
 def test_parse_actions(raw_trigger: str, expected: str):
     assert __parse_actions(raw_trigger) == expected
+
+
+@pytest.mark.asyncio
+async def test_generating_code():
+    with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
+        data = f.read()
+        path = './test/test_folder/'
+        with create_test_folder(path, 10):
+            sm = parse(data)
+            await CppFileWriter(sm).write_to_file(path, 'ino')

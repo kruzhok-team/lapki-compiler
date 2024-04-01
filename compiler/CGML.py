@@ -2,19 +2,38 @@
 import re
 import random
 from typing import Dict, List
+from copy import deepcopy
 
-from cyberiadaml_py.types.elements import CGMLElements, CGMLState, CGMLTransition
-from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.PlatformManager import PlatformManager
 from compiler.types.ide_types import Bounds
 from compiler.types.platform_types import Platform
 from compiler.types.inner_types import InnerEvent, InnerTrigger
-from fullgraphmlparser.stateclasses import StateMachine, ParserState, ParserTrigger
+from cyberiadaml_py.cyberiadaml_parser import CGMLParser
+from cyberiadaml_py.types.elements import (
+    CGMLElements,
+    CGMLState,
+    CGMLTransition
+)
+from fullgraphmlparser.stateclasses import (
+    StateMachine,
+    ParserState,
+    ParserTrigger
+)
+
+TransitionId = str
+StateId = str
+
+
+class CGMLException(Exception):
+    """Errors occured during CGML processing."""
+
+    ...
 
 
 def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
+    """Get condition and trigger by regexes."""
     if trigger is None or trigger == '':
-        raise Exception('Trigger is None!')
+        raise CGMLException('Trigger is None!')
     for regex in regexes:
         regex_match = re.match(regex, trigger)
         if regex_match is None:
@@ -26,10 +45,12 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
         except IndexError:
             condition = None
         return InnerTrigger(parsed_trigger, condition)
-    raise Exception(f'Trigger({trigger}) doesnt match any regex!')
+    raise CGMLException(f'Trigger({trigger}) doesnt match any regex!')
 
 
 def __parse_actions(actions: str) -> List[InnerEvent]:
+    """Parse action field of CGMLElements and returns do,\
+        triggers, conditions."""
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
 
@@ -81,7 +102,7 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
                 condition = inner.event.condition
                 parser_triggers.append(
                     ParserTrigger(
-                        id=__gen_id(),
+                        id=str(__gen_id()),
                         name=inner.event.trigger,
                         source=state_id,
                         target='',
@@ -113,11 +134,13 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
 def __process_transition(
         transition_id: str,
         cgml_transition: CGMLTransition) -> ParserTrigger:
+    """Parse CGMLTransition and convert to ParserTrigger\
+        - class for fullgraphmlparser."""
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
 
     if len(inner_triggers) == 0:
         raise Exception('No trigger for transition!')
-    # TODO: Обработка нескольких условий для триггера
+    # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
     inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
@@ -130,28 +153,104 @@ def __process_transition(
         source=cgml_transition.source,
         target=cgml_transition.target,
         action=inner_event.actions,
-        id=__gen_id(),
+        id=transition_id,
         type='external',
         guard=condition
     )
 
 
+def __connect_transitions_to_states(
+    states: Dict[StateId, ParserState],
+    transitions: List[ParserTrigger]
+) -> Dict[StateId, ParserState]:
+    """Add external triggers to states."""
+    states_with_external_trigs = deepcopy(states)
+    for transition in transitions:
+        source_state = states_with_external_trigs.get(transition.source)
+        if source_state is None:
+            raise CGMLException('Source state is None!')
+        source_state.trigs.append(transition)
+
+    return states_with_external_trigs
+
+
+def __connect_parents_to_states(
+    parser_states: Dict[StateId, ParserState],
+    cgml_states: Dict[StateId, CGMLState],
+    global_state: ParserState
+) -> Dict[StateId, ParserState]:
+    states_with_parents = deepcopy(parser_states)
+
+    for state_id in cgml_states:
+        cgml_state = cgml_states[state_id]
+        parser_state = states_with_parents[state_id]
+        parent = cgml_state.parent
+        if parent is None:
+            parser_state.parent = global_state
+            global_state.childs.append(parser_state)
+        else:
+            parent_state = states_with_parents[parent]
+            parser_state.parent = parent_state
+            parent_state.childs.append(parser_state)
+
+    return states_with_parents
+
+
 def parse(xml: str) -> StateMachine:
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
-    platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
-    states: List[ParserState] = []
+    # platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
+    global_state = ParserState(
+        name='global',
+        type='group',
+        actions='',
+        trigs=[],
+        entry='',
+        exit='',
+        id='global',
+        new_id=['global'],
+        parent=None,
+        childs=[],
+        bounds=Bounds(
+            x=0,
+            y=0,
+            height=0,
+            width=0
+        )
+    )
+    # Parsing external transitions.
     transitions: List[ParserTrigger] = []
-
-    cgml_transitions: Dict[str, CGMLTransition] = cgml_scheme.transitions
+    cgml_transitions: Dict[TransitionId,
+                           CGMLTransition] = cgml_scheme.transitions
     for transition_id in cgml_transitions:
         cgml_transition = cgml_transitions[transition_id]
         transitions.append(__process_transition(
             transition_id, cgml_transition))
 
-    cgml_states: Dict[str, CGMLState] = cgml_scheme.states
+    # Parsing state's actions, internal triggers, entry/exit
+    states: Dict[StateId, ParserState] = {}
+    cgml_states: Dict[StateId, CGMLState] = cgml_scheme.states
     for state_id in cgml_states:
         cgml_state = cgml_states[state_id]
-        states.append(__process_state(state_id, cgml_state))
+        states[state_id] = __process_state(state_id, cgml_state)
+
+    states_with_transitions = __connect_transitions_to_states(
+        states,
+        transitions
+    )
+    states_with_parents = __connect_parents_to_states(
+        states_with_transitions, cgml_states, global_state)
     # TODO: Добавить внешние переходы в triggers
-    # sm: StateMachine = StateMachine()
+    if cgml_scheme.initial_state is None:
+        raise CGMLException('No initial state!')
+
+    start_node = cgml_scheme.initial_state.target
+
+    return StateMachine(
+        start_node=start_node,
+        name='sketch',
+        start_action='',
+        notes=[],  # TODO: Сгенерировать вставки для кода.
+        states=[global_state, *list(states_with_parents.values())],
+        signals=set(),  # TODO: Сформировать набор сигналов.
+    )

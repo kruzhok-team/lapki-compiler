@@ -21,6 +21,12 @@ class InnerTrigger:
 
 @dataclass
 class InnerEvent:
+    """
+    Dataclass represents parsed event string.
+
+    event/ actions
+    """
+
     event: InnerTrigger
     actions: str
 

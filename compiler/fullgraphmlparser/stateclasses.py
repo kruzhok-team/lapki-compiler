@@ -1,11 +1,12 @@
-from typing import List, Optional, Set, Protocol
+from typing import List, Optional, Set, Protocol, runtime_checkable
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 
 from compiler.types.ide_types import Bounds, IdeStateMachine
 
 
+@runtime_checkable
 class GeometryBounds(Protocol):
     x: float
     y: float
@@ -46,12 +47,12 @@ class ParserTrigger:
     source: str
     target: str
     action: str
-    id: int
+    id: str
     type: str = ''
     guard: str = 'true'
 
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ParserState:
     """
     class State describes state of uml-diagram and trigslates to qm format.

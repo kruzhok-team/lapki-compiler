@@ -393,7 +393,7 @@ class CJsonParser:
                 triggers.append(ParserTrigger(name=eventname,
                                               source=transition.source,
                                               target=transition.target,
-                                              id=i,
+                                              id=str(i),
                                               type='external',
                                               guard=condition,
                                               action=action))
@@ -461,7 +461,7 @@ class CJsonParser:
                     source=state_id,
                     target='',
                     action=actions,
-                    id=id,
+                    id=str(id),
                 )
         return Events(events=result,
                       signals=event_signals,
@@ -594,8 +594,8 @@ class CJsonParser:
             states=[global_state, *list(proccesed_states.values())],
             notes=notes,
             start_action='',
-            signals=[*player_signals.keys(),
-                     *self._addSignals(data.components, player_signals)],
+            signals=set([*player_signals.keys(),
+                         *self._addSignals(data.components, player_signals)]),
             start_node=startNode
         )
 
