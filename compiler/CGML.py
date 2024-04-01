@@ -1,7 +1,7 @@
 """Module for work with CyberiadaMl."""
 import re
 import random
-from typing import Dict, List
+from typing import Dict, List, Set
 from copy import deepcopy
 
 from compiler.PlatformManager import PlatformManager
@@ -65,10 +65,15 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
                 r'^(?P<trigger>\w+)$',
             ]
         )
-        inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
+        check_function: str | None = None
+        if '.' in inner_trigger.trigger:
+            check_function = inner_trigger.trigger
+            inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
+
         events.append(InnerEvent(
             inner_trigger,
-            do
+            do,
+            check_function
         ))
     return events
 
@@ -108,7 +113,8 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
                         target='',
                         type='internal',
                         action=inner.actions,
-                        guard=condition if condition is not None else 'true'
+                        guard=condition if condition is not None else 'true',
+                        check_function=inner.check
                     )
                 )
     bounds = (
@@ -155,7 +161,8 @@ def __process_transition(
         action=inner_event.actions,
         id=transition_id,
         type='external',
-        guard=condition
+        guard=condition,
+        check_function=inner_event.check
     )
 
 
@@ -194,6 +201,20 @@ def __connect_parents_to_states(
             parent_state.childs.append(parser_state)
 
     return states_with_parents
+
+
+def __get_signals_set(
+        states: List[ParserState],
+        transitions: List[ParserTrigger]) -> Set[str]:
+    signals = set()
+    for state in states:
+        for internal_trig in state.trigs:
+            signals.add(internal_trig.name)
+
+    for transition in transitions:
+        signals.add(transition.name)
+
+    return signals
 
 
 def parse(xml: str) -> StateMachine:
@@ -244,13 +265,16 @@ def parse(xml: str) -> StateMachine:
     if cgml_scheme.initial_state is None:
         raise CGMLException('No initial state!')
 
-    start_node = cgml_scheme.initial_state.target
-
+    start_node: str = cgml_scheme.initial_state.target
+    signals = __get_signals_set(
+        list(states_with_parents.values()),
+        transitions
+    )
     return StateMachine(
         start_node=start_node,
         name='sketch',
         start_action='',
         notes=[],  # TODO: Сгенерировать вставки для кода.
         states=[global_state, *list(states_with_parents.values())],
-        signals=set(),  # TODO: Сформировать набор сигналов.
+        signals=signals
     )

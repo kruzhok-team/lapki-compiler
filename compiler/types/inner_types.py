@@ -29,6 +29,7 @@ class InnerEvent:
 
     event: InnerTrigger
     actions: str
+    check: str | None = None
 
 
 @dataclass

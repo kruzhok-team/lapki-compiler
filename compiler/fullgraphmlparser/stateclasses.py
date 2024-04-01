@@ -3,8 +3,6 @@ from typing import List, Optional, Set, Protocol, runtime_checkable
 from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 
-from compiler.types.ide_types import Bounds, IdeStateMachine
-
 
 @runtime_checkable
 class GeometryBounds(Protocol):
@@ -41,6 +39,7 @@ class ParserTrigger:
             dx, dy: first relative movement of trigger visual path
             points: other relative movements of trigger visual path
             action_x, action_y, action_width: coordinates of trigger label
+            check_function: function, that check this signal
     """
 
     name: str
@@ -50,6 +49,7 @@ class ParserTrigger:
     id: str
     type: str = ''
     guard: str = 'true'
+    check_function: str | None = None
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
