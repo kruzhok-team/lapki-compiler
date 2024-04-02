@@ -6,12 +6,12 @@ from aiohttp import web
 
 try:
     from .routes import setup_routes
-    from .config import SERVER_PORT, SERVER_HOST, SCHEMA_DIRECTORY
+    from .config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
     from .Logger import Logger
     from .PlatformManager import PlatformManager
 except ImportError:
     from compiler.routes import setup_routes
-    from compiler.config import SERVER_PORT, SERVER_HOST, SCHEMA_DIRECTORY
+    from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
     from compiler.PlatformManager import PlatformManager
     from .Logger import Logger
 
@@ -25,7 +25,7 @@ async def main() -> NoReturn:
 
     site = web.TCPSite(runner, host=SERVER_HOST, port=SERVER_PORT)
     await Logger.init_logger()
-    await PlatformManager.initPlatform(SCHEMA_DIRECTORY)
+    await PlatformManager.init_platforms(PLATFORM_DIRECTORY)
     await site.start()
     print('Модуль компилятора запущен...')
     while True:

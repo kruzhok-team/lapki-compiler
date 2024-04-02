@@ -19,7 +19,9 @@ from fullgraphmlparser.stateclasses import (
     StateMachine,
     ParserState,
     ParserTrigger,
-    ParserNote
+    ParserNote,
+    Labels,
+    create_note
 )
 
 TransitionId = str
@@ -189,7 +191,13 @@ def __connect_parents_to_states(
     cgml_states: Dict[StateId, CGMLState],
     global_state: ParserState
 ) -> Dict[StateId, ParserState]:
-    """"""
+    """
+    Fill parent field for states.
+
+    We can't fill it during first iteration,\
+        because not everyone state is ready.
+    So we can't add parent, that doesn't exist yet.
+    """
     states_with_parents = deepcopy(parser_states)
 
     for state_id in cgml_states:
@@ -253,16 +261,44 @@ def __parse_components(
     return inner_components
 
 
-def __generate_init_components_code(
+def __generate_create_components_code(
         components: Dict[ComponentId, InnerComponent],
         platform: Platform) -> List[ParserNote]:
+    """
+    Generate code, that create component's variables in h-file.
+
+    Generated code example:
+    ```cpp
+    LED led1 = LED(12);
+    Timer timer1 = Timer();
+    ```
+    """
     notes: List[ParserNote] = []
     for component_id in components:
         component: InnerComponent = components[component_id]
-        type = component.type
+        type: str = component.type
         platform_component = platform.components[type]
-        const_parameters = platform_component.constructorParameters
 
+        if platform_component.singletone:
+            continue
+
+        construct_parameters = platform_component.constructorParameters
+        # Порядок вставки аргументов определяется по позиции ключа в платформе
+        construct_keys = list(construct_parameters.keys())
+        args: List[str] = []
+        for parameter_name in construct_keys:
+            parameter = component.parameters[parameter_name]
+            if parameter is None:
+                if construct_parameters[parameter_name].optional:
+                    continue
+                else:
+                    raise CGMLException(
+                        f'No arg {parameter_name} for component\
+                            {component_id}!')
+            args.append(str(parameter))
+        ', '.join(args)
+        code_to_insert = f'{type} {component_id} = {type}({args});\n'
+        notes.append(create_note(Labels.H, code_to_insert))
     return notes
 
 
@@ -275,7 +311,7 @@ def __generate_code(
 def parse(xml: str) -> StateMachine:
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
-    # platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
+    platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
     global_state = ParserState(
         name='global',
         type='group',
@@ -327,14 +363,16 @@ def parse(xml: str) -> StateMachine:
     )
 
     parsed_components = __parse_components(cgml_scheme.components)
-    notes: List[ParserNote] = []
-    # notes.extend()
+    notes: List[ParserNote] = [
+        *__generate_create_components_code(parsed_components, platform)
+    ]
+    print(notes)
 
     return StateMachine(
         start_node=start_node,
         name='sketch',
         start_action='',
-        notes=[],  # TODO: Сгенерировать вставки для кода.
+        notes=notes,  # TODO: Сгенерировать вставки для кода.
         states=[global_state, *list(states_with_parents.values())],
         signals=signals
     )

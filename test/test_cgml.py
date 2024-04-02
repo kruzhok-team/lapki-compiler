@@ -11,9 +11,14 @@ from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.types.inner_types import InnerEvent, InnerTrigger
 from compiler.types.platform_types import Platform
 from compiler.CGML import __parse_actions, parse
+from compiler.PlatformManager import PlatformManager
 
 pytest_plugins = ('pytest_asyncio',)
 
+
+@pytest.fixture
+def init_platform():
+    return PlatformManager.load_platform('compiler/platforms/Arduino.json')
 
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
@@ -39,7 +44,6 @@ def test_parse(path: str):
     parser = CGMLParser()
     with open(path, 'r') as f:
         parser.parseCGML(f.read())
-
 
 @pytest.mark.parametrize(
     'path',
@@ -95,7 +99,8 @@ def test_parse_actions(raw_trigger: str, expected: str):
 
 
 @pytest.mark.asyncio
-async def test_generating_code():
+async def test_generating_code(init_platform):
+    await init_platform
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
         path = './test/test_folder/'

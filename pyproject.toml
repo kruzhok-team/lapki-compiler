@@ -32,7 +32,7 @@ flake8-pyproject = "^1.2.3"
 [tool.flake8]
 import-order-style="pep8"
 inline-quotes = "single"
-ignore=["D107", "W504"]
+ignore=["D107", "W504", "D301"]
 include = ["compiler"]
 exclude=[
     "**/__pycache__",

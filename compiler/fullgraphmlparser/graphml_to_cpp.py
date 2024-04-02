@@ -3,13 +3,17 @@ import inspect
 
 import re
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from aiofile import async_open
 try:
     from .stateclasses import ParserState, ParserTrigger, StateMachine
     from .graphml import *
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import ParserState, ParserTrigger, StateMachine
+    from compiler.fullgraphmlparser.stateclasses import (
+        ParserState,
+        ParserTrigger,
+        StateMachine
+    )
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -39,28 +43,51 @@ class CppFileWriter:
     f = None
     all_signals = []
     userFlag = False  # Флаг на наличие кода для класса User
+    list_notes_dict: Dict[str, List[str]] = {}
 
     def __init__(self, state_machine: StateMachine) -> None:
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
-        notes_mapping = [('Code for h-file', 'raw_h_code'),
-                         ('Declare variable in h-file', 'declare_h_code'),
-                         ('Code for cpp-file', 'raw_cpp_code'),
-                         ('Constructor fields', 'constructor_fields'),
-                         ('State fields', 'state_fields'),
-                         ('Constructor code', 'constructor_code'),
-                         ('Event fields', 'event_fields'),
-                         ('User variables for h-file', 'user_variables_h'),
-                         ('User methods for h-file', 'user_methods_h'),
-                         ('User variables for c-file', 'user_variables_c'),
-                         ('User methods for c-file', 'user_methods_c')]
+        notes_mapping: List[Tuple[str, str]] = [
+            ('Code for h-file', 'raw_h_code'),
+            ('Declare variable in h-file',
+             'declare_h_code'),
+            ('Code for cpp-file',
+             'raw_cpp_code'),
+            ('Constructor fields',
+             'constructor_fields'),
+            ('State fields', 'state_fields'),
+            ('Constructor code',
+             'constructor_code'),
+            ('Event fields', 'event_fields'),
+            ('User variables for h-file',
+             'user_variables_h'),
+            ('User methods for h-file',
+             'user_methods_h'),
+            ('User variables for c-file',
+             'user_variables_c'),
+            ('User methods for c-file', 'user_methods_c')
+        ]
 
-        self.notes_dict = {key: '' for _, key in notes_mapping}
+        # TODO: Заставить это ***** работать со списками
+        self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
+                                                      in notes_mapping}
+
         for note in state_machine.notes:
             dict_note = note.model_dump(by_alias=True)
             for prefix, key in notes_mapping:
+                # Делаем так, чтобы при повторении меток, их содержимое
+                # объединялось, а не перезаписывалось
                 if dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
-                    self.notes_dict[key] = dict_note['y:UMLNoteNode']['y:NodeLabel']['#text']
+                    if self.list_notes_dict != []:
+                        self.list_notes_dict[key].append(
+                            '\n'.join(dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].split('\n')[1:]))
+                    else:
+                        self.list_notes_dict[key].append(
+                            dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'])
+        self.notes_dict = {key: '\n'.join(
+            self.list_notes_dict[key]) for _, key in notes_mapping}
+
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.states = state_machine.states

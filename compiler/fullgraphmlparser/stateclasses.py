@@ -1,7 +1,37 @@
 from typing import List, Optional, Set, Protocol, runtime_checkable
+from enum import Enum
 
 from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
+
+
+def create_note(label: 'Labels', content: str) -> 'ParserNote':
+    """
+    Создать ParserNote на основе метки вставки, и кода для вставки.
+
+    Между label и контентом добавляется \\n, так как по этому символу\
+        сплитится строка в функции write_to_file.
+    """
+    return ParserNote(
+        umlNote=_ParserNoteNodeLabel(
+            nodeLabel=_ParserNoteNodeContent(
+                text=f'{label.value}:\n {content}')
+        )
+    )
+
+
+class Labels(Enum):
+    """В fullgraphmlparser для определения, \
+        куда вставлять код используют метки."""
+
+    H_INCLUDE = 'Code for h-file'
+    H = 'Declare variable in h-file'
+    CPP = 'Code for cpp-file'
+    CTOR = 'Constructor code'
+    USER_VAR_H = 'User variables for h-file'
+    USER_VAR_C = 'User variables for c-file'
+    USER_FUNC_H = 'User methods for h-file'
+    USER_FUNC_C = 'User methods for c-file'
 
 
 @runtime_checkable
@@ -12,16 +42,19 @@ class GeometryBounds(Protocol):
     width: Optional[float]
 
 
-class ParserNoteNodeContent(BaseModel):
+class _ParserNoteNodeContent(BaseModel):
     text: str = Field(serialization_alias='#text')
 
 
-class ParserNoteNodeLabel(BaseModel):
-    nodeLabel: ParserNoteNodeContent = Field(serialization_alias='y:NodeLabel')
+class _ParserNoteNodeLabel(BaseModel):
+    nodeLabel: _ParserNoteNodeContent = Field(
+        serialization_alias='y:NodeLabel')
 
 
 class ParserNote(BaseModel):
-    umlNote: ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
+    """Class for code inserting."""
+
+    umlNote: _ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
 
 
 @dataclass
