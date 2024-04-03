@@ -92,9 +92,6 @@ class CJsonParser:
         """Функция, которая в зависимости от типа компонента\
             возвращает код его инициализации в h-файле."""
         match component.type:
-            case 'Timer':
-                return (f'\nTimer {component_name} = Timer'
-                        f'(the_sketch,{component_name}_timeout_SIG);')
             case 'QHsmSerial':
                 return ''
             case _:

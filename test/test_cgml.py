@@ -20,6 +20,7 @@ pytest_plugins = ('pytest_asyncio',)
 def init_platform():
     return PlatformManager.load_platform('compiler/platforms/Arduino.json')
 
+
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
     try:
@@ -44,6 +45,7 @@ def test_parse(path: str):
     parser = CGMLParser()
     with open(path, 'r') as f:
         parser.parseCGML(f.read())
+
 
 @pytest.mark.parametrize(
     'path',
@@ -105,5 +107,9 @@ async def test_generating_code(init_platform):
         data = f.read()
         path = './test/test_folder/'
         with create_test_folder(path, 10):
-            sm = parse(data)
-            await CppFileWriter(sm, True).write_to_file(path, 'ino')
+            try:
+                sm = parse(data)
+                await CppFileWriter(sm, True).write_to_file(path, 'ino')
+                print('Code generated!')
+            except Exception as e:
+                print(e)

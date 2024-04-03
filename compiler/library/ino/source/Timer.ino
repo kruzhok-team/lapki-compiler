@@ -26,12 +26,10 @@
 || @parameter oneshot  if true, the timer will be disabled after the timeout
 || @parameter signal   signal, that will be emmited by timeout
 */
-Timer::Timer(QHsm* qhsm, QSignal signal)
+Timer::Timer()
 {
   _active = false;
   _previous = 0;
-  _qhsm = qhsm;
-  _signal = signal;
 }
 
 void Timer::reset()
@@ -64,14 +62,15 @@ void Timer::enable()
 || | Check if it is time for this Timer to call the function
 || #
 */
-void Timer::timeout()
+bool Timer::timeout()
 {
   difference -= millis() - _previous;
   if (_active && (millis() - _previous >= _interval))
   {
     _previous = millis();
-    SIGNAL_DISPATCH(_qhsm, _signal);
+    return true
   }
+  return false
 }
 
 /*

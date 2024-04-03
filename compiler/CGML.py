@@ -3,11 +3,11 @@ import re
 import random
 from typing import Dict, List, Set, Any
 from copy import deepcopy
+from string import Template
 
 from compiler.PlatformManager import PlatformManager
 from compiler.types.ide_types import Bounds
-from string import Template
-from compiler.types.platform_types import ClassParameter, Platform
+from compiler.types.platform_types import ClassParameter, Component, Platform, Signal
 from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from cyberiadaml_py.types.elements import (
@@ -25,11 +25,18 @@ from fullgraphmlparser.stateclasses import (
     create_note
 )
 
-TransitionId = str
-StateId = str
-ComponentId = str
+_TransitionId = str
+_StateId = str
+_ComponentId = str
 
-CALL_FUNCTION_TEMPLATE = Template('$id$delimeter($args);')
+_CALL_FUNCTION_TEMPLATE = Template('$id$delimeter$method($args);')
+_CHECK_SIGNAL_TEMPLATE = Template(
+    """
+if($condition) {
+    SIMPLE_DISPATCH(the_sketch, $signal);
+}
+"""
+)
 
 
 class CGMLException(Exception):
@@ -100,6 +107,7 @@ def __gen_id() -> int:
 
 
 def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
+    """Process internal triggers and actions of state."""
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_state.actions)
     parser_triggers: List[ParserTrigger] = []
     entry = ''
@@ -175,9 +183,9 @@ def __process_transition(
 
 
 def __connect_transitions_to_states(
-    states: Dict[StateId, ParserState],
+    states: Dict[_StateId, ParserState],
     transitions: List[ParserTrigger]
-) -> Dict[StateId, ParserState]:
+) -> Dict[_StateId, ParserState]:
     """Add external triggers to states."""
     states_with_external_trigs = deepcopy(states)
     for transition in transitions:
@@ -190,10 +198,10 @@ def __connect_transitions_to_states(
 
 
 def __connect_parents_to_states(
-    parser_states: Dict[StateId, ParserState],
-    cgml_states: Dict[StateId, CGMLState],
+    parser_states: Dict[_StateId, ParserState],
+    cgml_states: Dict[_StateId, CGMLState],
     global_state: ParserState
-) -> Dict[StateId, ParserState]:
+) -> Dict[_StateId, ParserState]:
     """
     Fill parent field for states.
 
@@ -218,26 +226,32 @@ def __connect_parents_to_states(
     return states_with_parents
 
 
-def __get_signals_set(
-        states: List[ParserState],
-        transitions: List[ParserTrigger]) -> Set[str]:
-    """Get signals set from all states and transitions."""
-    signals = set()
+def __get_all_triggers(states: List[ParserState],
+                       transitions: List[ParserTrigger]
+                       ) -> List[ParserTrigger]:
+    """Get all triggers from states and transitions."""
+    triggers: List[ParserTrigger] = []
     for state in states:
-        for internal_trig in state.trigs:
-            signals.add(internal_trig.name)
+        triggers.extend(state.trigs)
+    triggers.extend(transitions)
+    return triggers
 
-    for transition in transitions:
-        signals.add(transition.name)
+
+def __get_signals_set(
+        triggers: List[ParserTrigger]) -> Set[str]:
+    """Get signals set from triggers."""
+    signals = set()
+    for trig in triggers:
+        signals.add(trig.name)
 
     return signals
 
 
 def __parse_components(
     components: List[CGMLComponent]
-) -> Dict[ComponentId, InnerComponent]:
+) -> Dict[_ComponentId, InnerComponent]:
     """Parse component's parameters."""
-    inner_components: Dict[ComponentId, InnerComponent] = {}
+    inner_components: Dict[_ComponentId, InnerComponent] = {}
 
     for component in components:
         parameters: List[str] = component.parameters.split('\n')
@@ -265,7 +279,7 @@ def __parse_components(
 
 
 def __generate_create_components_code(
-        components: Dict[ComponentId, InnerComponent],
+        components: Dict[_ComponentId, InnerComponent],
         platform: Platform) -> List[ParserNote]:
     """
     Generate code, that create component's variables in h-file.
@@ -288,7 +302,7 @@ def __generate_create_components_code(
         construct_parameters = platform_component.constructorParameters
         args: str = __create_parameters_sequence(
             component.parameters, construct_parameters)
-        code_to_insert = (f'{type} {component_id} ='
+        code_to_insert = (f'{type} {component_id} = '
                           f'{type}({args});\n')
         notes.append(create_note(Labels.H, code_to_insert))
     return notes
@@ -323,15 +337,15 @@ def __generate_function_call(
         method: str,
         args: str) -> str:
     """
-    Generate function call code using CALL_FUNCTION_TEMPLATE.
+    Generate function call code using _CALL_FUNCTION_TEMPLATE.
 
-    Check component's static or platform's static.
+    Check component's static and platform's static.
     """
     delimeter = '.'
     if (platform.staticComponents or
             platform.components[component_type].singletone):
         delimeter = '::'
-    return CALL_FUNCTION_TEMPLATE.substitute(
+    return _CALL_FUNCTION_TEMPLATE.substitute(
         {
             'id': component_id,
             'method': method,
@@ -341,9 +355,65 @@ def __generate_function_call(
     )
 
 
+def __generate_signal_checker(
+        platform: Platform,
+        component_type: str,
+        component_id: str,
+        method: str,
+        signal_name: str
+) -> str:
+    """Generate code part for checking and emitting signals using\
+        _CHECK_SIGNAL_TEMPLATE."""
+    platform_component: Component = platform.components[component_type]
+    signal: Signal = platform_component.signals[method]
+    call_method = signal.checkMethod
+    print(call_method)
+    condition = __generate_function_call(
+        platform, component_type, component_id, call_method, '')
+    return _CHECK_SIGNAL_TEMPLATE.substitute({
+        'signal': signal_name,
+        'condition': condition.rstrip(';')
+    })
+
+
+def __generate_loop_function_code(
+    platform: Platform,
+    triggers: List[ParserTrigger],
+    components: Dict[_ComponentId, InnerComponent]
+) -> List[ParserNote]:
+    checked_signals: Set[str] = set()
+    notes: List[ParserNote] = []
+
+    for trigger in triggers:
+        if trigger.name in checked_signals:
+            continue
+        # Предполагается, что в check_function лежит строка вида
+        # component.method
+        condition = trigger.check_function
+        if condition is None:
+            continue
+        component_id, method = condition.split('.')
+        type = components[component_id].type
+        code_to_insert = __generate_signal_checker(
+            platform, type, component_id, method, trigger.name)
+        notes.append(create_note(Labels.LOOP, code_to_insert))
+        checked_signals.add(trigger.name)
+    return notes
+
+
 def __generate_setup_function_code(
-        components: Dict[ComponentId, InnerComponent],
+        components: Dict[_ComponentId, InnerComponent],
         platform: Platform) -> List[ParserNote]:
+    """
+    Generate code for initialization components in setup function.
+
+    Base of setup function generates in CppWriter!
+
+    Generated code example:
+    ```cpp
+    QHsmSerial::init(9600);
+    ```
+    """
     notes: List[ParserNote] = []
     for component_id, component in components.items():
         type = component.type
@@ -386,7 +456,7 @@ def parse(xml: str) -> StateMachine:
     )
     # Parsing external transitions.
     transitions: List[ParserTrigger] = []
-    cgml_transitions: Dict[TransitionId,
+    cgml_transitions: Dict[_TransitionId,
                            CGMLTransition] = cgml_scheme.transitions
     for transition_id in cgml_transitions:
         cgml_transition = cgml_transitions[transition_id]
@@ -394,8 +464,8 @@ def parse(xml: str) -> StateMachine:
             transition_id, cgml_transition))
 
     # Parsing state's actions, internal triggers, entry/exit
-    states: Dict[StateId, ParserState] = {}
-    cgml_states: Dict[StateId, CGMLState] = cgml_scheme.states
+    states: Dict[_StateId, ParserState] = {}
+    cgml_states: Dict[_StateId, CGMLState] = cgml_scheme.states
     for state_id in cgml_states:
         cgml_state = cgml_states[state_id]
         states[state_id] = __process_state(state_id, cgml_state)
@@ -411,17 +481,20 @@ def parse(xml: str) -> StateMachine:
         raise CGMLException('No initial state!')
 
     start_node: str = cgml_scheme.initial_state.target
-    signals = __get_signals_set(
+    # Мы получаем список триггеров для того, чтобы потом:
+    # 1) Сформировать набор всех сигналов
+    # 2) Сгенерировать проверки для вызова сигналов
+    all_triggers = __get_all_triggers(
         list(states_with_parents.values()),
-        transitions
-    )
+        transitions)
+    signals = __get_signals_set(all_triggers)
 
     parsed_components = __parse_components(cgml_scheme.components)
     notes: List[ParserNote] = [
         *__generate_create_components_code(parsed_components, platform),
         *__generate_setup_function_code(parsed_components, platform),
+        *__generate_loop_function_code(platform, all_triggers, parsed_components)
     ]
-    print(notes)
 
     return StateMachine(
         start_node=start_node,

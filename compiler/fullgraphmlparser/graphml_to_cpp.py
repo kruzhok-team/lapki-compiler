@@ -48,33 +48,35 @@ class CppFileWriter:
 
     def __init__(self,
                  state_machine: StateMachine,
-                 create_setup=False) -> None:
+                 create_setup=False,
+                 create_loop=False) -> None:
+        self.create_loop = create_loop
         self.create_setup = create_setup
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
         notes_mapping: List[Tuple[str, str]] = [
-            ('Code for h-file', 'raw_h_code'),
-            ('Declare variable in h-file',
+            (Labels.H_INCLUDE.value, 'raw_h_code'),
+            (Labels.H.value,
              'declare_h_code'),
-            ('Code for cpp-file',
+            (Labels.CPP.value,
              'raw_cpp_code'),
-            ('Constructor fields',
+            (Labels.CTOR_FIELDS.value,
              'constructor_fields'),
-            ('State fields', 'state_fields'),
-            ('Constructor code',
+            (Labels.STATE_FIELDS.value, 'state_fields'),
+            (Labels.CTOR.value,
              'constructor_code'),
-            ('Event fields', 'event_fields'),
-            ('User variables for h-file',
+            (Labels.EVENT_FIELDS.value, 'event_fields'),
+            (Labels.USER_VAR_H.value,
              'user_variables_h'),
-            ('User methods for h-file',
+            (Labels.USER_FUNC_H.value,
              'user_methods_h'),
-            ('User variables for c-file',
+            (Labels.USER_VAR_C.value,
              'user_variables_c'),
-            ('User methods for c-file', 'user_methods_c'),
-            (Labels.SETUP.value, 'setup')
+            (Labels.USER_FUNC_C.value, 'user_methods_c'),
+            (Labels.SETUP.value, 'setup'),
+            (Labels.LOOP.value, 'loop')
         ]
 
-        # TODO: Заставить это ***** работать со списками
         self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
                                                       in notes_mapping}
 
@@ -112,10 +114,14 @@ class CppFileWriter:
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
-                await self._insert_string('\n\tsketch_ctor();')
+                await self._insert_string('\n\tSketch_ctor();')
                 await self._insert_string('\n\tQEvt event;')
                 await self._insert_string('\n\tQMsm_init(the_sketch, &event);')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
+                await self._insert_string('\n}')
+            if self.notes_dict['loop'] or self.create_loop:
+                await self._insert_string('\nvoid loop() {')
+                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
                 await self._insert_string('\n}')
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n//Start of c code from diagram\n')

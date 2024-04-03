@@ -29,10 +29,14 @@ class Labels(Enum):
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
     SETUP = 'Setup function in cpp-file'
+    LOOP = 'Loop function in cpp-file'
     USER_VAR_H = 'User variables for h-file'
     USER_VAR_C = 'User variables for c-file'
     USER_FUNC_H = 'User methods for h-file'
     USER_FUNC_C = 'User methods for c-file'
+    CTOR_FIELDS = 'Constructor fields'
+    STATE_FIELDS = 'State fields'
+    EVENT_FIELDS = 'Event fields'
 
 
 @runtime_checkable
