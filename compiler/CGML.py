@@ -7,8 +7,13 @@ from string import Template
 
 from compiler.PlatformManager import PlatformManager
 from compiler.types.ide_types import Bounds
-from compiler.types.platform_types import ClassParameter, Component, Platform, Signal
 from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
+from compiler.types.platform_types import (
+    ClassParameter,
+    Component,
+    Platform,
+    Signal
+)
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from cyberiadaml_py.types.elements import (
     CGMLElements,
@@ -376,11 +381,21 @@ def __generate_signal_checker(
     })
 
 
-def __generate_loop_function_code(
+def __generate_loop_signal_checks_code(
     platform: Platform,
     triggers: List[ParserTrigger],
     components: Dict[_ComponentId, InnerComponent]
 ) -> List[ParserNote]:
+    """
+    Generate code for checking signals in loop function.
+
+    Generated code example:
+    ```cpp
+    if(timer1.timeout()) {
+        SIMPLE_DISPATCH(the_sketch, timer1_timeout);
+    }
+    ```
+    """
     checked_signals: Set[str] = set()
     notes: List[ParserNote] = []
 
@@ -398,6 +413,21 @@ def __generate_loop_function_code(
             platform, type, component_id, method, trigger.name)
         notes.append(create_note(Labels.LOOP, code_to_insert))
         checked_signals.add(trigger.name)
+    return notes
+
+
+def __generate_loop_tick_actions_code(
+    platform: Platform,
+    components: Dict[_ComponentId, InnerComponent]
+) -> List[ParserNote]:
+    notes: List[ParserNote] = []
+    for component_id, component in components.items():
+        platform_component: Component = platform.components[component.type]
+        loop_actions: List[str] = platform_component.loopActions
+        for method in loop_actions:
+            code_to_insert = __generate_function_call(
+                platform, component.type, component_id, method, '')
+            notes.append(create_note(Labels.LOOP, code_to_insert))
     return notes
 
 
@@ -433,9 +463,21 @@ def __generate_setup_function_code(
 
 
 def parse(xml: str) -> StateMachine:
+    """
+    Parse XML with cyberiadaml-py library and convert it\
+        to StateMachine for CppWriter class.
+
+    Generate code:
+    - creating component's variables;
+    - initialization components in setup function;
+    - signal checks in loop function;
+    """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
     platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
+    if not platform.compile:
+        raise CGMLException(
+            f'Platform {platform.name} not supporting compiling!')
     global_state = ParserState(
         name='global',
         type='group',
@@ -493,7 +535,10 @@ def parse(xml: str) -> StateMachine:
     notes: List[ParserNote] = [
         *__generate_create_components_code(parsed_components, platform),
         *__generate_setup_function_code(parsed_components, platform),
-        *__generate_loop_function_code(platform, all_triggers, parsed_components)
+        *__generate_loop_tick_actions_code(platform, parsed_components),
+        *__generate_loop_signal_checks_code(platform,
+                                            all_triggers,
+                                            parsed_components)
     ]
 
     return StateMachine(

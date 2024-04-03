@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
     """
-    Создать ParserNote на основе метки вставки, и кода для вставки.
+    Создать ParserNote на основе метки вставки, и кода, который нужно вставить.
 
     Между label и контентом добавляется \\n, так как по этому символу\
         сплитится строка в функции write_to_file.
@@ -57,7 +57,11 @@ class _ParserNoteNodeLabel(BaseModel):
 
 
 class ParserNote(BaseModel):
-    """Class for code inserting."""
+    """
+    Class for code inserting.
+
+    ### Create only by create_note function.
+    """
 
     umlNote: _ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
 

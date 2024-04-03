@@ -81,3 +81,4 @@ class Platform(BaseModel):
     compilingSettings: CompilingSettings
     components: Dict[str, Component]
     delimeter: str
+    compile: bool
