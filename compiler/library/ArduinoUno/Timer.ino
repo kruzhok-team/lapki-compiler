@@ -68,9 +68,9 @@ bool Timer::timeout()
   if (_active && (millis() - _previous >= _interval))
   {
     _previous = millis();
-    return true
+    return true;
   }
-  return false
+  return false;
 }
 
 /*

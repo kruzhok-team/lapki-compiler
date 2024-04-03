@@ -27,14 +27,15 @@ from fullgraphmlparser.stateclasses import (
     ParserTrigger,
     ParserNote,
     Labels,
-    create_note
+    create_note,
+    SMCompilingSettings
 )
 
 _TransitionId = str
 _StateId = str
 _ComponentId = str
 
-_INCLUDE_TEMPLATE = Template('#include "$component_type.h"')
+_INCLUDE_TEMPLATE = Template('#include "$component_type"')
 _CALL_FUNCTION_TEMPLATE = Template('$id$delimeter$method($args);')
 _CHECK_SIGNAL_TEMPLATE = Template(
     """
@@ -373,7 +374,6 @@ def __generate_signal_checker(
     platform_component: Component = platform.components[component_type]
     signal: Signal = platform_component.signals[method]
     call_method = signal.checkMethod
-    print(call_method)
     condition = __generate_function_call(
         platform, component_type, component_id, call_method, '')
     return _CHECK_SIGNAL_TEMPLATE.substitute({
@@ -478,7 +478,7 @@ def __get_include_libraries(platform: Platform,
     for component in components:
         included_libraries.update(
             platform.components[component.type].importFiles)
-    return set([component.type for component in components])
+    return included_libraries
 
 
 def __generate_includes_libraries_code(
@@ -489,6 +489,18 @@ def __generate_includes_libraries_code(
         Labels.H_INCLUDE,
         _INCLUDE_TEMPLATE.substitute({'component_type': type})
     ) for type in included_libraries]
+
+
+def __get_build_files(
+    platform: Platform,
+    components: List[InnerComponent]
+) -> Set[str]:
+    """Get set of files, that must be included for compiling."""
+    build_libraries: Set[str] = set()
+    for component in components:
+        build_libraries.update(
+            platform.components[component.type].buildFiles)
+    return build_libraries
 
 
 def parse(xml: str) -> StateMachine:
@@ -563,6 +575,7 @@ def parse(xml: str) -> StateMachine:
     parsed_components = __parse_components(cgml_scheme.components)
     included_libraries: Set[str] = __get_include_libraries(
         platform, list(parsed_components.values()))
+    build_files = __get_build_files(platform, list(parsed_components.values()))
     notes: List[ParserNote] = [
         *__generate_create_components_code(parsed_components, platform),
         *__generate_setup_function_code(parsed_components, platform),
@@ -572,12 +585,18 @@ def parse(xml: str) -> StateMachine:
                                             all_triggers,
                                             parsed_components)
     ]
-
+    compiling_settings = SMCompilingSettings(
+        included_libraries,
+        build_files,
+        platform.id,
+        platform.compilingSettings
+    )
     return StateMachine(
         start_node=start_node,
         name='sketch',
         start_action='',
-        notes=notes,  # TODO: Сгенерировать вставки для кода.
+        notes=notes,
         states=[global_state, *list(states_with_parents.values())],
-        signals=signals
+        signals=signals,
+        compiling_settings=compiling_settings
     )

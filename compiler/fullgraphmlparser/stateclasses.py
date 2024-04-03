@@ -1,8 +1,15 @@
-from typing import List, Optional, Set, Protocol, runtime_checkable
+from typing import (
+    List,
+    Optional,
+    Set,
+    Protocol,
+    runtime_checkable
+)
 from enum import Enum
 
 from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
+from compiler.types.platform_types import CompilingSettings
 
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
@@ -130,6 +137,14 @@ class ParserState:
 
 
 @dataclass
+class SMCompilingSettings:
+    import_files: Set[str]
+    build_files: Set[str]
+    platform_id: str
+    platform_compiler_settings: CompilingSettings
+
+
+@dataclass
 class StateMachine:
     name: str
     start_node: str
@@ -137,3 +152,5 @@ class StateMachine:
     notes: List[ParserNote]
     states: List[ParserState]
     signals: Set[str]
+    # Установлено дефолтное значение, чтобы не трогать легаси.
+    compiling_settings: Optional[SMCompilingSettings] = None
