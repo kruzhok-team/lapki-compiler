@@ -34,6 +34,7 @@ _TransitionId = str
 _StateId = str
 _ComponentId = str
 
+_INCLUDE_TEMPLATE = Template('#include "$component_type.h"')
 _CALL_FUNCTION_TEMPLATE = Template('$id$delimeter$method($args);')
 _CHECK_SIGNAL_TEMPLATE = Template(
     """
@@ -420,6 +421,14 @@ def __generate_loop_tick_actions_code(
     platform: Platform,
     components: Dict[_ComponentId, InnerComponent]
 ) -> List[ParserNote]:
+    """
+    Generate code, that will be call every loop's tick.
+
+    Generated code example:
+    ```cpp
+    analogIn.read();
+    ```
+    """
     notes: List[ParserNote] = []
     for component_id, component in components.items():
         platform_component: Component = platform.components[component.type]
@@ -460,6 +469,26 @@ def __generate_setup_function_code(
             platform, type, component_id, init_func, args)
         notes.append(create_note(Labels.SETUP, code_to_insert))
     return notes
+
+
+def __get_include_libraries(platform: Platform,
+                            components: List[InnerComponent]) -> Set[str]:
+    """Get set of source files, that must be included."""
+    included_libraries: Set[str] = set()
+    for component in components:
+        included_libraries.update(
+            platform.components[component.type].importFiles)
+    return set([component.type for component in components])
+
+
+def __generate_includes_libraries_code(
+    included_libraries: Set[str]
+) -> List[ParserNote]:
+    """Generate code for including libraries using _INCLUDE_TEMPLATE."""
+    return [create_note(
+        Labels.H_INCLUDE,
+        _INCLUDE_TEMPLATE.substitute({'component_type': type})
+    ) for type in included_libraries]
 
 
 def parse(xml: str) -> StateMachine:
@@ -532,10 +561,13 @@ def parse(xml: str) -> StateMachine:
     signals = __get_signals_set(all_triggers)
 
     parsed_components = __parse_components(cgml_scheme.components)
+    included_libraries: Set[str] = __get_include_libraries(
+        platform, list(parsed_components.values()))
     notes: List[ParserNote] = [
         *__generate_create_components_code(parsed_components, platform),
         *__generate_setup_function_code(parsed_components, platform),
-        *__generate_loop_tick_actions_code(platform, parsed_components),
+        *__generate_includes_libraries_code(included_libraries),
+        * __generate_loop_tick_actions_code(platform, parsed_components),
         *__generate_loop_signal_checks_code(platform,
                                             all_triggers,
                                             parsed_components)
