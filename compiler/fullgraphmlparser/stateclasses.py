@@ -15,7 +15,7 @@ def create_note(label: 'Labels', content: str) -> 'ParserNote':
     return ParserNote(
         umlNote=_ParserNoteNodeLabel(
             nodeLabel=_ParserNoteNodeContent(
-                text=f'{label.value}:\n {content}')
+                text=f'{label.value}:\n{content}')
         )
     )
 
@@ -28,6 +28,7 @@ class Labels(Enum):
     H = 'Declare variable in h-file'
     CPP = 'Code for cpp-file'
     CTOR = 'Constructor code'
+    SETUP = 'Setup function in cpp-file'
     USER_VAR_H = 'User variables for h-file'
     USER_VAR_C = 'User variables for c-file'
     USER_FUNC_H = 'User methods for h-file'

@@ -106,4 +106,4 @@ async def test_generating_code(init_platform):
         path = './test/test_folder/'
         with create_test_folder(path, 10):
             sm = parse(data)
-            await CppFileWriter(sm).write_to_file(path, 'ino')
+            await CppFileWriter(sm, True).write_to_file(path, 'ino')

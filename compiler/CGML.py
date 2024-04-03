@@ -1,12 +1,13 @@
 """Module for work with CyberiadaMl."""
 import re
 import random
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Any
 from copy import deepcopy
 
 from compiler.PlatformManager import PlatformManager
 from compiler.types.ide_types import Bounds
-from compiler.types.platform_types import Platform
+from string import Template
+from compiler.types.platform_types import ClassParameter, Platform
 from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from cyberiadaml_py.types.elements import (
@@ -27,6 +28,8 @@ from fullgraphmlparser.stateclasses import (
 TransitionId = str
 StateId = str
 ComponentId = str
+
+CALL_FUNCTION_TEMPLATE = Template('$id$delimeter($args);')
 
 
 class CGMLException(Exception):
@@ -283,29 +286,80 @@ def __generate_create_components_code(
             continue
 
         construct_parameters = platform_component.constructorParameters
-        # Порядок вставки аргументов определяется по позиции ключа в платформе
-        construct_keys = list(construct_parameters.keys())
-        args: List[str] = []
-        for parameter_name in construct_keys:
-            parameter = component.parameters[parameter_name]
-            if parameter is None:
-                if construct_parameters[parameter_name].optional:
-                    continue
-                else:
-                    raise CGMLException(
-                        f'No arg {parameter_name} for component\
-                            {component_id}!')
-            args.append(str(parameter))
-        ', '.join(args)
-        code_to_insert = f'{type} {component_id} = {type}({args});\n'
+        args: str = __create_parameters_sequence(
+            component.parameters, construct_parameters)
+        code_to_insert = (f'{type} {component_id} ='
+                          f'{type}({args});\n')
         notes.append(create_note(Labels.H, code_to_insert))
     return notes
 
 
-def __generate_code(
+def __create_parameters_sequence(
+        component_parameters: Dict[str, Any],
+        platform_parameters: Dict[str, ClassParameter]) -> str:
+    """
+    Create args sequence from component's parameters and platform parameters.
+
+    Order of parameters in sequence depends on order platform parameters.
+    Return example: 'arg1, arg2, arg3'
+    """
+    args: List[str] = []
+    for parameter_name in platform_parameters:
+        parameter = component_parameters[parameter_name]
+        if parameter is None:
+            if platform_parameters[parameter_name].optional:
+                continue
+            else:
+                raise CGMLException(
+                    f'No arg {parameter_name} for component!')
+        args.append(str(parameter))
+    return ', '.join(args)
+
+
+def __generate_function_call(
         platform: Platform,
-        components: List[CGMLComponent]) -> List[ParserNote]:
-    return []
+        component_type: str,
+        component_id: str,
+        method: str,
+        args: str) -> str:
+    """
+    Generate function call code using CALL_FUNCTION_TEMPLATE.
+
+    Check component's static or platform's static.
+    """
+    delimeter = '.'
+    if (platform.staticComponents or
+            platform.components[component_type].singletone):
+        delimeter = '::'
+    return CALL_FUNCTION_TEMPLATE.substitute(
+        {
+            'id': component_id,
+            'method': method,
+            'args': args,
+            'delimeter': delimeter
+        }
+    )
+
+
+def __generate_setup_function_code(
+        components: Dict[ComponentId, InnerComponent],
+        platform: Platform) -> List[ParserNote]:
+    notes: List[ParserNote] = []
+    for component_id, component in components.items():
+        type = component.type
+        platform_component = platform.components[type]
+        init_func = platform_component.initializationFunction
+        if init_func is None:
+            continue
+        init_parameters = platform_component.initializationParameters
+        args = ''
+        if init_parameters is not None:
+            args = __create_parameters_sequence(
+                component.parameters, init_parameters)
+        code_to_insert = __generate_function_call(
+            platform, type, component_id, init_func, args)
+        notes.append(create_note(Labels.SETUP, code_to_insert))
+    return notes
 
 
 def parse(xml: str) -> StateMachine:
@@ -364,7 +418,8 @@ def parse(xml: str) -> StateMachine:
 
     parsed_components = __parse_components(cgml_scheme.components)
     notes: List[ParserNote] = [
-        *__generate_create_components_code(parsed_components, platform)
+        *__generate_create_components_code(parsed_components, platform),
+        *__generate_setup_function_code(parsed_components, platform),
     ]
     print(notes)
 

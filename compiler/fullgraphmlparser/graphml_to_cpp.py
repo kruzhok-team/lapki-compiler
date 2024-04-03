@@ -6,13 +6,14 @@ from collections import defaultdict
 from typing import List, Tuple, Dict
 from aiofile import async_open
 try:
-    from .stateclasses import ParserState, ParserTrigger, StateMachine
+    from .stateclasses import ParserState, ParserTrigger, StateMachine, Labels
     from .graphml import *
 except ImportError:
     from compiler.fullgraphmlparser.stateclasses import (
         ParserState,
         ParserTrigger,
-        StateMachine
+        StateMachine,
+        Labels
     )
     from compiler.fullgraphmlparser.graphml import *
 
@@ -45,7 +46,10 @@ class CppFileWriter:
     userFlag = False  # Флаг на наличие кода для класса User
     list_notes_dict: Dict[str, List[str]] = {}
 
-    def __init__(self, state_machine: StateMachine) -> None:
+    def __init__(self,
+                 state_machine: StateMachine,
+                 create_setup=False) -> None:
+        self.create_setup = create_setup
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
         notes_mapping: List[Tuple[str, str]] = [
@@ -66,7 +70,8 @@ class CppFileWriter:
              'user_methods_h'),
             ('User variables for c-file',
              'user_variables_c'),
-            ('User methods for c-file', 'user_methods_c')
+            ('User methods for c-file', 'user_methods_c'),
+            (Labels.SETUP.value, 'setup')
         ]
 
         # TODO: Заставить это ***** работать со списками
@@ -105,6 +110,13 @@ class CppFileWriter:
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
             await self._insert_file_template('footer_c.txt')
+            if self.notes_dict['setup'] or self.create_setup:
+                await self._insert_string('\nvoid setup() {')
+                await self._insert_string('\n\tsketch_ctor();')
+                await self._insert_string('\n\tQEvt event;')
+                await self._insert_string('\n\tQMsm_init(the_sketch, &event);')
+                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
+                await self._insert_string('\n}')
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n//Start of c code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
