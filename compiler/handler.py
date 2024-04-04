@@ -51,6 +51,48 @@ except ImportError:
     from compiler.Logger import Logger
 
 
+async def create_response(
+        base_dir: str,
+        compiler_result: CompilerResult) -> CompilerResponse:
+    """
+    Get source files, binary files from\
+        directory and create CompilerResponse.
+
+        Doesn't send anything.
+    """
+    response = CompilerResponse(
+        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
+        return_code=compiler_result.return_code,
+        stdout=compiler_result.stdout,
+        stderr=compiler_result.stderr,
+        binary=[],
+        source=[]
+    )
+    build_path = base_dir + 'build/'
+    async for path in AsyncPath(build_path).rglob('*'):
+        if await path.is_file():
+            async with async_open(path, 'rb') as f:
+                binary = await f.read()
+                b64_data: bytes = base64.b64encode(binary)
+                response.binary.append(File(
+                    filename=path.name.split('.')[0],
+                    extension=''.join(path.suffixes),
+                    fileContent=b64_data.decode('ascii'),
+                ))
+
+    response.source.append(await Handler.readSourceFile(
+        'sketch',
+        'ino',
+        base_dir)
+    )
+    response.source.append(await Handler.readSourceFile(
+        'sketch',
+        'h',
+        base_dir)
+    )
+    return response
+
+
 def get_default_libraries() -> Set[str]:
     """
     Get set of default libraries.
@@ -68,9 +110,10 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
     Compile CGML scheme.
 
     This function generate code from scheme, compile it.
+
+    Doesn't send anything.
     """
     sm: StateMachine = parse(xml)
-    await AsyncPath(base_dir_path).mkdir(parents=True)
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
@@ -159,23 +202,13 @@ class Handler:
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
-            sm: StateMachine = parse(xml)
-            dirname = str(datetime.now()) + '/'
-            dirname = dirname.replace(' ', '_') + '/sketch'
-            await AsyncPath(dirname).mkdir()
-            await CppFileWriter(sm, True, True).write_to_file(dirname, '.ino')
-            settings: SMCompilingSettings | None = sm.compiling_settings
-            if settings is None:
-                raise Exception('Internal error!')
-            await Compiler.include_source_files(settings.platform_id,
-                                                settings.import_files,
-                                                dirname)
-            flags = settings.platform_compiler_settings.flags
-            compiler = settings.platform_compiler_settings.compiler
-            await Compiler.compile(dirname,
-                                   settings.build_files,
-                                   flags,
-                                   compiler)
+            base_dir = str(datetime.now()) + '/'
+            base_dir = base_dir.replace(' ', '_') + '/sketch'
+            await AsyncPath(base_dir).mkdir()
+            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
+            response = await create_response(base_dir, compiler_result)
+            await Logger.logger.info(response)
+            await ws.send_json(response.model_dump())
         except CGMLException as e:
             await Logger.logException()
             await RequestError(e.args[0]).dropConnection(ws)

@@ -6,7 +6,7 @@ from pathlib import Path
 from contextlib import contextmanager
 
 import pytest
-from compiler.handler import compile_xml
+from compiler.handler import compile_xml, create_response
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.types.inner_types import InnerEvent, InnerTrigger
@@ -25,7 +25,7 @@ async def init_platform():
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
     try:
-        Path(path).mkdir()
+        Path(path).mkdir(parents=True)
         yield
     finally:
         time.sleep(wait_time)
@@ -103,6 +103,7 @@ def test_parse_actions(raw_trigger: str, expected: str):
 
 @pytest.mark.asyncio
 async def test_generating_code(init_platform):
+    await init_platform
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
         path = './test/test_folder/'
@@ -119,5 +120,8 @@ async def test_generating_code(init_platform):
 async def test_cgml_route(init_platform):
     await init_platform
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
-        data = f.read()
-        await compile_xml(data)
+        path = './test/test_project/sketch'
+        with create_test_folder(path, 10):
+            data = f.read()
+            result = await compile_xml(data, path)
+            await create_response(path, result)

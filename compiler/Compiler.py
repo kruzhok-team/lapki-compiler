@@ -39,6 +39,7 @@ class SupportedCompiler(TypedDict):
 
 class Compiler:
     """Class for compiling, copying libraries sources."""
+
     DEFAULT_LIBRARY_ID = 'default'
     c_default_libraries = set(['qhsm'])  # legacy
     supported_compilers: Dict[str, SupportedCompiler] = {
