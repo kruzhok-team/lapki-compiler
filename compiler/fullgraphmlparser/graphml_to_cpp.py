@@ -3,13 +3,18 @@ import inspect
 
 import re
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from aiofile import async_open
 try:
-    from .stateclasses import ParserState, ParserTrigger, StateMachine
+    from .stateclasses import ParserState, ParserTrigger, StateMachine, Labels
     from .graphml import *
 except ImportError:
-    from compiler.fullgraphmlparser.stateclasses import ParserState, ParserTrigger, StateMachine
+    from compiler.fullgraphmlparser.stateclasses import (
+        ParserState,
+        ParserTrigger,
+        StateMachine,
+        Labels
+    )
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -39,28 +44,57 @@ class CppFileWriter:
     f = None
     all_signals = []
     userFlag = False  # Флаг на наличие кода для класса User
+    list_notes_dict: Dict[str, List[str]] = {}
 
-    def __init__(self, state_machine: StateMachine) -> None:
+    def __init__(self,
+                 state_machine: StateMachine,
+                 create_setup=False,
+                 create_loop=False) -> None:
+        self.create_loop = create_loop
+        self.create_setup = create_setup
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
-        notes_mapping = [('Code for h-file', 'raw_h_code'),
-                         ('Declare variable in h-file', 'declare_h_code'),
-                         ('Code for cpp-file', 'raw_cpp_code'),
-                         ('Constructor fields', 'constructor_fields'),
-                         ('State fields', 'state_fields'),
-                         ('Constructor code', 'constructor_code'),
-                         ('Event fields', 'event_fields'),
-                         ('User variables for h-file', 'user_variables_h'),
-                         ('User methods for h-file', 'user_methods_h'),
-                         ('User variables for c-file', 'user_variables_c'),
-                         ('User methods for c-file', 'user_methods_c')]
+        notes_mapping: List[Tuple[str, str]] = [
+            (Labels.H_INCLUDE.value, 'raw_h_code'),
+            (Labels.H.value,
+             'declare_h_code'),
+            (Labels.CPP.value,
+             'raw_cpp_code'),
+            (Labels.CTOR_FIELDS.value,
+             'constructor_fields'),
+            (Labels.STATE_FIELDS.value, 'state_fields'),
+            (Labels.CTOR.value,
+             'constructor_code'),
+            (Labels.EVENT_FIELDS.value, 'event_fields'),
+            (Labels.USER_VAR_H.value,
+             'user_variables_h'),
+            (Labels.USER_FUNC_H.value,
+             'user_methods_h'),
+            (Labels.USER_VAR_C.value,
+             'user_variables_c'),
+            (Labels.USER_FUNC_C.value, 'user_methods_c'),
+            (Labels.SETUP.value, 'setup'),
+            (Labels.LOOP.value, 'loop')
+        ]
 
-        self.notes_dict = {key: '' for _, key in notes_mapping}
+        self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
+                                                      in notes_mapping}
+
         for note in state_machine.notes:
             dict_note = note.model_dump(by_alias=True)
             for prefix, key in notes_mapping:
+                # Делаем так, чтобы при повторении меток, их содержимое
+                # объединялось, а не перезаписывалось
                 if dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
-                    self.notes_dict[key] = dict_note['y:UMLNoteNode']['y:NodeLabel']['#text']
+                    if self.list_notes_dict != []:
+                        self.list_notes_dict[key].append(
+                            '\n'.join(dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].split('\n')[1:]))
+                    else:
+                        self.list_notes_dict[key].append(
+                            dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'])
+        self.notes_dict = {key: '\n'.join(
+            self.list_notes_dict[key]) for _, key in notes_mapping}
+
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.states = state_machine.states
@@ -78,6 +112,17 @@ class CppFileWriter:
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
             await self._insert_file_template('footer_c.txt')
+            if self.notes_dict['setup'] or self.create_setup:
+                await self._insert_string('\nvoid setup() {')
+                await self._insert_string('\n\tSketch_ctor();')
+                await self._insert_string('\n\tQEvt event;')
+                await self._insert_string('\n\tQMsm_init(the_sketch, &event);')
+                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
+                await self._insert_string('\n}')
+            if self.notes_dict['loop'] or self.create_loop:
+                await self._insert_string('\nvoid loop() {')
+                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
+                await self._insert_string('\n}')
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n//Start of c code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')

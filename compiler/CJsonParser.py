@@ -1,6 +1,4 @@
 """Legacy module that implements parsing Lapki IDE's internal JSON scheme."""
-
-from enum import Enum
 from typing import Dict, Iterable, List, Set
 
 from compiler.types.ide_types import Bounds
@@ -13,8 +11,8 @@ try:
         StateMachine,
         ParserState,
         ParserNote,
-        ParserNoteNodeLabel,
-        ParserNoteNodeContent
+        Labels,
+        create_note
     )
     from .types.ide_types import (
         IdeStateMachine,
@@ -46,8 +44,8 @@ except ImportError:
         StateMachine,
         ParserState,
         ParserNote,
-        ParserNoteNodeLabel,
-        ParserNoteNodeContent
+        Labels,
+        create_note
     )
     from compiler.types.ide_types import (
         IdeStateMachine,
@@ -67,20 +65,6 @@ class ParserException(Exception):
     """Error during parsing CJsonParsinge."""
 
     ...
-
-
-class Labels(Enum):
-    """В fullgraphmlparser для определения, \
-        куда вставлять код используют метки."""
-
-    H_INCLUDE = 'Code for h-file'
-    H = 'Declare variable in h-file'
-    CPP = 'Code for cpp-file'
-    CTOR = 'Constructor code'
-    USER_VAR_H = 'User variables for h-file'
-    USER_VAR_C = 'User variables for c-file'
-    USER_FUNC_H = 'User methods for h-file'
-    USER_FUNC_C = 'User methods for c-file'
 
 
 class CJsonParser:
@@ -108,9 +92,6 @@ class CJsonParser:
         """Функция, которая в зависимости от типа компонента\
             возвращает код его инициализации в h-файле."""
         match component.type:
-            case 'Timer':
-                return (f'\nTimer {component_name} = Timer'
-                        f'(the_sketch,{component_name}_timeout_SIG);')
             case 'QHsmSerial':
                 return ''
             case _:
@@ -150,15 +131,6 @@ class CJsonParser:
                         '{', f'SIMPLE_DISPATCH(the_sketch, {signal});'
                     ]
                 ) + '\n\t}'
-
-    def _getNote(self, label: Labels, content: str) -> ParserNote:
-        """Создать ParserNote на основе метки вставки, и кода для вставки."""
-        return ParserNote(
-            umlNote=ParserNoteNodeLabel(
-                nodeLabel=ParserNoteNodeContent(
-                    text=f'{label.value}: {content}')
-            )
-        )
 
     def getLibraries(self, components: List[Component]) -> Set[str]:
         """Получить используемые типы компонентов."""
@@ -260,9 +232,9 @@ class CJsonParser:
                                              '}']) + '\n}'
                 notes.extend(
                     [
-                        self._getNote(Labels.H, ''.join(variables)),
-                        self._getNote(Labels.H_INCLUDE, ''.join(includes)),
-                        self._getNote(Labels.CPP, '\n\n'.join(
+                        create_note(Labels.H, ''.join(variables)),
+                        create_note(Labels.H_INCLUDE, ''.join(includes)),
+                        create_note(Labels.CPP, '\n\n'.join(
                             [setup_function, loop_function, main_function]
                         )
                         ),
@@ -281,9 +253,9 @@ class CJsonParser:
 
                 notes.extend(
                     [
-                        self._getNote(Labels.H, ''.join(variables)),
-                        self._getNote(Labels.H_INCLUDE, ''.join(includes)),
-                        self._getNote(Labels.CPP, '\n\n'.join(
+                        create_note(Labels.H, ''.join(variables)),
+                        create_note(Labels.H_INCLUDE, ''.join(includes)),
+                        create_note(Labels.CPP, '\n\n'.join(
                             [setup_function, loop_function]
                         )
                         ),
@@ -393,7 +365,7 @@ class CJsonParser:
                 triggers.append(ParserTrigger(name=eventname,
                                               source=transition.source,
                                               target=transition.target,
-                                              id=i,
+                                              id=str(i),
                                               type='external',
                                               guard=condition,
                                               action=action))
@@ -461,7 +433,7 @@ class CJsonParser:
                     source=state_id,
                     target='',
                     action=actions,
-                    id=id,
+                    id=str(id),
                 )
         return Events(events=result,
                       signals=event_signals,
@@ -594,8 +566,8 @@ class CJsonParser:
             states=[global_state, *list(proccesed_states.values())],
             notes=notes,
             start_action='',
-            signals=[*player_signals.keys(),
-                     *self._addSignals(data.components, player_signals)],
+            signals=set([*player_signals.keys(),
+                         *self._addSignals(data.components, player_signals)]),
             start_node=startNode
         )
 

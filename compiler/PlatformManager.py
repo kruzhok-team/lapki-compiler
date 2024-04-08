@@ -5,9 +5,9 @@ from aiofile import async_open
 from aiopath import AsyncPath
 
 try:
-    from .types.platform_types import Platform, UnprocessedPlatform
+    from .types.platform_types import Platform
 except ImportError:
-    from compiler.types.platform_types import Platform, UnprocessedPlatform
+    from compiler.types.platform_types import Platform
 
 
 class PlatformException(Exception):
@@ -27,21 +27,28 @@ class PlatformManager:
     platforms: dict[str, Platform] = {}
 
     @staticmethod
-    async def initPlatform(path_to_schemas_dir: str) -> None:
+    async def load_platform(path_to_platform: str | AsyncPath) -> None:
+        """Load platform from file and add it to dict."""
+        try:
+            async with async_open(path_to_platform, 'r') as f:
+                unprocessed_platform_data: str = await f.read()
+                platform = Platform(
+                    **json.loads(unprocessed_platform_data))
+                if PlatformManager.platforms.get(platform.id, None) is None:
+                    PlatformManager.platforms[platform.id] = platform
+                else:
+                    print(f'Platform with id {platform.id} is already exists.')
+        except Exception as e:
+            print(
+                f'Во время обработки файла "{path_to_platform}"'
+                f'произошла ошибка! {e}')
+
+    @staticmethod
+    async def init_platforms(path_to_schemas_dir: str) -> None:
         """Find platforms in path and add it to Dict."""
         print(f'Поиск схем в папке "{path_to_schemas_dir}"...')
         async for path in AsyncPath(path_to_schemas_dir).glob('*json'):
-            try:
-                async with async_open(file_specifier=path, mode='r') as f:
-                    unprocessed_platform_data = await f.read()
-                platform_data = UnprocessedPlatform(
-                    **json.loads(unprocessed_platform_data))
-                platform_id = list(platform_data.platform.keys())[0]
-                platform = platform_data.platform[platform_id]
-                PlatformManager.platforms[platform_id] = platform
-            except Exception as e:
-                print(
-                    f'Во время обработки файла "{path}" произошла ошибка! {e}')
+            await PlatformManager.load_platform(path)
 
         print(
             f'Были найдены платформы: {list(PlatformManager.platforms.keys())}'

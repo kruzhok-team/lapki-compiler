@@ -1,21 +1,76 @@
-from typing import List, Optional
+from typing import (
+    List,
+    Optional,
+    Set,
+    Protocol,
+    runtime_checkable
+)
+from enum import Enum
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
+from compiler.types.platform_types import CompilingSettings
 
-from compiler.types.ide_types import Bounds, IdeStateMachine
+
+def create_note(label: 'Labels', content: str) -> 'ParserNote':
+    """
+    Создать ParserNote на основе метки вставки, и кода, который нужно вставить.
+
+    Между label и контентом добавляется \\n, так как по этому символу\
+        сплитится строка в функции write_to_file.
+    """
+    return ParserNote(
+        umlNote=_ParserNoteNodeLabel(
+            nodeLabel=_ParserNoteNodeContent(
+                text=f'{label.value}:\n{content}')
+        )
+    )
 
 
-class ParserNoteNodeContent(BaseModel):
+class Labels(Enum):
+    """В fullgraphmlparser для определения, \
+        куда вставлять код используют метки."""
+
+    H_INCLUDE = 'Code for h-file'
+    H = 'Declare variable in h-file'
+    CPP = 'Code for cpp-file'
+    CTOR = 'Constructor code'
+    SETUP = 'Setup function in cpp-file'
+    LOOP = 'Loop function in cpp-file'
+    USER_VAR_H = 'User variables for h-file'
+    USER_VAR_C = 'User variables for c-file'
+    USER_FUNC_H = 'User methods for h-file'
+    USER_FUNC_C = 'User methods for c-file'
+    CTOR_FIELDS = 'Constructor fields'
+    STATE_FIELDS = 'State fields'
+    EVENT_FIELDS = 'Event fields'
+
+
+@runtime_checkable
+class GeometryBounds(Protocol):
+    x: float
+    y: float
+    height: Optional[float]
+    width: Optional[float]
+
+
+class _ParserNoteNodeContent(BaseModel):
     text: str = Field(serialization_alias='#text')
 
 
-class ParserNoteNodeLabel(BaseModel):
-    nodeLabel: ParserNoteNodeContent = Field(serialization_alias='y:NodeLabel')
+class _ParserNoteNodeLabel(BaseModel):
+    nodeLabel: _ParserNoteNodeContent = Field(
+        serialization_alias='y:NodeLabel')
 
 
 class ParserNote(BaseModel):
-    umlNote: ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
+    """
+    Class for code inserting.
+
+    ### Create only by create_note function.
+    """
+
+    umlNote: _ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
 
 
 @dataclass
@@ -33,18 +88,20 @@ class ParserTrigger:
             dx, dy: first relative movement of trigger visual path
             points: other relative movements of trigger visual path
             action_x, action_y, action_width: coordinates of trigger label
+            check_function: function, that check this signal
     """
 
     name: str
     source: str
     target: str
     action: str
-    id: int
+    id: str
     type: str = ''
     guard: str = 'true'
+    check_function: str | None = None
 
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ParserState:
     """
     class State describes state of uml-diagram and trigslates to qm format.
@@ -70,7 +127,7 @@ class ParserState:
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
-    bounds: Bounds
+    bounds: GeometryBounds
 
     def __str__(self) -> str:
         if self.parent is not None:
@@ -80,10 +137,20 @@ class ParserState:
 
 
 @dataclass
+class SMCompilingSettings:
+    import_files: Set[str]
+    build_files: Set[str]
+    platform_id: str
+    platform_compiler_settings: CompilingSettings
+
+
+@dataclass
 class StateMachine:
     name: str
     start_node: str
     start_action: str
     notes: List[ParserNote]
     states: List[ParserState]
-    signals: List[str]
+    signals: Set[str]
+    # Установлено дефолтное значение, чтобы не трогать легаси.
+    compiling_settings: Optional[SMCompilingSettings] = None

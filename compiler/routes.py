@@ -16,3 +16,4 @@ def setup_routes(app: web.Application) -> None:
         [web.get('/ws/berloga/import', Handler.handle_berloga_import)])
     app.add_routes(
         [web.get('/ws/berloga/export', Handler.handle_berloga_export)])
+    app.add_routes([web.get('/cgml', Handler.handle_cgml_compile)])

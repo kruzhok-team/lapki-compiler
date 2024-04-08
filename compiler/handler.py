@@ -4,6 +4,7 @@ import base64
 import time
 from typing import List, Optional, Set
 from datetime import datetime
+from itertools import chain
 
 import aiohttp
 from aiohttp import web
@@ -11,11 +12,16 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 
+
 try:
+    from .CGML import parse, CGMLException
     from .Compiler import CompilerResult
     from .types.inner_types import CompilerResponse, File
     from .types.ide_types import CompilerSettings
-    from .fullgraphmlparser.stateclasses import StateMachine
+    from .fullgraphmlparser.stateclasses import (
+        StateMachine,
+        SMCompilingSettings
+    )
     from .types.ide_types import IdeStateMachine
     from .GraphmlParser import GraphmlParser
     from .CJsonParser import CJsonParser
@@ -26,10 +32,14 @@ try:
     from .config import BUILD_DIRECTORY, MAX_MSG_SIZE
     from .Logger import Logger
 except ImportError:
+    from compiler.CGML import parse, CGMLException
     from compiler.Compiler import CompilerResult
     from compiler.types.inner_types import CompilerResponse, File
     from compiler.types.ide_types import CompilerSettings
-    from compiler.fullgraphmlparser.stateclasses import StateMachine
+    from compiler.fullgraphmlparser.stateclasses import (
+        StateMachine,
+        SMCompilingSettings
+    )
     from compiler.types.ide_types import IdeStateMachine
     from compiler.GraphmlParser import GraphmlParser
     from compiler.CJsonParser import CJsonParser
@@ -39,6 +49,89 @@ except ImportError:
     from compiler.RequestError import RequestError
     from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
     from compiler.Logger import Logger
+
+
+async def create_response(
+        base_dir: str,
+        compiler_result: CompilerResult) -> CompilerResponse:
+    """
+    Get source files, binary files from\
+        directory and create CompilerResponse.
+
+        Doesn't send anything.
+    """
+    response = CompilerResponse(
+        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
+        return_code=compiler_result.return_code,
+        stdout=compiler_result.stdout,
+        stderr=compiler_result.stderr,
+        binary=[],
+        source=[]
+    )
+    build_path = base_dir + 'build/'
+    async for path in AsyncPath(build_path).rglob('*'):
+        if await path.is_file():
+            async with async_open(path, 'rb') as f:
+                binary = await f.read()
+                b64_data: bytes = base64.b64encode(binary)
+                response.binary.append(File(
+                    filename=path.name.split('.')[0],
+                    extension=''.join(path.suffixes),
+                    fileContent=b64_data.decode('ascii'),
+                ))
+
+    response.source.append(await Handler.readSourceFile(
+        'sketch',
+        'ino',
+        base_dir)
+    )
+    response.source.append(await Handler.readSourceFile(
+        'sketch',
+        'h',
+        base_dir)
+    )
+    return response
+
+
+def get_default_libraries() -> Set[str]:
+    """
+    Get set of default libraries.
+
+    Return example: 'qhsm.c', 'qhsm.h'
+    """
+    return set(list(
+        chain.from_iterable((f'{library}.c', f'{library}.h')
+                            for library in Compiler.c_default_libraries))
+               )
+
+
+async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
+    """
+    Compile CGML scheme.
+
+    This function generate code from scheme, compile it.
+
+    Doesn't send anything.
+    """
+    sm: StateMachine = parse(xml)
+    await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
+    settings: SMCompilingSettings | None = sm.compiling_settings
+    if settings is None:
+        raise Exception('Internal error!')
+    default_library = get_default_libraries()
+    await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                        default_library,
+                                        base_dir_path)
+    await Compiler.include_source_files(settings.platform_id,
+                                        settings.build_files,
+                                        base_dir_path)
+    flags = settings.platform_compiler_settings.flags
+    compiler = settings.platform_compiler_settings.compiler
+    return await Compiler.compile_project(
+        base_dir_path,
+        flags,
+        compiler
+    )
 
 
 class HandlerException(Exception):
@@ -73,8 +166,7 @@ class Handler:
         async for msg in ws:
             await Logger.logger.info(msg)
             if msg.type == aiohttp.WSMsgType.TEXT:
-                processed_msg = msg.data
-                match processed_msg:
+                match msg.data:
                     case 'close':
                         await ws.close()
                     case 'arduino':
@@ -87,6 +179,8 @@ class Handler:
                         await Handler.handle_berloga_import(request, ws)
                     case 'berlogaExport':
                         await Handler.handle_berloga_export(request, ws)
+                    case 'cgml':
+                        await Handler.handle_cgml_compile(request, ws)
                     case _:
                         await ws.send_str(f'Unknown {msg}!'
                                           'Use close, arduino,'
@@ -94,6 +188,33 @@ class Handler:
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 pass
 
+        return ws
+
+    @staticmethod
+    async def handle_cgml_compile(
+        request: web.Request,
+        ws: Optional[web.WebSocketResponse] = None
+    ) -> web.WebSocketResponse:
+        """Generate code from CGML-scheme and compile it."""
+        if ws is None:
+            ws = web.WebSocketResponse(
+                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            await ws.prepare(request)
+        try:
+            xml = await ws.receive_str()
+            base_dir = str(datetime.now()) + '/'
+            base_dir = base_dir.replace(' ', '_') + '/sketch'
+            await AsyncPath(base_dir).mkdir()
+            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
+            response = await create_response(base_dir, compiler_result)
+            await Logger.logger.info(response)
+            await ws.send_json(response.model_dump())
+        except CGMLException as e:
+            await Logger.logException()
+            await RequestError(e.args[0]).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error!').dropConnection(ws)
         return ws
 
     @staticmethod

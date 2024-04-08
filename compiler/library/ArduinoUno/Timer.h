@@ -24,20 +24,18 @@ class Timer
 {
   public:
     unsigned long difference;
-    Timer(QHsm* qhsm, QSignal signal);
+    Timer();
 
     void reset();
     void disable();
     void enable();
-    void timeout();
+    bool timeout();
     void setInterval(unsigned long interval);
     void start(unsigned long interval);
   private:
     bool _active;
     unsigned long _previous;
     unsigned long _interval;
-    QHsm* _qhsm;
-    QSignal _signal;
     bool _oneshot;
 };
 
