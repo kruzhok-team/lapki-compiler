@@ -53,7 +53,7 @@ class GraphmlParser:
         for i in range(len(args)):
             # Можно сделать проверку значений и типов
             result[params[i].name] = args[i]
-        return result
+        return {}
 
     @staticmethod
     def _getParentNode(group_node: dict) -> dict:
