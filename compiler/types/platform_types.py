@@ -74,6 +74,7 @@ class Platform(BaseModel):
     description: str = ''
     icon: str = ''
     id: str = ''
+    version: str
     staticComponents: bool
     language: str
     author: str = ''

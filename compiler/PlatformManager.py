@@ -1,13 +1,26 @@
 """Module for managing platforms."""
 import json
+from typing import Dict, Set, List
 
 from aiofile import async_open
 from aiopath import AsyncPath
+from compiler.config import PLATFORM_DIRECTORY
+from compiler.types.inner_types import File
 
 try:
     from .types.platform_types import Platform
 except ImportError:
     from compiler.types.platform_types import Platform
+
+PlatformId = str
+PlatformVersion = str
+
+
+async def __write_source(path: str, source_files: List[File]) -> None:
+    for source in source_files:
+        filename = f'{path}{source.filename}.{source.extension}'
+        async with async_open(filename, 'w') as f:
+            await f.write(source.fileContent)
 
 
 class PlatformException(Exception):
@@ -20,11 +33,31 @@ class PlatformManager:
     """
     Класс-синглтон, отвечающий за загрузку платформ.
 
-    А также их удаление из памяти, если их не используют
+    TODO: А также их удаление из памяти, если их не используют
     какое-то время.
     """
 
+    # Здесь будут храниться недавно использованные
+    # платформы для быстрого доступа.
     platforms: dict[str, Platform] = {}
+    # Здесь будет храниться список id платформ.
+    platforms_versions_info: Dict[PlatformId, Set[PlatformVersion]] = {}
+
+    @staticmethod
+    async def save_platform(platform: Platform,
+                            source_files: List[File]) -> None:
+        """Save platform to folder."""
+        platform_path = (PLATFORM_DIRECTORY + platform.id +
+                         '/' + platform.version + '/')
+        if await AsyncPath(platform_path).exists():
+            raise PlatformException(
+                f'Platform ({platform.id})'
+                f'with version {platform.version} is already exists.')
+        json_platform = platform.model_dump_json(indent=4)
+        await AsyncPath(platform_path).mkdir(parents=True)
+        await __write_source(platform_path, source_files)
+        await __write_source(platform_path, [File(
+            f'{platform.id}-{platform.version}', 'json', json_platform)])
 
     @staticmethod
     async def load_platform(path_to_platform: str | AsyncPath) -> None:
@@ -55,7 +88,7 @@ class PlatformManager:
         )
 
     @staticmethod
-    def getPlatform(platform_id: str) -> Platform:
+    def get_platform(platform_id: str, version: str) -> Platform:
         """Get platform by id."""
         platform: Platform | None = PlatformManager.platforms.get(platform_id)
         if platform is None:
