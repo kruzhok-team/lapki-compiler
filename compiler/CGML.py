@@ -503,7 +503,7 @@ def __get_build_files(
     return build_libraries
 
 
-def parse(xml: str) -> StateMachine:
+async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachine for CppWriter class.
@@ -515,7 +515,7 @@ def parse(xml: str) -> StateMachine:
     """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
-    platform: Platform = PlatformManager.get_platform(
+    platform: Platform = await PlatformManager.get_platform(
         cgml_scheme.platform, '')  # TODO: Доставать версию платформы
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(

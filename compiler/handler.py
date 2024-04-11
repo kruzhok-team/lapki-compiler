@@ -113,7 +113,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
 
     Doesn't send anything.
     """
-    sm: StateMachine = parse(xml)
+    sm: StateMachine = await parse(xml)
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
