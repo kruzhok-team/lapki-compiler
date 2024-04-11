@@ -1,10 +1,11 @@
 """Module for managing platforms."""
 import json
+import uuid
 from typing import Dict, Set, List
 
 from aiofile import async_open
 from aiopath import AsyncPath
-from compiler.config import PLATFORM_DIRECTORY
+from compiler.config import PLATFORM_DIRECTORY, LIBRARY_PATH
 from compiler.types.inner_types import File
 
 try:
@@ -16,11 +17,16 @@ PlatformId = str
 PlatformVersion = str
 
 
-async def __write_source(path: str, source_files: List[File]) -> None:
+async def _write_source(path: str, source_files: List[File]) -> None:
     for source in source_files:
         filename = f'{path}{source.filename}.{source.extension}'
         async with async_open(filename, 'w') as f:
             await f.write(source.fileContent)
+
+
+def _gen_platform_path(base_path: str, id: str, version: str) -> str:
+    return (base_path + id +
+            '/' + version + '/')
 
 
 class PlatformException(Exception):
@@ -44,19 +50,32 @@ class PlatformManager:
     platforms_versions_info: Dict[PlatformId, Set[PlatformVersion]] = {}
 
     @staticmethod
+    def gen_platform_id() -> str:
+        """Generate platform id."""
+        return uuid.uuid4().hex
+
+    @staticmethod
     async def save_platform(platform: Platform,
                             source_files: List[File]) -> None:
-        """Save platform to folder."""
-        platform_path = (PLATFORM_DIRECTORY + platform.id +
-                         '/' + platform.version + '/')
-        if await AsyncPath(platform_path).exists():
-            raise PlatformException(
-                f'Platform ({platform.id})'
-                f'with version {platform.version} is already exists.')
+        """
+        Save platform to folder.
+
+        Doesn't generate id.
+        """
+        platform_path = _gen_platform_path(
+            PLATFORM_DIRECTORY, platform.id, platform.version)
+        platform_library_path = _gen_platform_path(
+            LIBRARY_PATH, platform.id, platform.version)
+        # if (await AsyncPath(platform_path).exists() or
+        #         await AsyncPath(platform_library_path).exists()):
+        #     raise PlatformException(
+        #         f'Platform ({platform.id})'
+        #         f'with version {platform.version} is already exists.')
         json_platform = platform.model_dump_json(indent=4)
         await AsyncPath(platform_path).mkdir(parents=True)
-        await __write_source(platform_path, source_files)
-        await __write_source(platform_path, [File(
+        await AsyncPath(platform_library_path).mkdir(parents=True)
+        await _write_source(platform_library_path, source_files)
+        await _write_source(platform_path, [File(
             f'{platform.id}-{platform.version}', 'json', json_platform)])
 
     @staticmethod
