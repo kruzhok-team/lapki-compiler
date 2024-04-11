@@ -49,13 +49,13 @@ class GraphmlParser:
     def _getArgs(component: str, method: str, args: list[str], platform: str):
         """функция, которая формирует аргументы в виде\
             объекта с учетом контекста платформы."""
-        # nmethod: Method = PlatformManager.getPlatform(
-        #     platform).components[component].methods[method]
-        # params: List[MethodParameter] = nmethod.parameters
-        # result: Dict[str, str] = {}
-        # for i in range(len(args)):
-        #     # Можно сделать проверку значений и типов
-        #     result[params[i].name] = args[i]
+        nmethod: Method = PlatformManager.get_platform(
+            platform).components[component].methods[method]
+        params: List[MethodParameter] = nmethod.parameters
+        result: Dict[str, str] = {}
+        for i in range(len(args)):
+            # Можно сделать проверку значений и типов
+            result[params[i].name] = args[i]
         return {}
 
     @staticmethod
@@ -440,7 +440,7 @@ class GraphmlParser:
     @staticmethod
     def _getComponents(platform: str) -> dict:
         result = {}
-        platform_pbject = PlatformManager.getPlatform(platform)
+        platform_pbject = PlatformManager.get_platform(platform, '')
         if platform_pbject is not None:
             for component in platform_pbject.components:
                 result[component] = {}

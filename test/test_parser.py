@@ -5,7 +5,7 @@ import pytest
 from compiler.GraphmlParser import GraphmlParser
 from compiler.Logger import Logger
 from compiler.PlatformManager import PlatformManager
-from compiler.config import SCHEMA_DIRECTORY
+from compiler.config import PLATFORM_DIRECTORY
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -24,7 +24,7 @@ pytest_plugins = ('pytest_asyncio',)
 async def test_graphhmlParser(path: str, platform: str):
     """Test parsing yed-Graphml."""
     await Logger.init_logger()
-    await PlatformManager.initPlatform(SCHEMA_DIRECTORY)
+    await PlatformManager.init_platforms(PLATFORM_DIRECTORY)
     with open(path, 'r') as f:
         unprocessed_xml = f.read()
 

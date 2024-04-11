@@ -20,7 +20,9 @@ PlatformVersion = str
 async def _write_source(path: str, source_files: List[File]) -> None:
     for source in source_files:
         filename = f'{path}{source.filename}.{source.extension}'
-        async with async_open(filename, 'w') as f:
+        await AsyncPath(filename).parent.mkdir(parents=True, exist_ok=True)
+        mode = 'wb' if isinstance(source.fileContent, bytes) else 'w'
+        async with async_open(filename, mode) as f:
             await f.write(source.fileContent)
 
 
@@ -56,7 +58,8 @@ class PlatformManager:
 
     @staticmethod
     async def save_platform(platform: Platform,
-                            source_files: List[File]) -> None:
+                            source_files: List[File],
+                            images: List[File] | None = None) -> None:
         """
         Save platform to folder.
 
@@ -66,17 +69,19 @@ class PlatformManager:
             PLATFORM_DIRECTORY, platform.id, platform.version)
         platform_library_path = _gen_platform_path(
             LIBRARY_PATH, platform.id, platform.version)
-        # if (await AsyncPath(platform_path).exists() or
-        #         await AsyncPath(platform_library_path).exists()):
-        #     raise PlatformException(
-        #         f'Platform ({platform.id})'
-        #         f'with version {platform.version} is already exists.')
+        source_path = platform_library_path + '/source/'
+        img_path = platform_library_path + '/img/'
         json_platform = platform.model_dump_json(indent=4)
         await AsyncPath(platform_path).mkdir(parents=True)
         await AsyncPath(platform_library_path).mkdir(parents=True)
-        await _write_source(platform_library_path, source_files)
+        await AsyncPath(source_path).mkdir()
+        await AsyncPath(img_path).mkdir()
         await _write_source(platform_path, [File(
             f'{platform.id}-{platform.version}', 'json', json_platform)])
+        await _write_source(source_path, source_files)
+
+        if images is not None:
+            await _write_source(img_path, images)
 
     @staticmethod
     async def load_platform(path_to_platform: str | AsyncPath) -> None:

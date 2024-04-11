@@ -13,8 +13,15 @@ pytest_plugins = ('pytest_asyncio',)
 def source_files() -> List[File]:
     """Get test source files."""
     return [
-        File('Test', 'cpp', 'ooooo;')
+        File('aaaa/Test', 'cpp', 'ooooo;')
     ]
+
+
+@pytest.fixture
+def images() -> List[File]:
+    """Get test images."""
+    with open('test/test_resources/test_image.jpg', 'rb') as f:
+        return [File('babuleh', 'jpg', f.read())]
 
 
 @pytest.fixture
@@ -30,6 +37,8 @@ def test_not_compile_platform_creation(load_platform):
 
 
 @pytest.mark.asyncio
-async def test_add_platform(load_platform, source_files):
-    platform_id = await _add_platform(load_platform, source_files)
+async def test_add_platform(load_platform,
+                            source_files,
+                            images):
+    platform_id = await _add_platform(load_platform, source_files, images)
     # TODO: remove platform
