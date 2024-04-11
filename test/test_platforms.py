@@ -78,9 +78,20 @@ async def test_get_raw_platform(add_platform: tuple[str, Platform]):
 
 
 @pytest.mark.asyncio
-async def test_get_platform_sources(add_platform: tuple[str, Platform], source_files: List[InnerFile]):
+async def test_get_platform_sources(add_platform: tuple[str, Platform],
+                                    source_files: List[InnerFile]):
     platform_id, platform = add_platform
-    source_gen = PlatformManager.get_platform_sources(
+    source_gen = await PlatformManager.get_platform_sources(
         platform_id, platform.version)
     result_sources: List[InnerFile] = [source async for source in source_gen]
     assert result_sources == source_files
+
+
+@pytest.mark.asyncio
+async def test_get_platform_images(add_platform: tuple[str, Platform],
+                                   images: List[InnerFile]):
+    platform_id, platform = add_platform
+    image_gen = await PlatformManager.get_platform_images(
+        platform_id, platform.version)
+    result_images: List[InnerFile] = [img async for img in image_gen]
+    assert result_images == images

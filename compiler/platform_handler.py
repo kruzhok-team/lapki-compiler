@@ -102,7 +102,7 @@ class PlatformHandler:
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
-        """Get platform source-code files by id."""
+        """Get platform source-code files."""
         # TODO: Проверить, что платформа компилируемая
         if ws is None:
             ws = web.WebSocketResponse(
@@ -111,10 +111,32 @@ class PlatformHandler:
 
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
-        source_generator = PlatformManager.get_platform_sources(
+        source_generator = await PlatformManager.get_platform_sources(
             platform_id, version)
         async for source in source_generator:
             await ws.send_str('source')
             await ws.send_json(source.model_dump())
-        await ws.send_str('end-source-send')
+        await ws.send_str('end-sources-send')
+        return ws
+
+    @staticmethod
+    async def handle_get_platform_images(
+        request: web.Request,
+        ws: Optional[web.WebSocketResponse] = None
+    ) -> web.WebSocketResponse:
+        """Get platform s images."""
+        # TODO: Проверить, что платформа визуальная
+        if ws is None:
+            ws = web.WebSocketResponse(
+                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            await ws.prepare(request)
+
+        platform_id = await ws.receive_str()
+        version = await ws.receive_str()
+        image_generator = await PlatformManager.get_platform_images(
+            platform_id, version)
+        async for image in image_generator:
+            await ws.send_str('img')
+            await ws.send_json(image.model_dump())
+        await ws.send_str('end-images-send')
         return ws

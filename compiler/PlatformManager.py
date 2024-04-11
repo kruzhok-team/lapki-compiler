@@ -1,9 +1,9 @@
 """Module for managing platforms."""
-from collections import defaultdict
-from pprint import pprint
 import json
 import uuid
-from typing import Dict, Set, List, DefaultDict
+from typing import AsyncGenerator, Dict, Literal, Set, List, DefaultDict, Any
+from collections import defaultdict
+from pprint import pprint
 
 from aiofile import async_open
 from aiopath import AsyncPath
@@ -49,11 +49,13 @@ def _gen_platform_path(base_path: str, id: str, version: str) -> str:
             '/' + version + '/')
 
 
-async def _read_platform_files(source_dir: str):
+async def _read_platform_files(
+        source_dir: str,
+        mode: Literal['rb', 'r']) -> AsyncGenerator[InnerFile, None]:
     async for source in AsyncPath(source_dir).rglob('*'):
         if not await source.is_file():
             continue
-        async with async_open(source, 'r') as f:
+        async with async_open(source, mode) as f:
             content = await f.read()
             extension = ''.join(source.suffixes).replace('.', '', 1)
             filename = str(source.relative_to(source_dir)).split('.')[0]
@@ -198,22 +200,15 @@ class PlatformManager:
                 PlatformManager.platforms_versions_info[platform_id])
 
     @staticmethod
-    async def get_platform_sources(platform_id: str, version: str):
+    async def get_platform_sources(
+            platform_id: str, version: str) -> AsyncGenerator[InnerFile, Any]:
         """Get platform source-code files by id and version."""
         source_dir = _get_source_path(platform_id, version)
-        async for source in AsyncPath(source_dir).rglob('*'):
-            if not await source.is_file():
-                continue
-            async with async_open(source, 'r') as f:
-                content = await f.read()
-                extension = ''.join(source.suffixes).replace('.', '', 1)
-                filename = str(source.relative_to(source_dir)).split('.')[0]
-                yield InnerFile(filename=filename,
-                                extension=extension,
-                                fileContent=content)
+        return _read_platform_files(source_dir, 'r')
 
     @staticmethod
-    async def get_platform_images(platform_id: str, version: str):
+    async def get_platform_images(
+            platform_id: str, version: str) -> AsyncGenerator[InnerFile, Any]:
         """Get platform images by id and version."""
         source_dir = _get_img_path(platform_id, version)
-        return _read_platform_files(source_dir)
+        return _read_platform_files(source_dir, 'rb')
