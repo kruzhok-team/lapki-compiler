@@ -49,14 +49,14 @@ class GraphmlParser:
     def _getArgs(component: str, method: str, args: list[str], platform: str):
         """функция, которая формирует аргументы в виде\
             объекта с учетом контекста платформы."""
-        nmethod: Method = PlatformManager.getPlatform(
-            platform).components[component].methods[method]
-        params: List[MethodParameter] = nmethod.parameters
-        result: Dict[str, str] = {}
-        for i in range(len(args)):
-            # Можно сделать проверку значений и типов
-            result[params[i].name] = args[i]
-        return result
+        # nmethod: Method = PlatformManager.getPlatform(
+        #     platform).components[component].methods[method]
+        # params: List[MethodParameter] = nmethod.parameters
+        # result: Dict[str, str] = {}
+        # for i in range(len(args)):
+        #     # Можно сделать проверку значений и типов
+        #     result[params[i].name] = args[i]
+        return {}
 
     @staticmethod
     def _getParentNode(group_node: dict) -> dict:
@@ -126,14 +126,20 @@ class GraphmlParser:
         states_dict: dict[str, dict[str, str]],
         nparent: str | None = None
     ) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
+        ...
         for node in xml:
             if 'graph' in node.keys():
+                print(node['graph'])
+                print('--------')
                 parent = GraphmlParser._getParentNode(node)
                 states.append(parent)
                 GraphmlParser._addStateToDict(
                     parent, states_dict, parent=nparent)
+                nodes = node['graph']['node']
+                if isinstance(nodes, dict):
+                    nodes = [nodes]
                 GraphmlParser._getFlattenStates(
-                    node['graph']['node'],
+                    nodes,
                     states,
                     states_dict,
                     nparent=parent['@id']
@@ -452,7 +458,7 @@ class GraphmlParser:
             graph = xml['graphml']['graph']
             nodes = graph['node']
             triggers = graph['edge']
-            components = GraphmlParser._getComponents(platform)
+            components = {}
             flattenStates, states_dict = GraphmlParser._getFlattenStates(
                 nodes, states=[], states_dict={})
             states = GraphmlParser._createStates(

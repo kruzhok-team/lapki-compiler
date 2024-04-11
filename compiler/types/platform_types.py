@@ -20,7 +20,7 @@ class MethodParameter:
 class Signal:
     img: str
     description: str
-    checkMethod: str
+    checkMethod: str = ''
     parameters: Optional[List[MethodParameter]] = None
 
 
@@ -53,8 +53,8 @@ class Component:
     signals: Dict[str, Signal]
     variables: Dict[str, Variable]
     methods: Dict[str, Method]
-    buildFiles: List[str]
-    importFiles: List[str]
+    buildFiles: List[str] = Field(default_factory=list)
+    importFiles: List[str] = Field(default_factory=list)
     singletone: bool = False
     constructorParameters: Dict[str, ClassParameter] = Field(
         default_factory=dict)
@@ -74,12 +74,14 @@ class Platform(BaseModel):
     description: str = ''
     icon: str = ''
     id: str = ''
+    format_version: str = Field(alias='formatVersion')
+    standart_version: str = Field(alias='standartVersion')
     version: str
     staticComponents: bool
-    language: str
+    language: str = ''
     author: str = ''
     visual: bool
-    compilingSettings: CompilingSettings
+    compilingSettings: CompilingSettings | None = None
     components: Dict[str, Component]
     delimeter: str
     compile: bool

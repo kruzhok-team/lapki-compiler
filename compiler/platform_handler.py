@@ -3,10 +3,11 @@ from typing import Optional
 
 from aiohttp import web
 from compiler.config import MAX_MSG_SIZE
+from compiler.types.platform_types import Platform
 
 
 class PlatformHandler:
-    """Class for handling requests to adding/removing/changing platforms."""
+    """Class for handling requests CRUD-operations with platforms."""
 
     @staticmethod
     async def handle_add_platform(
@@ -18,5 +19,5 @@ class PlatformHandler:
             ws = web.WebSocketResponse(
                 autoclose=False, max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
-        platform = ...
+        platform = Platform(**await ws.receive_json())
         return ws
