@@ -38,8 +38,7 @@ class InnerEvent:
     check: str | None = None
 
 
-@dataclass
-class File:
+class InnerFile(BaseModel):
     filename: str
     extension: str
     fileContent: str | bytes
@@ -60,8 +59,8 @@ class CompilerResponse(BaseModel):
     return_code: int
     stdout: str
     stderr: str
-    binary: List[File]
-    source: List[File]
+    binary: List[InnerFile]
+    source: List[InnerFile]
 
     def __str__(self) -> str:
         return (f'Response: {self.result}, {self.return_code},'

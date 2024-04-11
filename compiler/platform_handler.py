@@ -5,7 +5,7 @@ import aiohttp
 from aiohttp import web
 from compiler.PlatformManager import PlatformManager
 from compiler.config import MAX_MSG_SIZE
-from compiler.types.inner_types import File
+from compiler.types.inner_types import InnerFile
 from compiler.types.platform_types import Platform
 
 # С помощью этих функций отделяется процесс передачи данных
@@ -14,8 +14,8 @@ from compiler.types.platform_types import Platform
 
 
 async def _add_platform(platform: Platform,
-                        source_files: List[File],
-                        images: List[File]) -> str:
+                        source_files: List[InnerFile],
+                        images: List[InnerFile]) -> str:
     platform.id = PlatformManager.gen_platform_id()
     await PlatformManager.save_platform(platform, source_files, images)
     return platform.id
@@ -42,8 +42,8 @@ class PlatformHandler:
 
         # TODO: Отлавливание ошибок и отправка их пользователю
         platform = Platform(**await ws.receive_json())
-        source_files: List[File] = []
-        images: List[File] = []
+        source_files: List[InnerFile] = []
+        images: List[InnerFile] = []
         if platform.compile:
             # Если платформа компилируемая, ждем исходники
             async for msg in ws:
@@ -53,7 +53,7 @@ class PlatformHandler:
                     case 'stop':
                         break
                     case 'file':
-                        file = File(**await ws.receive_json())
+                        file = InnerFile(**await ws.receive_json())
                         source_files.append(file)
                     case _:
                         await ws.close()
@@ -67,7 +67,7 @@ class PlatformHandler:
                     case 'stop':
                         break
                     case 'img':
-                        img = File(**await ws.receive_json())
+                        img = InnerFile(**await ws.receive_json())
                         images.append(img)
                     case _:
                         await ws.close()
@@ -95,4 +95,26 @@ class PlatformHandler:
         raw_platform = await _get_platform(platform_id, version)
         await ws.send_str('raw-platform-scheme')
         await ws.send_str(raw_platform)
+        return ws
+
+    @staticmethod
+    async def handle_get_platform_source_files(
+        request: web.Request,
+        ws: Optional[web.WebSocketResponse] = None
+    ) -> web.WebSocketResponse:
+        """Get platform source-code files by id."""
+        # TODO: Проверить, что платформа компилируемая
+        if ws is None:
+            ws = web.WebSocketResponse(
+                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            await ws.prepare(request)
+
+        platform_id = await ws.receive_str()
+        version = await ws.receive_str()
+        source_generator = PlatformManager.get_platform_sources(
+            platform_id, version)
+        async for source in source_generator:
+            await ws.send_str('source')
+            await ws.send_json(source.model_dump())
+        await ws.send_str('end-source-send')
         return ws

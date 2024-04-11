@@ -2,7 +2,7 @@
 from typing import Dict, Iterable, List, Set
 
 from compiler.types.ide_types import Bounds
-from compiler.types.inner_types import File
+from compiler.types.inner_types import InnerFile
 
 
 try:
@@ -576,7 +576,9 @@ class CJsonParser:
         files = []
 
         for data in json_data:
-            files.append(File(
-                data['filename'], data['extension'], data['fileContent']))
+            files.append(InnerFile(
+                filename=data['filename'],
+                extension=data['extension'],
+                fileContent=data['fileContent']))
 
         return files

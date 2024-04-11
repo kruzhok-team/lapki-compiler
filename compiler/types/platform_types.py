@@ -70,18 +70,18 @@ class CompilingSettings:
 
 
 class Platform(BaseModel):
+    id: str = ''
     name: str
     description: str = ''
+    compile: bool
+    author: str = ''
     icon: str = ''
-    id: str = ''
     format_version: str = Field(alias='formatVersion')
     standart_version: str = Field(alias='standartVersion')
     version: str
     staticComponents: bool
     language: str = ''
-    author: str = ''
+    delimeter: str
     visual: bool
     compilingSettings: CompilingSettings | None = None
     components: Dict[str, Component]
-    delimeter: str
-    compile: bool
