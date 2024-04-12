@@ -1,5 +1,5 @@
 """Module implements handling request to process platforms."""
-from typing import List, Optional
+from typing import List, Optional, Set
 
 import aiohttp
 from aiohttp import web
@@ -17,6 +17,14 @@ class PlatformHandlerException(Exception):
 # С помощью этих функций отделяется процесс передачи данных
 # и бизнес-логика, также эти функции можно тестировать с помощью CI/CD,
 # так как для них не требуется запуск всего компилятора в целом.
+
+
+async def _delete_platform_by_versions(platform_id: str,
+                                       versions_to_delete: str) -> None:
+    set_versions: Set[str] = set(map(
+        lambda string: string.strip(), versions_to_delete.split(',')))
+    await PlatformManager.delete_platform_by_versions(platform_id,
+                                                      set_versions)
 
 
 async def _add_platform(platform: Platform,
@@ -40,6 +48,7 @@ async def _update_platform(new_platform: Platform,
 async def _get_platform(platform_id: str, version: str) -> str:
     return await PlatformManager.get_raw_platform_scheme(
         platform_id, version)
+
 
 Images = List[InnerFile]
 SourceFiles = List[InnerFile]
@@ -80,6 +89,15 @@ async def _get_platform_sources(ws: web.WebSocketResponse,
     return images, source_files
 
 
+async def _prepare_request(ws: Optional[web.WebSocketResponse],
+                           request: web.Request) -> web.WebSocketResponse:
+    if ws is None:
+        ws = web.WebSocketResponse(
+            autoclose=False, max_msg_size=MAX_MSG_SIZE)
+        await ws.prepare(request)
+    return ws
+
+
 class PlatformHandler:
     """Class for handling requests CRUD-operations with platforms."""
 
@@ -89,10 +107,7 @@ class PlatformHandler:
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Validate and save platform."""
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
+        ws = await _prepare_request(ws, request)
 
         # TODO: Отлавливание ошибок и отправка их пользователю
         platform = Platform(**await ws.receive_json())
@@ -110,10 +125,7 @@ class PlatformHandler:
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Get platform json scheme."""
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
+        ws = await _prepare_request(ws, request)
 
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
@@ -130,10 +142,7 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Get platform source-code files."""
         # TODO: Проверить, что платформа компилируемая
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
+        ws = await _prepare_request(ws, request)
 
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
@@ -192,4 +201,21 @@ class PlatformHandler:
                                source_files,
                                images)
         await ws.send_str('updated')
+        return ws
+
+    @staticmethod
+    async def handle_remove_platform_by_versions(
+        request: web.Request,
+        ws: Optional[web.WebSocketResponse] = None,
+        access_token: str | None = None
+    ) -> web.WebSocketResponse:
+        """Remove platform by versions and platform id.
+
+        Versions is a string like "v1.0, 2.0, 3.0".
+        """
+        ws = await _prepare_request(ws, request)
+        platform_id = await ws.receive_str()
+        versions_to_delete = await ws.receive_str()
+        await _delete_platform_by_versions(platform_id, versions_to_delete)
+
         return ws

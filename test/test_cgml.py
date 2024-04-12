@@ -1,4 +1,6 @@
 """Module for testing CGML.py file."""
+import os
+import inspect
 import json
 import shutil
 import time
@@ -6,6 +8,8 @@ from pathlib import Path
 from contextlib import contextmanager
 
 import pytest
+from aiopath import AsyncPath
+from compiler.config import BUILD_DIRECTORY
 from compiler.handler import compile_xml, create_response
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
@@ -103,13 +107,12 @@ def test_parse_actions(raw_trigger: str, expected: str):
 
 @pytest.mark.asyncio
 async def test_generating_code(init_platform):
-    await init_platform
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
         path = './test/test_folder/'
         with create_test_folder(path, 10):
             try:
-                sm = parse(data)
+                sm = await parse(data)
                 await CppFileWriter(sm, True).write_to_file(path, 'ino')
                 print('Code generated!')
             except Exception as e:
@@ -118,10 +121,11 @@ async def test_generating_code(init_platform):
 
 @pytest.mark.asyncio
 async def test_cgml_route(init_platform):
-    await init_platform
+    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
+    test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
-        path = './test/test_project/sketch'
-        with create_test_folder(path, 10):
+        path = test_path + '/test_project/sketch/'
+        with create_test_folder(path, 2):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

@@ -158,7 +158,8 @@ class Compiler:
     @staticmethod
     async def include_source_files(platform_id: str,
                                    libraries: Set[str],
-                                   target_directory: str) -> None:
+                                   target_directory: str
+                                   ) -> None:
         """Include source files from platform's \
             library directory to target directory."""
         path = os.path.join(LIBRARY_PATH, f'{platform_id}/')

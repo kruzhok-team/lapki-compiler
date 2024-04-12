@@ -1,5 +1,7 @@
 """Module to test platform processing."""
+import asyncio
 import json
+import time
 from typing import List
 
 import pytest
@@ -12,7 +14,8 @@ from compiler.PlatformManager import (
 from compiler.platform_handler import (
     _add_platform,
     _get_platform,
-    _update_platform
+    _update_platform,
+    _delete_platform_by_versions
 )
 from compiler.types.platform_types import Platform, PlatformInfo
 from compiler.types.inner_types import InnerFile
@@ -124,10 +127,23 @@ async def test_update_platform(add_platform: tuple[str, Platform],
             access_tokens=set()
         )
     }
-
+    # If platform with this version already exist
     with pytest.raises(PlatformException):
         await _update_platform(new_platform, '', source_files, images)
-
+    # If platform with this id doesn't exist
     with pytest.raises(PlatformException):
         new_platform.id = 'blabla'
         await _update_platform(new_platform, '', source_files, images)
+
+
+@pytest.mark.asyncio
+async def test_delete_platform_by_version(add_platform: tuple[str, Platform]):
+    platform_id, platform = add_platform
+    await _delete_platform_by_versions(platform_id, platform.version)
+    assert PlatformManager.has_version(platform_id, platform.version) is False
+    # Не проходится из-за непонятного поведения
+    # Если проверить платформы на существование в самой функции
+    # PlatformManager.delete_platform_by_versions
+    # То выведется True, и словарь platforms_versions_info будет дейтсвительно
+    # пустым, но здесь, в тесте, он почему-то все равно имеет ключ platform_id
+    assert PlatformManager.platform_exist(platform_id) is False

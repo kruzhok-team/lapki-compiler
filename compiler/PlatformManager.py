@@ -1,7 +1,8 @@
 """Module for managing platforms."""
+import asyncio
 import json
 import uuid
-from typing import AsyncGenerator, Dict, Literal, List, DefaultDict, Any
+from typing import AsyncGenerator, Callable, Dict, Literal, List, DefaultDict, Any, Set
 from collections import defaultdict
 from pprint import pprint
 
@@ -29,18 +30,47 @@ async def _write_source(path: str, source_files: List[InnerFile]) -> None:
             await f.write(source.fileContent)
 
 
+async def _delete_platform(platform_id: str) -> None:
+    """Delete all sources of all versions. Doesn't delete anything in dict."""
+    async def path_without_version(platform_id: str, func: Callable[[str, str], str]) -> AsyncPath:
+        # Так как удаляем платформу полностью, нам не нужна версия
+        # Поэтому оставляем пустое значение, и получаем путь/platform_id//
+        # И убираем последний слэш
+        return await AsyncPath(func(platform_id, '')[:-1]).parent.absolute()
+
+    paths = [_get_path_to_platform, _get_source_path]
+    for path_func in paths:
+        path_to_platform = await path_without_version(
+            platform_id,
+            path_func
+        )
+        await asyncio.create_subprocess_exec('rm', '-r', path_to_platform)
+
+
 def _get_img_path(id: str, version: str) -> str:
-    """Get path to images dir."""
+    """
+    Get path to images dir.
+
+    LIBRARY_PATH/id/version/img/
+    """
     return _gen_platform_path(LIBRARY_PATH, id, version) + 'img/'
 
 
 def _get_source_path(id: str, version: str) -> str:
-    """Get path to source dir."""
+    """
+    Get path to source dir.
+
+    LIBRARY_PATH/id/version/source/
+    """
     return _gen_platform_path(LIBRARY_PATH, id, version) + 'source/'
 
 
 def _get_path_to_platform(id: str, version: str) -> str:
-    """Get path to platform JSON scheme."""
+    """
+    Get path to platform JSON scheme.
+
+    PLATFORM_DIRECTORY/id/version/id-version.json
+    """
     base_path = _gen_platform_path(PLATFORM_DIRECTORY, id, version)
     return base_path + f'{id}-{version}.json'
 
@@ -155,7 +185,8 @@ class PlatformManager:
                 if PlatformManager.platforms.get(platform.id, None) is None:
                     PlatformManager.platforms[platform.id] = platform
                 else:
-                    print(f'Platform with id {platform.id} is already exists.')
+                    raise PlatformException(
+                        f'Platform with id {platform.id} is already exists.')
                 return platform
         except Exception as e:
             raise PlatformException(
@@ -263,3 +294,39 @@ class PlatformManager:
         """Get platform images by id and version."""
         source_dir = _get_img_path(platform_id, version)
         return _read_platform_files(source_dir, 'rb')
+
+    @staticmethod
+    async def delete_platform_by_versions(platform_id: str,
+                                          versions: Set[str]) -> None:
+        """
+        Delete platform versions.
+
+        If the platform does not have any versions\
+            after this operation, it will be deleted
+        """
+        if not PlatformManager.platform_exist(platform_id):
+            raise PlatformException(
+                f'Platform with id {platform_id} doesnt exist.')
+
+        for version in versions:
+            if not PlatformManager.has_version(platform_id, version):
+                raise PlatformException(
+                    f'Platform with id {platform_id} and '
+                    f'version {version} doesnt exist.')
+        versions_info = (
+            PlatformManager.platforms_versions_info[platform_id].versions)
+        for version in versions:
+            json_scheme_folder = await AsyncPath(
+                _get_path_to_platform(platform_id, version)).parent.absolute()
+            await asyncio.create_subprocess_exec('rm',
+                                                 '-r',
+                                                 json_scheme_folder
+                                                 )
+            library_folder = await AsyncPath(
+                _get_source_path(platform_id, version)).parent.absolute()
+            await asyncio.create_subprocess_exec('rm', '-r', library_folder)
+            versions_info.remove(version)
+
+        if len(versions_info) == 0:
+            await _delete_platform(platform_id)
+            del PlatformManager.platforms_versions_info[platform_id]
