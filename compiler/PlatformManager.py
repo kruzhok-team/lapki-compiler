@@ -1,7 +1,7 @@
 """Module for managing platforms."""
 import json
 import uuid
-from typing import AsyncGenerator, Dict, Literal, Set, List, DefaultDict, Any
+from typing import AsyncGenerator, Dict, Literal, List, DefaultDict, Any
 from collections import defaultdict
 from pprint import pprint
 
@@ -9,6 +9,7 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from compiler.config import PLATFORM_DIRECTORY, LIBRARY_PATH
 from compiler.types.inner_types import InnerFile
+from compiler.types.platform_types import PlatformInfo
 
 try:
     from .types.platform_types import Platform
@@ -65,7 +66,7 @@ async def _read_platform_files(
 
 
 class PlatformException(Exception):
-    """Error during add platforms."""
+    """Error during process platforms."""
 
     ...
 
@@ -82,9 +83,10 @@ class PlatformManager:
     # платформы для быстрого доступа.
     platforms: Dict[str, Platform] = {}
     # Здесь будет храниться список id платформ.
-    platforms_versions_info: DefaultDict[PlatformId, Set[PlatformVersion]] = (
+    platforms_versions_info: DefaultDict[PlatformId, PlatformInfo] = (
         defaultdict(
-            lambda: set())
+            lambda: PlatformInfo()
+        )
     )
 
     @staticmethod
@@ -93,14 +95,33 @@ class PlatformManager:
         return uuid.uuid4().hex
 
     @staticmethod
-    async def save_platform(platform: Platform,
-                            source_files: List[InnerFile],
-                            images: List[InnerFile] | None = None) -> None:
+    async def add_platform(platform: Platform,
+                           source_files: List[InnerFile],
+                           images: List[InnerFile] | None = None) -> None:
         """
-        Save platform to folder and add platform's\
+        Add platform's\
             info to platforms_versions_info.
 
-        Doesn't generate id.
+        Raise PlatformException if platform is already exist.
+        """
+        if PlatformManager.platform_exist(platform.id):
+            raise PlatformException(
+                f'Platform with id {platform.id} is already exist.')
+        await PlatformManager._save_platform(platform, source_files, images)
+        PlatformManager.platforms_versions_info[platform.id].versions.add(
+            platform.version)
+
+    @staticmethod
+    async def _save_platform(platform: Platform,
+                             source_files: List[InnerFile],
+                             images: List[InnerFile] | None = None) -> None:
+        """
+        Save platform to folder.
+
+        Create:
+        - platform source folder
+        - platform image folder
+        - platform raw json scheme
         """
         platform_path = _gen_platform_path(
             PLATFORM_DIRECTORY, platform.id, platform.version)
@@ -122,8 +143,6 @@ class PlatformManager:
 
         if images is not None:
             await _write_source(img_path, images)
-        PlatformManager.platforms_versions_info[platform.id].add(
-            platform.version)
 
     @staticmethod
     async def load_platform(path_to_platform: str | AsyncPath) -> Platform:
@@ -153,7 +172,10 @@ class PlatformManager:
                     unprocessed_platform_data: str = await f.read()
                     platform = Platform(
                         **json.loads(unprocessed_platform_data))
-                    PlatformManager.platforms_versions_info[platform.id].add(
+                    id = platform.id
+                    versions = (
+                        PlatformManager.platforms_versions_info[id].versions)
+                    versions.add(
                         platform.version)
             except Exception as e:
                 print(
@@ -171,7 +193,8 @@ class PlatformManager:
         if platform is not None:
             return platform
 
-        if version not in PlatformManager.platforms_versions_info[platform_id]:
+        if (version not in
+                PlatformManager.platforms_versions_info[platform_id].versions):
             raise PlatformException(
                 f'Unsupported platform {platform_id}, version {version}')
 
@@ -186,7 +209,7 @@ class PlatformManager:
         if platform is not None:
             return platform.model_dump_json(indent=4)
 
-        if PlatformManager.platform_exist(platform_id, version):
+        if not PlatformManager.has_version(platform_id, version):
             raise PlatformException(f'Unsupported platform {platform_id}')
 
         path_to_platform = _get_path_to_platform(platform_id, version)
@@ -194,10 +217,38 @@ class PlatformManager:
             return await f.read()
 
     @staticmethod
-    def platform_exist(platform_id: str, version: str) -> bool:
+    def platform_exist(platform_id: str) -> bool:
         """Check that platform exist."""
-        return (version not in
-                PlatformManager.platforms_versions_info[platform_id])
+        return (platform_id in PlatformManager.platforms_versions_info.keys())
+
+    @staticmethod
+    def has_version(platform_id: str, version: str) -> bool:
+        """Check, that platform has received version."""
+        return (
+            version in
+            PlatformManager.platforms_versions_info[platform_id].versions
+        )
+
+    @staticmethod
+    async def update_platform(platform: Platform,
+                              source_files: List[InnerFile],
+                              images: List[InnerFile]) -> None:
+        """Update platform.
+
+        Raise PlatformException if platform doesn't exist or
+        platform's version is already exist.
+        """
+        if not PlatformManager.platform_exist(platform.id):
+            raise PlatformException(
+                f'Platform with id {platform.id} doesnt exist.')
+        if PlatformManager.has_version(platform.id, platform.version):
+            raise PlatformException(
+                f'Platform with id {platform} '
+                f'already has version {platform.version}'
+            )
+        await PlatformManager._save_platform(platform, source_files, images)
+        PlatformManager.platforms_versions_info[platform.id].versions.add(
+            platform.version)
 
     @staticmethod
     async def get_platform_sources(

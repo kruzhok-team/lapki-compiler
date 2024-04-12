@@ -4,9 +4,17 @@ from typing import List
 
 import pytest
 from aiofile import async_open
-from compiler.PlatformManager import PlatformManager, _get_path_to_platform
-from compiler.types.platform_types import Platform
-from compiler.platform_handler import _add_platform, _get_platform
+from compiler.PlatformManager import (
+    PlatformException,
+    PlatformManager,
+    _get_path_to_platform
+)
+from compiler.platform_handler import (
+    _add_platform,
+    _get_platform,
+    _update_platform
+)
+from compiler.types.platform_types import Platform, PlatformInfo
 from compiler.types.inner_types import InnerFile
 
 pytest_plugins = ('pytest_asyncio',)
@@ -60,8 +68,12 @@ async def test_add_platform(load_platform_from_file: Platform,
         load_platform_from_file,
         source_files,
         images)
-    assert dict(PlatformManager.platforms_versions_info) == {
-        platform_id: {'1.0'}}
+    assert PlatformManager.platforms_versions_info == {
+        platform_id: PlatformInfo(
+            versions=set(['1.0']),
+            access_tokens=set()
+        )
+    }
     # TODO: remove platform
 
 
@@ -95,3 +107,27 @@ async def test_get_platform_images(add_platform: tuple[str, Platform],
         platform_id, platform.version)
     result_images: List[InnerFile] = [img async for img in image_gen]
     assert result_images == images
+
+
+@pytest.mark.asyncio
+async def test_update_platform(add_platform: tuple[str, Platform],
+                               source_files: List[InnerFile],
+                               images: List[InnerFile]):
+    platform_id, platform = add_platform
+    new_platform = platform.model_copy(deep=True)
+    new_platform.version = '2.0'
+    # TODO: add test token?
+    await _update_platform(new_platform, '', source_files, images)
+    assert PlatformManager.platforms_versions_info == {
+        platform_id: PlatformInfo(
+            versions=set(['1.0', '2.0']),
+            access_tokens=set()
+        )
+    }
+
+    with pytest.raises(PlatformException):
+        await _update_platform(new_platform, '', source_files, images)
+
+    with pytest.raises(PlatformException):
+        new_platform.id = 'blabla'
+        await _update_platform(new_platform, '', source_files, images)

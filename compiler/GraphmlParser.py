@@ -129,8 +129,6 @@ class GraphmlParser:
         ...
         for node in xml:
             if 'graph' in node.keys():
-                print(node['graph'])
-                print('--------')
                 parent = GraphmlParser._getParentNode(node)
                 states.append(parent)
                 GraphmlParser._addStateToDict(

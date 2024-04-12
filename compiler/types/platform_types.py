@@ -1,4 +1,4 @@
-from typing import Dict, TypeAlias, Literal, List, Optional
+from typing import Dict, TypeAlias, Literal, List, Optional, Set
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -85,3 +85,12 @@ class Platform(BaseModel):
     visual: bool
     compilingSettings: CompilingSettings | None = None
     components: Dict[str, Component]
+
+
+@dataclass
+class PlatformInfo:
+    """Class contains available versions\
+        and tokens to access update platform."""
+
+    versions: Set[str] = Field(default_factory=set)
+    access_tokens: Set[str] = Field(default_factory=set)
