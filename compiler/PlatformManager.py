@@ -127,8 +127,8 @@ class PlatformManager:
 
     def __init__(self) -> None:
         if not PlatformManager._initialized:
-            self.platforms: Dict[str, Platform] = {}
-            self.versions_info: DefaultDict[PlatformId, PlatformInfo] = (
+            self.__platforms: Dict[str, Platform] = {}
+            self.__versions_info: DefaultDict[PlatformId, PlatformInfo] = (
                 defaultdict(
                     lambda: PlatformInfo()
                 )
@@ -153,12 +153,13 @@ class PlatformManager:
             self,
             new_value: DefaultDict[PlatformId, PlatformInfo]) -> None:
         """Set versions_info."""
-        self.versions_info = new_value
+        self.__versions_info = new_value
 
     async def add_platform(self,
                            platform: Platform,
                            source_files: List[InnerFile],
-                           images: List[InnerFile] | None = None) -> None:
+                           images: List[InnerFile] | None = None
+                           ) -> DefaultDict[PlatformId, PlatformInfo]:
         """
         Add platform's\
             info to versions_info.
@@ -169,8 +170,11 @@ class PlatformManager:
             raise PlatformException(
                 f'Platform with id {platform.id} is already exist.')
         await self._save_platform(platform, source_files, images)
-        self.versions_info[platform.id].versions.add(
+        new_versions_info = deepcopy(self.__versions_info)
+        new_versions_info[platform.id].versions.add(
             platform.version)
+
+        return new_versions_info
 
     async def _save_platform(self,
                              platform: Platform,
@@ -213,8 +217,8 @@ class PlatformManager:
                 unprocessed_platform_data: str = await f.read()
                 platform = Platform(
                     **json.loads(unprocessed_platform_data))
-                if self.platforms.get(platform.id, None) is None:
-                    self.platforms[platform.id] = platform
+                if self.__platforms.get(platform.id, None) is None:
+                    self.__platforms[platform.id] = platform
                 else:
                     raise PlatformException(
                         f'Platform with id {platform.id} is already exists.')
@@ -235,7 +239,7 @@ class PlatformManager:
                         **json.loads(unprocessed_platform_data))
                     id = platform.id
                     versions = (
-                        self.versions_info[id].versions)
+                        self.__versions_info[id].versions)
                     versions.add(
                         platform.version)
             except Exception as e:
@@ -244,17 +248,17 @@ class PlatformManager:
                     f'произошла ошибка! {e}')
 
         print('Были найдены платформы:')
-        pprint(dict(self.versions_info), indent=3)
+        pprint(dict(self.__versions_info), indent=3)
 
     async def get_platform(self, platform_id: str, version: str) -> Platform:
         """Get platform object by id."""
-        platform: Platform | None = self.platforms.get(platform_id)
+        platform: Platform | None = self.__platforms.get(platform_id)
 
         if platform is not None:
             return platform
 
         if (version not in
-                self.versions_info[platform_id].versions):
+                self.__versions_info[platform_id].versions):
             raise PlatformException(
                 f'Unsupported platform {platform_id}, version {version}')
 
@@ -271,7 +275,7 @@ class PlatformManager:
 
         Raise PlatformException if platform or version doesn't exist.
         """
-        platform: Platform | None = self.platforms.get(platform_id)
+        platform: Platform | None = self.__platforms.get(platform_id)
 
         if platform is not None:
             return platform.model_dump_json(indent=4)
@@ -285,13 +289,13 @@ class PlatformManager:
 
     def platform_exist(self, platform_id: str) -> bool:
         """Check that platform exist."""
-        return (platform_id in self.versions_info.keys())
+        return (platform_id in self.__versions_info.keys())
 
     def has_version(self, platform_id: str, version: str) -> bool:
         """Check, that platform has received version."""
         return (
             version in
-            self.versions_info[platform_id].versions
+            self.__versions_info[platform_id].versions
         )
 
     async def update_platform(
@@ -306,7 +310,6 @@ class PlatformManager:
         Raise PlatformException if platform doesn't exist or
         platform's version is already exist.
         """
-        print(self.versions_info)
         if not self.platform_exist(platform.id):
             raise PlatformException(
                 f'Platform with id {platform.id} doesnt exist.')
@@ -318,7 +321,7 @@ class PlatformManager:
         await self._save_platform(platform, source_files, images)
 
         new_versions_info = deepcopy(
-            self.versions_info)
+            self.__versions_info)
         new_versions_info[platform.id].versions.add(platform.version)
 
         return new_versions_info
@@ -339,9 +342,11 @@ class PlatformManager:
         source_dir = _get_img_path(platform_id, version)
         return _read_platform_files(source_dir, 'rb')
 
-    async def delete_platform_by_versions(self,
-                                          platform_id: str,
-                                          versions: Set[str]) -> None:
+    async def delete_platform_by_versions(
+        self,
+        platform_id: str,
+        versions: Set[str]
+    ) -> DefaultDict[PlatformId, PlatformInfo]:
         """
         Delete platform versions.
 
@@ -350,6 +355,7 @@ class PlatformManager:
 
         Raise PlatformException, if platform or version doesn't exist
         """
+        new_versions_info = deepcopy(self.__versions_info)
         if not self.platform_exist(platform_id):
             raise PlatformException(
                 f'Platform with id {platform_id} doesnt exist.')
@@ -359,8 +365,7 @@ class PlatformManager:
                 raise PlatformException(
                     f'Platform with id {platform_id} and '
                     f'version {version} doesnt exist.')
-        versions_info = (
-            self.versions_info[platform_id].versions)
+        versions_info = new_versions_info[platform_id].versions
         for version in versions:
             json_scheme_folder = await AsyncPath(
                 _get_path_to_platform(platform_id, version)).parent.absolute()
@@ -375,9 +380,14 @@ class PlatformManager:
 
         if len(versions_info) == 0:
             await _delete_platform(platform_id)
-            del self.versions_info[platform_id]
+            del new_versions_info[platform_id]
 
-    async def delete_platform(self, platform_id: str) -> None:
+        return new_versions_info
+
+    async def delete_platform(
+            self,
+            platform_id: str
+    ) -> DefaultDict[PlatformId, PlatformInfo]:
         """
         Delete full platform by id.
 
@@ -386,5 +396,6 @@ class PlatformManager:
         if not self.platform_exist(platform_id):
             raise PlatformException(f'Platform {platform_id} doesnt exist.')
         await _delete_platform(platform_id)
-
-        # del self.versions_info[platform_id]
+        new_versions_info = deepcopy(self.__versions_info)
+        del new_versions_info[platform_id]
+        return new_versions_info

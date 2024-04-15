@@ -24,8 +24,11 @@ async def _delete_platform_by_versions(platform_id: str,
     platform_manager = PlatformManager()
     set_versions: Set[str] = set(map(
         lambda string: string.strip(), versions_to_delete.split(',')))
-    await platform_manager.delete_platform_by_versions(platform_id,
-                                                       set_versions)
+    new_versions_info = await platform_manager.delete_platform_by_versions(
+        platform_id,
+        set_versions
+    )
+    platform_manager.set_platforms_info(new_versions_info)
 
 
 async def _add_platform(platform: Platform,
@@ -33,7 +36,11 @@ async def _add_platform(platform: Platform,
                         images: List[InnerFile]) -> str:
     platform_manager = PlatformManager()
     platform.id = platform_manager.gen_platform_id()
-    await platform_manager.add_platform(platform, source_files, images)
+    new_versions_info = await platform_manager.add_platform(
+        platform,
+        source_files,
+        images)
+    platform_manager.set_platforms_info(new_versions_info)
     return platform.id
 
 
