@@ -23,9 +23,10 @@ async def main() -> NoReturn:
     runner = web.AppRunner(app)
     await runner.setup()
 
+    platform_manager = PlatformManager()
     site = web.TCPSite(runner, host=SERVER_HOST, port=SERVER_PORT)
     await Logger.init_logger()
-    await PlatformManager.init_platforms(PLATFORM_DIRECTORY)
+    await platform_manager.init_platforms(PLATFORM_DIRECTORY)
     await site.start()
     print('Модуль компилятора запущен...')
     while True:

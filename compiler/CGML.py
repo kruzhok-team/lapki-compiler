@@ -515,7 +515,8 @@ async def parse(xml: str) -> StateMachine:
     """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
-    platform: Platform = await PlatformManager.get_platform(
+    platfrom_manager = PlatformManager()
+    platform: Platform = await platfrom_manager.get_platform(
         cgml_scheme.platform, '')  # TODO: Доставать версию платформы
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(

@@ -21,17 +21,19 @@ class PlatformHandlerException(Exception):
 
 async def _delete_platform_by_versions(platform_id: str,
                                        versions_to_delete: str) -> None:
+    platform_manager = PlatformManager()
     set_versions: Set[str] = set(map(
         lambda string: string.strip(), versions_to_delete.split(',')))
-    await PlatformManager.delete_platform_by_versions(platform_id,
-                                                      set_versions)
+    await platform_manager.delete_platform_by_versions(platform_id,
+                                                       set_versions)
 
 
 async def _add_platform(platform: Platform,
                         source_files: List[InnerFile],
                         images: List[InnerFile]) -> str:
-    platform.id = PlatformManager.gen_platform_id()
-    await PlatformManager.add_platform(platform, source_files, images)
+    platform_manager = PlatformManager()
+    platform.id = platform_manager.gen_platform_id()
+    await platform_manager.add_platform(platform, source_files, images)
     return platform.id
 
 
@@ -40,13 +42,17 @@ async def _update_platform(new_platform: Platform,
                            source_files: List[InnerFile],
                            images: List[InnerFile]
                            ) -> None:
-    return await PlatformManager.update_platform(new_platform,
-                                                 source_files,
-                                                 images)
+    platform_manager = PlatformManager()
+    new_versions_info = await platform_manager.update_platform(
+        new_platform,
+        source_files,
+        images)
+    platform_manager.set_platforms_info(new_versions_info)
 
 
 async def _get_platform(platform_id: str, version: str) -> str:
-    return await PlatformManager.get_raw_platform_scheme(
+    platform_manager = PlatformManager()
+    return await platform_manager.get_raw_platform_scheme(
         platform_id, version)
 
 
@@ -143,10 +149,10 @@ class PlatformHandler:
         """Get platform source-code files."""
         # TODO: Проверить, что платформа компилируемая
         ws = await _prepare_request(ws, request)
-
+        platform_manager = PlatformManager()
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
-        source_generator = await PlatformManager.get_platform_sources(
+        source_generator = await platform_manager.get_platform_sources(
             platform_id, version)
         async for source in source_generator:
             await ws.send_str('source')
@@ -170,7 +176,8 @@ class PlatformHandler:
             ...
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
-        image_generator = await PlatformManager.get_platform_images(
+        platform_manager = PlatformManager()
+        image_generator = await platform_manager.get_platform_images(
             platform_id, version)
         async for image in image_generator:
             await ws.send_str('img')

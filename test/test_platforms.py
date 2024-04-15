@@ -35,6 +35,12 @@ def source_files() -> List[InnerFile]:
 
 
 @pytest.fixture
+def platform_manager() -> PlatformManager:
+    """Return PlatformManager instance."""
+    return PlatformManager()
+
+
+@pytest.fixture
 def images() -> List[InnerFile]:
     """Get test images."""
     with open('test/test_resources/test_image.jpg', 'rb') as f:
@@ -66,14 +72,15 @@ async def add_platform(platform: Platform,
 
 
 @pytest.mark.asyncio
-async def test_add_platform(platform: Platform,
+async def test_add_platform(platform_manager: PlatformManager,
+                            platform: Platform,
                             source_files: List[InnerFile],
                             images: List[InnerFile]):
     platform_id = await _add_platform(
         platform,
         source_files,
         images)
-    assert PlatformManager.platforms_versions_info == {
+    assert platform_manager.versions_info == {
         platform_id: PlatformInfo(
             versions=set(['1.0']),
             access_tokens=set()
@@ -97,10 +104,11 @@ async def test_get_raw_platform(platform: Platform,
 
 
 @pytest.mark.asyncio
-async def test_get_platform_sources(platform: Platform,
+async def test_get_platform_sources(platform_manager: PlatformManager,
+                                    platform: Platform,
                                     source_files: List[InnerFile]):
     async with add_platform(platform, source_files, []) as platform_id:
-        source_gen = await PlatformManager.get_platform_sources(
+        source_gen = await platform_manager.get_platform_sources(
             platform_id, platform.version)
         result_sources: List[InnerFile] = [source async
                                            for source in source_gen]
@@ -108,17 +116,19 @@ async def test_get_platform_sources(platform: Platform,
 
 
 @pytest.mark.asyncio
-async def test_get_platform_images(platform: Platform,
+async def test_get_platform_images(platform_manager: PlatformManager,
+                                   platform: Platform,
                                    images: List[InnerFile]):
     async with add_platform(platform, [], images) as platform_id:
-        image_gen = await PlatformManager.get_platform_images(
+        image_gen = await platform_manager.get_platform_images(
             platform_id, platform.version)
         result_images: List[InnerFile] = [img async for img in image_gen]
         assert result_images == images
 
 
 @pytest.mark.asyncio
-async def test_update_platform(platform: Platform,
+async def test_update_platform(platform_manager: PlatformManager,
+                               platform: Platform,
                                source_files: List[InnerFile],
                                images: List[InnerFile]):
     async with add_platform(platform, source_files, images) as platform_id:
@@ -126,7 +136,7 @@ async def test_update_platform(platform: Platform,
         new_platform.version = '2.0'
         # TODO: add test token?
         await _update_platform(new_platform, '', source_files, images)
-        assert PlatformManager.platforms_versions_info == {
+        assert platform_manager.versions_info == {
             platform_id: PlatformInfo(
                 versions=set(['1.0', '2.0']),
                 access_tokens=set()
@@ -142,19 +152,20 @@ async def test_update_platform(platform: Platform,
 
 
 @pytest.mark.asyncio
-async def test_delete_platform_by_version(platform: Platform,
+async def test_delete_platform_by_version(platform_manager: PlatformManager,
+                                          platform: Platform,
                                           source_files: List[InnerFile],
                                           images: List[InnerFile]):
     async with (add_platform(platform, source_files, images)
                 as platform_id):
         await _delete_platform_by_versions(platform_id, platform.version)
-        assert PlatformManager.has_version(
+        assert platform_manager.has_version(
             platform_id, platform.version) is False
 
         # Не проходится из-за непонятного поведения
         # Если проверить платформы на существование в самой функции
         # PlatformManager.delete_platform_by_versions
-        # То выведется True, и словарь platforms_versions_info будет
+        # То выведется True, и словарь versions_info будет
         # дейтсвительно пустым, но здесь, в тесте,
         # он почему-то все равно имеет ключ platform_id
-        assert PlatformManager.platform_exist(platform_id) is False
+        assert platform_manager.platform_exist(platform_id) is False
