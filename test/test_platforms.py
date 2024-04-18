@@ -9,13 +9,13 @@ from compiler.PlatformManager import (
     PlatformException,
     PlatformManager,
     _get_path_to_platform,
-    _delete_platform
 )
 from compiler.platform_handler import (
     _add_platform,
     _get_platform,
     _update_platform,
-    _delete_platform_by_versions
+    _delete_platform_by_versions,
+    _delete_platform
 )
 from compiler.types.platform_types import Platform, PlatformInfo
 from compiler.types.inner_types import InnerFile
@@ -60,7 +60,8 @@ def platform() -> Platform:
 @asynccontextmanager
 async def add_platform(platform: Platform,
                        source_files: List[InnerFile],
-                       images: List[InnerFile]):
+                       images: List[InnerFile],
+                       autodelete: bool = True):
     try:
         platform_id = await _add_platform(
             platform,
@@ -68,7 +69,8 @@ async def add_platform(platform: Platform,
             images)
         yield platform_id
     finally:
-        await _delete_platform(platform.id)
+        if autodelete:
+            await _delete_platform(platform.id)
 
 
 @pytest.mark.asyncio
@@ -156,16 +158,35 @@ async def test_delete_platform_by_version(platform_manager: PlatformManager,
                                           platform: Platform,
                                           source_files: List[InnerFile],
                                           images: List[InnerFile]):
-    async with (add_platform(platform, source_files, images)
+    async with (add_platform(platform, source_files, images, False)
                 as platform_id):
         await _delete_platform_by_versions(platform_id, platform.version)
-        assert platform_manager.has_version(
-            platform_id, platform.version) is False
-
-        # Не проходится из-за непонятного поведения
-        # Если проверить платформы на существование в самой функции
-        # PlatformManager.delete_platform_by_versions
-        # То выведется True, и словарь versions_info будет
-        # дейтсвительно пустым, но здесь, в тесте,
-        # он почему-то все равно имеет ключ platform_id
         assert platform_manager.platform_exist(platform_id) is False
+        # почему-то with pytest.raises тут не работает
+        with pytest.raises(KeyError):
+            platform_manager.has_version(platform_id, platform.version)
+    async with (add_platform(platform, source_files, images, autodelete=True)
+                as platform_id):
+        new_version_platform = platform.model_copy(deep=True)
+        new_version_platform.version = '2.0'
+        assert platform_manager.versions_info[platform_id].versions == set(
+            ('1.0',))
+
+
+@pytest.mark.asyncio
+async def test_delete_platfrom(
+    platform_manager: PlatformManager,
+    platform: Platform,
+    source_files: List[InnerFile],
+    images: List[InnerFile]
+):
+    async with (add_platform(platform, source_files, images, False)
+                as platform_id):
+        new_version = platform.model_copy(deep=True)
+        new_version.version = '2.0'
+        await _update_platform(new_version, '', [], [])
+        await _delete_platform(platform_id)
+
+        assert platform_manager.versions_info == {}
+    # with pytest.raises(PlatformException):
+    #     ...

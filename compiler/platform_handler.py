@@ -29,7 +29,8 @@ async def _delete_platform_by_versions(platform_id: str,
         set_versions
     )
     platform_manager.set_platforms_info(new_versions_info)
-
+    print('in handler')
+    print(platform_manager.versions_info)
 
 async def _add_platform(platform: Platform,
                         source_files: List[InnerFile],
@@ -62,6 +63,11 @@ async def _get_platform(platform_id: str, version: str) -> str:
     return await platform_manager.get_raw_platform_scheme(
         platform_id, version)
 
+
+async def _delete_platform(platform_id: str) -> None:
+    platform_manager = PlatformManager()
+    new_versions_info = await platform_manager.delete_platform(platform_id)
+    platform_manager.set_platforms_info(new_versions_info)
 
 Images = List[InnerFile]
 SourceFiles = List[InnerFile]
@@ -231,5 +237,18 @@ class PlatformHandler:
         platform_id = await ws.receive_str()
         versions_to_delete = await ws.receive_str()
         await _delete_platform_by_versions(platform_id, versions_to_delete)
+
+        return ws
+
+    @staticmethod
+    async def handle_remove_platform(
+        request: web.Request,
+        ws: Optional[web.WebSocketResponse] = None,
+        access_token: str | None = None
+    ) -> web.WebSocketResponse:
+        """Remove all versions of platform."""
+        ws = await _prepare_request(ws, request)
+        platform_id = await ws.receive_str()
+        await _delete_platform(platform_id)
 
         return ws

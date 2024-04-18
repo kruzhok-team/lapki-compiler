@@ -9,12 +9,10 @@ from typing import (
     Dict,
     Literal,
     List,
-    DefaultDict,
     Any,
     Optional,
     Set
 )
-from collections import defaultdict
 from pprint import pprint
 
 from aiofile import async_open
@@ -128,11 +126,7 @@ class PlatformManager:
     def __init__(self) -> None:
         if not PlatformManager._initialized:
             self.__platforms: Dict[str, Platform] = {}
-            self.__versions_info: DefaultDict[PlatformId, PlatformInfo] = (
-                defaultdict(
-                    lambda: PlatformInfo()
-                )
-            )
+            self.__versions_info: Dict[PlatformId, PlatformInfo] = {}
             PlatformManager._initialized = True
 
     def __new__(cls, *args, **kwargs) -> 'PlatformManager':
@@ -145,13 +139,18 @@ class PlatformManager:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
+    @property
+    def versions_info(self):
+        """Information about platform's versions."""
+        return deepcopy(self.__versions_info)
+
     def gen_platform_id(self) -> str:
         """Generate platform id."""
         return uuid.uuid4().hex
 
     def set_platforms_info(
             self,
-            new_value: DefaultDict[PlatformId, PlatformInfo]) -> None:
+            new_value: Dict[PlatformId, PlatformInfo]) -> None:
         """Set versions_info."""
         self.__versions_info = new_value
 
@@ -159,7 +158,7 @@ class PlatformManager:
                            platform: Platform,
                            source_files: List[InnerFile],
                            images: List[InnerFile] | None = None
-                           ) -> DefaultDict[PlatformId, PlatformInfo]:
+                           ) -> Dict[PlatformId, PlatformInfo]:
         """
         Add platform's\
             info to versions_info.
@@ -171,8 +170,8 @@ class PlatformManager:
                 f'Platform with id {platform.id} is already exist.')
         await self._save_platform(platform, source_files, images)
         new_versions_info = deepcopy(self.__versions_info)
-        new_versions_info[platform.id].versions.add(
-            platform.version)
+        new_versions_info[platform.id] = PlatformInfo(
+            versions=set((platform.version,)))
 
         return new_versions_info
 
@@ -293,9 +292,10 @@ class PlatformManager:
 
     def has_version(self, platform_id: str, version: str) -> bool:
         """Check, that platform has received version."""
+        platform = self.__versions_info[platform_id]
         return (
             version in
-            self.__versions_info[platform_id].versions
+            platform.versions
         )
 
     async def update_platform(
@@ -303,7 +303,7 @@ class PlatformManager:
         platform: Platform,
         source_files: List[InnerFile],
         images: List[InnerFile]
-    ) -> DefaultDict[PlatformId, PlatformInfo]:
+    ) -> Dict[PlatformId, PlatformInfo]:
         """
         Update platform.
 
@@ -346,7 +346,7 @@ class PlatformManager:
         self,
         platform_id: str,
         versions: Set[str]
-    ) -> DefaultDict[PlatformId, PlatformInfo]:
+    ) -> Dict[PlatformId, PlatformInfo]:
         """
         Delete platform versions.
 
@@ -387,7 +387,7 @@ class PlatformManager:
     async def delete_platform(
             self,
             platform_id: str
-    ) -> DefaultDict[PlatformId, PlatformInfo]:
+    ) -> Dict[PlatformId, PlatformInfo]:
         """
         Delete full platform by id.
 
