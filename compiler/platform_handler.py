@@ -3,11 +3,14 @@ from typing import List, Optional, Set, Dict
 
 import aiohttp
 from aiohttp import web
+from compiler.Logger import Logger
 from compiler.PlatformManager import (
+    PlatformException,
     PlatformManager,
     PlatformId,
     PlatformMeta
 )
+from compiler.RequestError import RequestError
 from compiler.access_controller import (
     AccessController,
     AccessControllerException
@@ -137,7 +140,7 @@ async def _prepare_request(ws: Optional[web.WebSocketResponse],
 class PlatformHandler:
     """Class for handling requests CRUD-operations with platforms."""
 
-    @ staticmethod
+    @staticmethod
     async def handle_add_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -145,71 +148,95 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Validate and save platform."""
         ws = await _prepare_request(ws, request)
-        if access_token is None:
-            access_token = await ws.receive_str()
-        _check_token(access_token)
-        # TODO: Отлавливание ошибок и отправка их пользователю
-        platform = Platform(**await ws.receive_json())
-        images, source_files = await _get_platform_sources(
-            ws, platform.visual, platform.compile)
-        platform_id = await _add_platform(platform, source_files, images)
-        await ws.send_str('id')
-        await ws.send_str(platform_id)
+        try:
+            if access_token is None:
+                access_token = await ws.receive_str()
+            _check_token(access_token)
+            # TODO: Отлавливание ошибок и отправка их пользователю
+            platform = Platform(**await ws.receive_json())
+            images, source_files = await _get_platform_sources(
+                ws, platform.visual, platform.compile)
+            platform_id = await _add_platform(platform, source_files, images)
+            await ws.send_str('id')
+            await ws.send_str(platform_id)
+        except AccessControllerException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_get_platform_by_id(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Get platform json scheme."""
         ws = await _prepare_request(ws, request)
-        platform_id = await ws.receive_str()
-        version = await ws.receive_str()
-        raw_platform = await _get_platform(platform_id, version)
-        await ws.send_str('raw-platform-scheme')
-        await ws.send_str(raw_platform)
+        try:
+            platform_id = await ws.receive_str()
+            version = await ws.receive_str()
+            raw_platform = await _get_platform(platform_id, version)
+            await ws.send_str('raw-platform-scheme')
+            await ws.send_str(raw_platform)
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_get_platform_source_files(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Get platform source-code files."""
-        # TODO: Проверить, что платформа компилируемая
         ws = await _prepare_request(ws, request)
-        platform_manager = PlatformManager()
-        platform_id = await ws.receive_str()
-        version = await ws.receive_str()
-        source_generator = await platform_manager.get_platform_sources(
-            platform_id, version)
-        async for source in source_generator:
-            await ws.send_str('source')
-            await ws.send_json(source.model_dump())
-        await ws.send_str('end-sources-send')
+        try:
+            platform_manager = PlatformManager()
+            platform_id = await ws.receive_str()
+            version = await ws.receive_str()
+            source_generator = await platform_manager.get_platform_sources(
+                platform_id, version)
+            async for source in source_generator:
+                await ws.send_str('source')
+                await ws.send_json(source.model_dump())
+            await ws.send_str('end-sources-send')
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_get_platform_images(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
     ) -> web.WebSocketResponse:
         """Get platform s images."""
-        # TODO: Проверить, что платформа визуальная
         ws = await _prepare_request(ws, request)
-        platform_id = await ws.receive_str()
-        version = await ws.receive_str()
-        platform_manager = PlatformManager()
-        image_generator = await platform_manager.get_platform_images(
-            platform_id, version)
-        async for image in image_generator:
-            await ws.send_str('img')
-            await ws.send_json(image.model_dump())
-        await ws.send_str('end-images-send')
+        try:
+            platform_id = await ws.receive_str()
+            version = await ws.receive_str()
+            platform_manager = PlatformManager()
+            image_generator = await platform_manager.get_platform_images(
+                platform_id, version)
+            async for image in image_generator:
+                await ws.send_str('img')
+                await ws.send_json(image.model_dump())
+            await ws.send_str('end-images-send')
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_update_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -217,19 +244,27 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Update platform by id."""
         ws = await _prepare_request(ws, request)
-        if access_token is None:
-            access_token = await ws.receive_str()
-        _check_token(access_token)
-        platform = Platform(**await ws.receive_json())
-        images, source_files = await _get_platform_sources(
-            ws, platform.visual, platform.compile)
-        await _update_platform(platform,
-                               source_files,
-                               images)
-        await ws.send_str('updated')
+        try:
+            if access_token is None:
+                access_token = await ws.receive_str()
+            _check_token(access_token)
+            platform = Platform(**await ws.receive_json())
+            images, source_files = await _get_platform_sources(
+                ws, platform.visual, platform.compile)
+            await _update_platform(platform,
+                                   source_files,
+                                   images)
+            await ws.send_str('updated')
+        except AccessControllerException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_remove_platform_by_versions(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -240,16 +275,24 @@ class PlatformHandler:
         Versions is a string like "v1.0, 2.0, 3.0".
         """
         ws = await _prepare_request(ws, request)
-        if access_token is None:
-            access_token = await ws.receive_str()
-        _check_token(access_token)
-        platform_id = await ws.receive_str()
-        versions_to_delete = await ws.receive_str()
-        await _delete_platform_by_versions(platform_id, versions_to_delete)
-        await ws.send_str('deleted')
+        try:
+            if access_token is None:
+                access_token = await ws.receive_str()
+            _check_token(access_token)
+            platform_id = await ws.receive_str()
+            versions_to_delete = await ws.receive_str()
+            await _delete_platform_by_versions(platform_id, versions_to_delete)
+            await ws.send_str('deleted')
+        except AccessControllerException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_remove_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -257,28 +300,48 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Remove all versions of platform."""
         ws = await _prepare_request(ws, request)
-        if access_token is None:
-            access_token = await ws.receive_str()
-        _check_token(access_token)
-        platform_id = await ws.receive_str()
-        await _delete_platform(platform_id)
-        await ws.send_str('deleted')
+        try:
+            if access_token is None:
+                access_token = await ws.receive_str()
+            _check_token(access_token)
+            platform_id = await ws.receive_str()
+            await _delete_platform(platform_id)
+            await ws.send_str('deleted')
+        except AccessControllerException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except PlatformException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
 
-    @ staticmethod
-    async def handle_auth(ws: web.WebSocketResponse) -> str:
+    @staticmethod
+    async def handle_auth(ws: web.WebSocketResponse) -> str | None:
         """Check token."""
-        token = await ws.receive_str()
-        _check_token(token)
-        await ws.send_str('auth_success')
-        return token
+        try:
+            token = await ws.receive_str()
+            _check_token(token)
+            await ws.send_str('auth_success')
+            return token
+        except AccessControllerException as e:
+            await RequestError(str(e)).dropConnection(ws)
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
+        return None
 
-    @ staticmethod
+    @staticmethod
     async def handle_get_list(request: web.Request,
                               ws: Optional[web.WebSocketResponse] = None
                               ) -> web.WebSocketResponse:
         """Get list of all platforms."""
         ws = await _prepare_request(ws, request)
-        platform_list = _get_platforms_list()
-        await ws.send_json(platform_list)
+        try:
+            platform_list = _get_platforms_list()
+            await ws.send_json(platform_list)
+            return ws
+        except Exception:
+            await Logger.logException()
+            await RequestError('Internal error.').dropConnection(ws)
         return ws
