@@ -5,17 +5,9 @@ from typing import Any, Dict, List, TypeAlias, Literal
 from collections import defaultdict
 
 import xmltodict
-
-
-try:
-    from .types.platform_types import Method, MethodParameter
-    from .Logger import Logger
-    from .PlatformManager import PlatformManager
-except ImportError:
-    from compiler.types.platform_types import Method, MethodParameter
-
-    from compiler.Logger import Logger
-    from compiler.PlatformManager import PlatformManager
+from compiler.types.platform_types import Method, MethodParameter
+from compiler.Logger import Logger
+from compiler.PlatformManager import PlatformManager
 
 Point: TypeAlias = dict[Literal['x', 'y'], int]
 TRANSTIONS_DISTANCE = 75

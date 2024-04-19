@@ -6,13 +6,8 @@ from typing import Dict, List, Set, TypedDict
 
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
-# Если засунуть в try except линтер начинает ругаться.
 from compiler.types.ide_types import SupportedCompilers
-
-try:
-    from .config import LIBRARY_PATH, BUILD_DIRECTORY
-except ImportError:
-    from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
+from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
 
 
 class CompilerException(Exception):

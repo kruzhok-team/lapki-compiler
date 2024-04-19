@@ -6,49 +6,27 @@ from typing import List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
-import aiohttp
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
-
-
-try:
-    from .CGML import parse, CGMLException
-    from .Compiler import CompilerResult
-    from .types.inner_types import CompilerResponse, InnerFile
-    from .types.ide_types import CompilerSettings
-    from .fullgraphmlparser.stateclasses import (
-        StateMachine,
-        SMCompilingSettings
-    )
-    from .types.ide_types import IdeStateMachine
-    from .GraphmlParser import GraphmlParser
-    from .CJsonParser import CJsonParser
-    from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from .Compiler import Compiler
-    from .JsonConverter import JsonConverter
-    from .RequestError import RequestError
-    from .config import BUILD_DIRECTORY, MAX_MSG_SIZE
-    from .Logger import Logger
-except ImportError:
-    from compiler.CGML import parse, CGMLException
-    from compiler.Compiler import CompilerResult
-    from compiler.types.inner_types import CompilerResponse, InnerFile
-    from compiler.types.ide_types import CompilerSettings
-    from compiler.fullgraphmlparser.stateclasses import (
-        StateMachine,
-        SMCompilingSettings
-    )
-    from compiler.types.ide_types import IdeStateMachine
-    from compiler.GraphmlParser import GraphmlParser
-    from compiler.CJsonParser import CJsonParser
-    from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from compiler.Compiler import Compiler
-    from compiler.JsonConverter import JsonConverter
-    from compiler.RequestError import RequestError
-    from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
-    from compiler.Logger import Logger
+from compiler.CGML import parse, CGMLException
+from compiler.Compiler import CompilerResult
+from compiler.types.inner_types import CompilerResponse, InnerFile
+from compiler.types.ide_types import CompilerSettings
+from compiler.fullgraphmlparser.stateclasses import (
+    StateMachine,
+    SMCompilingSettings
+)
+from compiler.types.ide_types import IdeStateMachine
+from compiler.GraphmlParser import GraphmlParser
+from compiler.CJsonParser import CJsonParser
+from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
+from compiler.Compiler import Compiler
+from compiler.JsonConverter import JsonConverter
+from compiler.RequestError import RequestError
+from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
+from compiler.Logger import Logger
 
 
 async def create_response(
@@ -157,39 +135,6 @@ class Handler:
             extension=extension,
             fileContent=data
         )
-
-    @staticmethod
-    async def main(request: web.Request) -> web.WebSocketResponse:
-        """Root handler, call other handlers."""
-        ws = web.WebSocketResponse(autoclose=False, max_msg_size=MAX_MSG_SIZE)
-        await ws.prepare(request)
-        await Logger.logger.info(request)
-        async for msg in ws:
-            await Logger.logger.info(msg)
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                match msg.data:
-                    case 'close':
-                        await ws.close()
-                    case 'arduino':
-                        # Я не понимаю, у pyright какие-то проблемы
-                        # с моими асинхронными функциями
-                        # type: ignore
-                        await Handler.handle_ws_compile(request, ws)
-                    case 'berlogaImport':
-                        # type: ignore
-                        await Handler.handle_berloga_import(request, ws)
-                    case 'berlogaExport':
-                        await Handler.handle_berloga_export(request, ws)
-                    case 'cgml':
-                        await Handler.handle_cgml_compile(request, ws)
-                    case _:
-                        await ws.send_str(f'Unknown {msg}!'
-                                          'Use close, arduino,'
-                                          'berlogaImport, berlogaExport')
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                pass
-
-        return ws
 
     @staticmethod
     async def handle_cgml_compile(

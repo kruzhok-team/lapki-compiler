@@ -3,7 +3,6 @@ from time import gmtime, strftime
 import random
 import base64
 from pathlib import Path
-import asyncio
 
 import pytest
 from compiler.Client import Client

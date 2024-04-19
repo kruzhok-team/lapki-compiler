@@ -3,62 +3,32 @@ from typing import Dict, Iterable, List, Set
 
 from compiler.types.ide_types import Bounds
 from compiler.types.inner_types import InnerFile
-
-
-try:
-    from .fullgraphmlparser.stateclasses import (
-        ParserTrigger,
-        StateMachine,
-        ParserState,
-        ParserNote,
-        Labels,
-        create_note
-    )
-    from .types.ide_types import (
-        IdeStateMachine,
-        State,
-        Event,
-        Argument,
-        Component,
-        Trigger,
-        Action,
-        IncludeStr,
-        Transition,
-        Condition
-    )
-    from .types.inner_types import (
-        DefaultActions,
-        EventName,
-        EventSignal,
-        Events
-    )
-except ImportError:
-    from compiler.types.inner_types import (
-        DefaultActions,
-        EventName,
-        EventSignal,
-        Events
-    )
-    from compiler.fullgraphmlparser.stateclasses import (
-        ParserTrigger,
-        StateMachine,
-        ParserState,
-        ParserNote,
-        Labels,
-        create_note
-    )
-    from compiler.types.ide_types import (
-        IdeStateMachine,
-        State,
-        Event,
-        Argument,
-        Component,
-        Trigger,
-        Action,
-        IncludeStr,
-        Transition,
-        Condition
-    )
+from compiler.types.inner_types import (
+    DefaultActions,
+    EventName,
+    EventSignal,
+    Events
+)
+from compiler.fullgraphmlparser.stateclasses import (
+    ParserTrigger,
+    StateMachine,
+    ParserState,
+    ParserNote,
+    Labels,
+    create_note
+)
+from compiler.types.ide_types import (
+    IdeStateMachine,
+    State,
+    Event,
+    Argument,
+    Component,
+    Trigger,
+    Action,
+    IncludeStr,
+    Transition,
+    Condition
+)
 
 
 class ParserException(Exception):

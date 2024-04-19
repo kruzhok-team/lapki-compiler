@@ -4,16 +4,10 @@ from copy import deepcopy
 
 import xmltodict
 from aiohttp.web import WebSocketResponse
+from compiler.types.ide_types import InitialState, Point
+from compiler.fullgraphmlparser.stateclasses import ParserState
+from compiler.Logger import Logger
 
-
-try:
-    from compiler.types.ide_types import InitialState, Point
-    from compiler.fullgraphmlparser.stateclasses import ParserState
-    from compiler.Logger import Logger
-except ImportError:
-    from .types.ide_types import InitialState, Point
-    from .fullgraphmlparser.stateclasses import ParserState
-    from .Logger import Logger
 
 DEFAULT_TRANSITION_DATA = {
     '@key': 'd10',

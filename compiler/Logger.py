@@ -6,11 +6,7 @@ from aiologger.handlers.files import AsyncFileHandler
 from aiologger.loggers.json import JsonLogger
 from aiologger.levels import LogLevel
 from aiologger.formatters.base import Formatter
-
-try:
-    from .config import LOG_PATH
-except ImportError:
-    from compiler.config import LOG_PATH
+from compiler.config import LOG_PATH
 
 
 class Logger:

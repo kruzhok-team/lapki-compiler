@@ -19,12 +19,7 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from compiler.config import PLATFORM_DIRECTORY, LIBRARY_PATH
 from compiler.types.inner_types import InnerFile
-from compiler.types.platform_types import PlatformInfo
-
-try:
-    from .types.platform_types import Platform
-except ImportError:
-    from compiler.types.platform_types import Platform
+from compiler.types.platform_types import PlatformInfo, Platform
 
 PlatformId = str
 PlatformVersion = str

@@ -257,3 +257,11 @@ class PlatformHandler:
         await _delete_platform(platform_id)
         await ws.send_str('deleted')
         return ws
+
+    @staticmethod
+    async def handle_auth(ws: web.WebSocketResponse) -> str:
+        """Check token."""
+        token = await ws.receive_str()
+        _check_token(token)
+
+        return token

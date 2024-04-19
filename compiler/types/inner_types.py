@@ -4,8 +4,7 @@ from typing import List, Literal, Dict, Optional, TypeAlias, Any
 
 from pydantic import BaseModel, field_validator
 from pydantic.dataclasses import dataclass
-
-from ..fullgraphmlparser.stateclasses import ParserTrigger
+from compiler.fullgraphmlparser.stateclasses import ParserTrigger
 
 DefaultComponents = Literal['System']
 DefaultActions = Literal['onEnter', 'onExit']

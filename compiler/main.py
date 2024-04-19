@@ -3,19 +3,11 @@ from typing import NoReturn
 import asyncio
 
 from aiohttp import web
-
-try:
-    from .routes import setup_routes
-    from .config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
-    from .Logger import Logger
-    from .access_controller import AccessController
-    from .PlatformManager import PlatformManager
-except ImportError:
-    from compiler.routes import setup_routes
-    from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
-    from compiler.PlatformManager import PlatformManager
-    from compiler.access_controller import AccessController
-    from .Logger import Logger
+from compiler.routes import setup_routes
+from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
+from compiler.PlatformManager import PlatformManager
+from compiler.access_controller import AccessController
+from compiler.Logger import Logger
 
 
 async def main() -> NoReturn:
