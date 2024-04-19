@@ -224,7 +224,6 @@ class PlatformHandler:
         images, source_files = await _get_platform_sources(
             ws, platform.visual, platform.compile)
         await _update_platform(platform,
-                               access_token,
                                source_files,
                                images)
         await ws.send_str('updated')
