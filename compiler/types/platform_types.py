@@ -88,9 +88,10 @@ class Platform(BaseModel):
 
 
 @dataclass
-class PlatformInfo:
+class PlatformMeta:
     """Class contains available versions\
         and tokens to access update platform."""
 
     versions: Set[str] = Field(default_factory=set)
-    access_tokens: Set[str] = Field(default_factory=set)
+    name: str = ''
+    author: str = ''

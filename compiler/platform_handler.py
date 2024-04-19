@@ -1,9 +1,13 @@
 """Module implements handling request to process platforms."""
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Dict
 
 import aiohttp
 from aiohttp import web
-from compiler.PlatformManager import PlatformManager
+from compiler.PlatformManager import (
+    PlatformManager,
+    PlatformId,
+    PlatformMeta
+)
 from compiler.access_controller import (
     AccessController,
     AccessControllerException
@@ -21,6 +25,11 @@ class PlatformHandlerException(Exception):
 # С помощью этих функций отделяется процесс передачи данных
 # и бизнес-логика, также эти функции можно тестировать с помощью CI/CD,
 # так как для них не требуется запуск всего компилятора в целом.
+
+
+def _get_platforms_list() -> Dict[PlatformId, PlatformMeta]:
+    platform_manager = PlatformManager()
+    return platform_manager.versions_info
 
 
 def _check_token(token: str) -> None:
@@ -55,7 +64,6 @@ async def _add_platform(platform: Platform,
 
 
 async def _update_platform(new_platform: Platform,
-                           access_token: str,
                            source_files: List[InnerFile],
                            images: List[InnerFile]
                            ) -> None:
@@ -129,7 +137,7 @@ async def _prepare_request(ws: Optional[web.WebSocketResponse],
 class PlatformHandler:
     """Class for handling requests CRUD-operations with platforms."""
 
-    @staticmethod
+    @ staticmethod
     async def handle_add_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -149,7 +157,7 @@ class PlatformHandler:
         await ws.send_str(platform_id)
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_get_platform_by_id(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
@@ -163,7 +171,7 @@ class PlatformHandler:
         await ws.send_str(raw_platform)
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_get_platform_source_files(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
@@ -182,7 +190,7 @@ class PlatformHandler:
         await ws.send_str('end-sources-send')
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_get_platform_images(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -201,7 +209,7 @@ class PlatformHandler:
         await ws.send_str('end-images-send')
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_update_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -222,7 +230,7 @@ class PlatformHandler:
         await ws.send_str('updated')
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_remove_platform_by_versions(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -242,7 +250,7 @@ class PlatformHandler:
         await ws.send_str('deleted')
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_remove_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
@@ -258,10 +266,20 @@ class PlatformHandler:
         await ws.send_str('deleted')
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_auth(ws: web.WebSocketResponse) -> str:
         """Check token."""
         token = await ws.receive_str()
         _check_token(token)
-
+        await ws.send_str('auth_success')
         return token
+
+    @ staticmethod
+    async def handle_get_list(request: web.Request,
+                              ws: Optional[web.WebSocketResponse] = None
+                              ) -> web.WebSocketResponse:
+        """Get list of all platforms."""
+        ws = await _prepare_request(ws, request)
+        platform_list = _get_platforms_list()
+        await ws.send_json(platform_list)
+        return ws

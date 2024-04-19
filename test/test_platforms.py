@@ -22,7 +22,7 @@ from compiler.access_controller import (
     AccessController,
     AccessControllerException
 )
-from compiler.types.platform_types import Platform, PlatformInfo
+from compiler.types.platform_types import Platform, PlatformMeta
 from compiler.types.inner_types import InnerFile
 
 pytest_plugins = ('pytest_asyncio',)
@@ -93,7 +93,7 @@ async def test_add_platform(platform_manager: PlatformManager,
         source_files,
         images)
     assert platform_manager.versions_info == {
-        platform_id: PlatformInfo(
+        platform_id: PlatformMeta(
             versions=set(['1.0']),
             access_tokens=set()
         )
@@ -146,21 +146,23 @@ async def test_update_platform(platform_manager: PlatformManager,
     async with add_platform(platform, source_files, images) as platform_id:
         new_platform = platform.model_copy(deep=True)
         new_platform.version = '2.0'
-        # TODO: add test token?
-        await _update_platform(new_platform, '', source_files, images)
+        new_platform.author = 'test'
+        new_platform.name = 'test'
+        await _update_platform(new_platform, source_files, images)
         assert platform_manager.versions_info == {
-            platform_id: PlatformInfo(
+            platform_id: PlatformMeta(
                 versions=set(['1.0', '2.0']),
-                access_tokens=set()
+                author=new_platform.author,
+                name=new_platform.name
             )
         }
         # If platform with this version already exist
         with pytest.raises(PlatformException):
-            await _update_platform(new_platform, '', source_files, images)
+            await _update_platform(new_platform, source_files, images)
         # If platform with this id doesn't exist
         with pytest.raises(PlatformException):
             new_platform.id = 'blabla'
-            await _update_platform(new_platform, '', source_files, images)
+            await _update_platform(new_platform, source_files, images)
 
 
 @pytest.mark.asyncio
@@ -194,9 +196,8 @@ async def test_delete_platfrom(
                 as platform_id):
         new_version = platform.model_copy(deep=True)
         new_version.version = '2.0'
-        await _update_platform(new_version, '', [], [])
+        await _update_platform(new_version, [], [])
         await _delete_platform(platform_id)
-
         assert platform_manager.versions_info == {}
 
 
