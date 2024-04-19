@@ -4,6 +4,10 @@ from typing import List, Optional, Set
 import aiohttp
 from aiohttp import web
 from compiler.PlatformManager import PlatformManager
+from compiler.access_controller import (
+    AccessController,
+    AccessControllerException
+)
 from compiler.config import MAX_MSG_SIZE
 from compiler.types.inner_types import InnerFile
 from compiler.types.platform_types import Platform
@@ -19,6 +23,12 @@ class PlatformHandlerException(Exception):
 # так как для них не требуется запуск всего компилятора в целом.
 
 
+def _check_token(token: str) -> None:
+    access_controller = AccessController()
+    if not access_controller.check_access_token(token):
+        raise AccessControllerException('Invalid token.')
+
+
 async def _delete_platform_by_versions(platform_id: str,
                                        versions_to_delete: str) -> None:
     platform_manager = PlatformManager()
@@ -29,8 +39,7 @@ async def _delete_platform_by_versions(platform_id: str,
         set_versions
     )
     platform_manager.set_platforms_info(new_versions_info)
-    print('in handler')
-    print(platform_manager.versions_info)
+
 
 async def _add_platform(platform: Platform,
                         source_files: List[InnerFile],
@@ -123,16 +132,18 @@ class PlatformHandler:
     @staticmethod
     async def handle_add_platform(
         request: web.Request,
-        ws: Optional[web.WebSocketResponse] = None
+        ws: Optional[web.WebSocketResponse] = None,
+        access_token: Optional[str] = None
     ) -> web.WebSocketResponse:
         """Validate and save platform."""
         ws = await _prepare_request(ws, request)
-
+        if access_token is None:
+            access_token = await ws.receive_str()
+        _check_token(access_token)
         # TODO: Отлавливание ошибок и отправка их пользователю
         platform = Platform(**await ws.receive_json())
         images, source_files = await _get_platform_sources(
             ws, platform.visual, platform.compile)
-
         platform_id = await _add_platform(platform, source_files, images)
         await ws.send_str('id')
         await ws.send_str(platform_id)
@@ -145,10 +156,8 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Get platform json scheme."""
         ws = await _prepare_request(ws, request)
-
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
-
         raw_platform = await _get_platform(platform_id, version)
         await ws.send_str('raw-platform-scheme')
         await ws.send_str(raw_platform)
@@ -177,16 +186,10 @@ class PlatformHandler:
     async def handle_get_platform_images(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
-        access_token: str | None = None
     ) -> web.WebSocketResponse:
         """Get platform s images."""
         # TODO: Проверить, что платформа визуальная
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
-        if access_token is None:
-            ...
+        ws = await _prepare_request(ws, request)
         platform_id = await ws.receive_str()
         version = await ws.receive_str()
         platform_manager = PlatformManager()
@@ -202,17 +205,13 @@ class PlatformHandler:
     async def handle_update_platform(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None,
-        access_token: str | None = None
+        access_token: Optional[str] = None
     ) -> web.WebSocketResponse:
         """Update platform by id."""
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
+        ws = await _prepare_request(ws, request)
         if access_token is None:
-            await ws.send_str('send-token')
             access_token = await ws.receive_str()
-            # TODO проверка токена
+        _check_token(access_token)
         platform = Platform(**await ws.receive_json())
         images, source_files = await _get_platform_sources(
             ws, platform.visual, platform.compile)
@@ -234,10 +233,13 @@ class PlatformHandler:
         Versions is a string like "v1.0, 2.0, 3.0".
         """
         ws = await _prepare_request(ws, request)
+        if access_token is None:
+            access_token = await ws.receive_str()
+        _check_token(access_token)
         platform_id = await ws.receive_str()
         versions_to_delete = await ws.receive_str()
         await _delete_platform_by_versions(platform_id, versions_to_delete)
-
+        await ws.send_str('deleted')
         return ws
 
     @staticmethod
@@ -248,7 +250,10 @@ class PlatformHandler:
     ) -> web.WebSocketResponse:
         """Remove all versions of platform."""
         ws = await _prepare_request(ws, request)
+        if access_token is None:
+            access_token = await ws.receive_str()
+        _check_token(access_token)
         platform_id = await ws.receive_str()
         await _delete_platform(platform_id)
-
+        await ws.send_str('deleted')
         return ws

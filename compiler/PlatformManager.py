@@ -124,10 +124,10 @@ class PlatformManager:
     _initialized: bool = False
 
     def __init__(self) -> None:
-        if not PlatformManager._initialized:
+        if not self._initialized:
             self.__platforms: Dict[str, Platform] = {}
             self.__versions_info: Dict[PlatformId, PlatformInfo] = {}
-            PlatformManager._initialized = True
+            self._initialized = True
 
     def __new__(cls, *args, **kwargs) -> 'PlatformManager':
         """
@@ -237,13 +237,18 @@ class PlatformManager:
                     platform = Platform(
                         **json.loads(unprocessed_platform_data))
                     id = platform.id
-                    versions = (
-                        self.__versions_info[id].versions)
-                    versions.add(
-                        platform.version)
+                    if self.platform_exist(id):
+                        versions = (
+                            self.__versions_info[id].versions)
+                        versions.add(
+                            platform.version)
+                    else:
+                        self.__versions_info[id] = PlatformInfo(
+                            versions=set((platform.version,)))
             except Exception as e:
+                print(e)
                 print(
-                    f'Во время обработки файла "{path.absolute()}"'
+                    f'Во время обработки файла "{await path.absolute()}"'
                     f'произошла ошибка! {e}')
 
         print('Были найдены платформы:')

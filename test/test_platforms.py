@@ -15,12 +15,22 @@ from compiler.platform_handler import (
     _get_platform,
     _update_platform,
     _delete_platform_by_versions,
-    _delete_platform
+    _delete_platform,
+    _check_token
+)
+from compiler.access_controller import (
+    AccessController,
+    AccessControllerException
 )
 from compiler.types.platform_types import Platform, PlatformInfo
 from compiler.types.inner_types import InnerFile
 
 pytest_plugins = ('pytest_asyncio',)
+
+
+@pytest.fixture
+def access_controller() -> AccessController:
+    return AccessController()
 
 
 @pytest.fixture
@@ -188,5 +198,10 @@ async def test_delete_platfrom(
         await _delete_platform(platform_id)
 
         assert platform_manager.versions_info == {}
-    # with pytest.raises(PlatformException):
-    #     ...
+
+
+def test_check_token(access_controller: AccessController) -> None:
+    token = access_controller.create_token()
+    _check_token(token)
+    with pytest.raises(AccessControllerException):
+        _check_token('blabla')

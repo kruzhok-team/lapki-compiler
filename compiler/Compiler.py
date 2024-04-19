@@ -138,8 +138,8 @@ class Compiler:
             case 'arduino-cli':
                 process = await asyncio.create_subprocess_exec(
                     compiler,
-                    '--export-binaries',
                     *flags,
+                    '--export-binaries',
                     *build_files,
                     cwd=base_dir,
                     text=False,
@@ -180,7 +180,7 @@ class Compiler:
             Функция, которая копирует все необходимые файлы библиотек."""
         paths_to_libs = [''.join(
             [
-                f'{Compiler._path(platform)}/',
+                f'{Compiler._path(platform)}',
                 library,
                 extension]
         ) for library in libraries]

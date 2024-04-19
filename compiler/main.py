@@ -8,11 +8,13 @@ try:
     from .routes import setup_routes
     from .config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
     from .Logger import Logger
+    from .access_controller import AccessController
     from .PlatformManager import PlatformManager
 except ImportError:
     from compiler.routes import setup_routes
     from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
     from compiler.PlatformManager import PlatformManager
+    from compiler.access_controller import AccessController
     from .Logger import Logger
 
 
@@ -24,6 +26,8 @@ async def main() -> NoReturn:
     await runner.setup()
 
     platform_manager = PlatformManager()
+    access_controller = AccessController()
+    await access_controller.init_access_tokens()
     site = web.TCPSite(runner, host=SERVER_HOST, port=SERVER_PORT)
     await Logger.init_logger()
     await platform_manager.init_platforms(PLATFORM_DIRECTORY)

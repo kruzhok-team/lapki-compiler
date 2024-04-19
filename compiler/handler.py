@@ -270,7 +270,7 @@ class Handler:
                     )
                     await Logger.logger.info(f'{libraries} included')
                 case 'arduino-cli':
-                    platform = 'ino'
+                    platform = 'ArduinoUno'
                     dirname += 'sketch/'
                     path += 'sketch/'
                     await AsyncPath(path).mkdir(parents=True)
@@ -284,10 +284,16 @@ class Handler:
                         path,
                         platform)
                     await Compiler.includeLibraryFiles(
-                        libraries.union(Compiler.c_default_libraries),
+                        libraries,
                         dirname,
                         '.h',
                         platform)
+                    await Compiler.includeLibraryFiles(
+                        Compiler.c_default_libraries,
+                        dirname,
+                        '.h',
+                        Compiler.DEFAULT_LIBRARY_ID
+                    )
                     await Compiler.includeLibraryFiles(
                         libraries,
                         dirname,
@@ -297,13 +303,13 @@ class Handler:
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
-                        platform)
+                        Compiler.DEFAULT_LIBRARY_ID)
                     await Logger.logger.info(f'{libraries} included')
 
             result: CompilerResult = await Compiler.compile(
                 path,
                 build_files,
-                flags,
+                ['compile', *flags],
                 compiler)
             response = CompilerResponse(
                 result='NOTOK',
