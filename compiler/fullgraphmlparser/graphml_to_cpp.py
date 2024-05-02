@@ -121,6 +121,7 @@ class CppFileWriter:
                 await self._insert_string('\n}')
             if self.notes_dict['loop'] or self.create_loop:
                 await self._insert_string('\nvoid loop() {')
+                await self._insert_file_template('defer_loop.txt')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
                 await self._insert_string('\n}')
             if self.notes_dict['raw_cpp_code']:
@@ -275,6 +276,12 @@ class CppFileWriter:
             async for line in input_file:
                 await self._insert_string(str(line))
 
+    async def _insert_defer(self, trigger_name: str) -> None:
+        await self._insert_string('                if (!signalDefer) {')
+        await self._insert_string(f'                                defer[defer_i] = {trigger_name}_SIG;\n')
+        await self._insert_string('                                defer_i++;\n')
+        await self._insert_string('                }')
+
     async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
         state_comment = '/*.${' + state_path + '} '
@@ -290,6 +297,7 @@ class CppFileWriter:
         else:
             await self._insert_string('        /*.${' + state_path + '} */\n')
             await self._insert_string('        case Q_ENTRY_SIG: {\n')
+            await self._insert_string('        \tstateChanged = false;\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('            break;\n')
@@ -372,12 +380,15 @@ class CppFileWriter:
             await self._write_states_declarations_recursively(child_state)
 
     async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, offset=''):
-        if trigger.action and not trigger.type == 'choice_start':
+        if trigger.defer:
+            await self._insert_defer(trigger.name)
+        elif trigger.action and not trigger.type == 'choice_start':
             await self._insert_string('\n'.join(
                 [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n')
         if trigger.type == 'internal':
             await self._insert_string(offset + '            status_ = Q_HANDLED();\n')
         elif trigger.type == 'external' or trigger.type == 'choice_result':
+            await self._insert_string(offset + '            stateChanged = true;\n')
             await self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target)
         elif trigger.type == 'choice_start':
             target_choice_node = next((s for s in self.states if s.id ==
