@@ -133,7 +133,7 @@ async def test_generating_code():
         'examples/choices.graphml'
     ),
     pytest.param(
-        'examples/atwo_choices.graphml'
+        'examples/two_choices.graphml'
     ),
     pytest.param(
         'examples/initial_states.graphml'

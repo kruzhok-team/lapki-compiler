@@ -90,6 +90,10 @@ type/ Counter
     <edge id="kqvealtjeeutftwpewon" source="gquxxfkcnnuxqupybpsl" target="sfdmmeidqlauhjhyudvj"></edge>
     <edge id="zdwblhnaiygvwpxxnlqe" source="sfdmmeidqlauhjhyudvj" target="spjtslyxubbfmnokvavz">
       <data key="dData">Timer1.timeout/
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8dfd478 (pseudostates)
 </data>
       <data key="dColor">#FFFFFF</data>
       <data key="dLabelGeometry">
