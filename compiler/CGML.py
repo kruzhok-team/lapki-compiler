@@ -81,7 +81,8 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
-                r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\] (?P<postfix>w+)$',
+                (r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\] '
+                 r'(?P<postfix>w+)$'),
                 r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
                 r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
                 r'^(?P<trigger>[^\[\]]+)$'
