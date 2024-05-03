@@ -76,7 +76,8 @@ class ParserNote(BaseModel):
 @dataclass
 class ParserTrigger:
     """
-    Class Trigger describes Triggers of uml-diagrams
+    Class Trigger describes Triggers of uml-diagrams.
+
             name: name of trigger
             type: internal or external
             guard: text of trigger guard if any
@@ -102,6 +103,7 @@ class ParserTrigger:
     guard: str = 'true'
     check_function: str | None = None
     defer: bool = False
+    propagate: bool = False
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -120,6 +122,7 @@ class ParserState:
             x, y: graphical coordinates
             height, width: height and with of node
     """
+
     name: str
     type: str
     actions: str

@@ -62,11 +62,11 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
             continue
 
         parsed_trigger: str = regex_match.group('trigger')
-        try:
-            condition: str | None = regex_match.group('condition')
-        except IndexError:
-            condition = None
-        return InnerTrigger(parsed_trigger, condition)
+
+        regex_dict = regex_match.groupdict()
+        condition = regex_dict.get('condition', None)
+        postfix = regex_dict.get('postfix', None)
+        return InnerTrigger(parsed_trigger, condition, postfix)
     raise CGMLException(f'Trigger({trigger}) doesnt match any regex!')
 
 
@@ -81,10 +81,10 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
-                r'^(?P<trigger>\w+\.\w+)\[(?P<condition>.+)\]$',
-                r'^(?P<trigger>\w+\.[\w()]+)$',
-                r'^(?P<trigger>\w+_\w+)$',
-                r'^(?P<trigger>\w+)$',
+                r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\] (?P<postfix>w+)$',
+                r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
+                r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
+                r'^(?P<trigger>[^\[\]]+)$'
             ]
         )
         check_function: str | None = None
@@ -94,7 +94,7 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         events.append(InnerEvent(
             inner_trigger,
             do,
-            check_function
+            check_function,
         ))
     return events
 
@@ -112,7 +112,9 @@ def __gen_id() -> int:
     return random.randint(0, 100)
 
 
-def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
+def __process_state(state_id: str,
+                    cgml_state: CGMLState,
+                    default_propagate: bool = False) -> ParserState:
     """Process internal triggers and actions of state."""
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_state.actions)
     parser_triggers: List[ParserTrigger] = []
@@ -127,6 +129,19 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
                 exit = inner.actions
             case _:
                 condition = inner.event.condition
+                propagate = default_propagate
+                if inner.event.postfix is not None:
+                    match inner.event.postfix:
+                        case 'propagate':
+                            propagate = True
+                        case 'block':
+                            propagate = False
+                        case '_':
+                            raise CGMLException(
+                                f'Неизвестный постфикс {inner.event.postfix} '
+                                'допустимые значения "propagate", "block"'
+                            )
+                print(propagate, inner.event.postfix)
                 parser_triggers.append(
                     ParserTrigger(
                         id=str(__gen_id()),
@@ -136,8 +151,10 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
                         type='internal',
                         action=inner.actions,
                         defer=inner.actions.strip() == 'defer',
-                        guard=condition if condition is not None else 'true',
-                        check_function=inner.check
+                        guard=(condition
+                               if condition is not None else 'true'),
+                        check_function=inner.check,
+                        propagate=propagate
                     )
                 )
     bounds = (
