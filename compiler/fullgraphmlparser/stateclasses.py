@@ -14,6 +14,7 @@ from compiler.types.platform_types import CompilingSettings
 
 TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
 StateType = Literal['group', 'choice', 'internal']
+VertexType = Literal['final', 'initial', 'choice', 'terminate']
 
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
@@ -109,6 +110,30 @@ class ParserTrigger:
     defer: bool = False
     propagate: bool = False
 
+@dataclass
+class UnconditionalTransition:
+    """
+    Безусловные переходы.
+
+    Свойства:
+    - Не нужно проверять в loop
+    - Нельзя вызвать сигналом
+    - Нет ограждающего условия
+    - Нет propagate/block
+    - Используются в начальных состояниях
+    """
+
+    action: str
+    target: str
+
+@dataclass
+class BaseParserVertex:
+    id: str
+    parent: str
+
+@dataclass
+class ParserInitialVertex(BaseParserVertex):
+    transition: UnconditionalTransition
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ParserState:
@@ -137,7 +162,7 @@ class ParserState:
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
-    bounds: GeometryBounds
+    bounds: Optional[GeometryBounds] = None
     initial_state: Optional[str] = None
 
     def __str__(self) -> str:
@@ -164,4 +189,5 @@ class StateMachine:
     states: List[ParserState]
     signals: Set[str]
     # Установлено дефолтное значение, чтобы не трогать легаси.
+    initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     compiling_settings: Optional[SMCompilingSettings] = None
