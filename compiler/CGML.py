@@ -19,7 +19,8 @@ from cyberiadaml_py.types.elements import (
     CGMLElements,
     CGMLState,
     CGMLTransition,
-    CGMLComponent
+    CGMLComponent,
+    CGMLInitialState
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -142,7 +143,6 @@ def __process_state(state_id: str,
                                 f'Неизвестный постфикс {inner.event.postfix} '
                                 'допустимые значения "propagate", "block"'
                             )
-                print(propagate, inner.event.postfix)
                 parser_triggers.append(
                     ParserTrigger(
                         id=str(__gen_id()),
@@ -247,6 +247,7 @@ def __connect_parents_to_states(
             parent_state = states_with_parents[parent]
             parser_state.parent = parent_state
             parent_state.childs.append(parser_state)
+            parent_state.type = 'group'
 
     return states_with_parents
 
@@ -519,6 +520,14 @@ def __get_build_files(
         build_libraries.update(
             platform.components[component.type].buildFiles)
     return build_libraries
+
+
+def __add_initial_states(
+    initial_states: Dict[str, CGMLInitialState],
+    states: Dict[str, ParserState]
+) -> Dict[str, ParserState]:
+    for initial_id, initial in initial_states.items():
+        # initial.
 
 
 async def parse(xml: str) -> StateMachine:
