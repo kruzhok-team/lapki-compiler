@@ -1,10 +1,13 @@
 """Module implement main route handler."""
+from typing import get_args
+
 import aiohttp
 from aiohttp import web
 from compiler.Logger import Logger
 from compiler.config import MAX_MSG_SIZE
 from compiler.handler import Handler
 from compiler.platform_handler import PlatformHandler
+from compiler.types.ws_types import Message
 
 
 async def main_handle(request: web.Request) -> web.WebSocketResponse:
@@ -74,8 +77,8 @@ async def main_handle(request: web.Request) -> web.WebSocketResponse:
                     token = await PlatformHandler.handle_auth(ws)
                 case _:
                     await ws.send_str(f'Unknown {msg}!'
-                                      'Use close, arduino,'
-                                      'berlogaImport, berlogaExport')
+                                      f'Use {get_args(Message)}'
+                                      )
         elif msg.type == aiohttp.WSMsgType.ERROR:
             pass
 
