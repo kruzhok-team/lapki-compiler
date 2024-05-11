@@ -48,9 +48,14 @@ class AccessController:
             data: str = await f.read()
             self.__tokens.update(data.split('\n'))
 
-    def create_token(self) -> str:
+    async def __add_token_to_file(self, token: str) -> None:
+        async with async_open(ACCESS_TOKENS_FILE, 'a') as f:
+            await f.write(token + '\n')
+
+    async def create_token(self) -> str:
         """Create new access token."""
         token = uuid.uuid4().hex
+        await self.__add_token_to_file(token)
         self.__tokens.add(token)
         return token
 

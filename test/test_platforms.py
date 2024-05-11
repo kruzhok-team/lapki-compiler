@@ -201,8 +201,10 @@ async def test_delete_platfrom(
         assert platform_manager.versions_info == {}
 
 
-def test_check_token(access_controller: AccessController) -> None:
-    token = access_controller.create_token()
+@pytest.mark.asyncio
+async def test_check_token(access_controller: AccessController) -> None:
+    token = await access_controller.create_token()
     _check_token(token)
     with pytest.raises(AccessControllerException):
         _check_token('blabla')
+    
