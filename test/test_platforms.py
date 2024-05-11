@@ -62,7 +62,7 @@ def images() -> List[InnerFile]:
 @pytest.fixture
 def platform() -> Platform:
     """Load Autoborder platform."""
-    with open('compiler/platforms/Autoborder-new.json', 'r') as f:
+    with open('compiler/platforms/BearlogaDefend-Autoborder/1.0/BearlogaDefend-Autoborder-1.0.json', 'r') as f:
         data = json.load(f)
     return Platform(**data)
 
@@ -95,7 +95,8 @@ async def test_add_platform(platform_manager: PlatformManager,
     assert platform_manager.versions_info == {
         platform_id: PlatformMeta(
             versions=set(['1.0']),
-            access_tokens=set()
+            name='Берлога/Защита пасеки - Автобортник',
+            author='Lapki TEAM'
         )
     }
     await _delete_platform(platform_id)
@@ -174,7 +175,6 @@ async def test_delete_platform_by_version(platform_manager: PlatformManager,
                 as platform_id):
         await _delete_platform_by_versions(platform_id, platform.version)
         assert platform_manager.platform_exist(platform_id) is False
-        # почему-то with pytest.raises тут не работает
         with pytest.raises(KeyError):
             platform_manager.has_version(platform_id, platform.version)
     async with (add_platform(platform, source_files, images, autodelete=True)
