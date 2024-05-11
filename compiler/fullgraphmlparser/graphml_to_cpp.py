@@ -1,5 +1,6 @@
 import os.path
 import inspect
+from string import Template
 
 import re
 from collections import defaultdict
@@ -18,6 +19,14 @@ except ImportError:
     from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+
+INITIAL_STATE_TEMPLATE = Template('''\
+QState $id() {
+    
+
+}    
+'''
+                                  )
 
 
 def get_enum(text_labels: List[str]) -> str:
@@ -103,6 +112,13 @@ class CppFileWriter:
             for trigger in state.trigs:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
+        self.initial_states = state_machine.initial_states
+
+    async def _write_initial_states(self):
+        for initial in self.initial_states:
+            await self._write_full_line_comment(
+                f'Initial pseudostate {initial.id}', ' ')
+            await self._insert_string()
 
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
@@ -111,6 +127,7 @@ class CppFileWriter:
             await self._write_constructor()
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
+            await self._write_states_definitions_recursively
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')

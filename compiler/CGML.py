@@ -506,6 +506,12 @@ def __get_build_files(
 def __init_initial_states(
     initial_states: Dict[str, CGMLInitialState],
 ) -> tuple[_StartNodeId, Dict[str, ParserInitialVertex]]:
+    """
+    Класс для инициализации начальных состояний.
+
+    После инициализации необходимо вызывать функцию \
+        _add_transition_to_initials, чтобы добавить переходы к узлам.
+    """
     start_node_id: str | None = None
     parser_initials: Dict[str, ParserInitialVertex] = {}
     for initial_id, initial in initial_states.items():
@@ -571,7 +577,7 @@ async def parse(xml: str) -> StateMachine:
     - signal checks in loop function;
     """
     parser = CGMLParser()
-    cgml_scheme: CGMLElements = parser.parseCGML(xml)  # type: ignore
+    cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
     platform: Platform = await platfrom_manager.get_platform(
         cgml_scheme.platform, '')  # TODO: Доставать версию платформы
@@ -629,8 +635,9 @@ async def parse(xml: str) -> StateMachine:
         transitions)
     signals = __get_signals_set(all_triggers)
     start_node, initials = __init_initial_states(cgml_scheme.initial_states)
-    initial_with_transition = _add_transition_to_initials(
-        initials, transitions)
+    initial_with_transition: Dict[str, ParserInitialVertex] = (
+        _add_transition_to_initials(initials, transitions)
+    )
     states_with_initials = _add_initials_to_states(
         initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)

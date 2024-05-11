@@ -140,7 +140,8 @@ class JsonConverter:
                                     '@textColor': '#000000',
                                     '@verticalTextPosition': 'bottom',
                                     '@visible': 'true',
-                                    '@width': state.bounds.width,
+                                    '@width': (state.bounds.width
+                                               if state.bounds else 0),
                                     '@x': '0',
                                     '@xml:space': 'preserve',
                                     '@y': '0',
@@ -162,7 +163,8 @@ class JsonConverter:
                                     '@textColor': '#000000',
                                     '@verticalTextPosition': 'bottom',
                                     '@visible': 'true',
-                                    '@width': state.bounds.width,
+                                    '@width': (state.bounds.width
+                                               if state.bounds else 0),
                                     '@x': '0',
                                     '@xml:space': 'preserve',
                                     '@y': '0',
@@ -170,10 +172,14 @@ class JsonConverter:
                                 },
                             ],
                             'y:Geometry': {
-                                '@x': state.bounds.x,
-                                '@y': state.bounds.y,
-                                '@width': state.bounds.width,
-                                '@height': state.bounds.height
+                                '@x': (state.bounds.x
+                                       if state.bounds else 0),
+                                '@y': (state.bounds.y
+                                       if state.bounds else 0),
+                                '@width': (state.bounds.width
+                                           if state.bounds else 0),
+                                '@height': (state.bounds.height
+                                            if state.bounds else 0)
                             },
                             'y:Shape': {
                                 '@type': 'roundrectangle'
@@ -232,8 +238,11 @@ class JsonConverter:
             node_type = 'y:GenericNode'
 
             if state.parent:
-                state.bounds.x += state.parent.bounds.x
-                state.bounds.y += state.parent.bounds.y
+                if state.bounds:
+                    state.bounds.x += (state.parent.bounds.x
+                                       if state.parent.bounds else 0)
+                    state.bounds.y += (state.parent.bounds.y
+                                       if state.parent.bounds else 0)
 
             xmlstate['data'][0][node_type] = {
                 'y:NodeLabel': [
@@ -255,7 +264,8 @@ class JsonConverter:
                         '@textColor': '#000000',
                         '@verticalTextPosition': 'bottom',
                         '@visible': 'true',
-                        '@width': state.bounds.width,
+                        '@width': (state.bounds.width
+                                   if state.bounds else 0),
                         '@x': '0',
                         '@xml:space': 'preserve',
                         '@y': '0',
@@ -271,7 +281,8 @@ class JsonConverter:
                         '@fontSize': '15',
                         '@fontStyle': 'Plain',
                         '@hasLineColor': 'false',
-                        '@height': state.bounds.height,
+                        '@height': (state.bounds.height
+                                    if state.bounds else 0),
                         '@horizontalTextPosition': 'center',
                         '@iconTextGap': '4',
                         '@modelName': 'custom',
@@ -279,7 +290,8 @@ class JsonConverter:
                         '@textColor': '#000000',
                         '@verticalTextPosition': 'bottom',
                         '@visible': 'true',
-                        '@width': state.bounds.width,
+                        '@width': (state.bounds.width
+                                   if state.bounds else 0),
                         '@x': '0',
                         '@xml:space': 'preserve',
                         '@y': '0',
@@ -287,10 +299,14 @@ class JsonConverter:
                     },
                 ],
                 'y:Geometry': {
-                    '@x': state.bounds.x,
-                    '@y': state.bounds.y,
-                    '@width': state.bounds.width,
-                    '@height': state.bounds.height
+                    '@x': (state.bounds.x
+                           if state.bounds else 0),
+                    '@y': (state.bounds.y
+                           if state.bounds else 0),
+                    '@width': (state.bounds.width
+                               if state.bounds else 0),
+                    '@height': (state.bounds.height
+                                if state.bounds else 0)
                 },
                 'y:Fill': {
                     '@color': '#E8EEF7',

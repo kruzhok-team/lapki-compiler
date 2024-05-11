@@ -18,14 +18,14 @@ from pprint import pprint
 from aiofile import async_open
 from aiopath import AsyncPath
 from compiler.config import PLATFORM_DIRECTORY, LIBRARY_PATH
-from compiler.types.inner_types import InnerFile
+from compiler.types.inner_types import File
 from compiler.types.platform_types import PlatformMeta, Platform
 
 PlatformId = str
 PlatformVersion = str
 
 
-async def _write_source(path: str, source_files: List[InnerFile]) -> None:
+async def _write_source(path: str, source_files: List[File]) -> None:
     for source in source_files:
         filename = f'{path}{source.filename}.{source.extension}'
         await AsyncPath(filename).parent.mkdir(parents=True, exist_ok=True)
@@ -88,7 +88,7 @@ def _gen_platform_path(base_path: str, id: str, version: str) -> str:
 
 async def _read_platform_files(
         source_dir: str,
-        mode: Literal['rb', 'r']) -> AsyncGenerator[InnerFile, None]:
+        mode: Literal['rb', 'r']) -> AsyncGenerator[File, None]:
     async for source in AsyncPath(source_dir).rglob('*'):
         if not await source.is_file():
             continue
@@ -96,9 +96,9 @@ async def _read_platform_files(
             content = await f.read()
             extension = ''.join(source.suffixes).replace('.', '', 1)
             filename = str(source.relative_to(source_dir)).split('.')[0]
-            yield InnerFile(filename=filename,
-                            extension=extension,
-                            fileContent=content)
+            yield File(filename=filename,
+                       extension=extension,
+                       fileContent=content)
 
 
 class PlatformException(Exception):
@@ -151,8 +151,8 @@ class PlatformManager:
 
     async def add_platform(self,
                            platform: Platform,
-                           source_files: List[InnerFile],
-                           images: List[InnerFile] | None = None
+                           source_files: List[File],
+                           images: List[File] | None = None
                            ) -> Dict[PlatformId, PlatformMeta]:
         """
         Add platform's\
@@ -174,8 +174,8 @@ class PlatformManager:
 
     async def _save_platform(self,
                              platform: Platform,
-                             source_files: List[InnerFile],
-                             images: List[InnerFile] | None = None) -> None:
+                             source_files: List[File],
+                             images: List[File] | None = None) -> None:
         """
         Save platform to folder.
 
@@ -197,9 +197,9 @@ class PlatformManager:
         await AsyncPath(source_path).mkdir(exist_ok=False)
         await AsyncPath(img_path).mkdir(exist_ok=False)
         await _write_source(platform_path, [
-            InnerFile(filename=f'{platform.id}-{platform.version}',
-                      extension='json',
-                      fileContent=json_platform)])
+            File(filename=f'{platform.id}-{platform.version}',
+                 extension='json',
+                 fileContent=json_platform)])
         await _write_source(source_path, source_files)
 
         if images is not None:
@@ -305,8 +305,8 @@ class PlatformManager:
     async def update_platform(
         self,
         platform: Platform,
-        source_files: List[InnerFile],
-        images: List[InnerFile]
+        source_files: List[File],
+        images: List[File]
     ) -> Dict[PlatformId, PlatformMeta]:
         """
         Update platform.
@@ -335,7 +335,7 @@ class PlatformManager:
     async def get_platform_sources(
             self,
             platform_id: str,
-            version: str) -> AsyncGenerator[InnerFile, Any]:
+            version: str) -> AsyncGenerator[File, Any]:
         """Get platform source-code files by id and version."""
         source_dir = _get_source_path(platform_id, version)
         return _read_platform_files(source_dir, 'r')
@@ -343,7 +343,7 @@ class PlatformManager:
     async def get_platform_images(
             self,
             platform_id: str,
-            version: str) -> AsyncGenerator[InnerFile, Any]:
+            version: str) -> AsyncGenerator[File, Any]:
         """Get platform images by id and version."""
         source_dir = _get_img_path(platform_id, version)
         return _read_platform_files(source_dir, 'rb')

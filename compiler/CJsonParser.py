@@ -2,7 +2,7 @@
 from typing import Dict, Iterable, List, Set
 
 from compiler.types.ide_types import Bounds
-from compiler.types.inner_types import InnerFile
+from compiler.types.inner_types import File
 from compiler.types.inner_types import (
     DefaultActions,
     EventName,
@@ -507,7 +507,7 @@ class CJsonParser:
             proccesed_states[state_id] = ParserState(
                 bounds=state.bounds,
                 name=state.name,
-                type='state',
+                type='internal',
                 actions='',
                 trigs=list(
                     triggers.values()),
@@ -546,7 +546,7 @@ class CJsonParser:
         files = []
 
         for data in json_data:
-            files.append(InnerFile(
+            files.append(File(
                 filename=data['filename'],
                 extension=data['extension'],
                 fileContent=data['fileContent']))

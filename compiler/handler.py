@@ -12,7 +12,7 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, InnerFile
+from compiler.types.inner_types import CompilerResponse, File
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -52,7 +52,7 @@ async def create_response(
             async with async_open(path, 'rb') as f:
                 binary = await f.read()
                 b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(InnerFile(
+                response.binary.append(File(
                     filename=path.name.split('.')[0],
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
@@ -126,11 +126,11 @@ class Handler:
 
     @staticmethod
     async def readSourceFile(
-            filename: str, extension: str, path: str) -> InnerFile:
+            filename: str, extension: str, path: str) -> File:
         """Read file by path."""
         async with async_open(f'{path}{filename}.{extension}', 'r') as f:
             data = await f.read()
-        return InnerFile(
+        return File(
             filename=filename,
             extension=extension,
             fileContent=data
@@ -274,7 +274,7 @@ class Handler:
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
                             b64_data: bytes = base64.b64encode(binary)
-                            response.binary.append(InnerFile(
+                            response.binary.append(File(
                                 filename=path.name.split('.')[0],
                                 extension=''.join(path.suffixes),
                                 fileContent=b64_data.decode('ascii'),
@@ -344,7 +344,7 @@ class Handler:
             dirname += source[0]['filename'] + '/'
 
         await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[InnerFile] = parser.getFiles(source)
+        files: List[File] = parser.getFiles(source)
         for file in files:
             path = ''.join([dirname, file.filename, file.extension])
             async with async_open(path, 'w') as f:
@@ -377,7 +377,7 @@ class Handler:
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()
                     b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(InnerFile(
+                    response.binary.append(File(
                         filename=path.name,
                         fileContent=b64_data.decode('ascii'),
                         extension=''.join(path.suffixes),
@@ -447,7 +447,7 @@ class Handler:
         """
         Generate yed-GraphMl from Lapki IDE's internal JSON scheme.
 
-        Send: InnerFile | RequestError
+        Send: File | RequestError
         """
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)

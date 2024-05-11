@@ -110,6 +110,7 @@ class ParserTrigger:
     defer: bool = False
     propagate: bool = False
 
+
 @dataclass
 class UnconditionalTransition:
     """
@@ -126,14 +127,21 @@ class UnconditionalTransition:
     action: str
     target: str
 
+
 @dataclass
 class BaseParserVertex:
+    """Базовый класс для всех узлов-псевдосостояний."""
+
     id: str
     parent: str
 
+
 @dataclass
 class ParserInitialVertex(BaseParserVertex):
+    """Класс, означающий начальное псевдосостояние."""
+
     transition: UnconditionalTransition
+
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ParserState:
