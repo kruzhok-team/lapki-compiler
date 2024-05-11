@@ -77,7 +77,7 @@ class Platform(BaseModel):
     author: str = ''
     icon: str = ''
     format_version: str = Field(alias='formatVersion')
-    standart_version: str = Field(alias='standartVersion')
+    standard_version: str = Field(alias='standardVersion')
     version: str
     staticComponents: bool
     language: str = ''

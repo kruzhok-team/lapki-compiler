@@ -5,7 +5,7 @@
     "icon": "путь/до/иконки",
     "staticComponents": true,
     "version": "1.0",
-    "standartVersion": "1.0",
+    "standardVersion": "1.0",
     "formatVersion": "1.0",
     "visual": true,
     "compile": false,

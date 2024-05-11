@@ -5,7 +5,7 @@
   "icon": "путь/до/иконки",
   "staticComponents": false,
   "version": "1.0",
-  "standartVersion": "1.0",
+  "standardVersion": "1.0",
   "formatVersion": "1.0",
   "language": "C++",
   "author": "Maxim Klypin",
