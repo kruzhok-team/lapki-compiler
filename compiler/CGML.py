@@ -15,7 +15,7 @@ from compiler.types.platform_types import (
     Signal
 )
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
-from compiler.types.new_format_types import (
+from cyberiadaml_py.types.elements import (
     CGMLElements,
     CGMLState,
     CGMLTransition,
