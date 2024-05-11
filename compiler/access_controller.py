@@ -4,6 +4,7 @@ from typing import Optional, Set
 
 from compiler.config import ACCESS_TOKENS_FILE
 from aiofile import async_open
+from aiopath import AsyncPath
 
 
 class AccessControllerException(Exception):
@@ -39,6 +40,10 @@ class AccessController:
 
     async def init_access_tokens(self):
         """Read tokens from ACCESS_TOKENS_FILE."""
+        path = AsyncPath(ACCESS_TOKENS_FILE)
+        if not await path.exists():
+            await path.touch()
+            return
         async with async_open(ACCESS_TOKENS_FILE, 'r') as f:
             data: str = await f.read()
             self.__tokens.update(data.split('\n'))
