@@ -95,7 +95,7 @@ async def test_berlogaImport():
 async def test_berlogaExport():
     client = Client()
     await client.doConnect(f'{BASE_ADDR}/berloga/export')
-    response = await client.exportBerlogaScheme('compiler/schemas/berlogaScheme.json')
+    response = await client.exportBerlogaScheme('examples/old/bearlogaSchemas/berlogaScheme.json')
     path = 'client/' + strftime('%Y-%m-%d %H:%M:%S',
                                 gmtime()) + str(random.randint(0, 10000)) + '/'
     Path(path).mkdir(parents=True)

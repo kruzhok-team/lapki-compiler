@@ -227,7 +227,7 @@ class PlatformManager:
     async def init_platforms(self, path_to_schemas_dir: str) -> None:
         """Find platforms in directory and add it to Dict."""
         print(f'Поиск схем в папке "{path_to_schemas_dir}"...')
-        async for path in AsyncPath(path_to_schemas_dir).glob('*json'):
+        async for path in AsyncPath(path_to_schemas_dir).rglob('*json'):
             try:
                 async with async_open(path, 'r') as f:
                     unprocessed_platform_data: str = await f.read()

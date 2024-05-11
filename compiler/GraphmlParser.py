@@ -1,11 +1,10 @@
-# type: ignore
 """Module implements parsing yed-Graphml."""
 import random
 from typing import Any, Dict, List, TypeAlias, Literal
 from collections import defaultdict
 
 import xmltodict
-from compiler.types.platform_types import Method, MethodParameter
+from compiler.types.platform_types import Method, MethodParameter, Platform
 from compiler.Logger import Logger
 from compiler.PlatformManager import PlatformManager
 
@@ -38,18 +37,23 @@ class GraphmlParser:
     }
 
     @staticmethod
-    def _getArgs(component: str, method: str, args: list[str], platform: str):
+    async def _getArgs(component_name: str,
+                       method_name: str,
+                       args: list[str],
+                       platform_id: str):
         """функция, которая формирует аргументы в виде\
             объекта с учетом контекста платформы."""
         platform_manager = PlatformManager()
-        nmethod: Method = platform_manager.get_platform(
-            platform).components[component].methods[method]
-        params: List[MethodParameter] = nmethod.parameters
+        platform: Platform = await platform_manager.get_platform(
+            platform_id, '1.0')
+        method: Method = (
+            platform.components[component_name].methods[method_name])
+        params: List[MethodParameter] = method.parameters
         result: Dict[str, str] = {}
         for i in range(len(args)):
             # Можно сделать проверку значений и типов
             result[params[i].name] = args[i]
-        return {}
+        return result
 
     @staticmethod
     def _getParentNode(group_node: dict) -> dict:
@@ -119,7 +123,7 @@ class GraphmlParser:
         states_dict: dict[str, dict[str, str]],
         nparent: str | None = None
     ) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
-        ...
+        """Из иерархической структуры графа создаем плоскую."""
         for node in xml:
             if 'graph' in node.keys():
                 parent = GraphmlParser._getParentNode(node)
@@ -143,10 +147,10 @@ class GraphmlParser:
         return states, states_dict
 
     @staticmethod
-    def _getEvents(state: Dict[str, Any],
-                   node_type: str,
-                   platform: str
-                   ) -> List[Dict[str, Dict[str, Any]]]:
+    async def _getEvents(state: Dict[str, Any],
+                         node_type: str,
+                         platform: str
+                         ) -> List[Dict[str, Dict[str, Any]]]:
         str_events: str = state['data'][node_type]['y:NodeLabel'][1]['#text']
         events: list[str] = str_events.split('\n')
         new_events: list[dict[str, List[Dict[str, Any]] | Dict[str, str]]] = []
@@ -190,12 +194,12 @@ class GraphmlParser:
             if bracket_pos != -1:
                 args = action[1][bracket_pos + 1:-1].split(',')
                 if args != ['']:
-                    action_dict['args'] = GraphmlParser._getArgs(
+                    action_dict['args'] = await GraphmlParser._getArgs(
                         component, method, args, platform)
                 else:
                     action_dict['args'] = {}
-            current_dict.append(action_dict)
-        return new_events
+            current_dict.append(action_dict)  # type: ignore
+        return new_events  # type: ignore
 
     @staticmethod
     def _getParentName(state: dict, states_dict: dict) -> str | None:
@@ -223,10 +227,10 @@ class GraphmlParser:
         result = None
         if condition != '':
             condition = condition.replace('[', '').replace(']', '')
-            condition = condition.split()
-            lval = GraphmlParser._checkValueType(condition[0])
-            operator = condition[1]
-            rval = GraphmlParser._checkValueType(condition[2])
+            condition_list = condition.split()
+            lval = GraphmlParser._checkValueType(condition_list[0])
+            operator = condition_list[1]
+            rval = GraphmlParser._checkValueType(condition_list[2])
 
             result = {
                 'type': GraphmlParser.operatorAlias[operator],
@@ -278,7 +282,7 @@ class GraphmlParser:
         return {'x': nx, 'y': ny}
 
     @staticmethod
-    def _parseAction(action: str, platform) -> dict:
+    async def _parseAction(action: str, platform) -> dict:
         component, method = action.split('.')
         call_pos = method.find('(')
         args = method[call_pos + 1:-1].split(',')
@@ -286,7 +290,12 @@ class GraphmlParser:
         if args == ['']:
             args = {}
         else:
-            args = GraphmlParser._getArgs(component, method, args, platform)
+            args = await GraphmlParser._getArgs(
+                component,
+                method,
+                args,
+                platform
+            )
         return {
             'component': component,
             'method': method,
@@ -294,7 +303,7 @@ class GraphmlParser:
         }
 
     @staticmethod
-    def getActions(actions: list[str], platform) -> list[dict]:
+    async def getActions(actions: list[str], platform) -> list[dict]:
         """Функция получает список действий и\
             возвращает их в нотации IDE Lapki.
 
@@ -311,11 +320,11 @@ class GraphmlParser:
         """
         result: list[dict] = []
         for action in actions:
-            result.append(GraphmlParser._parseAction(action, platform))
+            result.append(await GraphmlParser._parseAction(action, platform))
         return result
 
     @staticmethod
-    def _getTransitions(
+    async def _getTransitions(
         triggers: list[dict],
         statesDict: dict,
         platform: str
@@ -342,7 +351,7 @@ class GraphmlParser:
                     if '' in t:
                         t.remove('')
                     actions = t
-                actions = GraphmlParser.getActions(actions, platform)
+                actions = await GraphmlParser.getActions(actions, platform)
                 component, method = event.split('.')
                 transition['trigger'] = {
                     'component': component,
@@ -360,7 +369,7 @@ class GraphmlParser:
                     1 if condition else 0,
                     source_geometry,
                     target_geometry,
-                    used_coordinates
+                    used_coordinates  # type: ignore
                 )
                 transition['do'] = actions
                 transition['color'] = GraphmlParser._randColor()
@@ -405,7 +414,7 @@ class GraphmlParser:
         }
 
     @staticmethod
-    def _createStates(
+    async def _createStates(
             flattenStates: list[dict],
             states_dict: dict,
             platform: str) -> dict:
@@ -417,7 +426,7 @@ class GraphmlParser:
             id = state['@id']
             node_type = states_dict[state['@id']]['type']
             new_state['name'] = states_dict[state['@id']]['name']
-            new_state['events'] = GraphmlParser._getEvents(
+            new_state['events'] = await GraphmlParser._getEvents(
                 state, node_type, platform)
             geometry = GraphmlParser._getGeometry(state['@id'], states_dict)
             new_state['bounds'] = geometry
@@ -429,12 +438,14 @@ class GraphmlParser:
         return states
 
     @staticmethod
-    def _getComponents(platform: str) -> dict:
+    async def _getComponents(platform: str) -> dict:
+        # Так как в схеме Берлоги нет компонентов,
+        # достаем из платформы все компоненты
         result = {}
         platform_manager = PlatformManager()
-        platform_pbject = platform_manager.get_platform(platform, '')
-        if platform_pbject is not None:
-            for component in platform_pbject.components:
+        platform_object = await platform_manager.get_platform(platform, '1.0')
+        if platform_object is not None:
+            for component in platform_object.components:
                 result[component] = {}
                 result[component]['type'] = component
                 result[component]['parameters'] = {}
@@ -450,12 +461,12 @@ class GraphmlParser:
             graph = xml['graphml']['graph']
             nodes = graph['node']
             triggers = graph['edge']
-            components = {}
+            components = await GraphmlParser._getComponents(platform)
             flattenStates, states_dict = GraphmlParser._getFlattenStates(
                 nodes, states=[], states_dict={})
-            states = GraphmlParser._createStates(
+            states = await GraphmlParser._createStates(
                 flattenStates, states_dict, platform)
-            transitions, initial_state = GraphmlParser._getTransitions(
+            transitions, initial_state = await GraphmlParser._getTransitions(
                 triggers, states_dict, platform)
             obj_initial_state = states[initial_state]
             init_x = obj_initial_state['bounds']['x'] - 100
