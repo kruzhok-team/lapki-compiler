@@ -1,9 +1,8 @@
 import os.path
 import inspect
-from string import Template
 import re
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
@@ -11,19 +10,12 @@ from compiler.fullgraphmlparser.stateclasses import (
     ParserTrigger,
     StateMachine,
     Labels,
-    UnconditionalTransition
+    UnconditionalTransition,
+    BaseParserVertex
 )
 from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-
-INITIAL_STATE_TEMPLATE = Template('''\
-QState $id() {
-    
-
-}    
-'''
-                                  )
 
 
 def get_enum(text_labels: List[str]) -> str:
@@ -114,17 +106,25 @@ class CppFileWriter:
     async def _write_unconditional_transition(
         self,
         transition: UnconditionalTransition,
-        offset: str = ''
     ) -> None:
-        await self._insert_string('')
+        actions = transition.action.split('\n')
+        await self._insert_string('\n\t'.join(actions))
+        await self._insert_string('\tstatus_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % transition.target)
 
-    async def _write_initial_states(self):
+    async def _write_vertexes_declaration(self,
+                                          vertexes: Sequence[BaseParserVertex]):
+        for vertex in vertexes:
+            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const *const e);\n' % vertex.id)
+
+    async def _write_initial_states_definition(self) -> None:
         for initial in self.initial_states:
             await self._write_full_line_comment(
                 f'Initial pseudostate {initial.id}', ' ')
-            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.id)
-            await self._insert_string('    QState status_;\n')
-            # await self._insert_string(initial.transition)
+            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % initial.id)
+            await self._insert_string('\tQState status_;\n')
+            await self._write_unconditional_transition(initial.transition)
+            await self._insert_string('\treturn status_;\n')
+            await self._insert_string('}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
@@ -133,7 +133,7 @@ class CppFileWriter:
             await self._write_constructor()
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
-            await self._write_initial_states()
+            await self._write_initial_states_definition()
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
@@ -207,8 +207,9 @@ class CppFileWriter:
             await self._insert_string('    ' + '\n    '.join(constructor_fields.split('\n')[1:]) + '\n')
             await self._insert_string('} STATE_MACHINE_CAPITALIZED_NAME;\n\n')
             await self._insert_string('/* protected: */\n')
-            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
+            await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
+            await self._write_vertexes_declaration(self.initial_states)
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string(
                 'QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n')
@@ -254,7 +255,7 @@ class CppFileWriter:
         constructor_code: str = self.notes_dict['constructor_code']
         await self._insert_string('     ' + '\n    '.join(constructor_code.replace('\r', '').split('\n')[1:]))
         await self._insert_string('\n')
-        await self._insert_string('    QHsm_ctor(&me->super, Q_STATE_CAST(&STATE_MACHINE_CAPITALIZED_NAME_initial));\n')
+        await self._insert_string('    QHsm_ctor(&me->super, Q_STATE_CAST(&DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial));\n')
         await self._insert_string('}\n')
         await self._write_full_line_comment('.$enddef${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '^')
 
@@ -263,7 +264,7 @@ class CppFileWriter:
         await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '.')
         await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM}', '.')
         await self._insert_string(
-            'QState STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par) {\n')
+            'QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par) {\n')
         await self._insert_string('    /*.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM::initial} */\n')
         await self._insert_string('    %s\n' % self.start_action)
         await self._insert_string(
@@ -322,8 +323,10 @@ class CppFileWriter:
             await self._insert_string('        case Q_ENTRY_SIG: {\n')
             await self._insert_string('        \tstateChanged = false;\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
-            await self._insert_string('            status_ = Q_HANDLED();\n')
-            await self._insert_string('            break;\n')
+            if state.initial_state is not None:
+                await self._insert_string('            \tstatus_ = Q_TRAN(&STATE_MACHINE_\
+            CAPITALIZED_NAME_%s);\\n' % state.initial_state)
+                await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
 
             await self._insert_string('        /*.${' + state_path + '} */\n')

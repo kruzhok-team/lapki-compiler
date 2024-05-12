@@ -70,8 +70,8 @@ description/ Программный таймер.
    <node id="diod1">
         <data key="dName">Включен</data>
         <data key="dData">entry/
-LED1.on()
-timer1.start(1000)
+LED1.on();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
@@ -82,8 +82,8 @@ timer1.start(1000)
     <node id="diod2">
         <data key="dName">Выключен</data>
         <data key="dData">entry/
-LED1.off()
-timer1.start(1000)
+LED1.off();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
