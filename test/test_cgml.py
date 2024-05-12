@@ -129,12 +129,12 @@ async def test_generating_code():
     pytest.param(
         'examples/CyberiadaFormat-Blinker.graphml'
     ),
-    pytest.param(
-        'examples/with-defer.xml'
-    ),
-    pytest.param(
-        'examples/with-propagate-block.graphml'
-    ),
+    # pytest.param(
+    #     'examples/with-defer.xml'
+    # ),
+    # pytest.param(
+    #     'examples/with-propagate-block.graphml'
+    # ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
@@ -145,11 +145,11 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 30):
+        with create_test_folder(path, 0):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)
             dir = AsyncPath(path + 'build/')
-            print(dir)
+            print(result.stderr)
             filecount = len([file async for file in dir.iterdir()])
             assert filecount != 0

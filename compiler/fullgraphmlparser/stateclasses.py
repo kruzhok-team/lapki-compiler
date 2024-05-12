@@ -133,7 +133,7 @@ class BaseParserVertex:
     """Базовый класс для всех узлов-псевдосостояний."""
 
     id: str
-    parent: str
+    parent: str | None
 
 
 @dataclass

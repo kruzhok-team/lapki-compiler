@@ -78,7 +78,6 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         triggers, conditions."""
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
-
     for raw_event in raw_events:
         raw_trigger, do = raw_event.split('/')
         inner_trigger = __parse_trigger(
@@ -171,8 +170,17 @@ def __process_transition(
         cgml_transition: CGMLTransition) -> ParserTrigger:
     """Parse CGMLTransition and convert to ParserTrigger\
         - class for fullgraphmlparser."""
+    if '/' not in cgml_transition.actions:
+        return ParserTrigger(
+            name=cgml_transition.id,
+            id=cgml_transition.id,
+            source=cgml_transition.source,
+            target=cgml_transition.target,
+            action=cgml_transition.actions,
+            type='external',
+            guard='true'
+        )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
-
     if len(inner_triggers) == 0:
         raise Exception('No trigger for transition!')
     # TODO: Обработка нескольких событий для триггера
@@ -519,7 +527,6 @@ def __init_initial_states(
             if start_node_id is not None:
                 raise CGMLException('Double initial node.')
             start_node_id = initial_id
-            continue
         parser_initials[initial_id] = ParserInitialVertex(
             initial_id,
             initial.parent,
@@ -533,22 +540,23 @@ def __init_initial_states(
     return start_node_id, parser_initials
 
 
-def _add_transition_to_initials(initial_states: Dict[str, ParserInitialVertex],
-                                transitions: List[ParserTrigger]
-                                ) -> Dict[str, ParserInitialVertex]:
+def _add_transition_to_initials(
+    initial_states: Dict[str, ParserInitialVertex],
+    transitions: List[ParserTrigger]
+) -> tuple[Dict[str, ParserInitialVertex], List[ParserTrigger]]:
     new_initial_states: Dict[str,
                              ParserInitialVertex] = deepcopy(initial_states)
-
+    new_transitions: List[ParserTrigger] = []
     for trigger in transitions:
         vertex = new_initial_states.get(trigger.source, None)
         if vertex is None:
+            new_transitions.append(trigger)
             continue
         vertex.transition = UnconditionalTransition(
             trigger.action,
             trigger.target
         )
-
-    return new_initial_states
+    return new_initial_states, new_transitions
 
 
 def _add_initials_to_states(
@@ -630,14 +638,14 @@ async def parse(xml: str) -> StateMachine:
     # Мы получаем список триггеров для того, чтобы потом:
     # 1) Сформировать набор всех сигналов
     # 2) Сгенерировать проверки для вызова сигналов
-    all_triggers = __get_all_triggers(
-        list(states_with_parents.values()),
-        transitions)
-    signals = __get_signals_set(all_triggers)
     start_node, initials = __init_initial_states(cgml_scheme.initial_states)
-    initial_with_transition: Dict[str, ParserInitialVertex] = (
+    initial_with_transition, transitions_without_vertexes = (
         _add_transition_to_initials(initials, transitions)
     )
+    all_triggers = __get_all_triggers(
+        list(states_with_parents.values()),
+        transitions_without_vertexes)
+    signals = __get_signals_set(all_triggers)
     states_with_initials = _add_initials_to_states(
         initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)
