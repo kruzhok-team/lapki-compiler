@@ -1,9 +1,11 @@
 """Module implements handling and processing requests."""
+import asyncio
 import json
 import base64
 import os
 import time
-from typing import List, Optional, Set
+import os.path
+from typing import List, Optional, Set, get_args
 from datetime import datetime
 from itertools import chain
 
@@ -11,9 +13,10 @@ from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
+from compiler.config import MODULE_PATH
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File
+from compiler.types.inner_types import CompilerResponse, File, CompileCommands
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -28,6 +31,37 @@ from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
 from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
 from compiler.Logger import Logger
+
+BinaryFile = File
+
+
+def _get_project_directory() -> str:
+    """Generate path to project directory, but don't create it."""
+    base_dir = str(datetime.now()) + '/'
+    base_dir = base_dir.replace(' ', '_')
+    return os.path.join(MODULE_PATH, base_dir)
+
+
+async def _create_project(project_path: AsyncPath,
+                          source_files: List[File]) -> None:
+    """Save source file into project directory, create project directory\
+        if it doesn't exist."""
+    await project_path.mkdir(parents=True, exist_ok=True)
+    build_path = project_path
+    for source_file in source_files:
+        file_path = project_path.joinpath(source_file.filename)
+        async with async_open(file_path, 'wb') as f:
+            await f.write(source_file.fileContent)
+
+
+async def _raw_compile(source_files: List[File],
+                       config_commands: List[str]) -> List[BinaryFile]:
+    project_directory = AsyncPath(_get_project_directory())
+    await _create_project(project_directory, source_files)
+    for command in config_commands:
+        await asyncio.create_subprocess_exec(command)
+
+    return []
 
 
 async def create_response(
@@ -111,6 +145,12 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         flags,
         compiler
     )
+
+
+class CompileCommandException(Exception):
+    """Got unknown compile command."""
+
+    ...
 
 
 class HandlerException(Exception):
@@ -312,9 +352,11 @@ class Handler:
         return ws
 
     @staticmethod
-    async def handle_ws_compile_source(request: web.Request):
+    async def handle_ws_raw_compile(
+            request: web.Request,
+            ws: Optional[web.WebSocketResponse] = None):
         """
-        Legacy handler for compiling from source.
+        Handle for compiling from source.
 
         Send: CompilerResponse | RequestError
         """

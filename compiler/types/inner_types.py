@@ -41,6 +41,9 @@ class InnerEvent:
     check: str | None = None
 
 
+CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
+
+
 class File(BaseModel):
     filename: str
     extension: str
