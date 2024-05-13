@@ -5,10 +5,11 @@ import base64
 import os
 import time
 import os.path
-from typing import List, Optional, Set, get_args
+from typing import List, Optional, Set, get_args, AsyncGenerator
 from datetime import datetime
 from itertools import chain
 
+import aiohttp
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
@@ -16,7 +17,12 @@ from pydantic import ValidationError
 from compiler.config import MODULE_PATH
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File, CompileCommands
+from compiler.types.inner_types import (
+    CompilerResponse,
+    File,
+    CompileCommands,
+    CommandResult
+)
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -47,21 +53,39 @@ async def _create_project(project_path: AsyncPath,
     """Save source file into project directory, create project directory\
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
-    build_path = project_path
     for source_file in source_files:
         file_path = project_path.joinpath(source_file.filename)
         async with async_open(file_path, 'wb') as f:
             await f.write(source_file.fileContent)
 
 
-async def _raw_compile(source_files: List[File],
-                       config_commands: List[str]) -> List[BinaryFile]:
-    project_directory = AsyncPath(_get_project_directory())
-    await _create_project(project_directory, source_files)
-    for command in config_commands:
-        await asyncio.create_subprocess_exec(command)
+async def _raw_compile(project_directory: AsyncPath,
+                       source_files: List[File],
+                       config_commands: List[str]
+                       ) -> AsyncGenerator[CommandResult, None]:
+    """
+    Save source files to project directory and run build\
+        commands one by one.
 
-    return []
+    Create project directory if it doesn't exist.
+    Create project_directory/build directory if it doesn't exist.
+    """
+    await _create_project(project_directory, source_files)
+    build_path = project_directory.joinpath('./build')
+    await build_path.mkdir(parents=True, exist_ok=True)
+    for command in config_commands:
+        process = await asyncio.create_subprocess_exec(
+            command,
+            cwd=project_directory,
+            text=False,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        yield CommandResult(command, process.returncode, stdout, stderr)
+
+
+async def _get_build_files(project_directory: str):
+    ...
 
 
 async def create_response(
@@ -360,76 +384,53 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
-        ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
-        await ws.prepare(request)
-        data = json.loads(await ws.receive_json())
-        await Logger.logger.info(data)
+        if ws is None:
+            ws = web.WebSocketResponse(
+                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            await ws.prepare(request)
+
+        source_files: List[File] = []
+        build_commands: List[str] = []
+        current_file = File('', '', bytes())
+        finished = False
         try:
-            source = data['source']
-            flags = data['compilerSettings']['flags']
-            compiler = data['compilerSettings']['compiler']
-        except KeyError as e:
-            await RequestError('Invalid request there'
-                               f' isnt key {e.args[0]}').dropConnection(ws)
-            return ws
-        if compiler not in Compiler.supported_compilers:
-            supported_compilers = list(map(
-                str,
-                Compiler.supported_compilers.keys())
-            )
-            await Logger.logger.error(f'Unsupported compiler {compiler}.')
-            await RequestError(f'Unsupported compiler {compiler}.'
-                               'Supported compilers:'
-                               f'{supported_compilers}').dropConnection(ws)
-
-        dirname = os.path.join(BUILD_DIRECTORY, str(datetime.now()), '/')
-        parser = CJsonParser()
-        if compiler == 'arduino-cli':
-            dirname += source[0]['filename'] + '/'
-
-        await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[File] = parser.getFiles(source)
-        for file in files:
-            path = ''.join([dirname, file.filename, file.extension])
-            async with async_open(path, 'w') as f:
-                await f.write(file.fileContent)
-        if compiler in ['g++', 'gcc']:
-            platform = 'cpp'
-        else:
-            platform = 'arduino'
-        build_files: Set[str] = await Compiler.getBuildFiles(
-            libraries=set(),
-            compiler=compiler,
-            directory=dirname,
-            platform=platform)
-        result: CompilerResult = await Compiler.compile(
-            dirname,
-            build_files,
-            flags,
-            compiler)
-        response = CompilerResponse(
-            result='OK',
-            return_code=result.return_code,
-            stdout=result.stdout,
-            stderr=result.stderr,
-            binary=[],
-            source=[]
-        )
-
-        async for path in AsyncPath(''.join([dirname, '/build/'])).rglob('*'):
-            if await path.is_file():
-                async with async_open(path, 'rb') as f:
-                    binary = await f.read()
-                    b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(File(
-                        filename=path.name,
-                        fileContent=b64_data.decode('ascii'),
-                        extension=''.join(path.suffixes),
-                    ))
-
-        await ws.send_json(response.model_dump())
-        await ws.close()
-
+            async for msg in ws:
+                if finished:
+                    break
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    match msg.data:
+                        case 'file_path':
+                            current_file.filename = await ws.receive_str()
+                            break
+                        case 'file_content':
+                            current_file.fileContent = await ws.receive_bytes()
+                            source_files.append(current_file)
+                            current_file = File('', '', bytes())
+                            break
+                        case 'build_command':
+                            build_command = await ws.receive_str()
+                            for command in get_args(CompileCommands):
+                                if command in build_command:
+                                    break
+                            else:
+                                raise CompileCommandException(
+                                    f'Unknown compile command {build_command}.'
+                                    'Compile command must contains'
+                                    'one of these words: '
+                                    f'{get_args(CompileCommands)}.'
+                                )
+                            build_commands.append(await ws.receive_str())
+                            break
+                        case 'end':
+                            finished = True
+                            break
+                project_directory = AsyncPath(_get_project_directory())
+                command_result_generator = _raw_compile(
+                    project_directory, source_files, build_commands)
+                async for command_result in command_result_generator:
+                    await ws.send_json(command_result)
+        except CompileCommandException as e:
+            await ws.send_str(str(e))
         return ws
 
     @staticmethod

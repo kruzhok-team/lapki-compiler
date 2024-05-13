@@ -44,7 +44,19 @@ class InnerEvent:
 CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
 
 
-class File(BaseModel):
+@dataclass
+class CommandResult:
+    """The result of the command that was \
+        called during the raw compilation."""
+
+    command: str
+    return_code: int | None
+    stdout: str | bytes
+    stderr: str | bytes
+
+
+@dataclass
+class File:
     filename: str
     extension: str
     fileContent: str | bytes

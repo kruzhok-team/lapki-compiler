@@ -207,4 +207,3 @@ async def test_check_token(access_controller: AccessController) -> None:
     _check_token(token)
     with pytest.raises(AccessControllerException):
         _check_token('blabla')
-    
