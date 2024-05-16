@@ -130,7 +130,7 @@ async def test_generating_code():
     #     'examples/CyberiadaFormat-Blinker.graphml'
     # ),
     pytest.param(
-        'examples/graph.graphml'
+        'examples/initial_states.graphml'
     ),
     # pytest.param(
     #     'examples/with-defer.xml'
@@ -142,7 +142,7 @@ async def test_generating_code():
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
     # TODO: Пофиксить баг с повторной загрузкой платформы при
-    # запуске всех тестов сразу.
+    # запуске всех тестов сразу.пш
     await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()

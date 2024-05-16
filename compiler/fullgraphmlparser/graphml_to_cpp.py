@@ -160,10 +160,13 @@ class CppFileWriter:
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
+                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
+                await self._insert_string('\n\tdelay(1000);')
+                # Ставим дилей, так как без него в Serial
+                # не выводится сообщения из глобального начального состояния
                 await self._insert_string('\n\tSketch_ctor();')
                 await self._insert_string('\n\tQEvt event;')
                 await self._insert_string('\n\tQMsm_init(the_sketch, &event);')
-                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
                 await self._insert_string('\n}')
             if self.notes_dict['loop'] or self.create_loop:
                 await self._insert_string('\nvoid loop() {')
@@ -363,7 +366,10 @@ class CppFileWriter:
                 await self._insert_string('        }\n')
             else:
                 await self._insert_string('\n')
-            await self._insert_string('        case QEP_EMPTY_SIG_:\n')
+            await self._insert_string('        case QEP_EMPTY_SIG_: {\n')
+            await self._insert_string('            status_ = Q_HANDLED();\n')
+            await self._insert_string('            break;\n')
+            await self._insert_string('        }\n')
             await self._insert_string('        case Q_EXIT_SIG: {\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')
