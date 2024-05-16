@@ -91,7 +91,7 @@ typedef struct
 // макрос, который приводит Q_RET_HANDLED к типу QState
 #define Q_HANDLED() ((QState)(Q_RET_HANDLED))
 
-// приведение target 
+// преобразование 
 #define Q_TRAN(target) \
     ((Q_MSM_UPCAST(me))->target_ = Q_STATE_CAST(target), \
     (QState)(Q_RET_TRAN))
@@ -99,15 +99,18 @@ typedef struct
     ((Q_MSM_UPCAST(me))->effective_ = Q_STATE_CAST(super), \
     (QState)(Q_RET_SUPER))
 
-// инициализация QMsm из QHsm (me) и события (event)
+// инициализация преобразования машины состояния (me) через событие (event)
 #define QMSM_INIT(me, event) (QMsm_init(me, event))
 // отправка события (event) в QHsm (me)
 #define QMSM_DISPATCH(me, event) (QMsm_dispatch(me, event))
 
+// макрос для простой отправки вызовов только посредством сигналов, которые оканчиваются на _SIG.
 #define SIMPLE_DISPATCH(me_, sig_) \
         do { QEvt e_; e_.sig = sig_##_SIG; QMSM_DISPATCH(me_, &e_); } while (0)  // Macro to simple dispatch calls with signal only
+// макрос для простой отправки вызовов только посредством сигналов
 #define SIGNAL_DISPATCH(me_, sig_) \
         do { QEvt e_; e_.sig = sig_; QMSM_DISPATCH(me_, &e_); } while (0)  // Macro to simple dispatch calls with signal only
+// отправить событие в _obj
 #define PASS_EVENT_TO(obj_) \
         do { QMSM_DISPATCH(obj_, e);  } while (0)  // Macro with clear name
 
@@ -120,7 +123,7 @@ QState QHsm_top(void *const me, const QEvt *const event);
 // конструктор QHsm 
 void QHsm_ctor(QHsm *const me, QStateHandler initial);
 
-// инициализация QMsm из QHsm (me) и события (event)
+// инициализация преобразования машины состояния (me) через событие (event)
 void QMsm_init(QHsm *me, const QEvt *const event);
 // отправка события (event) в QHsm (me)
 QState QMsm_dispatch(QHsm *me, const QEvt *const event);
