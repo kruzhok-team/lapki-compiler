@@ -152,7 +152,6 @@ class PlatformHandler:
             if access_token is None:
                 access_token = await ws.receive_str()
             _check_token(access_token)
-            # TODO: Отлавливание ошибок и отправка их пользователю
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)
