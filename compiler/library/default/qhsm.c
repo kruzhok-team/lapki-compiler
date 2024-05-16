@@ -4,13 +4,13 @@
 
 // стандартные события
 const QEvt standard_events[] = {
-    // пустой сигнал
+    // сигнал для кодирования пустых действий
     {(QSignal)(QEP_EMPTY_SIG_)},
-    // сигнал входа
+    // сигнал для кодирования действий входа
     {(QSignal)(Q_ENTRY_SIG)},
-    // сигнал выхода
+    // сигнал для кодирования действий выхода
     {(QSignal)(Q_EXIT_SIG)},
-    // начальный сигнал
+    // сигнал для кодирования вложенных начальных переходоов
     {(QSignal)(Q_INIT_SIG)},
 };
 
@@ -45,8 +45,11 @@ static void do_transition(QHsm *me)
         return;
     }
 
+    // Поиск наименьшего общего предка (LCA -  lowest common ancestor.)
+
     QStateHandler path[Q_MAX_DEPTH];
     ptrdiff_t top = 0;
+    // наименьший общий предок
     ptrdiff_t lca = -1;
 
     path[0] = target;
