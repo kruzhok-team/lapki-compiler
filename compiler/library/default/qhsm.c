@@ -2,10 +2,15 @@
 
 #include <stddef.h>
 
+// стандартные события
 const QEvt standard_events[] = {
+    // пустой сигнал
     {(QSignal)(QEP_EMPTY_SIG_)},
+    // сигнал входа
     {(QSignal)(Q_ENTRY_SIG)},
+    // сигнал выхода
     {(QSignal)(Q_EXIT_SIG)},
+    // начальный сигнал
     {(QSignal)(Q_INIT_SIG)},
 };
 
@@ -17,6 +22,7 @@ QState QHsm_top(void *const me, const QEvt *const event)
     return (QState)(Q_RET_IGNORED);
 }
 
+// сделать преобразование (переход) внутри иерархической машины состояния
 static void do_transition(QHsm *me)
 {
     QStateHandler source = me->current_;
