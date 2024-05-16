@@ -16,3 +16,4 @@ QSignal defer[64];
 int defer_i = 0;
 bool stateChanged = false;
 bool signalDefer = false;
+bool inVertex = false;

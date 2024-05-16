@@ -106,6 +106,7 @@ class CppFileWriter:
     async def _write_unconditional_transition(
         self,
         transition: UnconditionalTransition,
+        offset: str = ''
     ) -> None:
         actions = transition.action.split('\n')
         await self._insert_string('\n\t'.join(actions))
@@ -121,10 +122,32 @@ class CppFileWriter:
             await self._write_full_line_comment(
                 f'Initial pseudostate {initial.id}', ' ')
             await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % initial.id)
-            await self._insert_string('\tQState status_;\n')
-            await self._write_unconditional_transition(initial.transition)
-            await self._insert_string('\treturn status_;\n')
-            await self._insert_string('}\n\n')
+            await self._insert_string('         QState status_;\n')
+            await self._insert_string('         switch(e -> sig) {\n')
+            await self._insert_string('            case Q_ENTRY_SIG: {\n')
+            actions = initial.transition.action.split('\n')
+            await self._insert_string('\n              '.join(actions))
+            await self._insert_string('\n              status_ = Q_HANDLED();')
+            await self._insert_string('\n              inVertex = true;')
+            await self._insert_string('\n              break;')
+            await self._insert_string('\n          }')
+            await self._insert_string('\n            case Q_EXIT_SIG: {')
+            await self._insert_string('\n              inVertex = false;')
+            await self._insert_string('\n              status_ = Q_HANDLED();')
+            await self._insert_string('\n              break;')
+            await self._insert_string('\n          }')
+            await self._insert_string('\n          case Q_VERTEX_SIG: {')
+            await self._insert_string('\n              inVertex = false;')
+            await self._insert_string(f'\n              status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target});')
+            await self._insert_string('\n              break;')
+            await self._insert_string('\n          }')
+            await self._insert_string('\n          default: {')
+            await self._insert_string('\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_global);')
+            await self._insert_string('\n              break;')
+            await self._insert_string('\n          }')
+            await self._insert_string('\n         }\n')
+            await self._insert_string('\n         return status_;')
+            await self._insert_string('\n}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
@@ -144,6 +167,7 @@ class CppFileWriter:
                 await self._insert_string('\n}')
             if self.notes_dict['loop'] or self.create_loop:
                 await self._insert_string('\nvoid loop() {')
+                await self._insert_file_template('q_vertex_sig.txt')
                 await self._insert_file_template('defer_loop.txt')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
                 await self._insert_string('\n}')
@@ -315,21 +339,31 @@ class CppFileWriter:
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % state.id)
         await self._insert_string('    QState status_;\n')
         await self._insert_string('    switch (e->sig) {\n')
-
         if state.name == 'global':
             await self._insert_file_template('terminate_sig_c.txt')
         else:
             await self._insert_string('        /*.${' + state_path + '} */\n')
             await self._insert_string('        case Q_ENTRY_SIG: {\n')
-            await self._insert_string('        \tstateChanged = false;\n')
+            await self._insert_string('            stateChanged = false;\n')
+            # Ставим флаг, означающий необходимость вызова Q_VERTEX_SIG
+            if state.initial_state:
+                await self._insert_string('            inVertex = true;\n')
+            else:
+                await self._insert_string('            inVertex = false;\n')
+            await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
-            if state.initial_state is not None:
-                await self._insert_string('            \tstatus_ = Q_TRAN(&STATE_MACHINE_\
-            CAPITALIZED_NAME_%s);\\n' % state.initial_state)
-                await self._insert_string('            break;\n')
+            await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
-
-            await self._insert_string('        /*.${' + state_path + '} */\n')
+            await self._insert_string('        case Q_VERTEX_SIG:')
+            if state.initial_state:
+                await self._insert_string(' {\n')
+                await self._insert_string(f'            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{state.initial_state});\n')
+                await self._insert_string('            inVertex = false;\n')
+                await self._insert_string('            break;\n')
+                await self._insert_string('        }\n')
+            else:
+                await self._insert_string('\n')
+            await self._insert_string('        case QEP_EMPTY_SIG_:\n')
             await self._insert_string('        case Q_EXIT_SIG: {\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')

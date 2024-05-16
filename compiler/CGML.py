@@ -586,6 +586,7 @@ async def parse(xml: str) -> StateMachine:
     """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
+    print(cgml_scheme.initial_states)
     platfrom_manager = PlatformManager()
     platform: Platform = await platfrom_manager.get_platform(
         cgml_scheme.platform, '')  # TODO: Доставать версию платформы
@@ -646,6 +647,7 @@ async def parse(xml: str) -> StateMachine:
         list(states_with_parents.values()),
         transitions_without_vertexes)
     signals = __get_signals_set(all_triggers)
+    print(initial_with_transition)
     states_with_initials = _add_initials_to_states(
         initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)
