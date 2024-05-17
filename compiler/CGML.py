@@ -21,7 +21,7 @@ from cyberiadaml_py.types.elements import (
     CGMLTransition,
     CGMLComponent
 )
-from fullgraphmlparser.stateclasses import (
+from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
     ParserState,
     ParserTrigger,
@@ -503,7 +503,7 @@ def __get_build_files(
     return build_libraries
 
 
-def parse(xml: str) -> StateMachine:
+async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachine for CppWriter class.
@@ -515,8 +515,10 @@ def parse(xml: str) -> StateMachine:
     """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parseCGML(xml)
-    platform: Platform = PlatformManager.getPlatform(cgml_scheme.platform)
-    if not platform.compile:
+    platfrom_manager = PlatformManager()
+    platform: Platform = await platfrom_manager.get_platform(
+        cgml_scheme.platform, '')  # TODO: Доставать версию платформы
+    if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')
     global_state = ParserState(

@@ -6,49 +6,27 @@ from typing import List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
-import aiohttp
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
-
-
-try:
-    from .CGML import parse, CGMLException
-    from .Compiler import CompilerResult
-    from .types.inner_types import CompilerResponse, File
-    from .types.ide_types import CompilerSettings
-    from .fullgraphmlparser.stateclasses import (
-        StateMachine,
-        SMCompilingSettings
-    )
-    from .types.ide_types import IdeStateMachine
-    from .GraphmlParser import GraphmlParser
-    from .CJsonParser import CJsonParser
-    from .fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from .Compiler import Compiler
-    from .JsonConverter import JsonConverter
-    from .RequestError import RequestError
-    from .config import BUILD_DIRECTORY, MAX_MSG_SIZE
-    from .Logger import Logger
-except ImportError:
-    from compiler.CGML import parse, CGMLException
-    from compiler.Compiler import CompilerResult
-    from compiler.types.inner_types import CompilerResponse, File
-    from compiler.types.ide_types import CompilerSettings
-    from compiler.fullgraphmlparser.stateclasses import (
-        StateMachine,
-        SMCompilingSettings
-    )
-    from compiler.types.ide_types import IdeStateMachine
-    from compiler.GraphmlParser import GraphmlParser
-    from compiler.CJsonParser import CJsonParser
-    from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-    from compiler.Compiler import Compiler
-    from compiler.JsonConverter import JsonConverter
-    from compiler.RequestError import RequestError
-    from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
-    from compiler.Logger import Logger
+from compiler.CGML import parse, CGMLException
+from compiler.Compiler import CompilerResult
+from compiler.types.inner_types import CompilerResponse, InnerFile
+from compiler.types.ide_types import CompilerSettings
+from compiler.fullgraphmlparser.stateclasses import (
+    StateMachine,
+    SMCompilingSettings
+)
+from compiler.types.ide_types import IdeStateMachine
+from compiler.GraphmlParser import GraphmlParser
+from compiler.CJsonParser import CJsonParser
+from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
+from compiler.Compiler import Compiler
+from compiler.JsonConverter import JsonConverter
+from compiler.RequestError import RequestError
+from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
+from compiler.Logger import Logger
 
 
 async def create_response(
@@ -74,7 +52,7 @@ async def create_response(
             async with async_open(path, 'rb') as f:
                 binary = await f.read()
                 b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(File(
+                response.binary.append(InnerFile(
                     filename=path.name.split('.')[0],
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
@@ -113,7 +91,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
 
     Doesn't send anything.
     """
-    sm: StateMachine = parse(xml)
+    sm: StateMachine = await parse(xml)
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
@@ -147,48 +125,16 @@ class Handler:
         pass
 
     @staticmethod
-    async def readSourceFile(filename: str, extension: str, path: str) -> File:
+    async def readSourceFile(
+            filename: str, extension: str, path: str) -> InnerFile:
         """Read file by path."""
         async with async_open(f'{path}{filename}.{extension}', 'r') as f:
             data = await f.read()
-        return File(
+        return InnerFile(
             filename=filename,
             extension=extension,
             fileContent=data
         )
-
-    @staticmethod
-    async def main(request: web.Request) -> web.WebSocketResponse:
-        """Root handler, call other handlers."""
-        ws = web.WebSocketResponse(autoclose=False, max_msg_size=MAX_MSG_SIZE)
-        await ws.prepare(request)
-        await Logger.logger.info(request)
-        async for msg in ws:
-            await Logger.logger.info(msg)
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                match msg.data:
-                    case 'close':
-                        await ws.close()
-                    case 'arduino':
-                        # Я не понимаю, у pyright какие-то проблемы
-                        # с моими асинхронными функциями
-                        # type: ignore
-                        await Handler.handle_ws_compile(request, ws)
-                    case 'berlogaImport':
-                        # type: ignore
-                        await Handler.handle_berloga_import(request, ws)
-                    case 'berlogaExport':
-                        await Handler.handle_berloga_export(request, ws)
-                    case 'cgml':
-                        await Handler.handle_cgml_compile(request, ws)
-                    case _:
-                        await ws.send_str(f'Unknown {msg}!'
-                                          'Use close, arduino,'
-                                          'berlogaImport, berlogaExport')
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                pass
-
-        return ws
 
     @staticmethod
     async def handle_cgml_compile(
@@ -269,7 +215,7 @@ class Handler:
                     )
                     await Logger.logger.info(f'{libraries} included')
                 case 'arduino-cli':
-                    platform = 'ino'
+                    platform = 'ArduinoUno'
                     dirname += 'sketch/'
                     path += 'sketch/'
                     await AsyncPath(path).mkdir(parents=True)
@@ -283,10 +229,16 @@ class Handler:
                         path,
                         platform)
                     await Compiler.includeLibraryFiles(
-                        libraries.union(Compiler.c_default_libraries),
+                        libraries,
                         dirname,
                         '.h',
                         platform)
+                    await Compiler.includeLibraryFiles(
+                        Compiler.c_default_libraries,
+                        dirname,
+                        '.h',
+                        Compiler.DEFAULT_LIBRARY_ID
+                    )
                     await Compiler.includeLibraryFiles(
                         libraries,
                         dirname,
@@ -296,13 +248,13 @@ class Handler:
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
-                        platform)
+                        Compiler.DEFAULT_LIBRARY_ID)
                     await Logger.logger.info(f'{libraries} included')
 
             result: CompilerResult = await Compiler.compile(
                 path,
                 build_files,
-                flags,
+                ['compile', *flags],
                 compiler)
             response = CompilerResponse(
                 result='NOTOK',
@@ -322,7 +274,7 @@ class Handler:
                         async with async_open(path, 'rb') as f:
                             binary = await f.read()
                             b64_data: bytes = base64.b64encode(binary)
-                            response.binary.append(File(
+                            response.binary.append(InnerFile(
                                 filename=path.name.split('.')[0],
                                 extension=''.join(path.suffixes),
                                 fileContent=b64_data.decode('ascii'),
@@ -392,7 +344,7 @@ class Handler:
             dirname += source[0]['filename'] + '/'
 
         await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[File] = parser.getFiles(source)
+        files: List[InnerFile] = parser.getFiles(source)
         for file in files:
             path = ''.join([dirname, file.filename, file.extension])
             async with async_open(path, 'w') as f:
@@ -425,7 +377,7 @@ class Handler:
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()
                     b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(File(
+                    response.binary.append(InnerFile(
                         filename=path.name,
                         fileContent=b64_data.decode('ascii'),
                         extension=''.join(path.suffixes),
@@ -495,7 +447,7 @@ class Handler:
         """
         Generate yed-GraphMl from Lapki IDE's internal JSON scheme.
 
-        Send: File | RequestError
+        Send: InnerFile | RequestError
         """
         if ws is None:
             ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
