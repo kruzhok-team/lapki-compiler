@@ -22,7 +22,7 @@ class InnerComponent:
 class InnerTrigger:
     """Dataclass represents trigger[condition] postfix/ string."""
 
-    trigger: str
+    trigger: Optional[str]
     condition: Optional[str]
     postfix: Optional[str]
 

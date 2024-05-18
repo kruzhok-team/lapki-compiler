@@ -129,6 +129,13 @@ class UnconditionalTransition:
 
 
 @dataclass
+class ChoiceTransition:
+    action: str
+    target: str
+    condition: str = 'else'
+
+
+@dataclass
 class BaseParserVertex:
     """Базовый класс для всех узлов-псевдосостояний."""
 
@@ -141,6 +148,13 @@ class ParserInitialVertex(BaseParserVertex):
     """Класс, означающий начальное псевдосостояние."""
 
     transition: UnconditionalTransition
+
+
+@dataclass
+class ParserChoiceVertex(BaseParserVertex):
+    """Класс, обознающий псевдосостояние выбора."""
+
+    transitions: List[ChoiceTransition]
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -198,4 +212,5 @@ class StateMachine:
     signals: Set[str]
     # Установлено дефолтное значение, чтобы не трогать легаси.
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
+    choices: List[ParserChoiceVertex] = Field(default_factory=list)
     compiling_settings: Optional[SMCompilingSettings] = None

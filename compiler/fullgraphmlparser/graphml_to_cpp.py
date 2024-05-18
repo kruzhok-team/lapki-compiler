@@ -6,6 +6,7 @@ from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
+    ParserInitialVertex,
     ParserState,
     ParserTrigger,
     StateMachine,
@@ -102,6 +103,7 @@ class CppFileWriter:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
+        self.choices = state_machine.choices
 
     async def _write_unconditional_transition(
         self,
@@ -117,7 +119,27 @@ class CppFileWriter:
         for vertex in vertexes:
             await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const *const e);\n' % vertex.id)
 
-    async def _write_initial_states_definition(self) -> None:
+    async def _write_choice_vertex_definition(self):
+        for choice in self.choices:
+            if len(choice.transitions) == 0:
+                'status_ = UN_HANDLED();'
+            for i in range(1, len(choice.transitions) - 1):
+                ...
+
+    async def _write_initial_vertexes_definition(self) -> None:
+        """Write initial vertexes definition."""
+        for initial in self.initial_states:
+            actions = initial.transition.action
+            actions += '\n'
+            await self._write_vertex_definition(f'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target})\n')
+
+    async def _write_vertex_definition(self, vertex_actions: str) -> None:
+        """
+        Write function-vertex definition.
+
+        vertex_actions: actions, that will be added to Q_VERTEX_SIG.
+        This function add `inVertex = false;` at the end
+        """
         for initial in self.initial_states:
             await self._write_full_line_comment(
                 f'Initial pseudostate {initial.id}', ' ')
@@ -135,10 +157,9 @@ class CppFileWriter:
             await self._insert_string('\n              break;')
             await self._insert_string('\n          }')
             await self._insert_string('\n          case Q_VERTEX_SIG: {\n')
-            actions = initial.transition.action.split('\n')
+            actions = vertex_actions.split('\n')
             await self._insert_string('\n              '.join(actions))
             await self._insert_string('\n              inVertex = false;')
-            await self._insert_string(f'\n              status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target});')
             await self._insert_string('\n              break;')
             await self._insert_string('\n          }')
             await self._insert_string('\n          default: {')
@@ -156,7 +177,8 @@ class CppFileWriter:
             await self._write_constructor()
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
-            await self._write_initial_states_definition()
+            await self._write_initial_vertexes_definition()
+            # await self._write_vertex_definition()
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
