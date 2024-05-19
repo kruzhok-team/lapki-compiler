@@ -214,3 +214,7 @@ class StateMachine:
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     choices: List[ParserChoiceVertex] = Field(default_factory=list)
     compiling_settings: Optional[SMCompilingSettings] = None
+
+
+class CodeGenerationException(Exception):
+    ...

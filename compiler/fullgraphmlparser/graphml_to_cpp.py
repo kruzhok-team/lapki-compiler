@@ -1,12 +1,14 @@
 import os.path
 import inspect
 import re
+import string
 from collections import defaultdict
 from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
-    ParserInitialVertex,
+    ChoiceTransition,
+    CodeGenerationException,
     ParserState,
     ParserTrigger,
     StateMachine,
@@ -17,6 +19,20 @@ from compiler.fullgraphmlparser.stateclasses import (
 from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+IF_EXPRESSION = string.Template('''if ($condition) {
+$actions
+_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+}''')
+
+ELSE_IF_EXPRESSION = string.Template('''else if ($condition) {
+$actions
+_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+}''')
+
+ELSE_EXPRESSION = string.Template('''else {
+$actions
+_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+''')
 
 
 def get_enum(text_labels: List[str]) -> str:
@@ -111,8 +127,8 @@ class CppFileWriter:
         offset: str = ''
     ) -> None:
         actions = transition.action.split('\n')
-        await self._insert_string('\n\t'.join(actions))
-        await self._insert_string('\tstatus_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % transition.target)
+        await self._insert_string(f'{offset}\n\t'.join(actions))
+        await self._insert_string(offset + '\tstatus_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % transition.target)
 
     async def _write_vertexes_declaration(self,
                                           vertexes: Sequence[BaseParserVertex]):
@@ -120,55 +136,87 @@ class CppFileWriter:
             await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const *const e);\n' % vertex.id)
 
     async def _write_choice_vertex_definition(self):
+        """
+        Generate choice vertex definition.
+
+        This function generate if else code using IF_EXPRESSIONS,\
+            ELSE_IF_EXPRESSION, ELSE_EXPRESSION template.
+        """
         for choice in self.choices:
+            else_transition: ChoiceTransition | None = None
             if len(choice.transitions) == 0:
-                'status_ = UN_HANDLED();'
-            for i in range(1, len(choice.transitions) - 1):
-                ...
+                actions = 'status_ = UN_HANDLED();'
+                await self._write_vertex_definition(actions, choice)
+                continue
+            start_transition = choice.transitions[0]
+            actions = IF_EXPRESSION.safe_substitute({
+                'condition': start_transition.condition,
+                'actions': start_transition.action,
+                'target': start_transition.target
+            }) + '\n'
+            for i in range(1, len(choice.transitions)):
+                transition = choice.transitions[i]
+                if transition.condition == 'else':
+                    if else_transition is None:
+                        else_transition = transition
+                        continue
+                    else:
+                        raise CodeGenerationException(
+                            'Too many else for choice pseudonode.')
+                actions += ELSE_IF_EXPRESSION.safe_substitute({
+                    'condition': transition.condition,
+                    'actions': transition.action,
+                    'target': transition.target
+                }) + '\n'
+            if else_transition is not None:
+                actions += ELSE_EXPRESSION.safe_substitute({
+                    'actions': else_transition.action,
+                    'target': else_transition.target
+                }) + '\n'
+            await self._write_vertex_definition(actions, choice)
 
     async def _write_initial_vertexes_definition(self) -> None:
         """Write initial vertexes definition."""
         for initial in self.initial_states:
             actions = initial.transition.action
             actions += '\n'
-            await self._write_vertex_definition(f'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target})\n')
+            await self._write_vertex_definition(f'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target})\n', initial)
 
-    async def _write_vertex_definition(self, vertex_actions: str) -> None:
+    async def _write_vertex_definition(self, vertex_actions: str, vertex: BaseParserVertex) -> None:
         """
         Write function-vertex definition.
 
         vertex_actions: actions, that will be added to Q_VERTEX_SIG.
         This function add `inVertex = false;` at the end
         """
-        for initial in self.initial_states:
-            await self._write_full_line_comment(
-                f'Initial pseudostate {initial.id}', ' ')
-            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % initial.id)
-            await self._insert_string('         QState status_;\n')
-            await self._insert_string('         switch(e -> sig) {\n')
-            await self._insert_string('            case Q_ENTRY_SIG: {\n')
-            await self._insert_string('\n              status_ = Q_HANDLED();')
-            await self._insert_string('\n              inVertex = true;')
-            await self._insert_string('\n              break;')
-            await self._insert_string('\n          }')
-            await self._insert_string('\n            case Q_EXIT_SIG: {')
-            await self._insert_string('\n              inVertex = false;')
-            await self._insert_string('\n              status_ = Q_HANDLED();')
-            await self._insert_string('\n              break;')
-            await self._insert_string('\n          }')
-            await self._insert_string('\n          case Q_VERTEX_SIG: {\n')
-            actions = vertex_actions.split('\n')
-            await self._insert_string('\n              '.join(actions))
-            await self._insert_string('\n              inVertex = false;')
-            await self._insert_string('\n              break;')
-            await self._insert_string('\n          }')
-            await self._insert_string('\n          default: {')
-            await self._insert_string('\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_global);')
-            await self._insert_string('\n              break;')
-            await self._insert_string('\n          }')
-            await self._insert_string('\n         }\n')
-            await self._insert_string('\n         return status_;')
-            await self._insert_string('\n}\n\n')
+        await self._write_full_line_comment(
+            f'Initial pseudostate {vertex.id}', ' ')
+        await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % vertex.id)
+        await self._insert_string('         QState status_;\n')
+        await self._insert_string('         switch(e -> sig) {\n')
+        await self._insert_string('            case Q_ENTRY_SIG: {\n')
+        await self._insert_string('\n              status_ = Q_HANDLED();')
+        await self._insert_string('\n              inVertex = true;')
+        await self._insert_string('\n              break;')
+        await self._insert_string('\n          }')
+        await self._insert_string('\n            case Q_EXIT_SIG: {')
+        await self._insert_string('\n              inVertex = false;')
+        await self._insert_string('\n              status_ = Q_HANDLED();')
+        await self._insert_string('\n              break;')
+        await self._insert_string('\n          }')
+        await self._insert_string('\n          case Q_VERTEX_SIG: {\n')
+        actions = vertex_actions.split('\n')
+        await self._insert_string('\n              '.join(actions))
+        await self._insert_string('\n              inVertex = false;')
+        await self._insert_string('\n              break;')
+        await self._insert_string('\n          }')
+        await self._insert_string('\n          default: {')
+        await self._insert_string('\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_global);')
+        await self._insert_string('\n              break;')
+        await self._insert_string('\n          }')
+        await self._insert_string('\n         }\n')
+        await self._insert_string('\n         return status_;')
+        await self._insert_string('\n}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
