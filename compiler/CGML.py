@@ -89,7 +89,7 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
                  r'(?P<postfix>w+)$'),
                 r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
                 r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
-                r'^\[(?P<condition>.+)\]$'
+                r'^\[(?P<condition>.+)\]$',
                 r'^(?P<trigger>[^\[\]]+)$'
             ]
         )
@@ -601,12 +601,18 @@ def __create_choices(
             new_transitions.append(transition)
             continue
         parser_choice = parser_choices.get(transition.source)
+        choice_transition = ChoiceTransition(
+            transition.action,
+            transition.target,
+            transition.guard,
+        )
         if parser_choice is not None:
-            parser_choice.transitions.append(ChoiceTransition(
-                transition.action,
-                transition.target,
-                transition.guard,
-            ))
+            parser_choice.transitions.append(choice_transition)
+        else:
+            parser_choices[transition.source] = ParserChoiceVertex(
+                transition.source, choice.parent,
+                [choice_transition]
+            )
 
     return parser_choices, new_transitions
 

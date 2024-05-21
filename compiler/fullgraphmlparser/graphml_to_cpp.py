@@ -21,17 +21,17 @@ from compiler.fullgraphmlparser.graphml import *
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
 IF_EXPRESSION = string.Template('''if ($condition) {
 $actions
-_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 }''')
 
 ELSE_IF_EXPRESSION = string.Template('''else if ($condition) {
 $actions
-_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 }''')
 
 ELSE_EXPRESSION = string.Template('''else {
 $actions
-_status = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 ''')
 
 
@@ -119,6 +119,7 @@ class CppFileWriter:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
+        print('choices: ', state_machine.choices)
         self.choices = state_machine.choices
 
     async def _write_unconditional_transition(
@@ -146,7 +147,7 @@ class CppFileWriter:
             else_transition: ChoiceTransition | None = None
             if len(choice.transitions) == 0:
                 actions = 'status_ = UN_HANDLED();'
-                await self._write_vertex_definition(actions, choice)
+                await self._write_vertex_definition(actions, choice, 'Choice')
                 continue
             start_transition = choice.transitions[0]
             actions = IF_EXPRESSION.safe_substitute({
@@ -173,16 +174,20 @@ class CppFileWriter:
                     'actions': else_transition.action,
                     'target': else_transition.target
                 }) + '\n'
-            await self._write_vertex_definition(actions, choice)
+            await self._write_vertex_definition(actions, choice, 'Choice')
 
     async def _write_initial_vertexes_definition(self) -> None:
         """Write initial vertexes definition."""
         for initial in self.initial_states:
             actions = initial.transition.action
             actions += '\n'
-            await self._write_vertex_definition(f'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target})\n', initial)
+            await self._write_vertex_definition(f'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{initial.transition.target});\n',
+                                                initial,
+                                                'Initial')
 
-    async def _write_vertex_definition(self, vertex_actions: str, vertex: BaseParserVertex) -> None:
+    async def _write_vertex_definition(self, vertex_actions: str,
+                                       vertex: BaseParserVertex,
+                                       vertex_type: str) -> None:
         """
         Write function-vertex definition.
 
@@ -190,7 +195,7 @@ class CppFileWriter:
         This function add `inVertex = false;` at the end
         """
         await self._write_full_line_comment(
-            f'Initial pseudostate {vertex.id}', ' ')
+            f'{vertex_type} pseudostate {vertex.id}', ' ')
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % vertex.id)
         await self._insert_string('         QState status_;\n')
         await self._insert_string('         switch(e -> sig) {\n')
@@ -226,6 +231,8 @@ class CppFileWriter:
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
             await self._write_initial_vertexes_definition()
+            print(self.choices)
+            await self._write_choice_vertex_definition()
             # await self._write_vertex_definition()
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
@@ -305,7 +312,8 @@ class CppFileWriter:
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
-            await self._write_vertexes_declaration(self.initial_states)
+            await self._write_vertexes_declaration([*self.initial_states,
+                                                    *self.choices])
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string(
                 'QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n')
