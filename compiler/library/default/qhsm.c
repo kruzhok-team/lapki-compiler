@@ -58,12 +58,12 @@ static void do_transition(QHsm *me)
         return;
     }
 
-    // Поиск наименьшего общего предка (LCA -  lowest common ancestor.)
+    // Поиск пути от target до source
 
     QStateHandler path[Q_MAX_DEPTH];
     // текущее расстояние от target
     ptrdiff_t top = 0;
-    // наименьший общий предок (длина пути от target до source)
+    // длина пути от target до source (LCA = lowest (least) common ancestor, наименьший общий предок) 
     ptrdiff_t lca = -1;
 
     path[0] = target;
@@ -72,7 +72,7 @@ static void do_transition(QHsm *me)
     Обход и передача сигналов EP_EMPTY_SIG_ target и его предкам.
 
     Цикл выполняется до тех пор, пока не будет достигнута вершина машины состояния, 
-    либо до тех пор пока не будет найден длина пути (top) от target до source.
+    либо до тех пор пока не будет найден номер вершины, на которой находится source, относительно target.
     */ 
     while (target != &QHsm_top) {
         target(me, &standard_events[QEP_EMPTY_SIG_]);
