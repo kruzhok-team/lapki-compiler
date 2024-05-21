@@ -36,7 +36,7 @@ typedef struct
     QSignal sig;
 } QEvt;
 
-// состояние
+// обработка состояния
 typedef QState (*QStateHandler)(void *const me, const QEvt *const event);
 
 // сигналы
