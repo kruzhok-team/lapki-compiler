@@ -391,7 +391,9 @@ class Handler:
 
         source_files: List[File] = []
         build_commands: List[str] = []
-        current_file = File('', '', bytes())
+        current_file = File(filename='',
+                            extension='',
+                            fileContent=bytes())
         finished = False
         try:
             async for msg in ws:
@@ -405,7 +407,9 @@ class Handler:
                         case 'file_content':
                             current_file.fileContent = await ws.receive_bytes()
                             source_files.append(current_file)
-                            current_file = File('', '', bytes())
+                            current_file = File(filename='',
+                                                extension='',
+                                                fileContent=bytes())
                             break
                         case 'build_command':
                             build_command = await ws.receive_str()

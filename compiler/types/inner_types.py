@@ -55,8 +55,7 @@ class CommandResult:
     stderr: str | bytes
 
 
-@dataclass
-class File:
+class File(BaseModel):
     filename: str
     extension: str
     fileContent: str | bytes
@@ -64,7 +63,7 @@ class File:
     @field_validator('filename', mode='after')
     @classmethod
     def check_file_path(cls, v: str) -> str:
-        """Check, that filepath doesn't is not relative."""
+        """Check, that filepath is not relative."""
         if '..' in v:
             raise ValueError('Path is not correct, remove all .. from path.')
         return v
