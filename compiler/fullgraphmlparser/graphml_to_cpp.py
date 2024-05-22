@@ -119,7 +119,6 @@ class CppFileWriter:
                 if trigger.guard:
                     trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
-        print('choices: ', state_machine.choices)
         self.choices = state_machine.choices
 
     async def _write_unconditional_transition(
@@ -231,7 +230,6 @@ class CppFileWriter:
             await self._write_initial()
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
             await self._write_initial_vertexes_definition()
-            print(self.choices)
             await self._write_choice_vertex_definition()
             # await self._write_vertex_definition()
             await self._insert_file_template('footer_c.txt')
