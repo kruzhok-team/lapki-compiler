@@ -5,7 +5,7 @@ import base64
 import os
 import time
 import os.path
-from typing import List, Optional, Set, get_args, AsyncGenerator
+from typing import List, Optional, Set, get_args
 from datetime import datetime
 from itertools import chain
 
@@ -16,12 +16,11 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.config import MODULE_PATH
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import CompilerResult
+from compiler.Compiler import CompilerResult, get_build_files
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
-    CompileCommands,
-    CommandResult
+    CompileCommands
 )
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
@@ -32,7 +31,7 @@ from compiler.types.ide_types import IdeStateMachine
 from compiler.GraphmlParser import GraphmlParser
 from compiler.CJsonParser import CJsonParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-from compiler.Compiler import Compiler
+from compiler.Compiler import Compiler, run_commands
 from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
 from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
@@ -46,46 +45,6 @@ def _get_project_directory() -> str:
     base_dir = str(datetime.now()) + '/'
     base_dir = base_dir.replace(' ', '_')
     return os.path.join(MODULE_PATH, base_dir)
-
-
-async def _create_project(project_path: AsyncPath,
-                          source_files: List[File]) -> None:
-    """Save source file into project directory, create project directory\
-        if it doesn't exist."""
-    await project_path.mkdir(parents=True, exist_ok=True)
-    for source_file in source_files:
-        file_path = project_path.joinpath(source_file.filename)
-        async with async_open(file_path, 'wb') as f:
-            await f.write(source_file.fileContent)
-
-
-async def _raw_compile(project_directory: AsyncPath,
-                       source_files: List[File],
-                       config_commands: List[str]
-                       ) -> AsyncGenerator[CommandResult, None]:
-    """
-    Save source files to project directory and run build\
-        commands one by one.
-
-    Create project directory if it doesn't exist.
-    Create project_directory/build directory if it doesn't exist.
-    """
-    await _create_project(project_directory, source_files)
-    build_path = project_directory.joinpath('./build')
-    await build_path.mkdir(parents=True, exist_ok=True)
-    for command in config_commands:
-        process = await asyncio.create_subprocess_exec(
-            command,
-            cwd=project_directory,
-            text=False,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await process.communicate()
-        yield CommandResult(command, process.returncode, stdout, stderr)
-
-
-async def _get_build_files(project_directory: str):
-    ...
 
 
 async def create_response(
@@ -429,10 +388,21 @@ class Handler:
                             finished = True
                             break
                 project_directory = AsyncPath(_get_project_directory())
-                command_result_generator = _raw_compile(
-                    project_directory, source_files, build_commands)
-                async for command_result in command_result_generator:
-                    await ws.send_json(command_result)
+                command_result_generator = run_commands(
+                    project_directory, source_files, build_commands
+                )
+                async for command in command_result_generator:
+                    await ws.send_str('command-result')
+                    await ws.send_json(command.model_dump())
+                build_files_generator = get_build_files(project_directory)
+                async for build_file in build_files_generator:
+                    await ws.send_str('build-file-name')
+                    await ws.send_str(build_file.filename)
+                    await ws.send_str('build-file-extension')
+                    await ws.send_str(build_file.extension)
+                    await ws.send_str('build-file-content')
+                    await ws.send_bytes(build_file.fileContent)
+                await ws.send_str('end')
         except CompileCommandException as e:
             await ws.send_str(str(e))
         return ws

@@ -2,12 +2,75 @@
 import os
 import asyncio
 from asyncio.subprocess import Process
-from typing import Dict, List, Set, TypedDict
+from typing import Dict, List, Set, TypedDict, AsyncGenerator
 
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
+from aiofile import async_open
 from compiler.types.ide_types import SupportedCompilers
 from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
+from compiler.types.inner_types import CommandResult, BuildFile
+
+
+async def get_build_files(
+        project_path: AsyncPath) -> AsyncGenerator[BuildFile, None]:
+    """
+    Get all files from 'build' directory in project path direcrory.
+
+    Create build directory if doesn't exist..
+    """
+    project_build_directory = project_path.joinpath('./build')
+    await project_path.mkdir(exist_ok=True)
+    async for path in project_build_directory.rglob('*'):
+        if not path.is_file():
+            continue
+        async with async_open(path, 'rb') as f:
+            file_data = await f.read()
+            extension = ''.join(path.suffixes).replace('.', '', 1)
+            filename = str(path.relative_to(
+                project_build_directory)).split('.')[0]
+            yield BuildFile(filename=filename,
+                            extension=extension,
+                            fileContent=file_data)
+
+
+async def create_project(project_path: AsyncPath,
+                         source_files: List[File]) -> None:
+    """Save source file into project directory, create project directory\
+        if it doesn't exist."""
+    await project_path.mkdir(parents=True, exist_ok=True)
+    for source_file in source_files:
+        file_path = project_path.joinpath(source_file.filename)
+        async with async_open(file_path, 'wb') as f:
+            await f.write(source_file.fileContent)
+
+
+async def run_commands(project_directory: AsyncPath,
+                       source_files: List[File],
+                       config_commands: List[str]
+                       ) -> AsyncGenerator[CommandResult, None]:
+    """
+    Save source files to project directory and run build\
+        commands one by one.
+
+    Create project directory if it doesn't exist.
+    Create project_directory/build directory if it doesn't exist.
+    """
+    await create_project(project_directory, source_files)
+    build_path = project_directory.joinpath('./build')
+    await build_path.mkdir(parents=True, exist_ok=True)
+    for command in config_commands:
+        process = await asyncio.create_subprocess_exec(
+            command,
+            cwd=project_directory,
+            text=False,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        yield CommandResult(command=command,
+                            return_code=process.returncode,
+                            stdout=stdout,
+                            stderr=stderr)
 
 
 class CompilerException(Exception):

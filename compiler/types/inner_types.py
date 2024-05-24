@@ -44,8 +44,7 @@ class InnerEvent:
 CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
 
 
-@dataclass
-class CommandResult:
+class CommandResult(BaseModel):
     """The result of the command that was \
         called during the raw compilation."""
 
@@ -67,6 +66,13 @@ class File(BaseModel):
         if '..' in v:
             raise ValueError('Path is not correct, remove all .. from path.')
         return v
+
+
+@dataclass
+class BuildFile:
+    filename: str
+    extension: str
+    fileContent: bytes
 
 
 class CompilerResponse(BaseModel):
