@@ -1,5 +1,4 @@
 """Module implements handling and processing requests."""
-import asyncio
 import json
 import base64
 import os
@@ -22,6 +21,7 @@ from compiler.types.inner_types import (
     File,
     CompileCommands
 )
+from platform_handler import check_token
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -337,7 +337,8 @@ class Handler:
     @staticmethod
     async def handle_ws_raw_compile(
             request: web.Request,
-            ws: Optional[web.WebSocketResponse] = None):
+            ws: Optional[web.WebSocketResponse] = None,
+            access_token: Optional[str] = None):
         """
         Handle for compiling from source.
 
@@ -347,14 +348,16 @@ class Handler:
             ws = web.WebSocketResponse(
                 autoclose=False, max_msg_size=MAX_MSG_SIZE)
             await ws.prepare(request)
-
-        source_files: List[File] = []
-        build_commands: List[str] = []
-        current_file = File(filename='',
-                            extension='',
-                            fileContent=bytes())
-        finished = False
         try:
+            if access_token is None:
+                access_token = await ws.receive_str()
+            check_token(access_token)
+            source_files: List[File] = []
+            build_commands: List[str] = []
+            current_file = File(filename='',
+                                extension='',
+                                fileContent=bytes())
+            finished = False
             async for msg in ws:
                 if finished:
                     break
@@ -394,6 +397,7 @@ class Handler:
                 async for command in command_result_generator:
                     await ws.send_str('command-result')
                     await ws.send_json(command.model_dump())
+                await ws.send_str('end-commands')
                 build_files_generator = get_build_files(project_directory)
                 async for build_file in build_files_generator:
                     await ws.send_str('build-file-name')
@@ -402,7 +406,7 @@ class Handler:
                     await ws.send_str(build_file.extension)
                     await ws.send_str('build-file-content')
                     await ws.send_bytes(build_file.fileContent)
-                await ws.send_str('end')
+                await ws.send_str('end-build-files-send')
         except CompileCommandException as e:
             await ws.send_str(str(e))
         return ws

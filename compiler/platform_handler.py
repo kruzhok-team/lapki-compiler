@@ -35,7 +35,8 @@ def _get_platforms_list() -> Dict[PlatformId, PlatformMeta]:
     return platform_manager.versions_info
 
 
-def _check_token(token: str) -> None:
+def check_token(token: str) -> None:
+    """Validate token."""
     access_controller = AccessController()
     if not access_controller.check_access_token(token):
         raise AccessControllerException('Invalid token.')
