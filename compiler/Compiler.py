@@ -9,7 +9,12 @@ from aiopath import AsyncPath
 from aiofile import async_open
 from compiler.types.ide_types import SupportedCompilers
 from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
-from compiler.types.inner_types import CommandResult, BuildFile
+from compiler.types.inner_types import CommandResult, BuildFile, File
+
+
+def get_file_extension(suffixes: List[str]) -> str:
+    """Create string extension from Path.suffixes."""
+    return ''.join(suffixes).replace('.', '', 1)
 
 
 async def get_build_files(
@@ -26,7 +31,7 @@ async def get_build_files(
             continue
         async with async_open(path, 'rb') as f:
             file_data = await f.read()
-            extension = ''.join(path.suffixes).replace('.', '', 1)
+            extension = get_file_extension(path.suffixes)
             filename = str(path.relative_to(
                 project_build_directory)).split('.')[0]
             yield BuildFile(filename=filename,
@@ -40,7 +45,9 @@ async def create_project(project_path: AsyncPath,
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
     for source_file in source_files:
-        file_path = project_path.joinpath(source_file.filename)
+        file_path = project_path.joinpath(
+            f'{source_file.filename}.'
+            f'{source_file.extension}')
         async with async_open(file_path, 'wb') as f:
             await f.write(source_file.fileContent)
 

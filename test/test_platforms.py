@@ -16,7 +16,7 @@ from compiler.platform_handler import (
     _update_platform,
     _delete_platform_by_versions,
     _delete_platform,
-    _check_token
+    check_token
 )
 from compiler.access_controller import (
     AccessController,
@@ -202,8 +202,8 @@ async def test_delete_platfrom(
 
 
 @pytest.mark.asyncio
-async def test_check_token(access_controller: AccessController) -> None:
+async def testcheck_token(access_controller: AccessController) -> None:
     token = await access_controller.create_token()
-    _check_token(token)
+    check_token(token)
     with pytest.raises(AccessControllerException):
-        _check_token('blabla')
+        check_token('blabla')

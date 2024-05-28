@@ -15,13 +15,17 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.config import MODULE_PATH
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import CompilerResult, get_build_files
+from compiler.Compiler import (
+    CompilerResult,
+    get_build_files,
+    get_file_extension
+)
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
     CompileCommands
 )
-from platform_handler import check_token
+from compiler.platform_handler import check_token
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -365,6 +369,8 @@ class Handler:
                     match msg.data:
                         case 'file_path':
                             current_file.filename = await ws.receive_str()
+                            current_file.extension = get_file_extension(
+                                AsyncPath(current_file.filename).suffixes)
                             break
                         case 'file_content':
                             current_file.fileContent = await ws.receive_bytes()

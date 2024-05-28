@@ -23,9 +23,13 @@ pytest_plugins = ('pytest_asyncio',)
 
 async def init_platform():
     platform_manager = PlatformManager()
+<<<<<<< HEAD
     # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
         await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json')
+=======
+    await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/Arduino.json')
+>>>>>>> 3c771d8 (create test project, fix Arduino platform location)
 
 
 @contextmanager
@@ -57,7 +61,11 @@ def test_parse(path: str):
 @pytest.mark.parametrize(
     'path',
     [
+<<<<<<< HEAD
         pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json',
+=======
+        pytest.param('compiler/platforms/ArduinoUno/1.0/Arduino.json',
+>>>>>>> 3c771d8 (create test project, fix Arduino platform location)
                      id='create ArduinoUno platform'),
     ]
 )

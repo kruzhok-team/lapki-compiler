@@ -152,7 +152,8 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
+            # TODO: Отлавливание ошибок и отправка их пользователю
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)
@@ -247,7 +248,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)
@@ -278,7 +279,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform_id = await ws.receive_str()
             versions_to_delete = await ws.receive_str()
             await _delete_platform_by_versions(platform_id, versions_to_delete)
@@ -303,7 +304,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform_id = await ws.receive_str()
             await _delete_platform(platform_id)
             await ws.send_str('deleted')
@@ -321,7 +322,7 @@ class PlatformHandler:
         """Check token."""
         try:
             token = await ws.receive_str()
-            _check_token(token)
+            check_token(token)
             await ws.send_str('auth_success')
             return token
         except AccessControllerException as e:
