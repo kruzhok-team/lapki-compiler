@@ -642,8 +642,12 @@ async def parse(xml: str) -> StateMachine:
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
+    platform_version = cgml_scheme.meta.values.get('platformVersion', None)
+    if platform_version is None:
+        raise CGMLException('Meta doesnt contains platformVersion.')
+
     platform: Platform = await platfrom_manager.get_platform(
-        cgml_scheme.platform, '1.0')  # TODO: Доставать версию платформы
+        cgml_scheme.platform, platform_version)  # TODO: Доставать версию платформы
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')

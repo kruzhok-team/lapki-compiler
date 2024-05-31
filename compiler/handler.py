@@ -46,7 +46,8 @@ async def create_response(
         binary=[],
         source=[]
     )
-    build_path = base_dir + 'build/'
+    build_path = base_dir + '/build/'
+    await AsyncPath(build_path).mkdir(exist_ok=True)
     async for path in AsyncPath(build_path).rglob('*'):
         if await path.is_file():
             async with async_open(path, 'rb') as f:
@@ -57,7 +58,6 @@ async def create_response(
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
                 ))
-
     response.source.append(await Handler.readSourceFile(
         'sketch',
         'ino',
@@ -149,7 +149,7 @@ class Handler:
         try:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
-            base_dir = base_dir.replace(' ', '_') + '/sketch'
+            base_dir = BUILD_DIRECTORY + base_dir.replace(' ', '_') + 'sketch/'
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)

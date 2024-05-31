@@ -240,7 +240,6 @@ class CppFileWriter:
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
-            # await self._write_vertex_definition()
             await self._insert_file_template('footer_c.txt')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
