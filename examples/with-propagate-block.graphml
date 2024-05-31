@@ -32,16 +32,16 @@ pin/ 12
         </data>
     </node>
 
-    <node id="timer2">
-        <data key="dName">timer2</data>
+    <node id="timer1">
+        <data key="dName">timer1</data>
         <data key="dData">type/ Timer
 name/ Светодиод
 description/ Программный таймер.
         </data>
     </node>
 
-    <node id="timer1">
-        <data key="dName">timer1</data>
+    <node id="timer2">
+        <data key="dName">timer2</data>
         <data key="dData">type/ Timer
 name/ Светодиод
 description/ Программный таймер.
@@ -53,9 +53,9 @@ description/ Программный таймер.
         <data key="dData">entry/
 LED1.on();
 timer1.start(1000);
-timer2.start(100);
 
-timer2.timeout/ defer
+timer2.timeout propagate/
+Serial.println("geree");
         </data>
         <data key="dGeometry" x="82" y="57"
             width="450.0" height="95" />
@@ -67,8 +67,8 @@ timer2.timeout/ defer
 LED1.off();
 timer1.start(1000);
 
-timer2.timeout/
-
+timer2.timeout block/
+Serial.println("geree");
         </data>
         <data key="dGeometry" x="81" y="334"
             width="450" height="95" />
@@ -76,7 +76,7 @@ timer2.timeout/
     
     <edge id="edgeLED1" source="" target="LED1"></edge>
     <edge id="edgetimer1" source="" target="timer1"></edge>
-    <edge id="edgetimer2" source="" target="timer2"></edge>
+    <edge id="edgetimer" source="" target="timer2"></edge>
     <edge id="edge1" source="init" target="diod1"></edge>
     <edge id="edge2" source="diod1" target="diod2">
         <data key="dData">timer1.timeout/</data>

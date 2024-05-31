@@ -21,10 +21,11 @@ from compiler.PlatformManager import PlatformManager
 pytest_plugins = ('pytest_asyncio',)
 
 
-@pytest.fixture
 async def init_platform():
     platform_manager = PlatformManager()
-    await platform_manager.load_platform('compiler/platforms/Arduino.json')
+    # platform_manager.init_platforms()
+    if not platform_manager.platform_exist('ArduinoUno'):
+        await platform_manager.load_platform('compiler/platforms/Arduino.json')
 
 
 @contextmanager
@@ -78,6 +79,7 @@ def test_new_platform_creation(path: str):
                 InnerEvent(
                     InnerTrigger(
                         'entry',
+                        None,
                         None
                     ),
                     """
@@ -93,9 +95,11 @@ def test_new_platform_creation(path: str):
                 InnerEvent(
                     InnerTrigger(
                         'timer1_timeout',
+                        None,
                         None
                     ),
-                    ''
+                    '',
+                    check='timer1.timeout'
                 )
             ]
 
@@ -107,11 +111,12 @@ def test_parse_actions(raw_trigger: str, expected: str):
 
 
 @pytest.mark.asyncio
-async def test_generating_code(init_platform):
+async def test_generating_code():
+    await init_platform()
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
         path = './test/test_folder/'
-        with create_test_folder(path, 10):
+        with create_test_folder(path, 0):
             try:
                 sm = await parse(data)
                 await CppFileWriter(sm, True).write_to_file(path, 'ino')
@@ -120,25 +125,31 @@ async def test_generating_code(init_platform):
                 print(e)
 
 
+@pytest.mark.parametrize('scheme_path', [
+    pytest.param(
+        'examples/CyberiadaFormat-Blinker.graphml'
+    ),
+    pytest.param(
+        'examples/with-defer.xml'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml'
+    ),
+])
 @pytest.mark.asyncio
-async def test_cgml_route(init_platform):
+async def test_compile_schemes(scheme_path: str):
+    # TODO: Пофиксить баг с повторной загрузкой платформы при
+    # запуске всех тестов сразу.
     await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
+    await init_platform()
+    with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 100):
+        with create_test_folder(path, 0):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)
-
-
-@pytest.mark.asyncio
-async def test_defer(init_platform):
-    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
-    test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    with open('examples/with-defer.xml', 'r') as f:
-        path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 15):
-            data = f.read()
-            result = await compile_xml(data, path)
-            await create_response(path, result)
+            dir = AsyncPath(path + 'build/')
+            print(dir)
+            filecount = len([file async for file in dir.iterdir()])
+            assert filecount != 0

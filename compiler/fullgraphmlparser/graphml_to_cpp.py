@@ -331,23 +331,23 @@ class CppFileWriter:
                 if triggers[0].guard:
                     await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
                     await self._insert_string('            if (%s) {\n' % triggers[0].guard)
-                    await self._write_trigger(self.f, triggers[0], state_path, event_name, '    ')
+                    await self._write_trigger(self.f, triggers[0], state_path, event_name, state, '    ')
                     await self._insert_string('            }\n')
                     await self._insert_string('            else {\n')
                     await self._insert_string('                status_ = Q_UNHANDLED();\n')
                     await self._insert_string('            }\n')
                 else:
-                    await self._write_trigger(self.f, triggers[0], state_path, event_name)
+                    await self._write_trigger(self.f, triggers[0], state_path, event_name, state=state)
             elif len(triggers) == 2:
                 if triggers[0].guard == 'else':
                     triggers[0], triggers[1] = triggers[1], triggers[0]
                 await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
                 await self._insert_string('            if (%s) {\n' % triggers[0].guard)
-                await self._write_trigger(self.f, triggers[0], state_path, event_name, '    ')
+                await self._write_trigger(self.f, triggers[0], state_path, event_name, state, '    ')
                 await self._insert_string('            }\n')
                 await self._write_guard_comment(self.f, state_path, event_name, triggers[1].guard)
                 await self._insert_string('            else {\n')
-                await self._write_trigger(self.f, triggers[1], state_path, event_name, '    ')
+                await self._write_trigger(self.f, triggers[1], state_path, event_name, state, '    ')
                 await self._insert_string('            }\n')
             else:
                 raise Exception('"else if" guards are not supported')
@@ -379,14 +379,20 @@ class CppFileWriter:
         for child_state in state.childs:
             await self._write_states_declarations_recursively(child_state)
 
-    async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, offset=''):
+    async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, state: ParserState, offset=''):
         if trigger.defer:
             await self._insert_defer(trigger.name)
         elif trigger.action and not trigger.type == 'choice_start':
             await self._insert_string('\n'.join(
                 [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n')
         if trigger.type == 'internal':
-            await self._insert_string(offset + '            status_ = Q_HANDLED();\n')
+            if trigger.propagate:
+                if state.parent:
+                    await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
+                else:
+                    await self._insert_string('            status_ = Q_SUPER(&QHsm_top);\n')
+            else:
+                await self._insert_string(offset + '            status_ = Q_HANDLED();\n')
         elif trigger.type == 'external' or trigger.type == 'choice_result':
             await self._insert_string(offset + '            stateChanged = true;\n')
             await self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target)
@@ -402,11 +408,11 @@ class CppFileWriter:
             triggers[1].action = trigger.action + triggers[1].action
             await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
             await self._insert_string(offset + '            if (%s) {\n' % triggers[0].guard)
-            await self._write_trigger(self.f, triggers[0], state_path, event_name, offset + '    ')
+            await self._write_trigger(self.f, triggers[0], state_path, event_name, state, offset + '    ')
             await self._insert_string(offset + '            }\n')
             await self._write_guard_comment(self.f, state_path, event_name, triggers[1].guard)
             await self._insert_string(offset + '            else {\n')
-            await self._write_trigger(self.f, triggers[1], state_path, event_name, offset + '    ')
+            await self._write_trigger(self.f, triggers[1], state_path, event_name, state, offset + '    ')
             await self._insert_string(offset + '            }\n')
         else:
             raise Exception('Unknown trigger type: %s' % trigger.type)

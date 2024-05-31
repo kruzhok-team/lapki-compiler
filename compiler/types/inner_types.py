@@ -20,8 +20,11 @@ class InnerComponent:
 
 @dataclass
 class InnerTrigger:
+    """Dataclass represents trigger[condition] postfix/ string."""
+
     trigger: str
     condition: Optional[str]
+    postfix: Optional[str]
 
 
 @dataclass
@@ -29,6 +32,7 @@ class InnerEvent:
     """
     Dataclass represents parsed event string.
 
+    check - function, that check signal
     event/ actions
     """
 
