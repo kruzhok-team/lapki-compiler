@@ -95,7 +95,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
-        raise Exception('Internal error! фывфы')
+        raise Exception('Internal error!')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                         default_library,
