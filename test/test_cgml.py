@@ -130,7 +130,10 @@ async def test_generating_code():
     #     'examples/CyberiadaFormat-Blinker.graphml'
     # ),
     pytest.param(
-        'examples/choices.graphml'
+        'examples/choices.graphzml'
+    ),
+    pytest.param(
+        'examples/with-final.graphml'
     ),
     pytest.param(
         'examples/two_choices.graphml'

@@ -144,15 +144,22 @@ class BaseParserVertex:
 
 
 @dataclass
+class ParserFinalVertex(BaseParserVertex):
+    """Класс, обозначающий финальное состояние."""
+
+    ...
+
+
+@dataclass
 class ParserInitialVertex(BaseParserVertex):
-    """Класс, означающий начальное псевдосостояние."""
+    """Класс, обозначающий начальное псевдосостояние."""
 
     transition: UnconditionalTransition
 
 
 @dataclass
 class ParserChoiceVertex(BaseParserVertex):
-    """Класс, обознающий псевдосостояние выбора."""
+    """Класс, обозначающий псевдосостояние выбора."""
 
     transitions: List[ChoiceTransition]
 
@@ -213,6 +220,7 @@ class StateMachine:
     # Установлено дефолтное значение, чтобы не трогать легаси.
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     choices: List[ParserChoiceVertex] = Field(default_factory=list)
+    final_states: List[ParserFinalVertex] = Field(default_factory=list)
     compiling_settings: Optional[SMCompilingSettings] = None
 
 

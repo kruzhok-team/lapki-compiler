@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="G">
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ ArduinoUno
+
+standardVersion/ 1.0
+
+name/ Arduino Blinker
+
+author/ Lapki IDE TEAM
+
+description/ Включение и выключение лампочки по таймеру
+
+</data>
+    </node>
+    <node id="diod1">
+      <data key="dName">Включен</data>
+      <data key="dData">entry/
+LED1.on();
+timer1.start(3000);
+
+</data>
+      <data key="dGeometry">
+        <rect x="82" y="57" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="diod2">
+      <data key="dName">Выключен</data>
+      <data key="dData">entry/
+LED1.off();
+timer1.start(4000);
+QHsmSerial::println(&quot;E&quot;);
+
+</data>
+      <data key="dGeometry">
+        <rect x="81" y="334" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="init">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <rect x="20" y="30" width="-1" height="-1"></rect>
+      </data>
+    </node>
+    <node id="tjvoskyfsjgyefqjwxyd">
+      <data key="dVertex">final</data>
+      <data key="dGeometry">
+        <point x="680" y="425.8125"></point>
+      </data>
+    </node>
+    <node id="cLED1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED1
+
+type/ LED
+
+name/ Светодиод
+
+description/ Встроенный в плату светодиод, чтобы им мигать
+
+pin/ 12
+
+</data>
+    </node>
+    <node id="ctimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ timer1
+
+type/ Timer
+
+name/ Таймер
+
+description/ Программный таймер.
+
+</data>
+    </node>
+    <node id="cQHsmSerial">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ QHsmSerial
+
+type/ QHsmSerial
+
+baud/ 9600
+
+</data>
+    </node>
+    <node id="commentX">
+      <data key="dGeometry">
+        <point x="600" y="78"></point>
+      </data>
+      <data key="dNote">informal</data>
+      <data key="dData">Включение и выключение лампочки по таймеру!</data>
+    </node>
+    <edge id="init-edge" source="init" target="diod1"></edge>
+    <edge id="edge3" source="diod1" target="diod2">
+      <data key="dData">timer1.timeout/
+
+</data>
+      <data key="dColor">#F29727</data>
+      <data key="dLabelGeometry">
+        <point x="388" y="194"></point>
+      </data>
+    </edge>
+    <edge id="feneybcjpchkygfizngj" source="diod2" target="tjvoskyfsjgyefqjwxyd">
+      <data key="dData">timer1.timeout/
+QHsmSerial::println(&quot;End!&quot;);
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="351.5" y="485.40625"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>

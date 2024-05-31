@@ -21,7 +21,8 @@ from cyberiadaml_py.types.elements import (
     CGMLTransition,
     CGMLComponent,
     CGMLInitialState,
-    CGMLChoice
+    CGMLChoice,
+    CGMLFinal
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -34,7 +35,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     create_note,
     SMCompilingSettings,
     ParserInitialVertex,
-    UnconditionalTransition
+    UnconditionalTransition,
+    ParserFinalVertex
 )
 _StartNodeId = str
 _TransitionId = str
@@ -617,6 +619,16 @@ def __create_choices(
     return parser_choices, new_transitions
 
 
+def __create_final_states(
+    cgml_finals: Dict[str, CGMLFinal]
+) -> List[ParserFinalVertex]:
+    finals: List[ParserFinalVertex] = []
+    for final_id, cgml_final in cgml_finals.items():
+        # Родитель в дальнейшем не используется
+        finals.append(ParserFinalVertex(final_id, cgml_final.parent))
+    return finals
+
+
 async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
@@ -687,6 +699,7 @@ async def parse(xml: str) -> StateMachine:
     )
     choices, transitions_without_choices = __create_choices(
         cgml_scheme.choices, transitions_without_initials)
+    final_states = __create_final_states(cgml_scheme.finals)
     all_triggers = __get_all_triggers(
         list(states_with_parents.values()),
         transitions_without_choices)
@@ -721,5 +734,6 @@ async def parse(xml: str) -> StateMachine:
         signals=signals,
         compiling_settings=compiling_settings,
         initial_states=[*initial_with_transition.values()],
-        choices=list(choices.values())
+        choices=list(choices.values()),
+        final_states=final_states
     )
