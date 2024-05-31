@@ -161,7 +161,6 @@ class CppFileWriter:
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
-                await self._insert_string('\n\tdelay(1000);')
                 # Ставим дилей, так как без него в Serial
                 # не выводится сообщения из глобального начального состояния
                 await self._insert_string('\n\tSketch_ctor();')
