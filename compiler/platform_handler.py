@@ -16,7 +16,7 @@ from compiler.access_controller import (
     AccessControllerException
 )
 from compiler.config import MAX_MSG_SIZE
-from compiler.types.inner_types import InnerFile
+from compiler.types.inner_types import File
 from compiler.types.platform_types import Platform
 
 
@@ -54,8 +54,8 @@ async def _delete_platform_by_versions(platform_id: str,
 
 
 async def _add_platform(platform: Platform,
-                        source_files: List[InnerFile],
-                        images: List[InnerFile]) -> str:
+                        source_files: List[File],
+                        images: List[File]) -> str:
     platform_manager = PlatformManager()
     platform.id = platform_manager.gen_platform_id()
     new_versions_info = await platform_manager.add_platform(
@@ -67,8 +67,8 @@ async def _add_platform(platform: Platform,
 
 
 async def _update_platform(new_platform: Platform,
-                           source_files: List[InnerFile],
-                           images: List[InnerFile]
+                           source_files: List[File],
+                           images: List[File]
                            ) -> None:
     platform_manager = PlatformManager()
     new_versions_info = await platform_manager.update_platform(
@@ -89,15 +89,15 @@ async def _delete_platform(platform_id: str) -> None:
     new_versions_info = await platform_manager.delete_platform(platform_id)
     platform_manager.set_platforms_info(new_versions_info)
 
-Images = List[InnerFile]
-SourceFiles = List[InnerFile]
+Images = List[File]
+SourceFiles = List[File]
 
 
 async def _get_platform_sources(ws: web.WebSocketResponse,
                                 visual: bool,
                                 compile: bool) -> tuple[Images, SourceFiles]:
-    source_files: List[InnerFile] = []
-    images: List[InnerFile] = []
+    source_files: List[File] = []
+    images: List[File] = []
     if compile:
         # Если платформа компилируемая, ждем исходники
         async for msg in ws:
@@ -107,7 +107,7 @@ async def _get_platform_sources(ws: web.WebSocketResponse,
                 case 'stop':
                     break
                 case 'file':
-                    file = InnerFile(**await ws.receive_json())
+                    file = File(**await ws.receive_json())
                     source_files.append(file)
                 case _:
                     raise PlatformHandlerException(
@@ -120,7 +120,7 @@ async def _get_platform_sources(ws: web.WebSocketResponse,
                 case 'stop':
                     break
                 case 'img':
-                    img = InnerFile(**await ws.receive_json())
+                    img = File(**await ws.receive_json())
                     images.append(img)
                 case _:
                     raise PlatformHandlerException(
@@ -152,7 +152,6 @@ class PlatformHandler:
             if access_token is None:
                 access_token = await ws.receive_str()
             _check_token(access_token)
-            # TODO: Отлавливание ошибок и отправка их пользователю
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)

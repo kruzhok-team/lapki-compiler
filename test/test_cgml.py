@@ -51,7 +51,7 @@ def test_parse(path: str):
     """Test CGML parsing."""
     parser = CGMLParser()
     with open(path, 'r') as f:
-        parser.parseCGML(f.read())
+        parser.parse_cgml(f.read())
 
 
 @pytest.mark.parametrize(
@@ -130,11 +130,14 @@ async def test_generating_code():
         'examples/CyberiadaFormat-Blinker.graphml'
     ),
     pytest.param(
-        'examples/with-defer.xml'
+        'examples/initial_states.graphml'
     ),
-    pytest.param(
-        'examples/with-propagate-block.graphml'
-    ),
+    # pytest.param(
+    #     'examples/with-defer.xml'
+    # ), TODO: Переделать под новый формат
+    # pytest.param(
+    #     'examples/with-propagate-block.graphml'
+    # ), TODO: Переделать под новый формат
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
@@ -150,6 +153,6 @@ async def test_compile_schemes(scheme_path: str):
             result = await compile_xml(data, path)
             await create_response(path, result)
             dir = AsyncPath(path + 'build/')
-            print(dir)
+            print(result.stderr)
             filecount = len([file async for file in dir.iterdir()])
             assert filecount != 0

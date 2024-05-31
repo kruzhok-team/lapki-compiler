@@ -3,13 +3,18 @@ from typing import (
     Optional,
     Set,
     Protocol,
-    runtime_checkable
+    runtime_checkable,
+    Literal
 )
 from enum import Enum
 
 from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 from compiler.types.platform_types import CompilingSettings
+
+TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
+StateType = Literal['group', 'choice', 'internal']
+VertexType = Literal['final', 'initial', 'choice', 'terminate']
 
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
@@ -99,11 +104,43 @@ class ParserTrigger:
     target: str
     action: str
     id: str
-    type: str = ''
+    type: TriggerType = 'internal'
     guard: str = 'true'
     check_function: str | None = None
     defer: bool = False
     propagate: bool = False
+
+
+@dataclass
+class UnconditionalTransition:
+    """
+    Безусловные переходы.
+
+    Свойства:
+    - Не нужно проверять в loop
+    - Нельзя вызвать сигналом
+    - Нет ограждающего условия
+    - Нет propagate/block
+    - Используются в начальных состояниях
+    """
+
+    action: str
+    target: str
+
+
+@dataclass
+class BaseParserVertex:
+    """Базовый класс для всех узлов-псевдосостояний."""
+
+    id: str
+    parent: str | None
+
+
+@dataclass
+class ParserInitialVertex(BaseParserVertex):
+    """Класс, означающий начальное псевдосостояние."""
+
+    transition: UnconditionalTransition
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -124,7 +161,7 @@ class ParserState:
     """
 
     name: str
-    type: str
+    type: StateType
     actions: str
     trigs: List[ParserTrigger]
     entry: str
@@ -133,7 +170,8 @@ class ParserState:
     new_id: List[str]
     parent: Optional['ParserState']
     childs: List['ParserState']
-    bounds: GeometryBounds
+    bounds: Optional[GeometryBounds] = None
+    initial_state: Optional[str] = None
 
     def __str__(self) -> str:
         if self.parent is not None:
@@ -159,4 +197,5 @@ class StateMachine:
     states: List[ParserState]
     signals: Set[str]
     # Установлено дефолтное значение, чтобы не трогать легаси.
+    initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     compiling_settings: Optional[SMCompilingSettings] = None

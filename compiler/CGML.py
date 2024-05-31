@@ -19,7 +19,8 @@ from cyberiadaml_py.types.elements import (
     CGMLElements,
     CGMLState,
     CGMLTransition,
-    CGMLComponent
+    CGMLComponent,
+    CGMLInitialState
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -28,9 +29,11 @@ from compiler.fullgraphmlparser.stateclasses import (
     ParserNote,
     Labels,
     create_note,
-    SMCompilingSettings
+    SMCompilingSettings,
+    ParserInitialVertex,
+    UnconditionalTransition
 )
-
+_StartNodeId = str
 _TransitionId = str
 _StateId = str
 _ComponentId = str
@@ -75,7 +78,6 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         triggers, conditions."""
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
-
     for raw_event in raw_events:
         raw_trigger, do = raw_event.split('/')
         inner_trigger = __parse_trigger(
@@ -98,15 +100,6 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
             check_function,
         ))
     return events
-
-
-def __create_empty_bounds() -> Bounds:
-    return Bounds(
-        x=0,
-        y=0,
-        height=0,
-        width=0
-    )
 
 
 def __gen_id() -> int:
@@ -142,7 +135,6 @@ def __process_state(state_id: str,
                                 f'Неизвестный постфикс {inner.event.postfix} '
                                 'допустимые значения "propagate", "block"'
                             )
-                print(propagate, inner.event.postfix)
                 parser_triggers.append(
                     ParserTrigger(
                         id=str(__gen_id()),
@@ -158,11 +150,6 @@ def __process_state(state_id: str,
                         propagate=propagate
                     )
                 )
-    bounds = (
-        cgml_state.bounds
-        if cgml_state.bounds is not None
-        else __create_empty_bounds()
-    )
     return ParserState(
         id=state_id,
         new_id=[state_id],
@@ -171,7 +158,7 @@ def __process_state(state_id: str,
         entry=entry,
         exit=exit,
         parent=None,
-        bounds=bounds,
+        bounds=None,
         actions='',
         trigs=parser_triggers,
         childs=[]
@@ -183,8 +170,17 @@ def __process_transition(
         cgml_transition: CGMLTransition) -> ParserTrigger:
     """Parse CGMLTransition and convert to ParserTrigger\
         - class for fullgraphmlparser."""
+    if '/' not in cgml_transition.actions:
+        return ParserTrigger(
+            name=cgml_transition.id,
+            id=cgml_transition.id,
+            source=cgml_transition.source,
+            target=cgml_transition.target,
+            action=cgml_transition.actions,
+            type='external',
+            guard='true'
+        )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
-
     if len(inner_triggers) == 0:
         raise Exception('No trigger for transition!')
     # TODO: Обработка нескольких событий для триггера
@@ -216,7 +212,7 @@ def __connect_transitions_to_states(
     for transition in transitions:
         source_state = states_with_external_trigs.get(transition.source)
         if source_state is None:
-            raise CGMLException('Source state is None!')
+            continue
         source_state.trigs.append(transition)
 
     return states_with_external_trigs
@@ -247,6 +243,7 @@ def __connect_parents_to_states(
             parent_state = states_with_parents[parent]
             parser_state.parent = parent_state
             parent_state.childs.append(parser_state)
+            parent_state.type = 'group'
 
     return states_with_parents
 
@@ -273,24 +270,17 @@ def __get_signals_set(
 
 
 def __parse_components(
-    components: List[CGMLComponent]
+    components: Dict[str, CGMLComponent]
 ) -> Dict[_ComponentId, InnerComponent]:
     """Parse component's parameters."""
     inner_components: Dict[_ComponentId, InnerComponent] = {}
 
-    for component in components:
-        parameters: List[str] = component.parameters.split('\n')
-        type = ''
+    for component in components.values():
+        parameters: Dict[str, str] = component.parameters
+        type = component.type
         parsed_parameters: Dict[str, str] = {}
-        for parameter in parameters:
-            parameter_name, value = list(map(
-                lambda val: val.strip(), parameter.split('/')))
-            if parameter_name is None or value is None:
-                raise CGMLException(
-                    'No name parameter or no value of parameter.')
+        for parameter_name, value in parameters.items():
             match parameter_name:
-                case 'type':
-                    type = value
                 case 'labelColor' | 'label' | 'name' | 'description':
                     ...
                 case _:
@@ -521,6 +511,69 @@ def __get_build_files(
     return build_libraries
 
 
+def __init_initial_states(
+    initial_states: Dict[str, CGMLInitialState],
+) -> tuple[_StartNodeId, Dict[str, ParserInitialVertex]]:
+    """
+    Класс для инициализации начальных состояний.
+
+    После инициализации необходимо вызывать функцию \
+        _add_transition_to_initials, чтобы добавить переходы к узлам.
+    """
+    start_node_id: str | None = None
+    parser_initials: Dict[str, ParserInitialVertex] = {}
+    for initial_id, initial in initial_states.items():
+        if initial.parent is None:
+            if start_node_id is not None:
+                raise CGMLException('Double initial node.')
+            start_node_id = initial_id
+        parser_initials[initial_id] = ParserInitialVertex(
+            initial_id,
+            initial.parent,
+            UnconditionalTransition(
+                '',
+                '')
+        )
+    if start_node_id is None:
+        raise CGMLException('No initial node.')
+
+    return start_node_id, parser_initials
+
+
+def _add_transition_to_initials(
+    initial_states: Dict[str, ParserInitialVertex],
+    transitions: List[ParserTrigger]
+) -> tuple[Dict[str, ParserInitialVertex], List[ParserTrigger]]:
+    new_initial_states: Dict[str,
+                             ParserInitialVertex] = deepcopy(initial_states)
+    new_transitions: List[ParserTrigger] = []
+    for trigger in transitions:
+        vertex = new_initial_states.get(trigger.source, None)
+        if vertex is None:
+            new_transitions.append(trigger)
+            continue
+        vertex.transition = UnconditionalTransition(
+            trigger.action,
+            trigger.target
+        )
+    return new_initial_states, new_transitions
+
+
+def _add_initials_to_states(
+    initials: Dict[str, ParserInitialVertex],
+    states: Dict[str, ParserState]
+) -> Dict[str, ParserState]:
+    new_states = deepcopy(states)
+    for initial in initials.values():
+        if initial.parent is None:
+            continue
+        state = states[initial.parent]
+        state.initial_state = initial.id
+        state.type = 'group'
+
+    return new_states
+
+
 async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
@@ -532,7 +585,8 @@ async def parse(xml: str) -> StateMachine:
     - signal checks in loop function;
     """
     parser = CGMLParser()
-    cgml_scheme: CGMLElements = parser.parseCGML(xml)
+    cgml_scheme: CGMLElements = parser.parse_cgml(xml)
+    print(cgml_scheme.initial_states)
     platfrom_manager = PlatformManager()
     platform: Platform = await platfrom_manager.get_platform(
         cgml_scheme.platform, '')  # TODO: Доставать версию платформы
@@ -579,19 +633,23 @@ async def parse(xml: str) -> StateMachine:
     )
     states_with_parents = __connect_parents_to_states(
         states_with_transitions, cgml_states, global_state)
-    # TODO: Добавить внешние переходы в triggers
-    if cgml_scheme.initial_state is None:
+    if cgml_scheme.initial_states is None:
         raise CGMLException('No initial state!')
 
-    start_node: str = cgml_scheme.initial_state.target
     # Мы получаем список триггеров для того, чтобы потом:
     # 1) Сформировать набор всех сигналов
     # 2) Сгенерировать проверки для вызова сигналов
+    start_node, initials = __init_initial_states(cgml_scheme.initial_states)
+    initial_with_transition, transitions_without_vertexes = (
+        _add_transition_to_initials(initials, transitions)
+    )
     all_triggers = __get_all_triggers(
         list(states_with_parents.values()),
-        transitions)
+        transitions_without_vertexes)
     signals = __get_signals_set(all_triggers)
-
+    print(initial_with_transition)
+    states_with_initials = _add_initials_to_states(
+        initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)
     included_libraries: Set[str] = __get_include_libraries(
         platform, list(parsed_components.values()))
@@ -616,7 +674,8 @@ async def parse(xml: str) -> StateMachine:
         name='sketch',
         start_action='',
         notes=notes,
-        states=[global_state, *list(states_with_parents.values())],
+        states=[global_state, *list(states_with_initials.values())],
         signals=signals,
-        compiling_settings=compiling_settings
+        compiling_settings=compiling_settings,
+        initial_states=[*initial_with_transition.values()]
     )

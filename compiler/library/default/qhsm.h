@@ -40,6 +40,7 @@ enum
     Q_ENTRY_SIG,
     Q_EXIT_SIG,
     Q_INIT_SIG,
+    Q_VERTEX_SIG,
     Q_USER_SIG,
 };
 

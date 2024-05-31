@@ -23,7 +23,7 @@ from compiler.access_controller import (
     AccessControllerException
 )
 from compiler.types.platform_types import Platform, PlatformMeta
-from compiler.types.inner_types import InnerFile
+from compiler.types.inner_types import File
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -34,10 +34,10 @@ def access_controller() -> AccessController:
 
 
 @pytest.fixture
-def source_files() -> List[InnerFile]:
+def source_files() -> List[File]:
     """Get test source files."""
     return [
-        InnerFile(
+        File(
             filename='aaaa/Test',
             extension='cpp',
             fileContent='ooooo;')
@@ -51,12 +51,12 @@ def platform_manager() -> PlatformManager:
 
 
 @pytest.fixture
-def images() -> List[InnerFile]:
+def images() -> List[File]:
     """Get test images."""
     with open('test/test_resources/test_image.jpg', 'rb') as f:
-        return [InnerFile(filename='babuleh',
-                          extension='jpg',
-                          fileContent=f.read())]
+        return [File(filename='babuleh',
+                     extension='jpg',
+                     fileContent=f.read())]
 
 
 @pytest.fixture
@@ -69,8 +69,8 @@ def platform() -> Platform:
 
 @asynccontextmanager
 async def add_platform(platform: Platform,
-                       source_files: List[InnerFile],
-                       images: List[InnerFile],
+                       source_files: List[File],
+                       images: List[File],
                        autodelete: bool = True):
     try:
         platform_id = await _add_platform(
@@ -86,8 +86,8 @@ async def add_platform(platform: Platform,
 @pytest.mark.asyncio
 async def test_add_platform(platform_manager: PlatformManager,
                             platform: Platform,
-                            source_files: List[InnerFile],
-                            images: List[InnerFile]):
+                            source_files: List[File],
+                            images: List[File]):
     platform_id = await _add_platform(
         platform,
         source_files,
@@ -104,8 +104,8 @@ async def test_add_platform(platform_manager: PlatformManager,
 
 @pytest.mark.asyncio
 async def test_get_raw_platform(platform: Platform,
-                                source_files: List[InnerFile],
-                                images: List[InnerFile]):
+                                source_files: List[File],
+                                images: List[File]):
 
     async with add_platform(platform, source_files, images) as platform_id:
         test_result = await _get_platform(platform_id, platform.version)
@@ -119,31 +119,31 @@ async def test_get_raw_platform(platform: Platform,
 @pytest.mark.asyncio
 async def test_get_platform_sources(platform_manager: PlatformManager,
                                     platform: Platform,
-                                    source_files: List[InnerFile]):
+                                    source_files: List[File]):
     async with add_platform(platform, source_files, []) as platform_id:
         source_gen = await platform_manager.get_platform_sources(
             platform_id, platform.version)
-        result_sources: List[InnerFile] = [source async
-                                           for source in source_gen]
+        result_sources: List[File] = [source async
+                                      for source in source_gen]
         assert result_sources == source_files
 
 
 @pytest.mark.asyncio
 async def test_get_platform_images(platform_manager: PlatformManager,
                                    platform: Platform,
-                                   images: List[InnerFile]):
+                                   images: List[File]):
     async with add_platform(platform, [], images) as platform_id:
         image_gen = await platform_manager.get_platform_images(
             platform_id, platform.version)
-        result_images: List[InnerFile] = [img async for img in image_gen]
+        result_images: List[File] = [img async for img in image_gen]
         assert result_images == images
 
 
 @pytest.mark.asyncio
 async def test_update_platform(platform_manager: PlatformManager,
                                platform: Platform,
-                               source_files: List[InnerFile],
-                               images: List[InnerFile]):
+                               source_files: List[File],
+                               images: List[File]):
     async with add_platform(platform, source_files, images) as platform_id:
         new_platform = platform.model_copy(deep=True)
         new_platform.version = '2.0'
@@ -169,8 +169,8 @@ async def test_update_platform(platform_manager: PlatformManager,
 @pytest.mark.asyncio
 async def test_delete_platform_by_version(platform_manager: PlatformManager,
                                           platform: Platform,
-                                          source_files: List[InnerFile],
-                                          images: List[InnerFile]):
+                                          source_files: List[File],
+                                          images: List[File]):
     async with (add_platform(platform, source_files, images, False)
                 as platform_id):
         await _delete_platform_by_versions(platform_id, platform.version)
@@ -189,8 +189,8 @@ async def test_delete_platform_by_version(platform_manager: PlatformManager,
 async def test_delete_platfrom(
     platform_manager: PlatformManager,
     platform: Platform,
-    source_files: List[InnerFile],
-    images: List[InnerFile]
+    source_files: List[File],
+    images: List[File]
 ):
     async with (add_platform(platform, source_files, images, False)
                 as platform_id):
