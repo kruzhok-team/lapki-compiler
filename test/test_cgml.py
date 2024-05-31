@@ -23,7 +23,8 @@ pytest_plugins = ('pytest_asyncio',)
 
 @pytest.fixture
 async def init_platform():
-    await PlatformManager.load_platform('compiler/platforms/Arduino.json')
+    platform_manager = PlatformManager()
+    await platform_manager.load_platform('compiler/platforms/Arduino.json')
 
 
 @contextmanager
@@ -125,7 +126,19 @@ async def test_cgml_route(init_platform):
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 2):
+        with create_test_folder(path, 100):
+            data = f.read()
+            result = await compile_xml(data, path)
+            await create_response(path, result)
+
+
+@pytest.mark.asyncio
+async def test_defer(init_platform):
+    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
+    test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+    with open('examples/with-defer.xml', 'r') as f:
+        path = test_path + '/test_project/sketch/'
+        with create_test_folder(path, 15):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

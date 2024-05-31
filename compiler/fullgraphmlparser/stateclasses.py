@@ -89,6 +89,8 @@ class ParserTrigger:
             points: other relative movements of trigger visual path
             action_x, action_y, action_width: coordinates of trigger label
             check_function: function, that check this signal
+            defer: delayed signal emmiting, if true, then the\
+                actions will not be recorded
     """
 
     name: str
@@ -99,6 +101,7 @@ class ParserTrigger:
     type: str = ''
     guard: str = 'true'
     check_function: str | None = None
+    defer: bool = False
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))

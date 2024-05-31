@@ -91,7 +91,6 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         if '.' in inner_trigger.trigger:
             check_function = inner_trigger.trigger
             inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
-
         events.append(InnerEvent(
             inner_trigger,
             do,
@@ -136,6 +135,7 @@ def __process_state(state_id: str, cgml_state: CGMLState) -> ParserState:
                         target='',
                         type='internal',
                         action=inner.actions,
+                        defer=inner.actions.strip() == 'defer',
                         guard=condition if condition is not None else 'true',
                         check_function=inner.check
                     )
