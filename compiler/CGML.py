@@ -80,6 +80,8 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
 def __parse_actions(actions: str) -> List[InnerEvent]:
     """Parse action field of CGMLElements and returns do,\
         triggers, conditions."""
+    if (actions == ''):
+        return []
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
     for raw_event in raw_events:
@@ -677,14 +679,12 @@ async def parse(xml: str) -> StateMachine:
         cgml_transition = cgml_transitions[transition_id]
         transitions.append(__process_transition(
             transition_id, cgml_transition))
-
     # Parsing state's actions, internal triggers, entry/exit
     states: Dict[_StateId, ParserState] = {}
     cgml_states: Dict[_StateId, CGMLState] = cgml_scheme.states
     for state_id in cgml_states:
         cgml_state = cgml_states[state_id]
         states[state_id] = __process_state(state_id, cgml_state)
-
     states_with_transitions = __connect_transitions_to_states(
         states,
         transitions

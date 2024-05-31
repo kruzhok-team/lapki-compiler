@@ -95,7 +95,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
-        raise Exception('Internal error!')
+        raise Exception('Internal error! фывфы')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                         default_library,
@@ -157,7 +157,7 @@ class Handler:
             await ws.send_json(response.model_dump())
         except CGMLException as e:
             await Logger.logException()
-            await RequestError(e.args[0]).dropConnection(ws)
+            await RequestError(', '.join(e.args)).dropConnection(ws)
         except Exception:
             await Logger.logException()
             await RequestError('Internal error!').dropConnection(ws)
