@@ -3,17 +3,11 @@ from typing import NoReturn
 import asyncio
 
 from aiohttp import web
-
-try:
-    from .routes import setup_routes
-    from .config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
-    from .Logger import Logger
-    from .PlatformManager import PlatformManager
-except ImportError:
-    from compiler.routes import setup_routes
-    from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
-    from compiler.PlatformManager import PlatformManager
-    from .Logger import Logger
+from compiler.routes import setup_routes
+from compiler.config import SERVER_PORT, SERVER_HOST, PLATFORM_DIRECTORY
+from compiler.PlatformManager import PlatformManager
+from compiler.access_controller import AccessController
+from compiler.Logger import Logger
 
 
 async def main() -> NoReturn:
@@ -23,9 +17,12 @@ async def main() -> NoReturn:
     runner = web.AppRunner(app)
     await runner.setup()
 
+    platform_manager = PlatformManager()
+    access_controller = AccessController()
+    await access_controller.init_access_tokens()
     site = web.TCPSite(runner, host=SERVER_HOST, port=SERVER_PORT)
     await Logger.init_logger()
-    await PlatformManager.init_platforms(PLATFORM_DIRECTORY)
+    await platform_manager.init_platforms(PLATFORM_DIRECTORY)
     await site.start()
     print('Модуль компилятора запущен...')
     while True:

@@ -6,6 +6,7 @@ SERVER_PORT = 8081
 SERVER_HOST = 'localhost'
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
 
+ACCESS_TOKENS_FILE = os.path.join(MODULE_PATH, 'ACCESS_TOKENS.txt')
 BASE_DIRECTORY = MODULE_PATH + '/'  # "server/"
 BUILD_DIRECTORY = '/tmp/lapki-compiler/'
 LIBRARY_PATH = os.path.join(MODULE_PATH, 'library/')

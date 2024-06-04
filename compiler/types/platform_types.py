@@ -1,4 +1,4 @@
-from typing import Dict, TypeAlias, Literal, List, Optional
+from typing import Dict, TypeAlias, Literal, List, Optional, Set
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -20,7 +20,7 @@ class MethodParameter:
 class Signal:
     img: str
     description: str
-    checkMethod: str
+    checkMethod: str = ''
     parameters: Optional[List[MethodParameter]] = None
 
 
@@ -53,8 +53,8 @@ class Component:
     signals: Dict[str, Signal]
     variables: Dict[str, Variable]
     methods: Dict[str, Method]
-    buildFiles: List[str]
-    importFiles: List[str]
+    buildFiles: List[str] = Field(default_factory=list)
+    importFiles: List[str] = Field(default_factory=list)
     singletone: bool = False
     constructorParameters: Dict[str, ClassParameter] = Field(
         default_factory=dict)
@@ -70,15 +70,28 @@ class CompilingSettings:
 
 
 class Platform(BaseModel):
+    id: str = ''
     name: str
     description: str = ''
-    icon: str = ''
-    id: str = ''
-    staticComponents: bool
-    language: str
-    author: str = ''
-    visual: bool
-    compilingSettings: CompilingSettings
-    components: Dict[str, Component]
-    delimeter: str
     compile: bool
+    author: str = ''
+    icon: str = ''
+    format_version: str = Field(alias='formatVersion')
+    standard_version: str = Field(alias='standardVersion')
+    version: str
+    staticComponents: bool
+    language: str = ''
+    delimeter: str
+    visual: bool
+    compilingSettings: CompilingSettings | None = None
+    components: Dict[str, Component]
+
+
+@dataclass
+class PlatformMeta:
+    """Class contains available versions\
+        and tokens to access update platform."""
+
+    versions: Set[str] = Field(default_factory=set)
+    name: str = ''
+    author: str = ''

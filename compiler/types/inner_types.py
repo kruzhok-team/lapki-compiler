@@ -2,10 +2,9 @@
 
 from typing import List, Literal, Dict, Optional, TypeAlias, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from pydantic.dataclasses import dataclass
-
-from ..fullgraphmlparser.stateclasses import ParserTrigger
+from compiler.fullgraphmlparser.stateclasses import ParserTrigger
 
 DefaultComponents = Literal['System']
 DefaultActions = Literal['onEnter', 'onExit']
@@ -21,8 +20,11 @@ class InnerComponent:
 
 @dataclass
 class InnerTrigger:
+    """Dataclass represents trigger[condition] postfix/ string."""
+
     trigger: str
     condition: Optional[str]
+    postfix: Optional[str]
 
 
 @dataclass
@@ -30,6 +32,7 @@ class InnerEvent:
     """
     Dataclass represents parsed event string.
 
+    check - function, that check signal
     event/ actions
     """
 
@@ -38,11 +41,18 @@ class InnerEvent:
     check: str | None = None
 
 
-@dataclass
-class File:
+class File(BaseModel):
     filename: str
     extension: str
-    fileContent: str
+    fileContent: str | bytes
+
+    @field_validator('filename', mode='after')
+    @classmethod
+    def check_file_path(cls, v: str) -> str:
+        """Check, that filepath doesn't is not relative."""
+        if '..' in v:
+            raise ValueError('Path is not correct, remove all .. from path.')
+        return v
 
 
 class CompilerResponse(BaseModel):

@@ -6,13 +6,8 @@ from typing import Dict, List, Set, TypedDict
 
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
-# Если засунуть в try except линтер начинает ругаться.
 from compiler.types.ide_types import SupportedCompilers
-
-try:
-    from .config import LIBRARY_PATH, BUILD_DIRECTORY
-except ImportError:
-    from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
+from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
 
 
 class CompilerException(Exception):
@@ -138,8 +133,8 @@ class Compiler:
             case 'arduino-cli':
                 process = await asyncio.create_subprocess_exec(
                     compiler,
-                    '--export-binaries',
                     *flags,
+                    '--export-binaries',
                     *build_files,
                     cwd=base_dir,
                     text=False,
@@ -158,7 +153,8 @@ class Compiler:
     @staticmethod
     async def include_source_files(platform_id: str,
                                    libraries: Set[str],
-                                   target_directory: str) -> None:
+                                   target_directory: str
+                                   ) -> None:
         """Include source files from platform's \
             library directory to target directory."""
         path = os.path.join(LIBRARY_PATH, f'{platform_id}/')
@@ -179,7 +175,7 @@ class Compiler:
             Функция, которая копирует все необходимые файлы библиотек."""
         paths_to_libs = [''.join(
             [
-                f'{Compiler._path(platform)}/',
+                f'{Compiler._path(platform)}',
                 library,
                 extension]
         ) for library in libraries]

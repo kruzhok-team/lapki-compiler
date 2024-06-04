@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="G">
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ ArduinoUno
+
+standardVersion/ 1.0
+
+</data>
+    </node>
+    <node id="ytpqqvuajpnczvfnuquc">
+      <data key="dName">Главное состояние</data>
+      <data key="dData">entry/
+Timer1.start(5000);
+QHsmSerial::println(&quot;Вошли в главное состояние&quot;);
+
+</data>
+      <data key="dGeometry">
+        <rect x="9" y="194.8125" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+      <graph id="ytpqqvuajpnczvfnuquc">
+        <node id="vmbpwwemcyqyywuqbiby">
+          <data key="dName">Подсостояние</data>
+          <data key="dData">entry/
+QHsmSerial::println(&quot;Вошли в подсостояние&quot;);
+
+</data>
+          <data key="dGeometry">
+            <rect x="100" y="100" width="450" height="95"></rect>
+          </data>
+          <data key="dColor">#FFFFFF</data>
+        </node>
+        <node id="ipujuzkssjjanlpuhxdk">
+          <data key="dVertex">initial</data>
+          <data key="dGeometry">
+            <point x="0" y="0"></point>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="gvuxfwblozjgixwcmvkw">
+      <data key="dName">Состояние</data>
+      <data key="dData">entry/
+Timer1.start(5000);
+QHsmSerial::println(&quot;Вошли во второе состояние&quot;);
+
+</data>
+      <data key="dGeometry">
+        <rect x="60.06000000000021" y="709.3431250000006" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="mqnudktinpiciufanqnn">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-91" y="94.8125"></point>
+      </data>
+    </node>
+    <node id="cTimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer1
+
+type/ Timer
+
+</data>
+    </node>
+    <node id="cQHsmSerial">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ QHsmSerial
+
+type/ QHsmSerial
+
+baud/ 9600
+
+</data>
+    </node>
+    <edge id="flfmuxehplsazwkjbbvx" source="mqnudktinpiciufanqnn" target="ytpqqvuajpnczvfnuquc">
+      <data key="dData">QHsmSerial::println(&quot;Глобальное начальное состояние!&quot;);
+      </data>
+    </edge>
+    <edge id="lvgfxuugwxdkcxhdkqyb" source="ipujuzkssjjanlpuhxdk" target="vmbpwwemcyqyywuqbiby">
+            <data key="dData">QHsmSerial::println(&quot;Дочернее начальное состояние!&quot;);
+      </data>
+    </edge>
+    <edge id="ibbzkehwwxzoxplaedsw" source="ytpqqvuajpnczvfnuquc" target="gvuxfwblozjgixwcmvkw">
+      <data key="dData">Timer1.timeout/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="74.26000000000009" y="565.7878125000004"></point>
+      </data>
+    </edge>
+    <edge id="fwquhlcpeketzecywgte" source="gvuxfwblozjgixwcmvkw" target="ytpqqvuajpnczvfnuquc">
+      <data key="dData">Timer1.timeout/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="321.1500000000001" y="564.9615625"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>

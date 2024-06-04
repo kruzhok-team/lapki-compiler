@@ -44,9 +44,9 @@ class Client:
     async def exportBerlogaScheme(self, path: str):
         """Send Lapki IDE's internal scheme and convert it to yed-Graphml."""
         async with async_open(path, 'r') as req:
-            data = json.loads(await req.read())
+            data = await req.read()
 
-        await self.ws.send_str(json.dumps(data, ensure_ascii=False))
+        await self.ws.send_str(data)
         await self.ws.send_str('Autoborder')
         response = (await self.ws.receive_json())['fileContent']
 

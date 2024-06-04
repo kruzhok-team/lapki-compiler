@@ -401,13 +401,13 @@ files = [
 
 [[package]]
 name = "cyberiadaml-py"
-version = "0.1.1"
+version = "1.0"
 description = "The Python 3 library for processing the CyberiadaML state machine graphs"
 optional = false
 python-versions = "<3.11,>=3.10"
 files = [
-    {file = "cyberiadaml_py-0.1.1-py3-none-any.whl", hash = "sha256:742577da1fe7c0d921bb1020edd9ada63a5bd480e5c5b4243cc009a9fdaa3a92"},
-    {file = "cyberiadaml_py-0.1.1.tar.gz", hash = "sha256:b95e6708578306af52940ab7ff20cce9f217c1550b4d75ac9938220658558a34"},
+    {file = "cyberiadaml_py-1.0-py3-none-any.whl", hash = "sha256:5b6ebe1be0f053f859b1a3b61e0caa0feeabf35644d01e7157e0a2948118183f"},
+    {file = "cyberiadaml_py-1.0.tar.gz", hash = "sha256:1d34e4d16b8eb553585a788777b8334b0b0e7efd02b4c6017174e28c3afe78c1"},
 ]
 
 [package.dependencies]
@@ -1147,4 +1147,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "d3a368e5e1caf749b63a67004258b018ed2cd7ea0444a758a185a56a5753ab93"
+content-hash = "7bec8ce00089cf9cbdbad91013a93645caf0ff9b5024f83dc197b8f3829f3734"

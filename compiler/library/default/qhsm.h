@@ -50,6 +50,7 @@ enum
     Q_EXIT_SIG,
     // начальный сигнал
     Q_INIT_SIG,
+    Q_VERTEX_SIG,
     // пользовательский сигнал
     Q_USER_SIG,
 };
