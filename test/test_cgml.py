@@ -25,7 +25,7 @@ async def init_platform():
     platform_manager = PlatformManager()
     # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
-        await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/Arduino.json')
+        await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json')
 
 
 @contextmanager
@@ -132,6 +132,12 @@ async def test_generating_code():
     pytest.param(
         'examples/choices.graphml'
     ),
+    pytest.param(
+        'examples/atwo_choices.graphml'
+    ),
+    pytest.param(
+        'examples/initial_states.graphml'
+    ),
     # pytest.param(
     #     'examples/with-defer.xml'
     # ), TODO: Переделать под новый формат
@@ -148,7 +154,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 60):
+        with create_test_folder(path, 10):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

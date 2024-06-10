@@ -150,7 +150,7 @@ class Handler:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = base_dir.replace(' ', '_') + '/sketch'
-            await AsyncPath(base_dir).mkdir()
+            await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)
             await Logger.logger.info(response)
