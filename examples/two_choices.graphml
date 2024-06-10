@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="G">
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ ArduinoUno
+
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+</data>
+    </node>
+    <node id="tiwpygboomipgwdemmne">
+      <data key="dName">Состояние</data>
+      <data key="dData">entry/
+Timer1.start(1000);
+Timer2.start(5000);
+
+Timer1.timeout/
+Counter1.add(1);
+
+</data>
+      <data key="dGeometry">
+        <rect x="45.913299560546875" y="72.7542839050293" width="450" height="145"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="jvlpndkeqwdhdljynyqb">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-12.086700439453125" y="-31.245716094970703"></point>
+      </data>
+    </node>
+    <node id="iphiwozkkmlvmyszkbwf">
+      <data key="dVertex">choice</data>
+      <data key="dGeometry">
+        <point x="251.8125" y="388.6374969482422"></point>
+      </data>
+    </node>
+    <node id="osxuhjnsvmtycunuoddd">
+      <data key="dVertex">choice</data>
+      <data key="dGeometry">
+        <point x="536.8125" y="475.6374969482422"></point>
+      </data>
+    </node>
+    <node id="cCounter1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Counter1
+
+type/ Counter
+
+</data>
+    </node>
+    <node id="cTimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer1
+
+type/ Timer
+
+</data>
+    </node>
+    <node id="cTimer2">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer2
+
+type/ Timer
+
+</data>
+    </node>
+    <edge id="zuhjwxoyzoucjitmcbpi" source="jvlpndkeqwdhdljynyqb" target="tiwpygboomipgwdemmne"></edge>
+    <edge id="iezxawquipspksxupxue" source="tiwpygboomipgwdemmne" target="iphiwozkkmlvmyszkbwf">
+      <data key="dData">Timer2.timeout/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="-18.137100219726562" y="304.69589042663574"></point>
+      </data>
+    </edge>
+    <edge id="xpzajsxtjmigohkaeglz" source="iphiwozkkmlvmyszkbwf" target="osxuhjnsvmtycunuoddd">
+      <data key="dData">[Counter1.value &gt; 4]/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="520.8125" y="274.1374969482422"></point>
+      </data>
+    </edge>
+    <edge id="ilvgyjqoobfpkegukizt" source="iphiwozkkmlvmyszkbwf" target="tiwpygboomipgwdemmne">
+      <data key="dData">[Counter1.value &lt;= 4]/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="234.86289978027344" y="281.19589042663574"></point>
+      </data>
+    </edge>
+    <edge id="qdsvbhnlvtczyelioaug" source="osxuhjnsvmtycunuoddd" target="tiwpygboomipgwdemmne">
+      <data key="dData">[Counter1.value &gt;= 6]/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="731.3628997802734" y="124.19589042663574"></point>
+      </data>
+    </edge>
+    <edge id="izqvsnumhhqujqpcgdbd" source="osxuhjnsvmtycunuoddd" target="tiwpygboomipgwdemmne">
+      <data key="dData">[Counter1.value &lt; 6]/
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="391.36289978027344" y="667.1958904266357"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>

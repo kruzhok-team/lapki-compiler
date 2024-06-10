@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="G">
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ ArduinoUno
+
+platformVersion/ 1.0
+
+standardVersion/ 1.0
+
+</data>
+    </node>
+    <node id="sfdmmeidqlauhjhyudvj">
+      <data key="dName">ADD</data>
+      <data key="dData">entry/
+Timer1.start(2000);
+Counter1.add(1);
+
+</data>
+      <data key="dGeometry">
+        <rect x="91" y="166.8125" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="gnnygmdtipfahdwyczgs">
+      <data key="dName">SUB</data>
+      <data key="dData">entry/
+Timer1.start(2000);
+Counter1.sub(1);
+
+</data>
+      <data key="dGeometry">
+        <rect x="612.1600000000016" y="528.0125000000015" width="450" height="95"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="gquxxfkcnnuxqupybpsl">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-3" y="47.8125"></point>
+      </data>
+    </node>
+    <node id="spjtslyxubbfmnokvavz">
+      <data key="dVertex">choice</data>
+      <data key="dGeometry">
+        <point x="275.28" y="401.8125"></point>
+      </data>
+    </node>
+    <node id="cTimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer1
+
+type/ Timer
+
+</data>
+    </node>
+    <node id="cQHsmSerial">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ QHsmSerial
+
+type/ QHsmSerial
+
+baud/ 9600
+
+</data>
+    </node>
+    <node id="cCounter1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Counter1
+
+type/ Counter
+
+</data>
+    </node>
+    <edge id="kqvealtjeeutftwpewon" source="gquxxfkcnnuxqupybpsl" target="sfdmmeidqlauhjhyudvj"></edge>
+    <edge id="zdwblhnaiygvwpxxnlqe" source="sfdmmeidqlauhjhyudvj" target="spjtslyxubbfmnokvavz">
+      <data key="dData">Timer1.timeout/
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="203.76" y="307.39249999999987"></point>
+      </data>
+    </edge>
+    <edge id="ijyufugqtsnddxbsnsvt" source="spjtslyxubbfmnokvavz" target="gnnygmdtipfahdwyczgs">
+      <data key="dData">[Counter1.value &gt;= 5]/ QHsmSerial::println(&quot;Больше или равно&quot;);
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="254.55999999999992" y="596.8400000000004"></point>
+      </data>
+    </edge>
+    <edge id="voonhvxsjkteszdltzfs" source="spjtslyxubbfmnokvavz" target="sfdmmeidqlauhjhyudvj">
+      <data key="dData">[Counter1.value &lt;= 5]/ QHsmSerial::println(&quot;Меньше или равно&quot;);
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="509.12000000000023" y="337.1200000000004"></point>
+      </data>
+    </edge>
+        <edge id="blabla" source="spjtslyxubbfmnokvavz" target="sfdmmeidqlauhjhyudvj">
+      <data key="dData">[else]/ QHsmSerial::println(&quot;Else&quot;);
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="509.12000000000023" y="337.1200000000004"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>

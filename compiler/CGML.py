@@ -20,7 +20,8 @@ from cyberiadaml_py.types.elements import (
     CGMLState,
     CGMLTransition,
     CGMLComponent,
-    CGMLInitialState
+    CGMLInitialState,
+    CGMLChoice
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -28,6 +29,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     ParserTrigger,
     ParserNote,
     Labels,
+    ParserChoiceVertex,
+    ChoiceTransition,
     create_note,
     SMCompilingSettings,
     ParserInitialVertex,
@@ -36,6 +39,7 @@ from compiler.fullgraphmlparser.stateclasses import (
 _StartNodeId = str
 _TransitionId = str
 _StateId = str
+_VertexId = str
 _ComponentId = str
 
 _INCLUDE_TEMPLATE = Template('#include "$component_type"')
@@ -63,11 +67,9 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
         regex_match = re.match(regex, trigger)
         if regex_match is None:
             continue
-
-        parsed_trigger: str = regex_match.group('trigger')
-
         regex_dict = regex_match.groupdict()
         condition = regex_dict.get('condition', None)
+        parsed_trigger = regex_dict.get('trigger', None)
         postfix = regex_dict.get('postfix', None)
         return InnerTrigger(parsed_trigger, condition, postfix)
     raise CGMLException(f'Trigger({trigger}) doesnt match any regex!')
@@ -83,15 +85,16 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
-                (r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\] '
+                (r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$'
                  r'(?P<postfix>w+)$'),
                 r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
                 r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
+                r'^\[(?P<condition>.+)\]$',
                 r'^(?P<trigger>[^\[\]]+)$'
             ]
         )
         check_function: str | None = None
-        if '.' in inner_trigger.trigger:
+        if inner_trigger.trigger is not None and '.' in inner_trigger.trigger:
             check_function = inner_trigger.trigger
             inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
         events.append(InnerEvent(
@@ -116,6 +119,8 @@ def __process_state(state_id: str,
     exit = ''
     for inner in inner_triggers:
         trigger = inner.event.trigger
+        if trigger is None:
+            raise CGMLException('No trigger for state event!')
         match trigger:
             case 'entry':
                 entry = inner.actions
@@ -138,7 +143,7 @@ def __process_state(state_id: str,
                 parser_triggers.append(
                     ParserTrigger(
                         id=str(__gen_id()),
-                        name=inner.event.trigger,
+                        name=trigger,
                         source=state_id,
                         target='',
                         type='internal',
@@ -186,7 +191,10 @@ def __process_transition(
     # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
-    inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
+    if inner_trigger.trigger is not None:
+        inner_trigger.trigger = inner_trigger.trigger.replace('.', '_')
+    else:
+        inner_trigger.trigger = ''
     condition = (
         inner_trigger.condition
         if inner_trigger.condition is not None
@@ -574,6 +582,41 @@ def _add_initials_to_states(
     return new_states
 
 
+def __create_choices(
+    choices: Dict[_VertexId, CGMLChoice],
+    transitions: List[ParserTrigger]
+) -> tuple[Dict[_VertexId, ParserChoiceVertex],
+           List[ParserTrigger]]:
+    """
+    Create choice-pseudostates for code generation from CGMLChoice.
+
+    Return ParserChoices and transitions without transitions,\
+        that the source is choice.
+    """
+    parser_choices: Dict[_VertexId, ParserChoiceVertex] = {}
+    new_transitions: List[ParserTrigger] = []
+    for transition in transitions:
+        choice = choices.get(transition.source, None)
+        if choice is None:
+            new_transitions.append(transition)
+            continue
+        parser_choice = parser_choices.get(transition.source)
+        choice_transition = ChoiceTransition(
+            transition.action,
+            transition.target,
+            transition.guard,
+        )
+        if parser_choice is not None:
+            parser_choice.transitions.append(choice_transition)
+        else:
+            parser_choices[transition.source] = ParserChoiceVertex(
+                transition.source, choice.parent,
+                [choice_transition]
+            )
+
+    return parser_choices, new_transitions
+
+
 async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
@@ -586,10 +629,9 @@ async def parse(xml: str) -> StateMachine:
     """
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
-    print(cgml_scheme.initial_states)
     platfrom_manager = PlatformManager()
     platform: Platform = await platfrom_manager.get_platform(
-        cgml_scheme.platform, '')  # TODO: Доставать версию платформы
+        cgml_scheme.platform, '1.0')  # TODO: Доставать версию платформы
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')
@@ -640,14 +682,15 @@ async def parse(xml: str) -> StateMachine:
     # 1) Сформировать набор всех сигналов
     # 2) Сгенерировать проверки для вызова сигналов
     start_node, initials = __init_initial_states(cgml_scheme.initial_states)
-    initial_with_transition, transitions_without_vertexes = (
+    initial_with_transition, transitions_without_initials = (
         _add_transition_to_initials(initials, transitions)
     )
+    choices, transitions_without_choices = __create_choices(
+        cgml_scheme.choices, transitions_without_initials)
     all_triggers = __get_all_triggers(
         list(states_with_parents.values()),
-        transitions_without_vertexes)
+        transitions_without_choices)
     signals = __get_signals_set(all_triggers)
-    print(initial_with_transition)
     states_with_initials = _add_initials_to_states(
         initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)
@@ -677,5 +720,6 @@ async def parse(xml: str) -> StateMachine:
         states=[global_state, *list(states_with_initials.values())],
         signals=signals,
         compiling_settings=compiling_settings,
-        initial_states=[*initial_with_transition.values()]
+        initial_states=[*initial_with_transition.values()],
+        choices=list(choices.values())
     )
