@@ -24,7 +24,7 @@ $actions
 status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 }''')
 
-FINAL_ACTION = 'while(true){}'
+FINAL_ACTION = 'status_ = Q_HANDLED();'
 
 ELSE_IF_EXPRESSION = string.Template('''else if ($condition) {
 $actions
@@ -228,7 +228,12 @@ class CppFileWriter:
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
-            await self._write_vertex_definition(FINAL_ACTION + '\n', final, 'final')
+            await self._write_full_line_comment(f'Final pseudostate {final.id}', ' ')
+            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % final.id)
+            await self._insert_string('         QState status_;\n')
+            await self._insert_string(f'         {FINAL_ACTION}\n')
+            await self._insert_string('         return status_;\n')
+            await self._insert_string('}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:

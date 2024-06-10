@@ -1,6 +1,7 @@
 """Module implements handling and processing requests."""
 import json
 import base64
+import os
 import time
 from typing import List, Optional, Set
 from datetime import datetime
@@ -46,7 +47,7 @@ async def create_response(
         binary=[],
         source=[]
     )
-    build_path = base_dir + '/build/'
+    build_path = os.path.join(base_dir, 'build/')
     await AsyncPath(build_path).mkdir(exist_ok=True)
     async for path in AsyncPath(build_path).rglob('*'):
         if await path.is_file():
@@ -149,7 +150,8 @@ class Handler:
         try:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
-            base_dir = BUILD_DIRECTORY + base_dir.replace(' ', '_') + 'sketch/'
+            base_dir = os.path.join(
+                BUILD_DIRECTORY, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)
@@ -157,7 +159,7 @@ class Handler:
             await ws.send_json(response.model_dump())
         except CGMLException as e:
             await Logger.logException()
-            await RequestError(', '.join(e.args)).dropConnection(ws)
+            await RequestError(', '.join(map(str, e.args))).dropConnection(ws)
         except Exception:
             await Logger.logException()
             await RequestError('Internal error!').dropConnection(ws)
@@ -338,7 +340,7 @@ class Handler:
                                'Supported compilers:'
                                f'{supported_compilers}').dropConnection(ws)
 
-        dirname = BUILD_DIRECTORY + str(datetime.now()) + '/'
+        dirname = os.path.join(BUILD_DIRECTORY, str(datetime.now()), '/')
         parser = CJsonParser()
         if compiler == 'arduino-cli':
             dirname += source[0]['filename'] + '/'

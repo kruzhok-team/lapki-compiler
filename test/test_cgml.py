@@ -130,7 +130,7 @@ async def test_generating_code():
     #     'examples/CyberiadaFormat-Blinker.graphml'
     # ),
     pytest.param(
-        'examples/choices.graphzml'
+        'examples/choices.graphml'
     ),
     pytest.param(
         'examples/with-final.graphml'
@@ -157,7 +157,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 10):
+        with create_test_folder(path, 60):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)
