@@ -25,7 +25,7 @@ async def init_platform():
     platform_manager = PlatformManager()
     # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
-        await platform_manager.load_platform('compiler/platforms/Arduino.json')
+        await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/Arduino.json')
 
 
 @contextmanager
@@ -57,7 +57,7 @@ def test_parse(path: str):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('compiler/platforms/Arduino.json',
+        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json',
                      id='create ArduinoUno platform'),
     ]
 )

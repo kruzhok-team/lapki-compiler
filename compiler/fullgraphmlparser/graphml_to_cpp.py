@@ -32,6 +32,7 @@ status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 ELSE_EXPRESSION = string.Template('''else {
 $actions
 status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
+}
 ''')
 
 

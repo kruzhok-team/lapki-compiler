@@ -113,5 +113,14 @@ type/ Counter
         <point x="509.12000000000023" y="337.1200000000004"></point>
       </data>
     </edge>
+        <edge id="blabla" source="spjtslyxubbfmnokvavz" target="sfdmmeidqlauhjhyudvj">
+      <data key="dData">[else]/ QHsmSerial::println(&quot;Меньше или равно&quot;);
+
+</data>
+      <data key="dColor">#FFFFFF</data>
+      <data key="dLabelGeometry">
+        <point x="509.12000000000023" y="337.1200000000004"></point>
+      </data>
+    </edge>
   </graph>
 </graphml>
