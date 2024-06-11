@@ -24,6 +24,8 @@ $actions
 status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
 }''')
 
+FINAL_ACTION = 'status_ = Q_HANDLED();'
+
 ELSE_IF_EXPRESSION = string.Template('''else if ($condition) {
 $actions
 status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
@@ -121,6 +123,7 @@ class CppFileWriter:
                     trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
+        self.final_states = state_machine.final_states
 
     async def _write_unconditional_transition(
         self,
@@ -223,6 +226,15 @@ class CppFileWriter:
         await self._insert_string('\n         return status_;')
         await self._insert_string('\n}\n\n')
 
+    async def _write_final_states_definition(self):
+        for final in self.final_states:
+            await self._write_full_line_comment(f'Final pseudostate {final.id}', ' ')
+            await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {\n' % final.id)
+            await self._insert_string('         QState status_;\n')
+            await self._insert_string(f'         {FINAL_ACTION}\n')
+            await self._insert_string('         return status_;\n')
+            await self._insert_string('}\n\n')
+
     async def write_to_file(self, folder: str, extension: str):
         async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
             self.f = f
@@ -232,8 +244,7 @@ class CppFileWriter:
             await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
-            # await self._write_vertex_definition()
-            await self._insert_file_template('footer_c.txt')
+            await self._write_final_states_definition()
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
@@ -312,10 +323,10 @@ class CppFileWriter:
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
             await self._write_vertexes_declaration([*self.initial_states,
-                                                    *self.choices])
+                                                    *self.choices,
+                                                    *self.final_states
+                                                    ])
             await self._insert_string('\n#ifdef DESKTOP\n')
-            await self._insert_string(
-                'QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
             await self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '^')
             await self._insert_string('extern QHsm * const the_STATE_MACHINE_NAME; /* opaque pointer to the STATE_MACHINE_NAME HSM */\n\n')

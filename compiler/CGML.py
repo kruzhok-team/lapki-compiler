@@ -21,7 +21,8 @@ from cyberiadaml_py.types.elements import (
     CGMLTransition,
     CGMLComponent,
     CGMLInitialState,
-    CGMLChoice
+    CGMLChoice,
+    CGMLFinal
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -34,7 +35,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     create_note,
     SMCompilingSettings,
     ParserInitialVertex,
-    UnconditionalTransition
+    UnconditionalTransition,
+    ParserFinalVertex
 )
 _StartNodeId = str
 _TransitionId = str
@@ -78,6 +80,8 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
 def __parse_actions(actions: str) -> List[InnerEvent]:
     """Parse action field of CGMLElements and returns do,\
         triggers, conditions."""
+    if (actions == ''):
+        return []
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
     for raw_event in raw_events:
@@ -617,6 +621,16 @@ def __create_choices(
     return parser_choices, new_transitions
 
 
+def __create_final_states(
+    cgml_finals: Dict[str, CGMLFinal]
+) -> List[ParserFinalVertex]:
+    finals: List[ParserFinalVertex] = []
+    for final_id, cgml_final in cgml_finals.items():
+        # Родитель в дальнейшем не используется
+        finals.append(ParserFinalVertex(final_id, cgml_final.parent))
+    return finals
+
+
 async def parse(xml: str) -> StateMachine:
     """
     Parse XML with cyberiadaml-py library and convert it\
@@ -630,8 +644,12 @@ async def parse(xml: str) -> StateMachine:
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
+    platform_version = cgml_scheme.meta.values.get('platformVersion', None)
+    if platform_version is None:
+        raise CGMLException('Meta doesnt contains platformVersion.')
+
     platform: Platform = await platfrom_manager.get_platform(
-        cgml_scheme.platform, '1.0')  # TODO: Доставать версию платформы
+        cgml_scheme.platform, platform_version)
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')
@@ -661,14 +679,12 @@ async def parse(xml: str) -> StateMachine:
         cgml_transition = cgml_transitions[transition_id]
         transitions.append(__process_transition(
             transition_id, cgml_transition))
-
     # Parsing state's actions, internal triggers, entry/exit
     states: Dict[_StateId, ParserState] = {}
     cgml_states: Dict[_StateId, CGMLState] = cgml_scheme.states
     for state_id in cgml_states:
         cgml_state = cgml_states[state_id]
         states[state_id] = __process_state(state_id, cgml_state)
-
     states_with_transitions = __connect_transitions_to_states(
         states,
         transitions
@@ -687,6 +703,7 @@ async def parse(xml: str) -> StateMachine:
     )
     choices, transitions_without_choices = __create_choices(
         cgml_scheme.choices, transitions_without_initials)
+    final_states = __create_final_states(cgml_scheme.finals)
     all_triggers = __get_all_triggers(
         list(states_with_parents.values()),
         transitions_without_choices)
@@ -721,5 +738,6 @@ async def parse(xml: str) -> StateMachine:
         signals=signals,
         compiling_settings=compiling_settings,
         initial_states=[*initial_with_transition.values()],
-        choices=list(choices.values())
+        choices=list(choices.values()),
+        final_states=final_states
     )
