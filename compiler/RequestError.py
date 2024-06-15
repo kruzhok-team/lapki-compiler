@@ -1,7 +1,7 @@
 """Module implements sending errors."""
 
 from aiohttp import web
-from compiler.types.inner_types import CompilerResponse
+from compiler.types.inner_types import CompilerResponse, StateMachineResult
 
 
 class RequestError:
@@ -14,7 +14,7 @@ class RequestError:
         """Drop connection and send error."""
         if (not ws.closed):
             await ws.send_json(
-                CompilerResponse(
+                StateMachineResult(
                     result=self.error,
                     return_code=-2,
                     stdout='',
