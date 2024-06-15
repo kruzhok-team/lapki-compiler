@@ -206,10 +206,12 @@ class Handler:
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
         except CGMLException as e:
+            await ws.send_str('error')
             await Logger.logException()
             await RequestError(', '.join(map(str, e.args))).dropConnection(ws)
         except Exception:
             await Logger.logException()
+            await ws.send_str('error')
             await RequestError('Internal error!').dropConnection(ws)
         return ws
 

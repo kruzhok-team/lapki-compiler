@@ -1,7 +1,7 @@
 """Module implements sending errors."""
 
 from aiohttp import web
-from compiler.types.inner_types import CompilerResponse, StateMachineResult
+from compiler.types.inner_types import StateMachineResult
 
 
 class RequestError:
