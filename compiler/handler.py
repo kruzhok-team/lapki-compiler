@@ -13,7 +13,12 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File, StateMachineResult
+from compiler.types.inner_types import (
+    CompilerResponse,
+    File,
+    StateMachineId,
+    StateMachineResult
+)
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -84,7 +89,18 @@ def get_default_libraries() -> Set[str]:
                )
 
 
-async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
+async def create_sm_directory(base_directory: str,
+                              sm_id: str) -> str:
+    """Create project directory for state machine\
+        relative to base directory."""
+    path = os.path.join(base_directory, sm_id)
+    await AsyncPath(os.path.join(base_directory, sm_id)).mkdir(parents=True)
+    return path
+
+
+async def compile_xml(xml: str,
+                      base_dir_path: str
+                      ) -> Dict[StateMachineId, CompilerResult]:
     """
     Compile CGML scheme.
 
@@ -92,25 +108,32 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
 
     Doesn't send anything.
     """
-    sm: Dict[str, StateMachine] = await parse(xml)
-    await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
-    settings: SMCompilingSettings | None = sm.compiling_settings
-    if settings is None:
-        raise Exception('Internal error!')
-    default_library = get_default_libraries()
-    await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                        default_library,
-                                        base_dir_path)
-    await Compiler.include_source_files(settings.platform_id,
-                                        settings.build_files,
-                                        base_dir_path)
-    flags = settings.platform_compiler_settings.flags
-    compiler = settings.platform_compiler_settings.compiler
-    return await Compiler.compile_project(
-        base_dir_path,
-        flags,
-        compiler
-    )
+    state_machines: Dict[str, StateMachine] = await parse(xml)
+    compiler_results: Dict[StateMachineId, CompilerResult] = {}
+    for sm_id, state_machine in state_machines.items():
+        path = await create_sm_directory(base_dir_path, sm_id)
+        await CppFileWriter(state_machine, True, True).write_to_file(
+            os.path.join(path, sm_id), 'ino'
+        )
+        settings: SMCompilingSettings | None = state_machine.compiling_settings
+        if settings is None:
+            raise Exception('Internal error! Settings compile is None!')
+        default_library = get_default_libraries()
+        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                            default_library,
+                                            base_dir_path)
+        await Compiler.include_source_files(settings.platform_id,
+                                            settings.build_files,
+                                            base_dir_path)
+        flags = settings.platform_compiler_settings.flags
+        compiler = settings.platform_compiler_settings.compiler
+        compiler_results[sm_id] = await Compiler.compile_project(
+            base_dir_path,
+            flags,
+            compiler
+        )
+
+    return compiler_results
 
 
 class HandlerException(Exception):
