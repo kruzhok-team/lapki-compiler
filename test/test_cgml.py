@@ -41,10 +41,10 @@ def create_test_folder(path: str, wait_time: int):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
-                     id='parse AutoBorder'),
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
-                     id='parse ArduinoUno')
+        pytest.param('examples/CyberiadaFormat-Blinker.graphml',
+                     id='parse ArduinoUno'),
+        pytest.param('examples/two-blinkers.graphml',
+                     id='parse multidocument')
     ]
 )
 def test_parse(path: str):

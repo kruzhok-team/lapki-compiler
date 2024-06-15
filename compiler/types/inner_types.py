@@ -8,7 +8,7 @@ from compiler.fullgraphmlparser.stateclasses import ParserTrigger
 
 DefaultComponents = Literal['System']
 DefaultActions = Literal['onEnter', 'onExit']
-
+StateMachineId = str
 EventName: TypeAlias = str
 
 
@@ -55,8 +55,8 @@ class File(BaseModel):
         return v
 
 
-class CompilerResponse(BaseModel):
-    """Data, that compiler send."""
+class StateMachineResult(BaseModel):
+    """State machine compiling result."""
 
     result: str
     return_code: int
@@ -65,9 +65,17 @@ class CompilerResponse(BaseModel):
     binary: List[File]
     source: List[File]
 
-    def __str__(self) -> str:
-        return (f'Response: {self.result}, {self.return_code},'
-                f'{self.stdout}, {self.stderr},{len(self.binary)}')
+
+class CompilerResponse(BaseModel):
+    """
+    Data, that compiler send.
+
+    result: compilation status, if at least one state \
+        machine has not been compiled, then the value will be NOTOK.
+    """
+
+    result: str
+    state_machines: Dict[str, StateMachineResult]
 
 
 @dataclass

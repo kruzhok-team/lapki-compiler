@@ -3,7 +3,7 @@ import json
 import base64
 import os
 import time
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
@@ -13,7 +13,7 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File
+from compiler.types.inner_types import CompilerResponse, File, StateMachineResult
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -59,12 +59,12 @@ async def create_response(
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
                 ))
-    response.source.append(await Handler.readSourceFile(
+    response.source.append(await Handler.read_source_file(
         'sketch',
         'ino',
         base_dir)
     )
-    response.source.append(await Handler.readSourceFile(
+    response.source.append(await Handler.read_source_file(
         'sketch',
         'h',
         base_dir)
@@ -92,7 +92,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
 
     Doesn't send anything.
     """
-    sm: StateMachine = await parse(xml)
+    sm: Dict[str, StateMachine] = await parse(xml)
     await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
     settings: SMCompilingSettings | None = sm.compiling_settings
     if settings is None:
@@ -126,7 +126,7 @@ class Handler:
         pass
 
     @staticmethod
-    async def readSourceFile(
+    async def read_source_file(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
         async with async_open(f'{path}{filename}.{extension}', 'r') as f:
@@ -151,7 +151,7 @@ class Handler:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                BUILD_DIRECTORY, base_dir.replace(' ', '_'), 'sketch/')
+                BUILD_DIRECTORY, base_dir.replace(' ', '_'))
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)
@@ -258,7 +258,7 @@ class Handler:
                 build_files,
                 ['compile', *flags],
                 compiler)
-            response = CompilerResponse(
+            response = StateMachineResult(
                 result='NOTOK',
                 return_code=result.return_code,
                 stdout=result.stdout,
@@ -282,12 +282,12 @@ class Handler:
                                 fileContent=b64_data.decode('ascii'),
                             ))
 
-                response.source.append(await Handler.readSourceFile(
+                response.source.append(await Handler.read_source_file(
                     'sketch',
                     extension,
                     source_path)
                 )
-                response.source.append(await Handler.readSourceFile(
+                response.source.append(await Handler.read_source_file(
                     'sketch',
                     'h',
                     source_path)
@@ -365,7 +365,7 @@ class Handler:
             build_files,
             flags,
             compiler)
-        response = CompilerResponse(
+        response = StateMachineResult(
             result='OK',
             return_code=result.return_code,
             stdout=result.stdout,
@@ -391,7 +391,7 @@ class Handler:
         return ws
 
     @staticmethod
-    def calculateBearlogaId() -> str:
+    def calculate_bearloga_id() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
@@ -426,7 +426,7 @@ class Handler:
                     'stderr': '',
                     'source': [{
                         'filename': f'{subplatform}_'
-                        f'{Handler.calculateBearlogaId()}',
+                        f'{Handler.calculate_bearloga_id()}',
                         'extension': '.json',
                         'fileContent': response
                     }],
@@ -467,7 +467,8 @@ class Handler:
             xml: str = await converter.parse(states_with_id, data.initialState)
             await ws.send_json(
                 {
-                    'filename': f'{filename}_{Handler.calculateBearlogaId()}',
+                    'filename': (f'{filename}_'
+                                 f'{Handler.calculate_bearloga_id()}'),
                     'extension': 'graphml',
                     'fileContent': xml
                 })
