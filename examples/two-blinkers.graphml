@@ -25,6 +25,8 @@
 
 standardVersion/ 1.0
 
+platformVersion/ 1.0
+
 name/ Arduino Blinker
 
 author/ Lapki IDE TEAM
@@ -69,9 +71,9 @@ description/ Программный таймер.
 
    <node id="diod1">
         <data key="dName">Включен</data>
-        <data key="dData">entry propagate/
-LED1.on()
-timer1.start(1000)
+        <data key="dData">entry/
+LED1.on();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
@@ -82,8 +84,8 @@ timer1.start(1000)
     <node id="diod2">
         <data key="dName">Выключен</data>
         <data key="dData">entry/
-LED1.off()
-timer1.start(1000)
+LED1.off();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
@@ -111,14 +113,6 @@ timer1.start(1000)
         <data key="dLabelGeometry">
             <point x="457" y="173"/>
         </data> 
-    </edge>
-
-    <edge id="edge4" source="diod2" target="diod1">
-        <data key="dData">[condition]/ blabla</data>
-        <data key="dLabelGeometry">
-            <point x="16" y="175"/>
-        </data> 
-        <data key="dColor">#F24C3D</data>
     </edge>
 </graph>
 
@@ -160,9 +154,9 @@ description/ Программный таймер.
 
    <node id="diod1">
         <data key="dName">Включен</data>
-        <data key="dData">entry propagate/
-LED1.on()
-timer1.start(1000)
+        <data key="dData">entry/
+LED1.on();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
@@ -173,8 +167,8 @@ timer1.start(1000)
     <node id="diod2">
         <data key="dName">Выключен</data>
         <data key="dData">entry/
-LED1.off()
-timer1.start(1000)
+LED1.off();
+timer1.start(1000);
 
         </data>
         <data key="dGeometry">
@@ -202,14 +196,6 @@ timer1.start(1000)
         <data key="dLabelGeometry">
             <point x="457" y="173"/>
         </data> 
-    </edge>
-
-    <edge id="edge4" source="diod2" target="diod1">
-        <data key="dData">[condition]/ blabla</data>
-        <data key="dLabelGeometry">
-            <point x="16" y="175"/>
-        </data> 
-        <data key="dColor">#F24C3D</data>
     </edge>
 </graph>
 </graphml>

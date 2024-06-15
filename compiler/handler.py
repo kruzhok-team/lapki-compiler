@@ -35,46 +35,65 @@ from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
 from compiler.Logger import Logger
 
 
+def get_sm_path(base_directory: str,
+                sm_id: str) -> StateMachineId:
+    """Get str path to state machine project."""
+    return os.path.join(base_directory, sm_id)
+
+
 async def create_response(
         base_dir: str,
-        compiler_result: CompilerResult) -> CompilerResponse:
+        compiler_results: Dict[StateMachineId, CompilerResult]
+) -> CompilerResponse:
     """
     Get source files, binary files from\
         directory and create CompilerResponse.
 
         Doesn't send anything.
     """
-    response = CompilerResponse(
-        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
-        return_code=compiler_result.return_code,
-        stdout=compiler_result.stdout,
-        stderr=compiler_result.stderr,
-        binary=[],
-        source=[]
+    compiler_response = CompilerResponse(
+        result='OK',
+        state_machines={}
     )
-    build_path = os.path.join(base_dir, 'build/')
-    await AsyncPath(build_path).mkdir(exist_ok=True)
-    async for path in AsyncPath(build_path).rglob('*'):
-        if await path.is_file():
-            async with async_open(path, 'rb') as f:
-                binary = await f.read()
-                b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(File(
-                    filename=path.name.split('.')[0],
-                    extension=''.join(path.suffixes),
-                    fileContent=b64_data.decode('ascii'),
-                ))
-    response.source.append(await Handler.read_source_file(
-        'sketch',
-        'ino',
-        base_dir)
-    )
-    response.source.append(await Handler.read_source_file(
-        'sketch',
-        'h',
-        base_dir)
-    )
-    return response
+    for sm_id, compiler_result in compiler_results.items():
+        path_to_sm = get_sm_path(base_dir, sm_id)
+        if compiler_result.return_code == 0:
+            result = 'OK'
+        else:
+            result = 'NOTOK'
+            compiler_response.result = 'NOTOK'
+        response = StateMachineResult(
+            result=result,
+            return_code=compiler_result.return_code,
+            stdout=compiler_result.stdout,
+            stderr=compiler_result.stderr,
+            binary=[],
+            source=[]
+        )
+        build_path = os.path.join(path_to_sm, 'build/')
+        await AsyncPath(build_path).mkdir(exist_ok=True)
+        async for path in AsyncPath(build_path).rglob('*'):
+            if await path.is_file():
+                async with async_open(path, 'rb') as f:
+                    binary = await f.read()
+                    b64_data: bytes = base64.b64encode(binary)
+                    response.binary.append(File(
+                        filename=path.name.split('.')[0],
+                        extension=''.join(path.suffixes),
+                        fileContent=b64_data.decode('ascii'),
+                    ))
+        response.source.append(await Handler.read_source_file(
+            sm_id,
+            'ino',
+            path_to_sm)
+        )
+        response.source.append(await Handler.read_source_file(
+            sm_id,
+            'h',
+            path_to_sm)
+        )
+        compiler_response.state_machines[sm_id] = response
+    return compiler_response
 
 
 def get_default_libraries() -> Set[str]:
@@ -93,8 +112,8 @@ async def create_sm_directory(base_directory: str,
                               sm_id: str) -> str:
     """Create project directory for state machine\
         relative to base directory."""
-    path = os.path.join(base_directory, sm_id)
-    await AsyncPath(os.path.join(base_directory, sm_id)).mkdir(parents=True)
+    path = get_sm_path(base_directory, sm_id)
+    await AsyncPath(path).mkdir(parents=True)
     return path
 
 
@@ -106,6 +125,9 @@ async def compile_xml(xml: str,
 
     This function generate code from scheme, compile it.
 
+    A separate project is created for each state machine.
+    Each state machine is compiled separately.
+
     Doesn't send anything.
     """
     state_machines: Dict[str, StateMachine] = await parse(xml)
@@ -113,7 +135,7 @@ async def compile_xml(xml: str,
     for sm_id, state_machine in state_machines.items():
         path = await create_sm_directory(base_dir_path, sm_id)
         await CppFileWriter(state_machine, True, True).write_to_file(
-            os.path.join(path, sm_id), 'ino'
+            path, 'ino'
         )
         settings: SMCompilingSettings | None = state_machine.compiling_settings
         if settings is None:
@@ -121,14 +143,14 @@ async def compile_xml(xml: str,
         default_library = get_default_libraries()
         await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                             default_library,
-                                            base_dir_path)
+                                            path)
         await Compiler.include_source_files(settings.platform_id,
                                             settings.build_files,
-                                            base_dir_path)
+                                            path)
         flags = settings.platform_compiler_settings.flags
         compiler = settings.platform_compiler_settings.compiler
         compiler_results[sm_id] = await Compiler.compile_project(
-            base_dir_path,
+            path,
             flags,
             compiler
         )
@@ -152,7 +174,8 @@ class Handler:
     async def read_source_file(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
-        async with async_open(f'{path}{filename}.{extension}', 'r') as f:
+        async with async_open(os.path.join(path, f'{filename}.{extension}'),
+                              'r') as f:
             data = await f.read()
         return File(
             filename=filename,
@@ -160,7 +183,7 @@ class Handler:
             fileContent=data
         )
 
-    @staticmethod
+    @ staticmethod
     async def handle_cgml_compile(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
@@ -176,7 +199,9 @@ class Handler:
             base_dir = os.path.join(
                 BUILD_DIRECTORY, base_dir.replace(' ', '_'))
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
+            compiler_result: Dict[StateMachineId, CompilerResult] = (
+                await compile_xml(xml, base_dir)
+            )
             response = await create_response(base_dir, compiler_result)
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
@@ -188,7 +213,7 @@ class Handler:
             await RequestError('Internal error!').dropConnection(ws)
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_ws_compile(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
@@ -334,7 +359,7 @@ class Handler:
             await ws.close()
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_ws_compile_source(request: web.Request):
         """
         Legacy handler for compiling from source.
@@ -413,12 +438,12 @@ class Handler:
 
         return ws
 
-    @staticmethod
+    @ staticmethod
     def calculate_bearloga_id() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
-    @staticmethod
+    @ staticmethod
     async def handle_berloga_import(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
@@ -465,7 +490,7 @@ class Handler:
 
         return ws
 
-    @staticmethod
+    @ staticmethod
     async def handle_berloga_export(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):

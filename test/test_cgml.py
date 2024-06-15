@@ -17,6 +17,7 @@ from compiler.types.inner_types import InnerEvent, InnerTrigger
 from compiler.types.platform_types import Platform
 from compiler.CGML import __parse_actions, parse
 from compiler.PlatformManager import PlatformManager
+from compiler.CGML import parse
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -129,17 +130,20 @@ async def test_generating_code():
     # pytest.param(
     #     'examples/CyberiadaFormat-Blinker.graphml'
     # ),
+    # pytest.param(
+    #     'examples/choices.graphml'
+    # ),
+    # pytest.param(
+    #     'examples/with-final.graphml'
+    # ),
+    # pytest.param(
+    #     'examples/two_choices.graphml'
+    # ),
+    # pytest.param(
+    #     'examples/initial_states.graphml'
+    # ),
     pytest.param(
-        'examples/choices.graphml'
-    ),
-    pytest.param(
-        'examples/with-final.graphml'
-    ),
-    pytest.param(
-        'examples/two_choices.graphml'
-    ),
-    pytest.param(
-        'examples/initial_states.graphml'
+        'examples/two-blinkers.graphml'
     ),
     # pytest.param(
     #     'examples/with-defer.xml'
@@ -156,12 +160,14 @@ async def test_compile_schemes(scheme_path: str):
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()
     with open(scheme_path, 'r') as f:
-        path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 60):
+        path = test_path + '/test_project/'
+        with create_test_folder(path, 5):
             data = f.read()
+            parsed_data = await parse(data)
             result = await compile_xml(data, path)
             await create_response(path, result)
-            dir = AsyncPath(path + 'build/')
-            print(result.stderr)
-            filecount = len([file async for file in dir.iterdir()])
-            assert filecount != 0
+            for sm_id in parsed_data.keys():
+                dir = AsyncPath(os.path.join(path, sm_id, 'build/'))
+                print(result[sm_id].stderr)
+                filecount = len([file async for file in dir.iterdir()])
+                assert filecount != 0

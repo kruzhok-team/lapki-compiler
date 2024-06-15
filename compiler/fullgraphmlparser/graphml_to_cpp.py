@@ -70,6 +70,7 @@ class CppFileWriter:
                  create_loop=False) -> None:
         self.create_loop = create_loop
         self.create_setup = create_setup
+        self.sm_id = state_machine.id
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
         notes_mapping: List[Tuple[str, str]] = [
@@ -236,7 +237,7 @@ class CppFileWriter:
             await self._insert_string('}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
-        async with async_open(os.path.join(folder, f'{self.sm_name}.{extension}'), 'w') as f:
+        async with async_open(os.path.join(folder, f'{self.sm_id}.{extension}'), 'w') as f:
             self.f = f
             await self._insert_file_template('preamble_c.txt')
             await self._write_constructor()
@@ -250,9 +251,9 @@ class CppFileWriter:
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
                 # Ставим дилей, так как без него в Serial
                 # не выводится сообщения из глобального начального состояния
-                await self._insert_string('\n\tSketch_ctor();')
+                await self._insert_string('\n\tSTATE_MACHINE_CAPITALIZED_NAME_ctor();')
                 await self._insert_string('\n\tQEvt event;')
-                await self._insert_string('\n\tQMsm_init(the_sketch, &event);')
+                await self._insert_string(f'\n\tQMsm_init(the_{self.sm_id}, &event);')
                 await self._insert_string('\n}')
             if self.notes_dict['loop'] or self.create_loop:
                 await self._insert_string('\nvoid loop() {')
@@ -265,45 +266,45 @@ class CppFileWriter:
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
                 await self._insert_string('//End of c code from diagram\n\n\n')
             self.f = None
-        async with async_open(os.path.join(folder, 'User.h'), "w") as f:
-            self.f = f
-            await self._insert_file_template('user_preamble_h.txt')
+        # async with async_open(os.path.join(folder, 'User.h'), "w") as f:
+        #     self.f = f
+        #     await self._insert_file_template('user_preamble_h.txt')
 
-            if self.notes_dict['user_variables_h']:
-                await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
-                self.userFlag = True
-            if self.notes_dict['user_methods_c']:
-                await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
-                self.userFlag = True
-            await self._insert_file_template('user_footer_h.txt')
+        #     if self.notes_dict['user_variables_h']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
+        #         self.userFlag = True
+        #     if self.notes_dict['user_methods_c']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
+        #         self.userFlag = True
+        #     await self._insert_file_template('user_footer_h.txt')
 
-        async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
-            self.f = f
+        # async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
+        #     self.f = f
 
-            if self.notes_dict['user_variables_h']:
-                await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
+        #     if self.notes_dict['user_variables_h']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
 
-            if self.notes_dict['user_methods_h']:
-                await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
+        #     if self.notes_dict['user_methods_h']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
 
-        async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
-            self.f = f
-            await self._insert_file_template('user_preamble_c.txt')
+        # async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
+        #     self.f = f
+        #     await self._insert_file_template('user_preamble_c.txt')
 
-            await self._insert_string('// Start variables\n')
-            if self.notes_dict['user_variables_c']:
-                await self._insert_string('\n'.join(self.notes_dict['user_variables_c'].split('\n')[1:]) + '\n')
-            await self._insert_string('// end variables\n')
+        #     await self._insert_string('// Start variables\n')
+        #     if self.notes_dict['user_variables_c']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_c'].split('\n')[1:]) + '\n')
+        #     await self._insert_string('// end variables\n')
 
-            if self.notes_dict['user_methods_c']:
-                await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
+        #     if self.notes_dict['user_methods_c']:
+        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
 
-        async with async_open(os.path.join(folder, '%s.h' % self.sm_name), 'w') as f:
+        async with async_open(os.path.join(folder, '%s.h' % self.sm_id), 'w') as f:
             self.f = f
 
             await self._insert_file_template('preamble_h.txt')
-            if self.userFlag:
-                await self._insert_string('#include "User.h"\n')
+            # if self.userFlag:
+            # await self._insert_string('#include "User.h"\n')
             if self.notes_dict['raw_h_code']:
                 await self._insert_string('//Start of h code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_h_code'].split('\n')[1:]) + '\n')
@@ -329,15 +330,15 @@ class CppFileWriter:
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
             await self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '^')
-            await self._insert_string('extern QHsm * const the_STATE_MACHINE_NAME; /* opaque pointer to the STATE_MACHINE_NAME HSM */\n\n')
+            await self._insert_string('extern QHsm * const the_STATE_MACHINE_LOWERED_NAME; /* opaque pointer to the STATE_MACHINE_LOWERED_NAME HSM */\n\n')
 
-            await self._insert_string('typedef struct STATE_MACHINE_NAMEQEvt {\n')
+            await self._insert_string('typedef struct STATE_MACHINE_LOWERED_NAMEQEvt {\n')
             await self._insert_string('    QEvt super;\n')
             event_fields: str = self.notes_dict['event_fields']
             await self._insert_string('    ' + '\n    '.join(event_fields.split('\n')[1:]) + '\n')
-            await self._insert_string('} STATE_MACHINE_NAMEQEvt;\n\n')
+            await self._insert_string('} STATE_MACHINE_LOWERED_NAMEQEvt;\n\n')
             await self._insert_string(get_enum(self.player_signal) + '\n')
-            await self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
+            await self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_LOWERED_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
             await self._write_full_line_comment('.$declare${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
             await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
             await self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
@@ -365,7 +366,7 @@ class CppFileWriter:
             await self._insert_string('{\n')
         else:
             await self._insert_string('void) {\n')
-        await self._insert_string('    STATE_MACHINE_CAPITALIZED_NAME *me = &STATE_MACHINE_NAME;\n')
+        await self._insert_string('    STATE_MACHINE_CAPITALIZED_NAME *me = &STATE_MACHINE_LOWERED_NAME;\n')
         constructor_code: str = self.notes_dict['constructor_code']
         await self._insert_string('     ' + '\n    '.join(constructor_code.replace('\r', '').split('\n')[1:]))
         await self._insert_string('\n')
@@ -400,14 +401,17 @@ class CppFileWriter:
         return await self._insert_string(prefix + shortened_guard + suffix)
 
     async def _write_full_line_comment(self, text: str, filler: str):
-        await self._insert_string(('/*' + text.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name()) + ' ').ljust(76, filler) + '*/\n')
+        await self._insert_string(('/*' + text.replace('STATE_MACHINE_NAME', self.sm_id).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name()) + ' ').ljust(76, filler) + '*/\n')
 
     def _sm_capitalized_name(self) -> str:
-        return self.sm_name[0].upper() + self.sm_name[1:]
+        return self.sm_id[0].upper() + self.sm_id[1:]
+
+    def _sm_lowered_name(self) -> str:
+        return self.sm_id[0].lower() + self.sm_id[1:]
 
     async def _insert_string(self, s: str):
         await self.f.write(re.sub('[ ]*\n', '\n',
-                                  s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
+                                  s.replace('STATE_MACHINE_LOWERED_NAME', self._sm_lowered_name()).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name()).replace('STATE_MACHINE_NAME', self.sm_id)))
 
     async def _insert_file_template(self, filename: str):
         async with async_open(os.path.join(MODULE_PATH, 'templates', filename)) as input_file:

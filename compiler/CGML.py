@@ -53,7 +53,7 @@ _CALL_FUNCTION_TEMPLATE = Template('$id$delimeter$method($args);')
 _CHECK_SIGNAL_TEMPLATE = Template(
     """
 if($condition) {
-    SIMPLE_DISPATCH(the_sketch, $signal);
+    SIMPLE_DISPATCH(the_STATE_MACHINE_NAME, $signal);
 }
 """
 )
