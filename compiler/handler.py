@@ -183,7 +183,7 @@ class Handler:
             fileContent=data
         )
 
-    @ staticmethod
+    @staticmethod
     async def handle_cgml_compile(
         request: web.Request,
         ws: Optional[web.WebSocketResponse] = None
@@ -215,7 +215,7 @@ class Handler:
             await RequestError('Internal error!').dropConnection(ws)
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_ws_compile(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
@@ -254,12 +254,12 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(
+                    build_files = await Compiler.get_build_files(
                         libraries,
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
@@ -275,28 +275,28 @@ class Handler:
                     # type: ignore
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    build_files = await Compiler.getBuildFiles(
+                    build_files = await Compiler.get_build_files(
                         libraries,
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.h',
                         Compiler.DEFAULT_LIBRARY_ID
                     )
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.ino',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
@@ -361,7 +361,7 @@ class Handler:
             await ws.close()
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_ws_compile_source(request: web.Request):
         """
         Legacy handler for compiling from source.
@@ -405,7 +405,7 @@ class Handler:
             platform = 'cpp'
         else:
             platform = 'arduino'
-        build_files: Set[str] = await Compiler.getBuildFiles(
+        build_files: Set[str] = await Compiler.get_build_files(
             libraries=set(),
             compiler=compiler,
             directory=dirname,
@@ -440,12 +440,12 @@ class Handler:
 
         return ws
 
-    @ staticmethod
+    @staticmethod
     def calculate_bearloga_id() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
-    @ staticmethod
+    @staticmethod
     async def handle_berloga_import(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):
@@ -492,7 +492,7 @@ class Handler:
 
         return ws
 
-    @ staticmethod
+    @staticmethod
     async def handle_berloga_export(
             request: web.Request,
             ws: Optional[web.WebSocketResponse] = None):

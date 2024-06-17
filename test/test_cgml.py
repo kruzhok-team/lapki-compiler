@@ -127,9 +127,9 @@ async def test_generating_code():
 
 
 @pytest.mark.parametrize('scheme_path', [
-    # pytest.param(
-    #     'examples/CyberiadaFormat-Blinker.graphml'
-    # ),
+    pytest.param(
+        'examples/CyberiadaFormat-Blinker.graphml'
+    ),
     # pytest.param(
     #     'examples/choices.graphml'
     # ),
@@ -142,9 +142,9 @@ async def test_generating_code():
     # pytest.param(
     #     'examples/initial_states.graphml'
     # ),
-    pytest.param(
-        'examples/two-blinkers.graphml'
-    ),
+    # pytest.param(
+    #     'examples/two-blinkers.graphml'
+    # ),
     # pytest.param(
     #     'examples/with-defer.xml'
     # ), TODO: Переделать под новый формат
@@ -161,7 +161,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/'
-        with create_test_folder(path, 5):
+        with create_test_folder(path, 0):
             data = f.read()
             parsed_data = await parse(data)
             result = await compile_xml(data, path)
