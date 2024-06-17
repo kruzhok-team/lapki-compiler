@@ -23,13 +23,9 @@ pytest_plugins = ('pytest_asyncio',)
 
 async def init_platform():
     platform_manager = PlatformManager()
-<<<<<<< HEAD
     # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
         await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json')
-=======
-    await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/Arduino.json')
->>>>>>> 3c771d8 (create test project, fix Arduino platform location)
 
 
 @contextmanager
@@ -61,12 +57,7 @@ def test_parse(path: str):
 @pytest.mark.parametrize(
     'path',
     [
-<<<<<<< HEAD
-        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json',
-=======
-        pytest.param('compiler/platforms/ArduinoUno/1.0/Arduino.json',
->>>>>>> 3c771d8 (create test project, fix Arduino platform location)
-                     id='create ArduinoUno platform'),
+        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'),
     ]
 )
 def test_new_platform_creation(path: str):
@@ -75,7 +66,7 @@ def test_new_platform_creation(path: str):
     print(platform)
 
 
-@pytest.mark.parametrize(
+@ pytest.mark.parametrize(
     'raw_trigger, expected',
     [
         pytest.param(
@@ -118,7 +109,7 @@ def test_parse_actions(raw_trigger: str, expected: str):
     assert __parse_actions(raw_trigger) == expected
 
 
-@pytest.mark.asyncio
+@ pytest.mark.asyncio
 async def test_generating_code():
     await init_platform()
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
@@ -133,7 +124,7 @@ async def test_generating_code():
                 print(e)
 
 
-@pytest.mark.parametrize('scheme_path', [
+@ pytest.mark.parametrize('scheme_path', [
     # pytest.param(
     #     'examples/CyberiadaFormat-Blinker.graphml'
     # ),
@@ -156,7 +147,7 @@ async def test_generating_code():
     #     'examples/with-propagate-block.graphml'
     # ), TODO: Переделать под новый формат
 ])
-@pytest.mark.asyncio
+@ pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
     # TODO: Пофиксить баг с повторной загрузкой платформы при
     # запуске всех тестов сразу.
