@@ -211,13 +211,14 @@ class SMCompilingSettings:
 
 @dataclass
 class StateMachine:
-    name: str
+    name: str | None
     start_node: str
     start_action: str
     notes: List[ParserNote]
     states: List[ParserState]
     signals: Set[str]
     # Установлено дефолтное значение, чтобы не трогать легаси.
+    id: str = 'sketch'
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     choices: List[ParserChoiceVertex] = Field(default_factory=list)
     final_states: List[ParserFinalVertex] = Field(default_factory=list)

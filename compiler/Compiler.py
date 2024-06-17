@@ -55,7 +55,7 @@ class Compiler:
         return f'{LIBRARY_PATH}{platform}/'
 
     @staticmethod
-    async def getBuildFiles(
+    async def get_build_files(
             libraries: Set[str],
             compiler: str,
             directory: str,
@@ -166,7 +166,7 @@ class Compiler:
                                              cwd=BUILD_DIRECTORY)
 
     @staticmethod
-    async def includeLibraryFiles(
+    async def include_library_files(
             libraries: Set[str],
             target_directory: str,
             extension: str,

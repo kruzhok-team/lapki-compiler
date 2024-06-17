@@ -3,7 +3,7 @@ import json
 import base64
 import os
 import time
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
@@ -13,7 +13,12 @@ from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File
+from compiler.types.inner_types import (
+    CompilerResponse,
+    File,
+    StateMachineId,
+    StateMachineResult
+)
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -30,46 +35,65 @@ from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
 from compiler.Logger import Logger
 
 
+def get_sm_path(base_directory: str,
+                sm_id: str) -> StateMachineId:
+    """Get str path to state machine project."""
+    return os.path.join(base_directory, sm_id)
+
+
 async def create_response(
         base_dir: str,
-        compiler_result: CompilerResult) -> CompilerResponse:
+        compiler_results: Dict[StateMachineId, CompilerResult]
+) -> CompilerResponse:
     """
     Get source files, binary files from\
         directory and create CompilerResponse.
 
         Doesn't send anything.
     """
-    response = CompilerResponse(
-        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
-        return_code=compiler_result.return_code,
-        stdout=compiler_result.stdout,
-        stderr=compiler_result.stderr,
-        binary=[],
-        source=[]
+    compiler_response = CompilerResponse(
+        result='OK',
+        state_machines={}
     )
-    build_path = os.path.join(base_dir, 'build/')
-    await AsyncPath(build_path).mkdir(exist_ok=True)
-    async for path in AsyncPath(build_path).rglob('*'):
-        if await path.is_file():
-            async with async_open(path, 'rb') as f:
-                binary = await f.read()
-                b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(File(
-                    filename=path.name.split('.')[0],
-                    extension=''.join(path.suffixes),
-                    fileContent=b64_data.decode('ascii'),
-                ))
-    response.source.append(await Handler.readSourceFile(
-        'sketch',
-        'ino',
-        base_dir)
-    )
-    response.source.append(await Handler.readSourceFile(
-        'sketch',
-        'h',
-        base_dir)
-    )
-    return response
+    for sm_id, compiler_result in compiler_results.items():
+        path_to_sm = get_sm_path(base_dir, sm_id)
+        if compiler_result.return_code == 0:
+            result = 'OK'
+        else:
+            result = 'NOTOK'
+            compiler_response.result = 'NOTOK'
+        response = StateMachineResult(
+            result=result,
+            return_code=compiler_result.return_code,
+            stdout=compiler_result.stdout,
+            stderr=compiler_result.stderr,
+            binary=[],
+            source=[]
+        )
+        build_path = os.path.join(path_to_sm, 'build/')
+        await AsyncPath(build_path).mkdir(exist_ok=True)
+        async for path in AsyncPath(build_path).rglob('*'):
+            if await path.is_file():
+                async with async_open(path, 'rb') as f:
+                    binary = await f.read()
+                    b64_data: bytes = base64.b64encode(binary)
+                    response.binary.append(File(
+                        filename=path.name.split('.')[0],
+                        extension=''.join(path.suffixes),
+                        fileContent=b64_data.decode('ascii'),
+                    ))
+        response.source.append(await Handler.read_source_file(
+            sm_id,
+            'ino',
+            path_to_sm)
+        )
+        response.source.append(await Handler.read_source_file(
+            sm_id,
+            'h',
+            path_to_sm)
+        )
+        compiler_response.state_machines[sm_id] = response
+    return compiler_response
 
 
 def get_default_libraries() -> Set[str]:
@@ -84,33 +108,54 @@ def get_default_libraries() -> Set[str]:
                )
 
 
-async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
+async def create_sm_directory(base_directory: str,
+                              sm_id: str) -> str:
+    """Create project directory for state machine\
+        relative to base directory."""
+    path = get_sm_path(base_directory, sm_id)
+    await AsyncPath(path).mkdir(parents=True)
+    return path
+
+
+async def compile_xml(xml: str,
+                      base_dir_path: str
+                      ) -> Dict[StateMachineId, CompilerResult]:
     """
     Compile CGML scheme.
 
     This function generate code from scheme, compile it.
 
+    A separate project is created for each state machine.
+    Each state machine is compiled separately.
+
     Doesn't send anything.
     """
-    sm: StateMachine = await parse(xml)
-    await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
-    settings: SMCompilingSettings | None = sm.compiling_settings
-    if settings is None:
-        raise Exception('Internal error!')
-    default_library = get_default_libraries()
-    await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                        default_library,
-                                        base_dir_path)
-    await Compiler.include_source_files(settings.platform_id,
-                                        settings.build_files,
-                                        base_dir_path)
-    flags = settings.platform_compiler_settings.flags
-    compiler = settings.platform_compiler_settings.compiler
-    return await Compiler.compile_project(
-        base_dir_path,
-        flags,
-        compiler
-    )
+    state_machines: Dict[str, StateMachine] = await parse(xml)
+    compiler_results: Dict[StateMachineId, CompilerResult] = {}
+    for sm_id, state_machine in state_machines.items():
+        path = await create_sm_directory(base_dir_path, sm_id)
+        await CppFileWriter(state_machine, True, True).write_to_file(
+            path, 'ino'
+        )
+        settings: SMCompilingSettings | None = state_machine.compiling_settings
+        if settings is None:
+            raise Exception('Internal error! Settings compile is None!')
+        default_library = get_default_libraries()
+        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                            default_library,
+                                            path)
+        await Compiler.include_source_files(settings.platform_id,
+                                            settings.build_files,
+                                            path)
+        flags = settings.platform_compiler_settings.flags
+        compiler = settings.platform_compiler_settings.compiler
+        compiler_results[sm_id] = await Compiler.compile_project(
+            path,
+            flags,
+            compiler
+        )
+
+    return compiler_results
 
 
 class HandlerException(Exception):
@@ -126,10 +171,11 @@ class Handler:
         pass
 
     @staticmethod
-    async def readSourceFile(
+    async def read_source_file(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
-        async with async_open(f'{path}{filename}.{extension}', 'r') as f:
+        async with async_open(os.path.join(path, f'{filename}.{extension}'),
+                              'r') as f:
             data = await f.read()
         return File(
             filename=filename,
@@ -151,17 +197,21 @@ class Handler:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                BUILD_DIRECTORY, base_dir.replace(' ', '_'), 'sketch/')
+                BUILD_DIRECTORY, base_dir.replace(' ', '_'))
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
+            compiler_result: Dict[StateMachineId, CompilerResult] = (
+                await compile_xml(xml, base_dir)
+            )
             response = await create_response(base_dir, compiler_result)
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
         except CGMLException as e:
+            await ws.send_str('error')
             await Logger.logException()
             await RequestError(', '.join(map(str, e.args))).dropConnection(ws)
         except Exception:
             await Logger.logException()
+            await ws.send_str('error')
             await RequestError('Internal error!').dropConnection(ws)
         return ws
 
@@ -204,12 +254,12 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(
+                    build_files = await Compiler.get_build_files(
                         libraries,
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
@@ -225,28 +275,28 @@ class Handler:
                     # type: ignore
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    build_files = await Compiler.getBuildFiles(
+                    build_files = await Compiler.get_build_files(
                         libraries,
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.h',
                         Compiler.DEFAULT_LIBRARY_ID
                     )
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.ino',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
@@ -258,7 +308,7 @@ class Handler:
                 build_files,
                 ['compile', *flags],
                 compiler)
-            response = CompilerResponse(
+            response = StateMachineResult(
                 result='NOTOK',
                 return_code=result.return_code,
                 stdout=result.stdout,
@@ -282,12 +332,12 @@ class Handler:
                                 fileContent=b64_data.decode('ascii'),
                             ))
 
-                response.source.append(await Handler.readSourceFile(
+                response.source.append(await Handler.read_source_file(
                     'sketch',
                     extension,
                     source_path)
                 )
-                response.source.append(await Handler.readSourceFile(
+                response.source.append(await Handler.read_source_file(
                     'sketch',
                     'h',
                     source_path)
@@ -355,7 +405,7 @@ class Handler:
             platform = 'cpp'
         else:
             platform = 'arduino'
-        build_files: Set[str] = await Compiler.getBuildFiles(
+        build_files: Set[str] = await Compiler.get_build_files(
             libraries=set(),
             compiler=compiler,
             directory=dirname,
@@ -365,7 +415,7 @@ class Handler:
             build_files,
             flags,
             compiler)
-        response = CompilerResponse(
+        response = StateMachineResult(
             result='OK',
             return_code=result.return_code,
             stdout=result.stdout,
@@ -391,7 +441,7 @@ class Handler:
         return ws
 
     @staticmethod
-    def calculateBearlogaId() -> str:
+    def calculate_bearloga_id() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
@@ -426,7 +476,7 @@ class Handler:
                     'stderr': '',
                     'source': [{
                         'filename': f'{subplatform}_'
-                        f'{Handler.calculateBearlogaId()}',
+                        f'{Handler.calculate_bearloga_id()}',
                         'extension': '.json',
                         'fileContent': response
                     }],
@@ -467,7 +517,8 @@ class Handler:
             xml: str = await converter.parse(states_with_id, data.initialState)
             await ws.send_json(
                 {
-                    'filename': f'{filename}_{Handler.calculateBearlogaId()}',
+                    'filename': (f'{filename}_'
+                                 f'{Handler.calculate_bearloga_id()}'),
                     'extension': 'graphml',
                     'fileContent': xml
                 })
