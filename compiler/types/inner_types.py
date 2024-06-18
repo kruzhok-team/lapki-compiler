@@ -41,6 +41,19 @@ class InnerEvent:
     check: str | None = None
 
 
+CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
+
+
+class CommandResult(BaseModel):
+    """The result of the command that was \
+        called during the raw compilation."""
+
+    command: str
+    return_code: int | None
+    stdout: str | bytes
+    stderr: str | bytes
+
+
 class File(BaseModel):
     filename: str
     extension: str
@@ -49,10 +62,17 @@ class File(BaseModel):
     @field_validator('filename', mode='after')
     @classmethod
     def check_file_path(cls, v: str) -> str:
-        """Check, that filepath doesn't is not relative."""
+        """Check, that filepath is not relative."""
         if '..' in v:
             raise ValueError('Path is not correct, remove all .. from path.')
         return v
+
+
+@dataclass
+class BuildFile:
+    filename: str
+    extension: str
+    fileContent: bytes
 
 
 class CompilerResponse(BaseModel):

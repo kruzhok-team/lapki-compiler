@@ -94,6 +94,7 @@ async def _read_platform_files(
             continue
         async with async_open(source, mode) as f:
             content = await f.read()
+            # Убираем точку в начале .suff.suff
             extension = ''.join(source.suffixes).replace('.', '', 1)
             filename = str(source.relative_to(source_dir)).split('.')[0]
             yield File(filename=filename,

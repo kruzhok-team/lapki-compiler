@@ -727,7 +727,8 @@ async def parse(xml: str) -> StateMachine:
         included_libraries,
         build_files,
         platform.id,
-        platform.compilingSettings
+        platform_version,
+        platform.compilingSettings,
     )
     return StateMachine(
         start_node=start_node,

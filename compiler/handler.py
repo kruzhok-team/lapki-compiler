@@ -3,6 +3,7 @@ import json
 import base64
 import os
 import time
+import os.path
 from typing import List, Optional, Set
 from datetime import datetime
 from itertools import chain
@@ -12,8 +13,13 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import CompilerResult
-from compiler.types.inner_types import CompilerResponse, File
+from compiler.Compiler import (
+    CompilerResult,
+)
+from compiler.types.inner_types import (
+    CompilerResponse,
+    File,
+)
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -28,6 +34,8 @@ from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
 from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
 from compiler.Logger import Logger
+
+BinaryFile = File
 
 
 async def create_response(
@@ -54,11 +62,11 @@ async def create_response(
             async with async_open(path, 'rb') as f:
                 binary = await f.read()
                 b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(File(
+                File(
                     filename=path.name.split('.')[0],
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
-                ))
+                )
     response.source.append(await Handler.readSourceFile(
         'sketch',
         'ino',
@@ -99,9 +107,11 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         raise Exception('Internal error!')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                        '',  # TODO: Версия стандарта?
                                         default_library,
                                         base_dir_path)
     await Compiler.include_source_files(settings.platform_id,
+                                        settings.platform_version,
                                         settings.build_files,
                                         base_dir_path)
     flags = settings.platform_compiler_settings.flags
@@ -209,7 +219,7 @@ class Handler:
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
@@ -230,23 +240,23 @@ class Handler:
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.h',
                         Compiler.DEFAULT_LIBRARY_ID
                     )
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.ino',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
@@ -309,85 +319,6 @@ class Handler:
             await Logger.logException()
             await RequestError('Something went wrong').dropConnection(ws)
             await ws.close()
-        return ws
-
-    @staticmethod
-    async def handle_ws_compile_source(request: web.Request):
-        """
-        Legacy handler for compiling from source.
-
-        Send: CompilerResponse | RequestError
-        """
-        ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
-        await ws.prepare(request)
-        data = json.loads(await ws.receive_json())
-        await Logger.logger.info(data)
-        try:
-            source = data['source']
-            flags = data['compilerSettings']['flags']
-            compiler = data['compilerSettings']['compiler']
-        except KeyError as e:
-            await RequestError('Invalid request there'
-                               f' isnt key {e.args[0]}').dropConnection(ws)
-            return ws
-        if compiler not in Compiler.supported_compilers:
-            supported_compilers = list(map(
-                str,
-                Compiler.supported_compilers.keys())
-            )
-            await Logger.logger.error(f'Unsupported compiler {compiler}.')
-            await RequestError(f'Unsupported compiler {compiler}.'
-                               'Supported compilers:'
-                               f'{supported_compilers}').dropConnection(ws)
-
-        dirname = os.path.join(BUILD_DIRECTORY, str(datetime.now()), '/')
-        parser = CJsonParser()
-        if compiler == 'arduino-cli':
-            dirname += source[0]['filename'] + '/'
-
-        await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[File] = parser.getFiles(source)
-        for file in files:
-            path = ''.join([dirname, file.filename, file.extension])
-            async with async_open(path, 'w') as f:
-                await f.write(file.fileContent)
-        if compiler in ['g++', 'gcc']:
-            platform = 'cpp'
-        else:
-            platform = 'arduino'
-        build_files: Set[str] = await Compiler.getBuildFiles(
-            libraries=set(),
-            compiler=compiler,
-            directory=dirname,
-            platform=platform)
-        result: CompilerResult = await Compiler.compile(
-            dirname,
-            build_files,
-            flags,
-            compiler)
-        response = CompilerResponse(
-            result='OK',
-            return_code=result.return_code,
-            stdout=result.stdout,
-            stderr=result.stderr,
-            binary=[],
-            source=[]
-        )
-
-        async for path in AsyncPath(''.join([dirname, '/build/'])).rglob('*'):
-            if await path.is_file():
-                async with async_open(path, 'rb') as f:
-                    binary = await f.read()
-                    b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(File(
-                        filename=path.name,
-                        fileContent=b64_data.decode('ascii'),
-                        extension=''.join(path.suffixes),
-                    ))
-
-        await ws.send_json(response.model_dump())
-        await ws.close()
-
         return ws
 
     @staticmethod

@@ -3,6 +3,7 @@ from aiohttp import web
 from compiler.main_handler import main_handle
 from compiler.handler import Handler
 from compiler.platform_handler import PlatformHandler
+from compiler.raw_compilation import handle_ws_raw_compile
 
 
 def setup_routes(app: web.Application) -> None:
@@ -11,7 +12,7 @@ def setup_routes(app: web.Application) -> None:
         [
             web.get('/main', main_handle),
             web.get('/ws', Handler.handle_ws_compile),
-            web.get('/ws/source', Handler.handle_ws_compile_source),
+            web.get('/ws/raw_compilation', handle_ws_raw_compile),
             web.get('/ws/berloga/import', Handler.handle_berloga_import),
             web.get('/ws/berloga/export', Handler.handle_berloga_export),
             web.get('/cgml', Handler.handle_cgml_compile),
