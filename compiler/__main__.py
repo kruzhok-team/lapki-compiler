@@ -1,3 +1,4 @@
+# PYTHON_ARGCOMPLETE_OK
 """Entry compiler's point."""
 try:
     from .main import sync_main
