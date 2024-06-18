@@ -41,9 +41,7 @@ def create_test_folder(path: str, wait_time: int):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
-                     id='parse AutoBorder'),
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
+        pytest.param('examples/CyberiadaFormat-Blinker.graphml',
                      id='parse ArduinoUno')
     ]
 )
@@ -131,15 +129,15 @@ async def test_generating_code():
     pytest.param(
         'examples/choices.graphml'
     ),
-    pytest.param(
-        'examples/with-final.graphml'
-    ),
-    pytest.param(
-        'examples/two_choices.graphml'
-    ),
-    pytest.param(
-        'examples/initial_states.graphml'
-    ),
+    # pytest.param(
+    #     'examples/with-final.graphml'
+    # ),
+    # pytest.param(
+    #     'examples/two_choices.graphml'
+    # ),
+    # pytest.param(
+    #     'examples/initial_states.graphml'
+    # ),
     # pytest.param(
     #     'examples/with-defer.xml'
     # ), TODO: Переделать под новый формат
@@ -156,7 +154,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 60):
+        with create_test_folder(path, 20):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

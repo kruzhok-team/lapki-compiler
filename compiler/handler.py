@@ -4,28 +4,22 @@ import base64
 import os
 import time
 import os.path
-from typing import List, Optional, Set, get_args
+from typing import List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
-import aiohttp
 from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
-from compiler.config import MODULE_PATH
 from compiler.CGML import parse, CGMLException
 from compiler.Compiler import (
     CompilerResult,
-    get_build_files,
-    get_file_extension
 )
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
-    CompileCommands
 )
-from compiler.platform_handler import check_token
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -35,20 +29,13 @@ from compiler.types.ide_types import IdeStateMachine
 from compiler.GraphmlParser import GraphmlParser
 from compiler.CJsonParser import CJsonParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-from compiler.Compiler import Compiler, run_commands
+from compiler.Compiler import Compiler
 from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
 from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
 from compiler.Logger import Logger
 
 BinaryFile = File
-
-
-def _get_project_directory() -> str:
-    """Generate path to project directory, but don't create it."""
-    base_dir = str(datetime.now()) + '/'
-    base_dir = base_dir.replace(' ', '_')
-    return os.path.join(MODULE_PATH, base_dir)
 
 
 async def create_response(
@@ -75,11 +62,11 @@ async def create_response(
             async with async_open(path, 'rb') as f:
                 binary = await f.read()
                 b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(File(
+                File(
                     filename=path.name.split('.')[0],
                     extension=''.join(path.suffixes),
                     fileContent=b64_data.decode('ascii'),
-                ))
+                )
     response.source.append(await Handler.readSourceFile(
         'sketch',
         'ino',
@@ -132,12 +119,6 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         flags,
         compiler
     )
-
-
-class CompileCommandException(Exception):
-    """Got unknown compile command."""
-
-    ...
 
 
 class HandlerException(Exception):
@@ -236,7 +217,7 @@ class Handler:
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
@@ -257,23 +238,23 @@ class Handler:
                         compiler,
                         path,
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.h',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.h',
                         Compiler.DEFAULT_LIBRARY_ID
                     )
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         libraries,
                         dirname,
                         '.ino',
                         platform)
-                    await Compiler.includeLibraryFiles(
+                    await Compiler.include_library_files(
                         Compiler.c_default_libraries,
                         dirname,
                         '.c',
@@ -336,85 +317,6 @@ class Handler:
             await Logger.logException()
             await RequestError('Something went wrong').dropConnection(ws)
             await ws.close()
-        return ws
-
-    @staticmethod
-    async def handle_ws_raw_compile(
-            request: web.Request,
-            ws: Optional[web.WebSocketResponse] = None,
-            access_token: Optional[str] = None):
-        """
-        Handle for compiling from source.
-
-        Send: CompilerResponse | RequestError
-        """
-        if ws is None:
-            ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
-            await ws.prepare(request)
-        try:
-            if access_token is None:
-                access_token = await ws.receive_str()
-            check_token(access_token)
-            source_files: List[File] = []
-            build_commands: List[str] = []
-            current_file = File(filename='',
-                                extension='',
-                                fileContent=bytes())
-            finished = False
-            async for msg in ws:
-                if finished:
-                    break
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    match msg.data:
-                        case 'file_path':
-                            current_file.filename = await ws.receive_str()
-                            current_file.extension = get_file_extension(
-                                AsyncPath(current_file.filename).suffixes)
-                            break
-                        case 'file_content':
-                            current_file.fileContent = await ws.receive_bytes()
-                            source_files.append(current_file)
-                            current_file = File(filename='',
-                                                extension='',
-                                                fileContent=bytes())
-                            break
-                        case 'build_command':
-                            build_command = await ws.receive_str()
-                            for command in get_args(CompileCommands):
-                                if command in build_command:
-                                    break
-                            else:
-                                raise CompileCommandException(
-                                    f'Unknown compile command {build_command}.'
-                                    'Compile command must contains'
-                                    'one of these words: '
-                                    f'{get_args(CompileCommands)}.'
-                                )
-                            build_commands.append(await ws.receive_str())
-                            break
-                        case 'end':
-                            finished = True
-                            break
-                project_directory = AsyncPath(_get_project_directory())
-                command_result_generator = run_commands(
-                    project_directory, source_files, build_commands
-                )
-                async for command in command_result_generator:
-                    await ws.send_str('command-result')
-                    await ws.send_json(command.model_dump())
-                await ws.send_str('end-commands')
-                build_files_generator = get_build_files(project_directory)
-                async for build_file in build_files_generator:
-                    await ws.send_str('build-file-name')
-                    await ws.send_str(build_file.filename)
-                    await ws.send_str('build-file-extension')
-                    await ws.send_str(build_file.extension)
-                    await ws.send_str('build-file-content')
-                    await ws.send_bytes(build_file.fileContent)
-                await ws.send_str('end-build-files-send')
-        except CompileCommandException as e:
-            await ws.send_str(str(e))
         return ws
 
     @staticmethod
