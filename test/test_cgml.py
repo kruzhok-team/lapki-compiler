@@ -64,7 +64,7 @@ def test_new_platform_creation(path: str):
     print(platform)
 
 
-@ pytest.mark.parametrize(
+@pytest.mark.parametrize(
     'raw_trigger, expected',
     [
         pytest.param(
@@ -107,7 +107,7 @@ def test_parse_actions(raw_trigger: str, expected: str):
     assert __parse_actions(raw_trigger) == expected
 
 
-@ pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_generating_code():
     await init_platform()
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
@@ -122,22 +122,22 @@ async def test_generating_code():
                 print(e)
 
 
-@ pytest.mark.parametrize('scheme_path', [
-    # pytest.param(
-    #     'examples/CyberiadaFormat-Blinker.graphml'
-    # ),
+@pytest.mark.parametrize('scheme_path', [
+    pytest.param(
+        'examples/CyberiadaFormat-Blinker.graphml'
+    ),
     pytest.param(
         'examples/choices.graphml'
     ),
-    # pytest.param(
-    #     'examples/with-final.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/two_choices.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/initial_states.graphml'
-    # ),
+    pytest.param(
+        'examples/with-final.graphml'
+    ),
+    pytest.param(
+        'examples/two_choices.graphml'
+    ),
+    pytest.param(
+        'examples/initial_states.graphml'
+    ),
     # pytest.param(
     #     'examples/with-defer.xml'
     # ), TODO: Переделать под новый формат
@@ -145,7 +145,7 @@ async def test_generating_code():
     #     'examples/with-propagate-block.graphml'
     # ), TODO: Переделать под новый формат
 ])
-@ pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
     # TODO: Пофиксить баг с повторной загрузкой платформы при
     # запуске всех тестов сразу.
@@ -154,7 +154,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 20):
+        with create_test_folder(path, 0):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

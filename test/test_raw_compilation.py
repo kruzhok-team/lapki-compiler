@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+import aioshutil
 import pytest
 from aiopath import AsyncPath
 from compiler.config import MODULE_PATH
@@ -13,7 +14,7 @@ from compiler.Compiler import (
 )
 
 PATH_TO_PROJECT = os.path.join(
-    MODULE_PATH, 'test/test_raw_compilation_project')
+    f'{MODULE_PATH}', '../test/test_raw_compilation_project/')
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -21,7 +22,7 @@ pytest_plugins = ('pytest_asyncio',)
 @pytest.fixture
 def commands() -> List[str]:
     """Commands to compile test project."""
-    return ['make config', 'make build']
+    return ['make', 'make build']
 
 
 @pytest.fixture
@@ -33,15 +34,16 @@ async def project_files() -> List[File]:
         if await path.is_file():
             file_content = await path.read_bytes()
             files.append(
-                File(filename=get_filename(str(path)),
-                     extension=get_file_extension(path.suffixes),
-                     fileContent=file_content)
+                File(filename=get_filename(str(path.relative_to(
+                    PATH_TO_PROJECT))),
+                    extension=get_file_extension(path.suffixes),
+                    fileContent=file_content)
             )
 
     return files
 
 
-async def test_raw_compile(project_files: List[File], commands: List[List[str]]):
+async def test_raw_compile(project_files: List[File], commands: List[str]):
     """Compile test project."""
     commands_generator = run_commands(
         AsyncPath(PATH_TO_PROJECT), project_files, commands)
@@ -51,4 +53,5 @@ async def test_raw_compile(project_files: List[File], commands: List[List[str]])
     i = 0
     async for _ in build_files_generator:
         i += 1
+    await aioshutil.rmtree(os.path.join(PATH_TO_PROJECT, './build'))
     assert i != 0

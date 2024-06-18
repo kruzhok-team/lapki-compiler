@@ -25,7 +25,7 @@ async def get_build_files(
     project_build_directory = project_path.joinpath('./build')
     await project_path.mkdir(exist_ok=True)
     async for path in project_build_directory.rglob('*'):
-        if not path.is_file():
+        if not await path.is_file():
             continue
         async with async_open(path, 'rb') as f:
             file_data = await f.read()
@@ -43,9 +43,11 @@ async def create_project(project_path: AsyncPath,
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
     for source_file in source_files:
-        file_path = project_path.joinpath(
-            f'{source_file.filename}.'
-            f'{source_file.extension}')
+        if source_file.extension != '':
+            file = f'{source_file.filename}.{source_file.extension}'
+        else:
+            file = source_file.filename
+        file_path = os.path.join(str(project_path), file)
         async with async_open(file_path, 'wb') as f:
             await f.write(source_file.fileContent)
 
@@ -58,6 +60,10 @@ async def run_commands(project_directory: AsyncPath,
     Save source files to project directory and run build\
         commands one by one.
 
+    config_commands example: ['make config', 'make run'].
+
+    Each command is splited by ' ' and converted to the form ['make', 'config']
+
     Create project directory if it doesn't exist.
     Create project_directory/build directory if it doesn't exist.
     """
@@ -66,7 +72,7 @@ async def run_commands(project_directory: AsyncPath,
     await build_path.mkdir(parents=True, exist_ok=True)
     for command in config_commands:
         process = await asyncio.create_subprocess_exec(
-            command,
+            *command.split(' '),
             cwd=project_directory,
             text=False,
             stdout=asyncio.subprocess.PIPE,
