@@ -107,9 +107,11 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         raise Exception('Internal error!')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                        '',  # TODO: Версия стандарта?
                                         default_library,
                                         base_dir_path)
     await Compiler.include_source_files(settings.platform_id,
+                                        settings.platform_version,
                                         settings.build_files,
                                         base_dir_path)
     flags = settings.platform_compiler_settings.flags

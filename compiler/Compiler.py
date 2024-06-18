@@ -226,7 +226,7 @@ class Compiler:
                                    ) -> None:
         """Include source files from platform's \
             library directory to target directory."""
-        path = os.path.join(LIBRARY_PATH, f'{platform_id}/{platform_version}/')
+        path = os.path.join(LIBRARY_PATH, platform_id, platform_version)
         path_to_libs = set([os.path.join(path, library)
                            for library in libraries])
         await asyncio.create_subprocess_exec('cp',

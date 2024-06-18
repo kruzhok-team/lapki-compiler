@@ -206,6 +206,7 @@ class SMCompilingSettings:
     import_files: Set[str]
     build_files: Set[str]
     platform_id: str
+    platform_version: str
     platform_compiler_settings: CompilingSettings
 
 
