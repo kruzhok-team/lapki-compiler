@@ -1,5 +1,4 @@
 """Root module."""
-import argparse
 from typing import NoReturn
 import asyncio
 
@@ -9,20 +8,20 @@ from compiler.config import (
     SERVER_PORT,
     SERVER_HOST,
     PLATFORM_DIRECTORY,
-    setup_args
+    configure
 )
 from compiler.PlatformManager import PlatformManager
 from compiler.access_controller import AccessController
 from compiler.Logger import Logger
-import argcomplete
+from compiler.types.config_types import ArgumentParser
+
 
 async def main() -> NoReturn:
     """Config and running app."""
-    args_parser = argparse.ArgumentParser()
-    setup_args(args_parser)
-    argcomplete.autocomplete(args_parser)
+    args_parser = ArgumentParser()
     app = web.Application()
     setup_routes(app)
+    configure(args_parser)
     runner = web.AppRunner(app)
     await runner.setup()
 
