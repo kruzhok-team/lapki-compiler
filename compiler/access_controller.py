@@ -2,7 +2,7 @@
 import uuid
 from typing import Optional, Set
 
-from compiler.config import ACCESS_TOKENS_FILE
+from compiler.config import get_config
 from aiofile import async_open
 from aiopath import AsyncPath
 
@@ -40,16 +40,17 @@ class AccessController:
 
     async def init_access_tokens(self):
         """Read tokens from ACCESS_TOKENS_FILE."""
-        path = AsyncPath(ACCESS_TOKENS_FILE)
+        config = get_config()
+        path = AsyncPath(config.access_token_path)
         if not await path.exists():
             await path.touch()
             return
-        async with async_open(ACCESS_TOKENS_FILE, 'r') as f:
+        async with async_open(config.access_token_path, 'r') as f:
             data: str = await f.read()
             self.__tokens.update(data.split('\n'))
 
     async def __add_token_to_file(self, token: str) -> None:
-        async with async_open(ACCESS_TOKENS_FILE, 'a') as f:
+        async with async_open(get_config().access_token_path, 'a') as f:
             await f.write(token + '\n')
 
     async def create_token(self) -> str:

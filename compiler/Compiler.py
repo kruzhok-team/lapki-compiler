@@ -7,7 +7,7 @@ from typing import Dict, List, Set, TypedDict
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
 from compiler.types.ide_types import SupportedCompilers
-from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
+from compiler.config import get_config
 
 
 class CompilerException(Exception):
@@ -52,7 +52,7 @@ class Compiler:
 
     @staticmethod
     def _path(platform: str) -> str:
-        return f'{LIBRARY_PATH}{platform}/'
+        return f'{get_config().library_path}{platform}/'
 
     @staticmethod
     async def getBuildFiles(
@@ -157,13 +157,14 @@ class Compiler:
                                    ) -> None:
         """Include source files from platform's \
             library directory to target directory."""
-        path = os.path.join(LIBRARY_PATH, f'{platform_id}/')
+        config = get_config()
+        path = os.path.join(config.library_path, f'{platform_id}/')
         path_to_libs = set([os.path.join(path, library)
                            for library in libraries])
         await asyncio.create_subprocess_exec('cp',
                                              *path_to_libs,
                                              target_directory,
-                                             cwd=BUILD_DIRECTORY)
+                                             cwd=config.build_directory)
 
     @staticmethod
     async def includeLibraryFiles(
@@ -182,4 +183,4 @@ class Compiler:
         await asyncio.create_subprocess_exec('cp',
                                              *paths_to_libs,
                                              target_directory,
-                                             cwd=BUILD_DIRECTORY)
+                                             cwd=get_config().build_directory)
