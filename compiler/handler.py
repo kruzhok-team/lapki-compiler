@@ -32,7 +32,7 @@ from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.Compiler import Compiler
 from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
-from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.Logger import Logger
 
 BinaryFile = File
@@ -153,15 +153,16 @@ class Handler:
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Generate code from CGML-scheme and compile it."""
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                BUILD_DIRECTORY, base_dir.replace(' ', '_'), 'sketch/')
+                config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)
@@ -185,9 +186,10 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
@@ -201,7 +203,7 @@ class Handler:
             flags: List[str] = compiler_settings.flags
             dirname = str(datetime.now()) + '/'
             dirname = dirname.replace(' ', '_')
-            path = BUILD_DIRECTORY + dirname
+            path = os.path.join(config.build_directory, dirname)
             extension = Compiler.supported_compilers[compiler]['extension'][0]
             parser = CJsonParser()
             components = list(data.components.values())
@@ -279,8 +281,9 @@ class Handler:
 
             if result.return_code == 0:
                 response.result = 'OK'
-                build_path = ''.join([BUILD_DIRECTORY, dirname, 'build/'])
-                source_path = ''.join([BUILD_DIRECTORY, dirname])
+                build_path = ''.join(
+                    [config.build_directory, dirname, 'build/'])
+                source_path = ''.join([config.build_directory, dirname])
                 async for path in AsyncPath(build_path).rglob('*'):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
@@ -322,6 +325,87 @@ class Handler:
         return ws
 
     @staticmethod
+    async def handle_ws_compile_source(request: web.Request):
+        """
+        Legacy handler for compiling from source.
+
+        Send: CompilerResponse | RequestError
+        """
+        config = get_config()
+        ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
+        await ws.prepare(request)
+        data = json.loads(await ws.receive_json())
+        await Logger.logger.info(data)
+        try:
+            source = data['source']
+            flags = data['compilerSettings']['flags']
+            compiler = data['compilerSettings']['compiler']
+        except KeyError as e:
+            await RequestError('Invalid request there'
+                               f' isnt key {e.args[0]}').dropConnection(ws)
+            return ws
+        if compiler not in Compiler.supported_compilers:
+            supported_compilers = list(map(
+                str,
+                Compiler.supported_compilers.keys())
+            )
+            await Logger.logger.error(f'Unsupported compiler {compiler}.')
+            await RequestError(f'Unsupported compiler {compiler}.'
+                               'Supported compilers:'
+                               f'{supported_compilers}').dropConnection(ws)
+
+        dirname = os.path.join(config.build_directory,
+                               str(datetime.now()), '/')
+        parser = CJsonParser()
+        if compiler == 'arduino-cli':
+            dirname += source[0]['filename'] + '/'
+
+        await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
+        files: List[File] = parser.getFiles(source)
+        for file in files:
+            path = ''.join([dirname, file.filename, file.extension])
+            async with async_open(path, 'w') as f:
+                await f.write(file.fileContent)
+        if compiler in ['g++', 'gcc']:
+            platform = 'cpp'
+        else:
+            platform = 'arduino'
+        build_files: Set[str] = await Compiler.getBuildFiles(
+            libraries=set(),
+            compiler=compiler,
+            directory=dirname,
+            platform=platform)
+        result: CompilerResult = await Compiler.compile(
+            dirname,
+            build_files,
+            flags,
+            compiler)
+        response = CompilerResponse(
+            result='OK',
+            return_code=result.return_code,
+            stdout=result.stdout,
+            stderr=result.stderr,
+            binary=[],
+            source=[]
+        )
+
+        async for path in AsyncPath(''.join([dirname, '/build/'])).rglob('*'):
+            if await path.is_file():
+                async with async_open(path, 'rb') as f:
+                    binary = await f.read()
+                    b64_data: bytes = base64.b64encode(binary)
+                    response.binary.append(File(
+                        filename=path.name,
+                        fileContent=b64_data.decode('ascii'),
+                        extension=''.join(path.suffixes),
+                    ))
+
+        await ws.send_json(response.model_dump())
+        await ws.close()
+
+        return ws
+
+    @staticmethod
     def calculateBearlogaId() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
@@ -335,8 +419,9 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
         filename_without_extension = await ws.receive_str()
@@ -382,8 +467,9 @@ class Handler:
 
         Send: File | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         data = IdeStateMachine(**json.loads(await ws.receive_str()))
         filename = await ws.receive_str()

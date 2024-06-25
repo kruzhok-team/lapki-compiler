@@ -15,7 +15,7 @@ from compiler.access_controller import (
     AccessController,
     AccessControllerException
 )
-from compiler.config import MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.types.inner_types import File
 from compiler.types.platform_types import Platform
 
@@ -133,7 +133,7 @@ async def _prepare_request(ws: Optional[web.WebSocketResponse],
                            request: web.Request) -> web.WebSocketResponse:
     if ws is None:
         ws = web.WebSocketResponse(
-            autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            autoclose=False, max_msg_size=get_config().max_msg_size)
         await ws.prepare(request)
     return ws
 

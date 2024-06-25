@@ -1,6 +1,24 @@
 """Module contains Config class."""
+from dataclasses import dataclass
+
 from tap import Tap
 import argcomplete
+
+
+@dataclass
+class Config:
+    """Compiler configuration."""
+
+    library_path: str
+    server_host: str
+    platform_directory: str
+    server_port: int
+    max_msg_size: int
+    log_path: str
+    access_token_path: str
+    build_directory: str
+    module_directory: str
+    base_path: str
 
 
 class ArgumentParser(Tap):
@@ -22,11 +40,16 @@ class ArgumentParser(Tap):
             '--library-path', help='Path to directory, '
             'that contain platform sources.', required=False)
         self.add_argument('--platform-direcory', help='Path to directory, '
-                          'that contain platform json schemes.', required=False)
+                          'that contain platform json schemes.',
+                          required=False
+                          )
         self.add_argument(
-            '--log-path', help='Path to log file.', required=False)
+            '--log-path', help='Path to log file.', required=False
+        )
         self.add_argument('--access-token-path',
-                          help='Path to file with access tokens.', required=False)
+                          help='Path to file with access tokens.',
+                          required=False
+                          )
         self.add_argument('--max-msg-size',
                           help='Max websocket message size.', required=False)
         argcomplete.autocomplete(self)

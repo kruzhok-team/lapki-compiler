@@ -17,7 +17,7 @@ from pprint import pprint
 
 from aiofile import async_open
 from aiopath import AsyncPath
-from compiler.config import PLATFORM_DIRECTORY, LIBRARY_PATH
+from compiler.config import get_config
 from compiler.types.inner_types import File
 from compiler.types.platform_types import PlatformMeta, Platform
 
@@ -59,7 +59,7 @@ def _get_img_path(id: str, version: str) -> str:
 
     LIBRARY_PATH/id/version/img/
     """
-    return _gen_platform_path(LIBRARY_PATH, id, version) + 'img/'
+    return _gen_platform_path(get_config().library_path, id, version) + 'img/'
 
 
 def _get_source_path(id: str, version: str) -> str:
@@ -68,7 +68,10 @@ def _get_source_path(id: str, version: str) -> str:
 
     LIBRARY_PATH/id/version/source/
     """
-    return _gen_platform_path(LIBRARY_PATH, id, version) + 'source/'
+    return _gen_platform_path(
+        get_config().library_path,
+        id,
+        version) + 'source/'
 
 
 def _get_path_to_platform(id: str, version: str) -> str:
@@ -77,7 +80,8 @@ def _get_path_to_platform(id: str, version: str) -> str:
 
     PLATFORM_DIRECTORY/id/version/id-version.json
     """
-    base_path = _gen_platform_path(PLATFORM_DIRECTORY, id, version)
+    base_path = _gen_platform_path(
+        get_config().platform_directory, id, version)
     return base_path + f'{id}-{version}.json'
 
 
@@ -185,10 +189,11 @@ class PlatformManager:
         - platform image folder
         - platform raw json scheme
         """
+        config = get_config()
         platform_path = _gen_platform_path(
-            PLATFORM_DIRECTORY, platform.id, platform.version)
+            config.platform_directory, platform.id, platform.version)
         platform_library_path = _gen_platform_path(
-            LIBRARY_PATH, platform.id, platform.version)
+            config.library_path, platform.id, platform.version)
         source_path = _get_source_path(platform.id, platform.version)
         img_path = _get_img_path(platform.id, platform.version)
         json_platform = platform.model_dump_json(indent=4)
@@ -245,11 +250,10 @@ class PlatformManager:
                             versions=set((platform.version,)),
                             name=platform.name,
                             author=platform.author)
-            except Exception as e:
-                print(e)
+            except Exception:
                 print(
                     f'Во время обработки файла "{await path.absolute()}"'
-                    f'произошла ошибка! {e}')
+                    f'произошла ошибка!')
 
         print('Были найдены платформы:')
         pprint(dict(self.__versions_info), indent=3)
