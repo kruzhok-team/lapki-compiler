@@ -8,7 +8,6 @@ from compiler.config import get_config
 
 def get_filename(path: str) -> str:
     """Get path without suffixes."""
-    print(path)
     return path.split('.')[0]
 
 
