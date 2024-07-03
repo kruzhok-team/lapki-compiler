@@ -2,6 +2,7 @@
 import asyncio
 import json
 import uuid
+import traceback
 from copy import deepcopy
 from typing import (
     AsyncGenerator,
@@ -253,7 +254,7 @@ class PlatformManager:
             except Exception:
                 print(
                     f'Во время обработки файла "{await path.absolute()}"'
-                    f'произошла ошибка!')
+                    f'произошла ошибка!' + '\n' + traceback.format_exc())
 
         print('Были найдены платформы:')
         pprint(dict(self.__versions_info), indent=3)
