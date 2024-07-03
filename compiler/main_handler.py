@@ -4,7 +4,7 @@ from typing import get_args
 import aiohttp
 from aiohttp import web
 from compiler.Logger import Logger
-from compiler.config import MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.handler import Handler
 from compiler.platform_handler import PlatformHandler
 from compiler.types.ws_types import Message
@@ -12,7 +12,8 @@ from compiler.types.ws_types import Message
 
 async def main_handle(request: web.Request) -> web.WebSocketResponse:
     """Root handler, call other handlers."""
-    ws = web.WebSocketResponse(autoclose=False, max_msg_size=MAX_MSG_SIZE)
+    ws = web.WebSocketResponse(
+        autoclose=False, max_msg_size=get_config().max_msg_size)
     await ws.prepare(request)
     await Logger.logger.info(request)
     token: str | None = None

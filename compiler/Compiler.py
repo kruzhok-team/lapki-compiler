@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
 from aiofile import async_open
 from compiler.types.ide_types import SupportedCompilers
-from compiler.config import LIBRARY_PATH, BUILD_DIRECTORY
+from compiler.config import get_config
 from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
 
@@ -126,7 +126,7 @@ class Compiler:
 
     @staticmethod
     def _path(platform: str) -> str:
-        return f'{LIBRARY_PATH}{platform}/'
+        return f'{get_config().library_path}{platform}/'
 
     @staticmethod
     async def getBuildFiles(
@@ -232,13 +232,14 @@ class Compiler:
                                    ) -> None:
         """Include source files from platform's \
             library directory to target directory."""
-        path = os.path.join(LIBRARY_PATH, platform_id, platform_version)
+        config = get_config()
+        path = os.path.join(config.library_path, platform_id, platform_version)
         path_to_libs = set([os.path.join(path, library)
                            for library in libraries])
         await asyncio.create_subprocess_exec('cp',
                                              *path_to_libs,
                                              target_directory,
-                                             cwd=BUILD_DIRECTORY)
+                                             cwd=config.build_directory)
 
     @staticmethod
     async def include_library_files(
@@ -257,4 +258,4 @@ class Compiler:
         await asyncio.create_subprocess_exec('cp',
                                              *paths_to_libs,
                                              target_directory,
-                                             cwd=BUILD_DIRECTORY)
+                                             cwd=get_config().build_directory)

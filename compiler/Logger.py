@@ -6,7 +6,7 @@ from aiologger.handlers.files import AsyncFileHandler
 from aiologger.loggers.json import JsonLogger
 from aiologger.levels import LogLevel
 from aiologger.formatters.base import Formatter
-from compiler.config import LOG_PATH
+from compiler.config import get_config
 
 
 class Logger:
@@ -17,16 +17,18 @@ class Logger:
     @staticmethod
     async def init_logger() -> None:
         """Initializize and configure logger."""
-        await AsyncPath(LOG_PATH[:LOG_PATH.rfind('/')]).mkdir(parents=True,
-                                                              exist_ok=True)
-        await AsyncPath(LOG_PATH).touch(exist_ok=True)
+        config = get_config()
+        await AsyncPath(config.log_path[:config.log_path.rfind('/')]).mkdir(
+            parents=True,
+            exist_ok=True)
+        await AsyncPath(config.log_path).touch(exist_ok=True)
         Logger.logger = JsonLogger(name='logger', level=LogLevel.DEBUG,
                                    serializer_kwargs={'ensure_ascii': False})
 
         formatter = Formatter(
             '[%(asctime)s] %(filename)s -> %(funcName)s\
                 line:%(lineno)d [%(levelname)s] %(message)s')
-        handler = AsyncFileHandler(filename=LOG_PATH)
+        handler = AsyncFileHandler(filename=config.log_path)
         handler.formatter = formatter
         Logger.logger.add_handler(handler)
 

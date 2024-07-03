@@ -18,6 +18,8 @@ asyncjson = "0.0.1"
 pydantic = "^2.5.2"
 xmltodict = "^0.13.0"
 cyberiadaml-py = "^1.0"
+argcomplete = "^3.4.0"
+typed-argument-parser = "^1.10.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.1.0"

@@ -32,7 +32,7 @@ from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.Compiler import Compiler
 from compiler.JsonConverter import JsonConverter
 from compiler.RequestError import RequestError
-from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.Logger import Logger
 
 BinaryFile = File
@@ -153,15 +153,16 @@ class Handler:
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Generate code from CGML-scheme and compile it."""
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                BUILD_DIRECTORY, base_dir.replace(' ', '_'), 'sketch/')
+                config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result: CompilerResult = await compile_xml(xml, base_dir)
             response = await create_response(base_dir, compiler_result)
@@ -185,9 +186,10 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
@@ -201,7 +203,7 @@ class Handler:
             flags: List[str] = compiler_settings.flags
             dirname = str(datetime.now()) + '/'
             dirname = dirname.replace(' ', '_')
-            path = BUILD_DIRECTORY + dirname
+            path = os.path.join(config.build_directory, dirname)
             extension = Compiler.supported_compilers[compiler]['extension'][0]
             parser = CJsonParser()
             components = list(data.components.values())
@@ -279,8 +281,9 @@ class Handler:
 
             if result.return_code == 0:
                 response.result = 'OK'
-                build_path = ''.join([BUILD_DIRECTORY, dirname, 'build/'])
-                source_path = ''.join([BUILD_DIRECTORY, dirname])
+                build_path = ''.join(
+                    [config.build_directory, dirname, 'build/'])
+                source_path = ''.join([config.build_directory, dirname])
                 async for path in AsyncPath(build_path).rglob('*'):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
@@ -335,8 +338,9 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
         filename_without_extension = await ws.receive_str()
@@ -382,8 +386,9 @@ class Handler:
 
         Send: File | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         data = IdeStateMachine(**json.loads(await ws.receive_str()))
         filename = await ws.receive_str()
