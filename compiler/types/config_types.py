@@ -31,6 +31,7 @@ class ArgumentParser(Tap):
     max_msg_size: str | None = None
     log_path: str | None = None
     access_token_path: str | None = None
+    build_path: str | None = None
 
     def configure(self):
         """Add CLI args to parser."""
@@ -39,8 +40,13 @@ class ArgumentParser(Tap):
         self.add_argument(
             '--library-path', help='Path to directory, '
             'that contain platform sources.', required=False)
-        self.add_argument('--platform-direcory', help='Path to directory, '
+        self.add_argument('--platform-directory', help='Path to directory, '
                           'that contain platform json schemes.',
+                          required=False
+                          )
+        self.add_argument('--build-directory', help='The path to the directory'
+                          ' where the build'
+                          ' will take place',
                           required=False
                           )
         self.add_argument(

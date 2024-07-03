@@ -6,13 +6,14 @@ from typing import TypeVar
 
 from compiler.types.config_types import ArgumentParser, Config
 
+_MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+_BASE_DIRECTORY = _MODULE_PATH + '/'  # "server/"
+
 # НАЧАЛО ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 _SERVER_PORT = 8081
 _SERVER_HOST = 'localhost'
-_MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-
-_ACCESS_TOKENS_FILE = os.path.join(_MODULE_PATH, 'ACCESS_TOKENS.txt')
-_BASE_DIRECTORY = _MODULE_PATH + '/'  # "server/"
+_ACCESS_TOKENS_FILE = os.path.join(
+    _MODULE_PATH, 'ACCESS_TOKENS.txt')
 _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
 _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library/')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms/')
@@ -22,20 +23,21 @@ _MAX_MSG_SIZE = 1024 * 50  # Максимальный размер сообще�
 T = TypeVar('T', str, int)
 
 
-def _update_config() -> Config:
-    return Config(library_path=_LIBRARY_PATH,
-                  server_host=_SERVER_HOST,
-                  platform_directory=_PLATFORM_DIRECTORY,
-                  server_port=_SERVER_PORT,
-                  max_msg_size=_MAX_MSG_SIZE,
-                  log_path=_LOG_PATH,
-                  access_token_path=_ACCESS_TOKENS_FILE,
-                  build_directory=_BUILD_DIRECTORY,
-                  module_directory=_MODULE_PATH,
-                  base_path=_BASE_DIRECTORY)
+def get_default_config() -> Config:
+    """Get config with default values."""
+    return Config(_LIBRARY_PATH,
+                  _SERVER_HOST,
+                  _PLATFORM_DIRECTORY,
+                  _SERVER_PORT,
+                  _MAX_MSG_SIZE,
+                  _LOG_PATH,
+                  _ACCESS_TOKENS_FILE,
+                  _BUILD_DIRECTORY,
+                  _MODULE_PATH,
+                  _BASE_DIRECTORY)
 
 
-_config = _update_config()
+_config = get_default_config()
 
 
 def _choice(flag_arg: str | None,
@@ -52,6 +54,13 @@ def _choice(flag_arg: str | None,
     return default_value
 
 
+def set_config(new_config: Config) -> None:
+    """Set new configuration."""
+    # TODO: Автоматический рестарт с новыми параметрами?
+    global _config
+    _config = new_config
+
+
 def get_config() -> Config:
     """Get current compiler configuration."""
     return _config
@@ -66,29 +75,34 @@ def configure(parser: ArgumentParser):
     2) Environment
     3) config.py
     """
-    global _SERVER_PORT
-    global _SERVER_HOST
-    global _ACCESS_TOKENS_FILE
-    global _LIBRARY_PATH
-    global _PLATFORM_DIRECTORY
-    global _LOG_PATH
-    global _MAX_MSG_SIZE
-    global _config
     args = parser.parse_args()
-    _SERVER_PORT = _choice(
+    server_port = _choice(
         args.server_port, 'LAPKI_COMPILER_SERVER_PORT', _SERVER_PORT)
-    _SERVER_HOST = _choice(
+    server_host = _choice(
         args.server_host, 'LAPKI_COMPILER_SERVER_HOST', _SERVER_HOST)
-    _ACCESS_TOKENS_FILE = _choice(
+    access_token_file = _choice(
         args.access_token_path, 'LAPKI_COMPILER_ACCESS_TOKENS_FILE',
         _ACCESS_TOKENS_FILE)
-    _LIBRARY_PATH = _choice(
+    library_path = _choice(
         args.library_path, 'LAPKI_COMPILER_LIBRARY_PATH', _LIBRARY_PATH)
-    _PLATFORM_DIRECTORY = _choice(
+    platform_directory = _choice(
         args.platform_directory, 'LAPKI_COMPILER_PLATFORM_DIRECTORY',
         _PLATFORM_DIRECTORY)
-    _LOG_PATH = _choice(
+    log_path = _choice(
         args.log_path, 'LAPKI_COMPILER_LOG_PATH', _LOG_PATH)
-    _MAX_MSG_SIZE = _choice(
+    max_msg_size = _choice(
         args.max_msg_size, 'LAPKI_COMPILER_MAX_MSG_SIZE', _MAX_MSG_SIZE)
-    _config = _update_config()
+    build_directory = _choice(
+        args.build_path, 'LAPKI_COMPILER_BUILD_PATH', _BUILD_DIRECTORY)
+    set_config(Config(
+        library_path,
+        server_host,
+        platform_directory,
+        server_port,
+        max_msg_size,
+        log_path,
+        access_token_file,
+        build_directory,
+        _MODULE_PATH,
+        _BASE_DIRECTORY)
+    )
