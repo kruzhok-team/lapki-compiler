@@ -14,7 +14,7 @@ from compiler.types.inner_types import (
 )
 from compiler.platform_handler import check_token
 from compiler.Compiler import run_commands
-from compiler.config import MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.Logger import Logger
 
 
@@ -34,8 +34,9 @@ async def handle_ws_raw_compile(
     Send: CompilerResponse | RequestError
     """
     if ws is None:
+        config = get_config()
         ws = web.WebSocketResponse(
-            autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            autoclose=False, max_msg_size=config.max_msg_size)
         await ws.prepare(request)
     try:
         if access_token is None:
