@@ -41,9 +41,7 @@ def create_test_folder(path: str, wait_time: int):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
-                     id='parse AutoBorder'),
-        pytest.param('examples/CyberiadaFormat-Autoborder.graphml',
+        pytest.param('examples/CyberiadaFormat-Blinker.graphml',
                      id='parse ArduinoUno')
     ]
 )
@@ -57,8 +55,7 @@ def test_parse(path: str):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json',
-                     id='create ArduinoUno platform'),
+        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'),
     ]
 )
 def test_new_platform_creation(path: str):
@@ -126,9 +123,9 @@ async def test_generating_code():
 
 
 @pytest.mark.parametrize('scheme_path', [
-    # pytest.param(
-    #     'examples/CyberiadaFormat-Blinker.graphml'
-    # ),
+    pytest.param(
+        'examples/CyberiadaFormat-Blinker.graphml'
+    ),
     pytest.param(
         'examples/choices.graphml'
     ),
@@ -157,7 +154,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 60):
+        with create_test_folder(path, 0):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)
