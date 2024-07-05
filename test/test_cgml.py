@@ -9,7 +9,7 @@ from contextlib import contextmanager
 
 import pytest
 from aiopath import AsyncPath
-from compiler.config import BUILD_DIRECTORY
+from compiler.config import get_config
 from compiler.handler import compile_xml, create_response
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
@@ -138,23 +138,23 @@ async def test_generating_code():
     pytest.param(
         'examples/initial_states.graphml'
     ),
-    # pytest.param(
-    #     'examples/with-defer.xml'
-    # ), TODO: Переделать под новый формат
-    # pytest.param(
-    #     'examples/with-propagate-block.graphml'
-    # ), TODO: Переделать под новый формат
+    pytest.param(
+        'examples/with-defer.xml'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
     # TODO: Пофиксить баг с повторной загрузкой платформы при
     # запуске всех тестов сразу.
-    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
+    await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 0):
+        with create_test_folder(path, 60):
             data = f.read()
             result = await compile_xml(data, path)
             await create_response(path, result)

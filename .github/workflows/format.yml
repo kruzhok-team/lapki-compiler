@@ -24,3 +24,4 @@ jobs:
       run: |
         source ./.venv/bin/activate
         flake8 ./compiler/
+        flake8 ./test/
