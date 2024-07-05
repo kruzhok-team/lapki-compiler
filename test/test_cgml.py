@@ -146,7 +146,8 @@ async def test_generating_code():
     ),
 ])
 @pytest.mark.asyncio
-async def test_compile_schemes(scheme_path: str):
+async def test_compile_schemes(scheme_path: str,
+                               platform_manager: PlatformManager):
     # TODO: Пофиксить баг с повторной загрузкой платформы при
     # запуске всех тестов сразу.
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
@@ -161,4 +162,5 @@ async def test_compile_schemes(scheme_path: str):
             dir = AsyncPath(path + 'build/')
             print(result.stderr)
             filecount = len([file async for file in dir.iterdir()])
+            await platform_manager.delete_platform('ArduinoUno')
             assert filecount != 0

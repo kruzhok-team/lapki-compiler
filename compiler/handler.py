@@ -16,6 +16,7 @@ from compiler.CGML import parse, CGMLException
 from compiler.Compiler import (
     CompilerResult,
 )
+from compiler.PlatformManager import get_source_path
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
@@ -216,11 +217,6 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
                     await Compiler.include_library_files(
                         libraries,
                         dirname,
@@ -237,37 +233,25 @@ class Handler:
                     # type: ignore
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    build_files = await Compiler.getBuildFiles(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.h',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.h',
-                        Compiler.DEFAULT_LIBRARY_ID
-                    )
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.ino',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.c',
-                        Compiler.DEFAULT_LIBRARY_ID)
+                    ino_libraries = {f'{library}.ino'
+                                     for library in libraries}
+                    h_libraries = {f'{library}.h'
+                                   for library in libraries}
+                    libraries = h_libraries | ino_libraries
+                    await Compiler.include_source_files(platform,
+                                                        '1.0',
+                                                        libraries,
+                                                        path)
+                    await Compiler.include_source_files(
+                        Compiler.DEFAULT_LIBRARY_ID,
+                        '1.0',
+                        get_default_libraries(),
+                        path)
                     await Logger.logger.info(f'{libraries} included')
 
             result: CompilerResult = await Compiler.compile(
                 path,
-                build_files,
+                set(),
                 ['compile', *flags],
                 compiler)
             response = CompilerResponse(

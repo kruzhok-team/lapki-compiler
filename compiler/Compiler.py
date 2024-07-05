@@ -7,6 +7,7 @@ from typing import Dict, List, Set, TypedDict, AsyncGenerator
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
 from aiofile import async_open
+from compiler.PlatformManager import get_source_path
 from compiler.types.ide_types import SupportedCompilers
 from compiler.config import get_config
 from compiler.types.inner_types import CommandResult, BuildFile, File
@@ -129,37 +130,6 @@ class Compiler:
         return f'{get_config().library_path}{platform}/'
 
     @staticmethod
-    async def getBuildFiles(
-            libraries: Set[str],
-            compiler: str,
-            directory: str,
-            platform: str) -> Set[str]:
-        """Get set of libraries path, thats need to compile."""
-        build_files: Set[str] = set()
-        for glob in Compiler.supported_compilers[compiler]['extension']:
-            async for file in AsyncPath(directory).glob(glob):
-                build_files.add(file.name)
-
-        match compiler:
-            # get compiled object files
-            case 'gcc' | 'g++':
-                for library in libraries:
-                    build_files.add(
-                        ''.join(
-                            [
-                                '../',
-                                Compiler._path(platform),
-                                '/build/',
-                                library,
-                                '.o'
-                            ]
-                        )
-                    )
-            case _:
-                ...
-        return build_files
-
-    @staticmethod
     async def compile_project(
         base_dir: str,
         flags: List[str],
@@ -233,7 +203,7 @@ class Compiler:
         """Include source files from platform's \
             library directory to target directory."""
         config = get_config()
-        path = os.path.join(config.library_path, platform_id, platform_version)
+        path = get_source_path(platform_id, platform_version)
         path_to_libs = set([os.path.join(path, library)
                            for library in libraries])
         await asyncio.create_subprocess_exec('cp',

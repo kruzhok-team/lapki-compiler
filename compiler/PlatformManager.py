@@ -45,7 +45,7 @@ async def _delete_platform(platform_id: str) -> None:
         # И убираем последний слэш
         return await AsyncPath(func(platform_id, '')[:-1]).parent.absolute()
 
-    paths = [_get_path_to_platform, _get_source_path]
+    paths = [get_path_to_platform, get_source_path]
     for path_func in paths:
         path_to_platform = await path_without_version(
             platform_id,
@@ -63,7 +63,7 @@ def _get_img_path(id: str, version: str) -> str:
     return _gen_platform_path(get_config().library_path, id, version) + 'img/'
 
 
-def _get_source_path(id: str, version: str) -> str:
+def get_source_path(id: str, version: str) -> str:
     """
     Get path to source dir.
 
@@ -75,7 +75,7 @@ def _get_source_path(id: str, version: str) -> str:
         version) + 'source/'
 
 
-def _get_path_to_platform(id: str, version: str) -> str:
+def get_path_to_platform(id: str, version: str) -> str:
     """
     Get path to platform JSON scheme.
 
@@ -195,7 +195,7 @@ class PlatformManager:
             config.platform_directory, platform.id, platform.version)
         platform_library_path = _gen_platform_path(
             config.library_path, platform.id, platform.version)
-        source_path = _get_source_path(platform.id, platform.version)
+        source_path = get_source_path(platform.id, platform.version)
         img_path = _get_img_path(platform.id, platform.version)
         json_platform = platform.model_dump_json(indent=4)
         await AsyncPath(platform_path).mkdir(parents=True, exist_ok=False)
@@ -272,7 +272,7 @@ class PlatformManager:
                 f'Unsupported platform {platform_id}, version {version}')
 
         return await self.load_platform(
-            _get_path_to_platform(platform_id, version))
+            get_path_to_platform(platform_id, version))
 
     async def get_raw_platform_scheme(self,
                                       platform_id: str,
@@ -292,7 +292,7 @@ class PlatformManager:
         if not self.has_version(platform_id, version):
             raise PlatformException(f'Unsupported platform {platform_id}')
 
-        path_to_platform = _get_path_to_platform(platform_id, version)
+        path_to_platform = get_path_to_platform(platform_id, version)
         async with async_open(path_to_platform, 'r') as f:
             return await f.read()
 
@@ -343,7 +343,7 @@ class PlatformManager:
             platform_id: str,
             version: str) -> AsyncGenerator[File, Any]:
         """Get platform source-code files by id and version."""
-        source_dir = _get_source_path(platform_id, version)
+        source_dir = get_source_path(platform_id, version)
         return _read_platform_files(source_dir, 'r')
 
     async def get_platform_images(
@@ -380,13 +380,13 @@ class PlatformManager:
         versions_info = new_versions_info[platform_id].versions
         for version in versions:
             json_scheme_folder = await AsyncPath(
-                _get_path_to_platform(platform_id, version)).parent.absolute()
+                get_path_to_platform(platform_id, version)).parent.absolute()
             await asyncio.create_subprocess_exec('rm',
                                                  '-r',
                                                  json_scheme_folder
                                                  )
             library_folder = await AsyncPath(
-                _get_source_path(platform_id, version)).parent.absolute()
+                get_source_path(platform_id, version)).parent.absolute()
             await asyncio.create_subprocess_exec('rm', '-r', library_folder)
             versions_info.remove(version)
 
