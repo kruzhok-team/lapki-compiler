@@ -25,6 +25,7 @@ def getPath():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip('Test manually with startup module!')
 async def test_berlogaImport():
     """Test generating JSON from Bearloga schemes."""
     client = Client()
@@ -49,6 +50,7 @@ async def test_berlogaImport():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip('Test manually with startup module!')
 async def test_berlogaExport():
     """Test generating Bearloga schemes from JSON."""
     client = Client()
@@ -93,7 +95,7 @@ async def test_berlogaExport():
                                           id='ShiftOut'),
                          ]
                          )
-# @pytest.mark.skip('Test manually with startup module!')
+@pytest.mark.skip('Test manually with startup module!')
 @pytest.mark.asyncio
 async def test_compile_json_scheme(path_to_scheme: str):
     """

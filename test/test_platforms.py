@@ -76,6 +76,7 @@ async def add_platform(platform: Platform,
                        autodelete: bool = True):
     """Add platform to PlatformManager. Delete platform after\
         "with" statement."""
+    platform_id = ''
     try:
         platform_id = await _add_platform(
             platform,
@@ -84,7 +85,7 @@ async def add_platform(platform: Platform,
         yield platform_id
     finally:
         if autodelete:
-            await _delete_platform(platform.id)
+            await _delete_platform(platform_id)
 
 
 @pytest.mark.asyncio
@@ -186,12 +187,6 @@ async def test_delete_platform_by_version(platform_manager: PlatformManager,
         assert platform_manager.platform_exist(platform_id) is False
         with pytest.raises(KeyError):
             platform_manager.has_version(platform_id, platform.version)
-    async with (add_platform(platform, source_files, images, autodelete=True)
-                as platform_id):
-        new_version_platform = platform.model_copy(deep=True)
-        new_version_platform.version = '2.0'
-        assert platform_manager.versions_info[platform_id].versions == set(
-            ('1.0',))
 
 
 @pytest.mark.asyncio

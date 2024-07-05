@@ -103,7 +103,7 @@
             "y": -200
          },
          "do": [],
-         "color": "#A4A9E7"
+         "color": "#3E7542"
       },
       {
          "source": "n1",
@@ -118,7 +118,7 @@
             "y": -235
          },
          "do": [],
-         "color": "#A87ED4"
+         "color": "#0EA47D"
       },
       {
          "source": "n1",
@@ -133,7 +133,7 @@
             "y": -265
          },
          "do": [],
-         "color": "#59FA4B"
+         "color": "#AFA810"
       }
    ],
    "components": {

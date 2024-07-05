@@ -5,31 +5,38 @@ import pytest
 from compiler.GraphmlParser import GraphmlParser
 from compiler.Logger import Logger
 from compiler.PlatformManager import PlatformManager
-from compiler.config import get_config
 
 pytest_plugins = ('pytest_asyncio',)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('path, platform', [
+@pytest.mark.parametrize('path, path_to_platform, platform', [
     pytest.param('examples/old/bearlogaSchemas/Autoborder_'
                  '638330223036439120.graphml',
+                 'compiler/platforms/BearlogaDefend-Autoborder/'
+                 '1.0/BearlogaDefend-Autoborder-1.0.json',
                  'BearlogaDefend-Autoborder', id='Autoborder'),
     pytest.param('examples/old/bearlogaSchemas/Generator_'
                  '638331191524332730.graphml',
+                 'compiler/platforms/BearlogaDefend-Generator/1.0/'
+                 'BearlogaDefend-Generator-1.0.json',
                  'BearlogaDefend-Generator', id='Generator'),
     pytest.param('examples/old/bearlogaSchemas/Smoker_'
                  '638331191988353340.graphml',
+                 'compiler/platforms/BearlogaDefend-Smoker/'
+                 '1.0/BearlogaDefend-Smoker-1.0.json',
                  'BearlogaDefend-Smoker', id='Smoker'),
     pytest.param('examples/old/bearlogaSchemas/Stapler_'
                  '638331190677085090.graphml',
+                 'compiler/platforms/BearlogaDefend-Stapler/'
+                 '1.0/BearlogaDefend-Stapler-1.0.json',
                  'BearlogaDefend-Stapler', id='Stapler'),
 ])
-async def test_graphmlParser(path: str, platform: str):
+async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     """Test parsing yed-Graphml."""
     platform_manager = PlatformManager()
+    await platform_manager.load_platform(path_to_platform)
     await Logger.init_logger()
-    await platform_manager.init_platforms(get_config().platform_directory)
     with open(path, 'r') as f:
         unprocessed_xml = f.read()
 

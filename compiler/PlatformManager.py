@@ -29,7 +29,7 @@ PlatformVersion = str
 
 async def _write_source(path: str, source_files: List[File]) -> None:
     for source in source_files:
-        filename = f'{path}{source.filename}.{source.extension}'
+        filename = os.path.join(path, f'{source.filename}.{source.extension}')
         await AsyncPath(filename).parent.mkdir(parents=True, exist_ok=True)
         mode = 'wb' if isinstance(source.fileContent, bytes) else 'w'
         async with async_open(filename, mode) as f:
@@ -400,7 +400,8 @@ class PlatformManager:
         if len(versions_info) == 0:
             await _delete_platform(platform_id)
             del new_versions_info[platform_id]
-            del self.__platforms[platform_id]
+            if self.__platforms.get(platform_id, None) is not None:
+                del self.__platforms[platform_id]
 
         return new_versions_info
 
@@ -418,5 +419,6 @@ class PlatformManager:
         await _delete_platform(platform_id)
         new_versions_info = deepcopy(self.__versions_info)
         del new_versions_info[platform_id]
-        del self.__platforms[platform_id]
+        if self.__platforms.get(platform_id, None) is not None:
+            del self.__platforms[platform_id]
         return new_versions_info
