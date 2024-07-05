@@ -156,7 +156,7 @@
             "y": 203
          },
          "do": [],
-         "color": "#DDF942"
+         "color": "#54BB66"
       },
       {
          "source": "n1",
@@ -171,7 +171,7 @@
             "y": 337
          },
          "do": [],
-         "color": "#D04C8B"
+         "color": "#F9232E"
       },
       {
          "source": "n1",
@@ -186,7 +186,7 @@
             "y": 373
          },
          "do": [],
-         "color": "#C0A50D"
+         "color": "#C1B30F"
       },
       {
          "source": "n1::n2",
@@ -201,7 +201,7 @@
             "y": 599
          },
          "do": [],
-         "color": "#DA6F5D"
+         "color": "#5F24BD"
       },
       {
          "source": "n1::n3",
@@ -216,7 +216,7 @@
             "y": 665
          },
          "do": [],
-         "color": "#8E2F34"
+         "color": "#DDD2D3"
       }
    ],
    "components": {
