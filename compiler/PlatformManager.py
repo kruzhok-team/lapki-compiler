@@ -1,6 +1,7 @@
 """Module for managing platforms."""
 import asyncio
 import json
+import os
 import uuid
 import traceback
 from copy import deepcopy
@@ -60,7 +61,10 @@ def _get_img_path(id: str, version: str) -> str:
 
     LIBRARY_PATH/id/version/img/
     """
-    return _gen_platform_path(get_config().library_path, id, version) + 'img/'
+    return os.path.join(_gen_platform_path(get_config().library_path,
+                                           id,
+                                           version),
+                        'img/')
 
 
 def get_source_path(id: str, version: str) -> str:
@@ -69,10 +73,10 @@ def get_source_path(id: str, version: str) -> str:
 
     LIBRARY_PATH/id/version/source/
     """
-    return _gen_platform_path(
+    return os.path.join(_gen_platform_path(
         get_config().library_path,
         id,
-        version) + 'source/'
+        version), 'source/')
 
 
 def get_path_to_platform(id: str, version: str) -> str:
@@ -81,14 +85,13 @@ def get_path_to_platform(id: str, version: str) -> str:
 
     PLATFORM_DIRECTORY/id/version/id-version.json
     """
-    base_path = _gen_platform_path(
-        get_config().platform_directory, id, version)
-    return base_path + f'{id}-{version}.json'
+    return os.path.join(_gen_platform_path(
+        get_config().platform_directory, id, version),
+        f'{id}-{version}.json')
 
 
 def _gen_platform_path(base_path: str, id: str, version: str) -> str:
-    return (base_path + id +
-            '/' + version + '/')
+    return os.path.join(base_path, id, version)
 
 
 async def _read_platform_files(
@@ -119,6 +122,9 @@ class PlatformManager:
 
     TODO: А также их удаление из памяти, если их не используют
     какое-то время.
+    TODO: Фикс словаря __platforms: в данный момент в качестве ключа
+    используется идентификатор платформы, но надо:
+    <id платформы>-<версия платформы>
     """
 
     _instance: Optional['PlatformManager'] = None
@@ -298,7 +304,8 @@ class PlatformManager:
 
     def platform_exist(self, platform_id: str) -> bool:
         """Check that platform exist."""
-        return (platform_id in self.__versions_info.keys())
+        return (platform_id in self.__versions_info.keys() or
+                platform_id in self.__platforms.keys())
 
     def has_version(self, platform_id: str, version: str) -> bool:
         """Check, that platform has received version."""
@@ -393,6 +400,7 @@ class PlatformManager:
         if len(versions_info) == 0:
             await _delete_platform(platform_id)
             del new_versions_info[platform_id]
+            del self.__platforms[platform_id]
 
         return new_versions_info
 
@@ -410,4 +418,5 @@ class PlatformManager:
         await _delete_platform(platform_id)
         new_versions_info = deepcopy(self.__versions_info)
         del new_versions_info[platform_id]
+        del self.__platforms[platform_id]
         return new_versions_info

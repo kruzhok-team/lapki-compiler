@@ -16,7 +16,6 @@ from compiler.CGML import parse, CGMLException
 from compiler.Compiler import (
     CompilerResult,
 )
-from compiler.PlatformManager import get_source_path
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
@@ -108,7 +107,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         raise Exception('Internal error!')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                        '',  # TODO: Версия стандарта?
+                                        '1.0',  # TODO: Версия стандарта?
                                         default_library,
                                         base_dir_path)
     await Compiler.include_source_files(settings.platform_id,

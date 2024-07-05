@@ -8,7 +8,7 @@ from aiofile import async_open
 from compiler.PlatformManager import (
     PlatformException,
     PlatformManager,
-    _get_path_to_platform,
+    get_path_to_platform,
 )
 from compiler.platform_handler import (
     _add_platform,
@@ -115,7 +115,7 @@ async def test_get_raw_platform(platform: Platform,
     async with add_platform(platform, source_files, images) as platform_id:
         test_result = await _get_platform(platform_id, platform.version)
         async with async_open(
-            _get_path_to_platform(platform_id, platform.version)
+            get_path_to_platform(platform_id, platform.version)
         ) as f:
             expected = await f.read()
             assert test_result == expected
