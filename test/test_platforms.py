@@ -30,6 +30,7 @@ pytest_plugins = ('pytest_asyncio',)
 
 @pytest.fixture
 def access_controller() -> AccessController:
+    """Get access controller."""
     return AccessController()
 
 
@@ -62,7 +63,8 @@ def images() -> List[File]:
 @pytest.fixture
 def platform() -> Platform:
     """Load Autoborder platform."""
-    with open('compiler/platforms/BearlogaDefend-Autoborder/1.0/BearlogaDefend-Autoborder-1.0.json', 'r') as f:
+    with open('compiler/platforms/BearlogaDefend-Autoborder/1.0/'
+              'BearlogaDefend-Autoborder-1.0.json', 'r') as f:
         data = json.load(f)
     return Platform(**data)
 
@@ -72,6 +74,8 @@ async def add_platform(platform: Platform,
                        source_files: List[File],
                        images: List[File],
                        autodelete: bool = True):
+    """Add platform to PlatformManager. Delete platform after\
+        "with" statement."""
     try:
         platform_id = await _add_platform(
             platform,
@@ -88,6 +92,7 @@ async def test_add_platform(platform_manager: PlatformManager,
                             platform: Platform,
                             source_files: List[File],
                             images: List[File]):
+    """Testing the addition of a platform."""
     platform_id = await _add_platform(
         platform,
         source_files,
@@ -106,7 +111,7 @@ async def test_add_platform(platform_manager: PlatformManager,
 async def test_get_raw_platform(platform: Platform,
                                 source_files: List[File],
                                 images: List[File]):
-
+    """Test receiving a JSON platform scheme."""
     async with add_platform(platform, source_files, images) as platform_id:
         test_result = await _get_platform(platform_id, platform.version)
         async with async_open(
@@ -120,6 +125,7 @@ async def test_get_raw_platform(platform: Platform,
 async def test_get_platform_sources(platform_manager: PlatformManager,
                                     platform: Platform,
                                     source_files: List[File]):
+    """Test receiving source files with code."""
     async with add_platform(platform, source_files, []) as platform_id:
         source_gen = await platform_manager.get_platform_sources(
             platform_id, platform.version)
@@ -132,6 +138,7 @@ async def test_get_platform_sources(platform_manager: PlatformManager,
 async def test_get_platform_images(platform_manager: PlatformManager,
                                    platform: Platform,
                                    images: List[File]):
+    """Test receiving platform images."""
     async with add_platform(platform, [], images) as platform_id:
         image_gen = await platform_manager.get_platform_images(
             platform_id, platform.version)
@@ -144,6 +151,7 @@ async def test_update_platform(platform_manager: PlatformManager,
                                platform: Platform,
                                source_files: List[File],
                                images: List[File]):
+    """Testing the update of an existing platform."""
     async with add_platform(platform, source_files, images) as platform_id:
         new_platform = platform.model_copy(deep=True)
         new_platform.version = '2.0'
@@ -171,6 +179,7 @@ async def test_delete_platform_by_version(platform_manager: PlatformManager,
                                           platform: Platform,
                                           source_files: List[File],
                                           images: List[File]):
+    """Testing the delete of an existing platform by version."""
     async with (add_platform(platform, source_files, images, False)
                 as platform_id):
         await _delete_platform_by_versions(platform_id, platform.version)
@@ -192,6 +201,7 @@ async def test_delete_platfrom(
     source_files: List[File],
     images: List[File]
 ):
+    """Testing the delete of an existing platform."""
     async with (add_platform(platform, source_files, images, False)
                 as platform_id):
         new_version = platform.model_copy(deep=True)
@@ -202,7 +212,8 @@ async def test_delete_platfrom(
 
 
 @pytest.mark.asyncio
-async def testcheck_token(access_controller: AccessController) -> None:
+async def test_check_token(access_controller: AccessController) -> None:
+    """Testing the check access token."""
     token = await access_controller.create_token()
     check_token(token)
     with pytest.raises(AccessControllerException):
