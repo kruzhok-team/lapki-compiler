@@ -107,7 +107,7 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
         raise Exception('Internal error!')
     default_library = get_default_libraries()
     await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                        '',  # TODO: Версия стандарта?
+                                        '1.0',  # TODO: Версия стандарта?
                                         default_library,
                                         base_dir_path)
     await Compiler.include_source_files(settings.platform_id,
@@ -216,11 +216,6 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.getBuildFiles(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
                     await Compiler.include_library_files(
                         libraries,
                         dirname,
@@ -237,37 +232,25 @@ class Handler:
                     # type: ignore
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    build_files = await Compiler.getBuildFiles(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.h',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.h',
-                        Compiler.DEFAULT_LIBRARY_ID
-                    )
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.ino',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.c',
-                        Compiler.DEFAULT_LIBRARY_ID)
+                    ino_libraries = {f'{library}.ino'
+                                     for library in libraries}
+                    h_libraries = {f'{library}.h'
+                                   for library in libraries}
+                    libraries = h_libraries | ino_libraries
+                    await Compiler.include_source_files(platform,
+                                                        '1.0',
+                                                        libraries,
+                                                        path)
+                    await Compiler.include_source_files(
+                        Compiler.DEFAULT_LIBRARY_ID,
+                        '1.0',
+                        get_default_libraries(),
+                        path)
                     await Logger.logger.info(f'{libraries} included')
 
             result: CompilerResult = await Compiler.compile(
                 path,
-                build_files,
+                set(),
                 ['compile', *flags],
                 compiler)
             response = CompilerResponse(

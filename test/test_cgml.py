@@ -9,27 +9,29 @@ from contextlib import contextmanager
 
 import pytest
 from aiopath import AsyncPath
-from compiler.config import BUILD_DIRECTORY
+from compiler.config import get_config
 from compiler.handler import compile_xml, create_response
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-from compiler.types.inner_types import InnerEvent, InnerTrigger
 from compiler.types.platform_types import Platform
-from compiler.CGML import __parse_actions, parse
+from compiler.CGML import parse
 from compiler.PlatformManager import PlatformManager
 
 pytest_plugins = ('pytest_asyncio',)
 
 
 async def init_platform():
+    """Init ArduinoUno platform."""
     platform_manager = PlatformManager()
-    # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
-        await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json')
+        await platform_manager.load_platform('compiler/platforms/ArduinoUno/'
+                                             '1.0/ArduinoUno-1.0.json')
 
 
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
+    """Create test folder by path and delete it\
+        after exit from 'with' statement and wait time."""
     try:
         Path(path).mkdir(parents=True)
         yield
@@ -59,56 +61,15 @@ def test_parse(path: str):
     ]
 )
 def test_new_platform_creation(path: str):
+    """Test Platform object creation."""
     with open(path, 'r') as f:
         platform = Platform(**json.loads(f.read()))
     print(platform)
 
 
-@pytest.mark.parametrize(
-    'raw_trigger, expected',
-    [
-        pytest.param(
-            """entry/
-                LED1.on();
-                timer1.start(1000);
-                """,
-            [
-                InnerEvent(
-                    InnerTrigger(
-                        'entry',
-                        None,
-                        None
-                    ),
-                    """
-                LED1.on();
-                timer1.start(1000);
-                """
-                )
-            ]
-        ),
-        pytest.param(
-            'timer1.timeout/',
-            [
-                InnerEvent(
-                    InnerTrigger(
-                        'timer1_timeout',
-                        None,
-                        None
-                    ),
-                    '',
-                    check='timer1.timeout'
-                )
-            ]
-
-        )
-    ]
-)
-def test_parse_actions(raw_trigger: str, expected: str):
-    assert __parse_actions(raw_trigger) == expected
-
-
 @pytest.mark.asyncio
 async def test_generating_code():
+    """Test generating code without compiling."""
     await init_platform()
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
@@ -138,20 +99,20 @@ async def test_generating_code():
     pytest.param(
         'examples/initial_states.graphml'
     ),
-    # pytest.param(
-    #     'examples/with-defer.xml'
-    # ), TODO: Переделать под новый формат
-    # pytest.param(
-    #     'examples/with-propagate-block.graphml'
-    # ), TODO: Переделать под новый формат
+    pytest.param(
+        'examples/with-defer.xml'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
-    # TODO: Пофиксить баг с повторной загрузкой платформы при
-    # запуске всех тестов сразу.
-    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
+    """Testing compiling and code generation from CGML-schemes."""
+    await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    await init_platform()
+    if not PlatformManager().platform_exist('ArduinoUno'):
+        await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
@@ -161,4 +122,5 @@ async def test_compile_schemes(scheme_path: str):
             dir = AsyncPath(path + 'build/')
             print(result.stderr)
             filecount = len([file async for file in dir.iterdir()])
+            print(PlatformManager().versions_info)
             assert filecount != 0

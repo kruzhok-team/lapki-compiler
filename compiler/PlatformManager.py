@@ -1,6 +1,7 @@
 """Module for managing platforms."""
 import asyncio
 import json
+import os
 import uuid
 import traceback
 from copy import deepcopy
@@ -28,7 +29,7 @@ PlatformVersion = str
 
 async def _write_source(path: str, source_files: List[File]) -> None:
     for source in source_files:
-        filename = f'{path}{source.filename}.{source.extension}'
+        filename = os.path.join(path, f'{source.filename}.{source.extension}')
         await AsyncPath(filename).parent.mkdir(parents=True, exist_ok=True)
         mode = 'wb' if isinstance(source.fileContent, bytes) else 'w'
         async with async_open(filename, mode) as f:
@@ -45,7 +46,7 @@ async def _delete_platform(platform_id: str) -> None:
         # И убираем последний слэш
         return await AsyncPath(func(platform_id, '')[:-1]).parent.absolute()
 
-    paths = [_get_path_to_platform, _get_source_path]
+    paths = [get_path_to_platform, get_source_path]
     for path_func in paths:
         path_to_platform = await path_without_version(
             platform_id,
@@ -60,35 +61,37 @@ def _get_img_path(id: str, version: str) -> str:
 
     LIBRARY_PATH/id/version/img/
     """
-    return _gen_platform_path(get_config().library_path, id, version) + 'img/'
+    return os.path.join(_gen_platform_path(get_config().library_path,
+                                           id,
+                                           version),
+                        'img/')
 
 
-def _get_source_path(id: str, version: str) -> str:
+def get_source_path(id: str, version: str) -> str:
     """
     Get path to source dir.
 
     LIBRARY_PATH/id/version/source/
     """
-    return _gen_platform_path(
+    return os.path.join(_gen_platform_path(
         get_config().library_path,
         id,
-        version) + 'source/'
+        version), 'source/')
 
 
-def _get_path_to_platform(id: str, version: str) -> str:
+def get_path_to_platform(id: str, version: str) -> str:
     """
     Get path to platform JSON scheme.
 
     PLATFORM_DIRECTORY/id/version/id-version.json
     """
-    base_path = _gen_platform_path(
-        get_config().platform_directory, id, version)
-    return base_path + f'{id}-{version}.json'
+    return os.path.join(_gen_platform_path(
+        get_config().platform_directory, id, version),
+        f'{id}-{version}.json')
 
 
 def _gen_platform_path(base_path: str, id: str, version: str) -> str:
-    return (base_path + id +
-            '/' + version + '/')
+    return os.path.join(base_path, id, version)
 
 
 async def _read_platform_files(
@@ -119,6 +122,9 @@ class PlatformManager:
 
     TODO: А также их удаление из памяти, если их не используют
     какое-то время.
+    TODO: Фикс словаря __platforms: в данный момент в качестве ключа
+    используется идентификатор платформы, но надо:
+    <id платформы>-<версия платформы>
     """
 
     _instance: Optional['PlatformManager'] = None
@@ -195,7 +201,7 @@ class PlatformManager:
             config.platform_directory, platform.id, platform.version)
         platform_library_path = _gen_platform_path(
             config.library_path, platform.id, platform.version)
-        source_path = _get_source_path(platform.id, platform.version)
+        source_path = get_source_path(platform.id, platform.version)
         img_path = _get_img_path(platform.id, platform.version)
         json_platform = platform.model_dump_json(indent=4)
         await AsyncPath(platform_path).mkdir(parents=True, exist_ok=False)
@@ -272,7 +278,7 @@ class PlatformManager:
                 f'Unsupported platform {platform_id}, version {version}')
 
         return await self.load_platform(
-            _get_path_to_platform(platform_id, version))
+            get_path_to_platform(platform_id, version))
 
     async def get_raw_platform_scheme(self,
                                       platform_id: str,
@@ -292,13 +298,14 @@ class PlatformManager:
         if not self.has_version(platform_id, version):
             raise PlatformException(f'Unsupported platform {platform_id}')
 
-        path_to_platform = _get_path_to_platform(platform_id, version)
+        path_to_platform = get_path_to_platform(platform_id, version)
         async with async_open(path_to_platform, 'r') as f:
             return await f.read()
 
     def platform_exist(self, platform_id: str) -> bool:
         """Check that platform exist."""
-        return (platform_id in self.__versions_info.keys())
+        return (platform_id in self.__versions_info.keys() or
+                platform_id in self.__platforms.keys())
 
     def has_version(self, platform_id: str, version: str) -> bool:
         """Check, that platform has received version."""
@@ -343,7 +350,7 @@ class PlatformManager:
             platform_id: str,
             version: str) -> AsyncGenerator[File, Any]:
         """Get platform source-code files by id and version."""
-        source_dir = _get_source_path(platform_id, version)
+        source_dir = get_source_path(platform_id, version)
         return _read_platform_files(source_dir, 'r')
 
     async def get_platform_images(
@@ -380,19 +387,21 @@ class PlatformManager:
         versions_info = new_versions_info[platform_id].versions
         for version in versions:
             json_scheme_folder = await AsyncPath(
-                _get_path_to_platform(platform_id, version)).parent.absolute()
+                get_path_to_platform(platform_id, version)).parent.absolute()
             await asyncio.create_subprocess_exec('rm',
                                                  '-r',
                                                  json_scheme_folder
                                                  )
             library_folder = await AsyncPath(
-                _get_source_path(platform_id, version)).parent.absolute()
+                get_source_path(platform_id, version)).parent.absolute()
             await asyncio.create_subprocess_exec('rm', '-r', library_folder)
             versions_info.remove(version)
 
         if len(versions_info) == 0:
             await _delete_platform(platform_id)
             del new_versions_info[platform_id]
+            if self.__platforms.get(platform_id, None) is not None:
+                del self.__platforms[platform_id]
 
         return new_versions_info
 
@@ -410,4 +419,6 @@ class PlatformManager:
         await _delete_platform(platform_id)
         new_versions_info = deepcopy(self.__versions_info)
         del new_versions_info[platform_id]
+        if self.__platforms.get(platform_id, None) is not None:
+            del self.__platforms[platform_id]
         return new_versions_info

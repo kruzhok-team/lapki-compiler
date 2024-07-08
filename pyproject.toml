@@ -35,7 +35,7 @@ flake8-pyproject = "^1.2.3"
 import-order-style="pep8"
 inline-quotes = "single"
 ignore=["D107", "W504", "D301"]
-include = ["compiler"]
+include = ["compiler", "test"]
 exclude=[
     "**/__pycache__",
     ".mypy_cache",
@@ -51,7 +51,7 @@ testpaths = ["test"]
 asyncio_mode="auto"
 
 [tool.pyright]
-include = ["compiler"]
+include = ["compiler", "test/*.py"]
 exclude = [
     "**/__pycache__",
     ".mypy_cache",
