@@ -19,19 +19,19 @@ QState QHsm_top(void *const me, const QEvt *const event)
 
 static void do_transition(QHsm *me)
 {
-    QStateHandler source = me->current_;
-    QStateHandler effective = me->effective_;
-    QStateHandler target = me->target_;
+    State* source = me->current_;
+    State* effective = me->effective_;
+    State* target = me->target_;
 
     while (source != effective) {
-        source(me, &standard_events[Q_EXIT_SIG]);
-        source(me, &standard_events[QEP_EMPTY_SIG_]);
+        source->process_state_func(me, &standard_events[Q_EXIT_SIG]);
+        source->process_state_func(me, &standard_events[QEP_EMPTY_SIG_]);
         source = me->effective_;
     }
 
     if (source == target) {
-        source(me, &standard_events[Q_EXIT_SIG]);
-        target(me, &standard_events[Q_ENTRY_SIG]);
+        source->process_state_func(me, &standard_events[Q_EXIT_SIG]);
+        target->process_state_func(me, &standard_events[Q_ENTRY_SIG]);
 
         me->current_ = target;
         me->effective_ = target;
@@ -46,7 +46,7 @@ static void do_transition(QHsm *me)
     path[0] = target;
 
     while (target != &QHsm_top) {
-        target(me, &standard_events[QEP_EMPTY_SIG_]);
+        target->process_state_func(me, &standard_events[QEP_EMPTY_SIG_]);
         target = me->effective_;
         path[++top] = target;
 
@@ -57,8 +57,8 @@ static void do_transition(QHsm *me)
     }
 
     while (lca == -1) {
-        source(me, &standard_events[Q_EXIT_SIG]);
-        source(me, &standard_events[QEP_EMPTY_SIG_]);
+        source->process_state_func(me, &standard_events[Q_EXIT_SIG]);
+        source->process_state_func(me, &standard_events[QEP_EMPTY_SIG_]);
         source = me->effective_;
 
         for (ptrdiff_t i = 0; i <= top; ++i) {
@@ -73,7 +73,7 @@ static void do_transition(QHsm *me)
 
     for (ptrdiff_t i = lca - 1; i >= 0; --i) {
         target = path[i];
-        target(me, &standard_events[Q_ENTRY_SIG]);
+        target->process_state_func(me, &standard_events[Q_ENTRY_SIG]);
     }
 
     me->current_ = target;
@@ -90,18 +90,18 @@ void QHsm_ctor(QHsm *const me, QStateHandler initial)
 
 void QMsm_init(QHsm *me, const QEvt *const event)
 {
-    me->current_(me, event);
+    me->current_->process_state_func(me, event);
 
-    me->effective_ = &QHsm_top;
+    me->effective_ = &{ &QHsm_top, NULL };
     do_transition(me);
 }
 
 QState QMsm_dispatch(QHsm *me, const QEvt *const event)
 {
-    QState result = me->current_(me, event);
+    QState result = me->current_->process_state_func(me, event);
 
     while (result == Q_RET_SUPER) {
-        result = me->effective_(me, event);
+        result = me->effective_->process_state_func(me, event);
     }
 
     switch (result) {

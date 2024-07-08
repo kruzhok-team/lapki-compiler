@@ -20,7 +20,7 @@
 /****************************************************************************/
 
 
-#include <stdint.h>
+#include <stdint.h>  
 
 #define Q_MAX_DEPTH 8
 
@@ -33,6 +33,11 @@ typedef struct
 } QEvt;
 
 typedef QState (*QStateHandler)(void *const me, const QEvt *const event);
+
+typedef struct {
+    QStateHandler process_state_func;
+    QStateHandler local_history;
+}  State;
 
 enum
 {
@@ -55,9 +60,10 @@ enum
 
 typedef struct
 {
-    QStateHandler current_;
-    QStateHandler effective_;
-    QStateHandler target_;
+    State* current_;
+    State* effective_;
+    State* target_;
+    State states[];
 } QHsm;
 
 #define Q_MSM_UPCAST(me) ((QHsm *)(me))
