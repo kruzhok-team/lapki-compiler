@@ -483,6 +483,5 @@ class GraphmlParser:
                     'components': components,
                     'platform': platform,
                     'parameters': {}}
-        except Exception as e:
-            print(e)
+        except Exception:
             await Logger.logException()
