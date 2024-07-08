@@ -1,31 +1,42 @@
-"""Module implements testing yed-Graphml parsing"""
+"""Module implements testing yed-Graphml parsing."""
 import json
 
 import pytest
 from compiler.GraphmlParser import GraphmlParser
 from compiler.Logger import Logger
 from compiler.PlatformManager import PlatformManager
-from compiler.config import PLATFORM_DIRECTORY
 
 pytest_plugins = ('pytest_asyncio',)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('path, platform', [
-    pytest.param('examples/bearlogaSchemas/Autoborder_638330223036439120.graphml',
+@pytest.mark.parametrize('path, path_to_platform, platform', [
+    pytest.param('examples/old/bearlogaSchemas/Autoborder_'
+                 '638330223036439120.graphml',
+                 'compiler/platforms/BearlogaDefend-Autoborder/'
+                 '1.0/BearlogaDefend-Autoborder-1.0.json',
                  'BearlogaDefend-Autoborder', id='Autoborder'),
-    pytest.param('examples/bearlogaSchemas/Generator_638331191524332730.graphml',
+    pytest.param('examples/old/bearlogaSchemas/Generator_'
+                 '638331191524332730.graphml',
+                 'compiler/platforms/BearlogaDefend-Generator/1.0/'
+                 'BearlogaDefend-Generator-1.0.json',
                  'BearlogaDefend-Generator', id='Generator'),
-    pytest.param('examples/bearlogaSchemas/Smoker_638331191988353340.graphml',
+    pytest.param('examples/old/bearlogaSchemas/Smoker_'
+                 '638331191988353340.graphml',
+                 'compiler/platforms/BearlogaDefend-Smoker/'
+                 '1.0/BearlogaDefend-Smoker-1.0.json',
                  'BearlogaDefend-Smoker', id='Smoker'),
-    pytest.param('examples/bearlogaSchemas/Stapler_638331190677085090.graphml',
+    pytest.param('examples/old/bearlogaSchemas/Stapler_'
+                 '638331190677085090.graphml',
+                 'compiler/platforms/BearlogaDefend-Stapler/'
+                 '1.0/BearlogaDefend-Stapler-1.0.json',
                  'BearlogaDefend-Stapler', id='Stapler'),
 ])
-async def test_graphhmlParser(path: str, platform: str):
+async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     """Test parsing yed-Graphml."""
     platform_manager = PlatformManager()
+    await platform_manager.load_platform(path_to_platform)
     await Logger.init_logger()
-    await platform_manager.init_platforms(PLATFORM_DIRECTORY)
     with open(path, 'r') as f:
         unprocessed_xml = f.read()
 
@@ -34,6 +45,6 @@ async def test_graphhmlParser(path: str, platform: str):
 
     assert parsed_graphml is not None
 
-    with open(f'examples/bearlogaSchemas/{platform}.json', 'w') as f:
+    with open(f'examples/old/bearlogaSchemas/{platform}.json', 'w') as f:
         json.dump(parsed_graphml, f, ensure_ascii=False, indent=3)
     assert parsed_graphml.get('states') is not None

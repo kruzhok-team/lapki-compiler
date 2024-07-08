@@ -1,10 +1,11 @@
+"""Module implements testing raw compilation module."""
 import os
 from typing import List
 
 import aioshutil
 import pytest
 from aiopath import AsyncPath
-from compiler.config import MODULE_PATH
+from compiler.config import get_config
 from compiler.types.inner_types import File
 from compiler.Compiler import (
     get_build_files,
@@ -14,7 +15,8 @@ from compiler.Compiler import (
 )
 
 PATH_TO_PROJECT = os.path.join(
-    f'{MODULE_PATH}', '../test/test_raw_compilation_project/')
+    f'{get_config().module_directory}',
+    '../test/test_raw_compilation_project/')
 
 pytest_plugins = ('pytest_asyncio',)
 
