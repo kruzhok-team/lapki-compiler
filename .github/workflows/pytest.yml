@@ -20,7 +20,13 @@ jobs:
         pip install poetry
         python -m venv .venv
         poetry install
-    - name: Running pytest
+    - name: Install arduino-cli
       run: |
+        curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+        export PATH=$PATH:/home/runner/work/lapki-compiler/lapki-compiler/bin
+        arduino-cli core install arduino:avr
+    - name: Running pytest, install arduin-cli library
+      run: |
+        export PATH=$PATH:/home/runner/work/lapki-compiler/lapki-compiler/bin
         source ./.venv/bin/activate
         pytest
