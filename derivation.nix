@@ -31,17 +31,6 @@ aiopath = buildPythonPackage rec {
   ];
 };
 
-asyncjson = buildPythonPackage rec {
-  pname = "asyncjson";
-  version = "0.0.1";
-  src = python.pkgs.fetchPypi {
-    inherit pname version;
-    sha256 = "sha256-CXdy000MQ+bzBzOo4Ukd+bZktFtZt5CenZK75xcPLP8=";
-  };
-  doCheck = false;
-  propagatedBuildInputs = with pkgs; [ ];
-};
-
 clang = buildPythonPackage rec {
   pname = "clang";
   version = "16.0.1.1";
@@ -53,11 +42,22 @@ clang = buildPythonPackage rec {
   propagatedBuildInputs = with pkgs; [ ];
 }; 
 
+cyberiadaml-py = buildPythonPackage rec {
+  pname = "cyberiadaml-py";
+  version = "1.1";
+  src = python.pkgs.fetchPypi {
+    inherit pname version;
+    sha256 = "5e51d435783a6377c11cd24d1fe0a9ec3676232b773e5ea229dc257321ca505d";
+  };
+  doCheck = false;
+  propagatedBuildInputs = with pkgs; [];
+};
+
 in
 
 buildPythonApplication {
   pname = "lapki-compiler";
-  version = "0.1";
+  version = "0.2.0";
 
   propagatedBuildInputs = [
     aiofile
@@ -69,10 +69,12 @@ buildPythonApplication {
     xmltodict
     aiologger
     aiopath
-    asyncjson
     clang
-    
+    pydantic
     arduino-cli
+    argcomplete
+    typed-argument-parser
+    flake8
   ];
 
   doCheck = false;
