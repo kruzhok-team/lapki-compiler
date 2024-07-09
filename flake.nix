@@ -20,14 +20,15 @@
       in
       {
         packages = {
+          # Почему-то не работает...
           myapp = mkPoetryApplication { 
             projectDir = self; 
-            overrides = mkPoetryApplication.defaultPoetryOverrides.extend(
-              final: prev: {
-                aiologger = prev.aiologger.overridePythonAttrs
+            overrides = mkPoetryApplication.overrides.withDefaults(
+              self: super: {
+                aiologger = super.aiologger.overridePythonAttrs
                 (
                   old: {
-                    buildInputs = (old.buildInputs or [ ]) ++ [ prev.setuptools ];
+                    buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
                   }
                 );
               });
