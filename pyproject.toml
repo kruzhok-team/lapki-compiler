@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
 aiofile = "3.8.7"
+aiofiles = "23.1.0"
 aiohttp = "3.8.4"
 aiologger = "0.7.0"
 aiopath = "0.6.11"
