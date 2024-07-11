@@ -247,16 +247,6 @@ files = [
 ]
 
 [[package]]
-name = "asyncjson"
-version = "0.0.1"
-description = "Asynchronous json library with support of nested awaitable objects in data"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "asyncjson-0.0.1.tar.gz", hash = "sha256:097772d34d0c43e6f30733a8e1491df9b664b45b59b7909e9d92bbe7170f2cff"},
-]
-
-[[package]]
 name = "attrs"
 version = "23.2.0"
 description = "Classes Without Boilerplate"
@@ -1216,4 +1206,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "3c8b1ba1c1e7c8ef627b2f73505220087cc628971586437212e7f6ea81cf9bf1"
+content-hash = "bc7b9b88446ef39f6758f85a516debad13f0b8194e96fe79a25ae481ce54ac17"
