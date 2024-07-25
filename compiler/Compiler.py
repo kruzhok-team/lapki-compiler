@@ -7,7 +7,7 @@ from typing import Dict, List, Set, TypedDict, AsyncGenerator
 from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
 from aiofile import async_open
-from compiler.PlatformManager import get_source_path
+from compiler.platform_manager import get_source_path
 from compiler.types.ide_types import SupportedCompilers
 from compiler.config import get_config
 from compiler.types.inner_types import CommandResult, BuildFile, File

@@ -8,9 +8,9 @@ from compiler.config import (
     configure,
     get_config
 )
-from compiler.PlatformManager import PlatformManager
+from compiler.platform_manager import PlatformManager
 from compiler.access_controller import AccessController
-from compiler.Logger import Logger
+from compiler.logger import Logger
 from compiler.types.config_types import ArgumentParser
 
 

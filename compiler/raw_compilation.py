@@ -15,7 +15,7 @@ from compiler.types.inner_types import (
 from compiler.platform_handler import check_token
 from compiler.Compiler import run_commands
 from compiler.config import get_config
-from compiler.Logger import Logger
+from compiler.logger import Logger
 
 
 class CompileCommandException(Exception):

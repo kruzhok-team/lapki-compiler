@@ -4,12 +4,15 @@ from contextlib import asynccontextmanager
 from typing import List
 
 import pytest
+from aiopath import AsyncPath
 from aiofile import async_open
-from compiler.PlatformManager import (
+from compiler.platform_manager import (
     PlatformException,
     PlatformManager,
+    get_full_platform_name,
     get_path_to_platform,
 )
+from compiler.config import get_config
 from compiler.platform_handler import (
     _add_platform,
     _get_platform,
@@ -105,6 +108,13 @@ async def test_add_platform(platform_manager: PlatformManager,
             author='Lapki TEAM'
         )
     }
+    await platform_manager.load_platform(get_path_to_platform(platform_id,
+                                                              '1.0'
+                                                              ))
+    platform_name = get_full_platform_name(platform_id, '1.0')
+    if platform_name not in platform_manager.platforms:
+        raise Exception(f'{platform_name} doesnt exists!',
+                        platform_manager.platforms)
     await _delete_platform(platform_id)
 
 
@@ -213,3 +223,4 @@ async def test_check_token(access_controller: AccessController) -> None:
     check_token(token)
     with pytest.raises(AccessControllerException):
         check_token('blabla')
+    await AsyncPath(get_config().access_token_path).unlink()

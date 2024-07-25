@@ -15,7 +15,7 @@ from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.types.platform_types import Platform
 from compiler.CGML import parse
-from compiler.PlatformManager import PlatformManager
+from compiler.platform_manager import PlatformManager
 
 pytest_plugins = ('pytest_asyncio',)
 

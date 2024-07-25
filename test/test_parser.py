@@ -2,9 +2,9 @@
 import json
 
 import pytest
-from compiler.GraphmlParser import GraphmlParser
-from compiler.Logger import Logger
-from compiler.PlatformManager import PlatformManager
+from compiler.graphml_parser import GraphmlParser
+from compiler.logger import Logger
+from compiler.platform_manager import PlatformManager
 
 pytest_plugins = ('pytest_asyncio',)
 

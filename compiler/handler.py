@@ -26,14 +26,14 @@ from compiler.fullgraphmlparser.stateclasses import (
     SMCompilingSettings
 )
 from compiler.types.ide_types import IdeStateMachine
-from compiler.GraphmlParser import GraphmlParser
-from compiler.CJsonParser import CJsonParser
+from compiler.graphml_parser import GraphmlParser
+from compiler.cjson_parser import CJsonParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.Compiler import Compiler
-from compiler.JsonConverter import JsonConverter
-from compiler.RequestError import RequestError
+from compiler.json_converter import JsonConverter
+from compiler.request_error import RequestError
 from compiler.config import get_config
-from compiler.Logger import Logger
+from compiler.logger import Logger
 
 BinaryFile = File
 
