@@ -242,19 +242,23 @@ class PlatformManager:
                     platform.id,
                     platform.version
                 )
+
+                if self.__platforms.get(full_platform_name, None) is None:
+                    self.__platforms[full_platform_name] = platform
+                else:
+                    raise PlatformException(
+                        f'Platform with id {platform.id} and version '
+                        f'{platform.version} is already loaded.')
                 if self.__versions_info.get(platform.id) is None:
                     self.__versions_info[platform.id] = PlatformMeta(
                         set([platform.version]),
                         platform.name,
                         platform.author)
-                    if self.__platforms.get(full_platform_name, None) is None:
-                        self.__platforms[full_platform_name] = platform
+                else:
+                    self.__versions_info[platform.id].versions.add(
+                        platform.version)
+                return platform
 
-                    return platform
-
-                raise PlatformException(
-                    f'Platform with id {platform.id} and version '
-                    f'{platform.version} is already loaded.')
         except Exception as e:
             raise PlatformException(
                 f'Во время обработки файла "{path_to_platform}"'
@@ -303,6 +307,10 @@ class PlatformManager:
 
         return await self.load_platform(
             get_path_to_platform(platform_id, version))
+
+    def is_loaded(self, platform_id: str, version: str) -> bool:
+        """Is platform loaded ar __platforms."""
+        return get_full_platform_name(platform_id, version) in self.__platforms
 
     async def get_raw_platform_scheme(self,
                                       platform_id: str,

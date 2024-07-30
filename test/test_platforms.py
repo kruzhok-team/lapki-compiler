@@ -108,10 +108,11 @@ async def test_add_platform(platform_manager: PlatformManager,
             author='Lapki TEAM'
         )
     }
-    await platform_manager.load_platform(get_path_to_platform(platform_id,
-                                                              '1.0'
-                                                              ))
     platform_name = get_full_platform_name(platform_id, '1.0')
+    if not platform_manager.is_loaded(platform_id, '1.0'):
+        await platform_manager.load_platform(get_path_to_platform(platform_id,
+                                                                  '1.0'
+                                                                  ))
     if platform_name not in platform_manager.platforms:
         raise Exception(f'{platform_name} doesnt exists!',
                         platform_manager.platforms)
