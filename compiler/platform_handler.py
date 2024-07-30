@@ -51,7 +51,7 @@ async def _delete_platform_by_versions(platform_id: str,
         platform_id,
         set_versions
     )
-    platform_manager.set_platforms_info = new_versions_info
+    platform_manager.platforms_info = new_versions_info
 
 
 async def _add_platform(platform: Platform,
@@ -63,7 +63,7 @@ async def _add_platform(platform: Platform,
         platform,
         source_files,
         images)
-    platform_manager.set_platforms_info = new_versions_info
+    platform_manager.platforms_info = new_versions_info
     return platform.id
 
 
@@ -76,7 +76,7 @@ async def _update_platform(new_platform: Platform,
         new_platform,
         source_files,
         images)
-    platform_manager.set_platforms_info = new_versions_info
+    platform_manager.platforms_info = new_versions_info
 
 
 async def _get_platform(platform_id: str, version: str) -> str:
@@ -88,7 +88,7 @@ async def _get_platform(platform_id: str, version: str) -> str:
 async def _delete_platform(platform_id: str) -> None:
     platform_manager = PlatformManager()
     new_versions_info = await platform_manager.delete_platform(platform_id)
-    platform_manager.set_platforms_info = new_versions_info
+    platform_manager.platforms_info = new_versions_info
 
 Images = List[File]
 SourceFiles = List[File]

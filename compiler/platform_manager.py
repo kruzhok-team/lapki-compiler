@@ -4,6 +4,7 @@ import json
 import os
 import uuid
 import traceback
+
 from copy import deepcopy
 from typing import (
     AsyncGenerator,
@@ -157,6 +158,10 @@ class PlatformManager:
         """Information about loaded platforms."""
         return deepcopy(self.__platforms)
 
+    @platforms.setter
+    def platforms(self, new_value: Dict[str, Platform]):
+        self.__platforms = new_value
+
     @property
     def versions_info(self):
         """Information about platform's versions."""
@@ -167,7 +172,7 @@ class PlatformManager:
         return uuid.uuid4().hex
 
     @versions_info.setter
-    def set_platforms_info(
+    def platforms_info(
             self,
             new_value: Dict[PlatformId, PlatformMeta]) -> None:
         """Set versions_info."""
@@ -464,4 +469,28 @@ class PlatformManager:
         self._delete_versions_from_platform_registry(
             platform_id, new_versions_info[platform_id].versions)
         del new_versions_info[platform_id]
+        return new_versions_info
+
+    def _delete_from_version_registry(self, platform_id: str,
+                                      versions: Set[str]
+                                      ) -> Dict[PlatformId, PlatformMeta]:
+        """
+        Remove platform versions from __versions_info.
+
+        Doesn't check, that platform exists.
+        If at least one version does not exist, \
+            PlatformException will be thrown.
+        """
+        new_versions_info = deepcopy(self.__versions_info)
+        for version in versions:
+            if self.has_version(platform_id, version):
+                continue
+            else:
+                raise PlatformException(
+                    f'Platform({platform_id}) with version({version}) '
+                    'doesnt exist.')
+        for version in versions:
+            new_versions_info[platform_id].versions.remove(version)
+        if len(new_versions_info[platform_id].versions) == 0:
+            del new_versions_info[platform_id]
         return new_versions_info

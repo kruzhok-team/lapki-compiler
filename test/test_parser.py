@@ -35,7 +35,7 @@ pytest_plugins = ('pytest_asyncio',)
 async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     """Test parsing yed-Graphml."""
     platform_manager = PlatformManager()
-    await platform_manager.load_platform(path_to_platform)
+    platform_obj = await platform_manager.load_platform(path_to_platform)
     await Logger.init_logger()
     with open(path, 'r') as f:
         unprocessed_xml = f.read()
@@ -48,3 +48,6 @@ async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     with open(f'examples/old/bearlogaSchemas/{platform}.json', 'w') as f:
         json.dump(parsed_graphml, f, ensure_ascii=False, indent=3)
     assert parsed_graphml.get('states') is not None
+    versions_info = platform_manager._delete_from_version_registry(
+        platform_obj.id, set([platform_obj.version]))
+    platform_manager.platforms_info = versions_info

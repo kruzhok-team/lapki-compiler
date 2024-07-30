@@ -110,8 +110,9 @@ async def test_generating_code():
 async def test_compile_schemes(scheme_path: str):
     """Testing compiling and code generation from CGML-schemes."""
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
+    platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    if not PlatformManager().platform_exist('ArduinoUno'):
+    if not platform_manager.platform_exist('ArduinoUno'):
         await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
@@ -122,5 +123,12 @@ async def test_compile_schemes(scheme_path: str):
             dir = AsyncPath(path + 'build/')
             print(result.stderr)
             filecount = len([file async for file in dir.iterdir()])
-            print(PlatformManager().versions_info)
+            print(platform_manager.versions_info)
             assert filecount != 0
+
+    versions = platform_manager._delete_from_version_registry(
+        'ArduinoUno', set(['1.0']))
+    platforms = platform_manager._delete_versions_from_platform_registry(
+        'ArduinoUno', set(['1.0']))
+    platform_manager.platforms = platforms
+    platform_manager.platforms_info = versions
