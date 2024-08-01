@@ -361,6 +361,16 @@
           "img": "arduino/toggle.svg",
           "description": "Сигнал вызывается, когда меняется значение на пине.",
           "checkMethod": "isChanged"
+        },
+        "isLow": {
+          "img": "arduino/isLow.svg",
+          "description": "Сигнал вызывается, когда значение на пине меняется на LOW",
+          "checkMethod": "isLow"
+        },
+        "isHigh": {
+          "img": "arduino/isHigh.svg",
+          "description": "Сигнал вызывается, когда значение на пине меняется на LOW",
+          "checkMethod": "isHigh"
         }
       },
       "constructorParameters": {
@@ -399,7 +409,12 @@
           "description": "Установить значение на аналоговый пин"
         }
       },
-      "constructorParameters": {},
+      "constructorParameters": {
+        "pin": {
+          "type": "uint8_t",
+          "description": "Пин, на который будет подаваться сигнал."
+        }
+      },
       "variables": {
         "value": {
           "img": "common/value.svg",
