@@ -6,7 +6,7 @@ import xmltodict
 from aiohttp.web import WebSocketResponse
 from compiler.types.ide_types import InitialState, Point
 from compiler.fullgraphmlparser.stateclasses import ParserState
-from compiler.Logger import Logger
+from compiler.logger import Logger
 
 
 DEFAULT_TRANSITION_DATA = {

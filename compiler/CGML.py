@@ -5,7 +5,7 @@ from typing import Dict, List, Set, Any
 from copy import deepcopy
 from string import Template
 
-from compiler.PlatformManager import PlatformManager
+from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
 from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
 from compiler.types.platform_types import (

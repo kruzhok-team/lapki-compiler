@@ -3,7 +3,7 @@ from typing import get_args
 
 import aiohttp
 from aiohttp import web
-from compiler.Logger import Logger
+from compiler.logger import Logger
 from compiler.config import get_config
 from compiler.handler import Handler
 from compiler.platform_handler import PlatformHandler
