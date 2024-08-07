@@ -13,9 +13,11 @@ bool DigitalIn::isChanged(){
 }
 
 bool DigitalIn::isHigh() {
-    return digitalRead(_pin) == HIGH;
+    value = digitalRead(_pin);
+    return _oldValue == LOW && value == HIGH;
 }
 
 bool DigitalIn::isLow() {
-    return digitalRead(_pin) == LOW;
+    value =  digitalRead(_pin);
+    return _oldValue == HIGH && value == LOW;
 }
