@@ -8,6 +8,8 @@ class DigitalIn {
         int value;
         DigitalIn(uint8_t pin);
         bool isChanged();
+        bool isHigh();
+        bool isLow();
 };
 
 #endif
