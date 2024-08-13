@@ -26,7 +26,7 @@ pydantic-core = buildPythonPackage rec {
     hash = "sha256-w1uC9tlMDOi1+qsE+U1OZkGxezPONofeG2H9wLFp5hk=";
   };
   doCheck = false;
- propagatedBuildInputs = with pkgs; [ 
+  propagatedBuildInputs = with pkgs; [ 
     typing-extensions
   ];
   rustVersion = "latest";
@@ -170,9 +170,9 @@ argcomplete = buildPythonPackage rec {
   version = "3.4.0";
   pyproject = true;
   nativeBuildInputs = [
-     setuptools
-     setuptools-scm
-   ];
+    setuptools
+    setuptools-scm
+  ];
 
   src = fetchFromGitHub {
     owner = "kislyuk";
@@ -193,7 +193,6 @@ buildPythonApplication {
   nativeBuildInputs = with pkgs; [
     poetry-core
   ];
-  LAPKI_COMPILER_SERVER_PORT = "8082"; 
   propagatedBuildInputs = [
     aiofile
     aiohttp
