@@ -62,10 +62,12 @@ async def create_response(
             async with async_open(path, 'rb') as f:
                 binary = await f.read()
                 b64_data: bytes = base64.b64encode(binary)
-                File(
-                    filename=path.name.split('.')[0],
-                    extension=''.join(path.suffixes),
-                    fileContent=b64_data.decode('ascii'),
+                response.binary.append(
+                    File(
+                        filename=path.name.split('.')[0],
+                        extension=''.join(path.suffixes),
+                        fileContent=b64_data.decode('ascii'),
+                    )
                 )
     response.source.append(await Handler.readSourceFile(
         'sketch',
