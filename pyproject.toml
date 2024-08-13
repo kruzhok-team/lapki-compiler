@@ -69,3 +69,6 @@ pythonPlatform = "Linux"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+lapki-compiler = "compiler.main:sync_main"
