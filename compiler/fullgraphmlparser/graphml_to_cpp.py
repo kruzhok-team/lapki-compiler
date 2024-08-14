@@ -444,8 +444,8 @@ class CppFileWriter:
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
-            await self._insert_string('        case Q_VERTEX_SIG:')
             if state.initial_state:
+                await self._insert_string('        case Q_VERTEX_SIG:')
                 await self._insert_string(' {\n')
                 await self._insert_string(f'            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{state.initial_state});\n')
                 await self._insert_string('            inVertex = false;\n')
@@ -453,10 +453,6 @@ class CppFileWriter:
                 await self._insert_string('        }\n')
             else:
                 await self._insert_string('\n')
-            await self._insert_string('        case QEP_EMPTY_SIG_: {\n')
-            await self._insert_string('            status_ = Q_HANDLED();\n')
-            await self._insert_string('            break;\n')
-            await self._insert_string('        }\n')
             await self._insert_string('        case Q_EXIT_SIG: {\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')
