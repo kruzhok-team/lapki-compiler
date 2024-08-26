@@ -49,6 +49,7 @@ class Labels(Enum):
     CTOR_FIELDS = 'Constructor fields'
     STATE_FIELDS = 'State fields'
     EVENT_FIELDS = 'Event fields'
+    MAIN_FUNCTION = 'Main function'
 
 
 @runtime_checkable
