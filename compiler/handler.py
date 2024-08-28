@@ -301,16 +301,16 @@ class Handler:
             await Logger.logger.error('Invalid request, there isnt'
                                       f'{e.args[0]} key.')
             await RequestError('Invalid request, there isnt'
-                               f'{e.args[0]} key.').dropConnection(ws)
+                               f'{e.args[0]} key.').dropConnection(ws, True)
             await ws.close()
         except ValidationError as e:
             await Logger.logger.info(e.errors())
             await RequestError(
                 f'Validation error: {e.errors()}'
-            ).dropConnection(ws)
+            ).dropConnection(ws, True)
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong').dropConnection(ws)
+            await RequestError('Something went wrong').dropConnection(ws, True)
             await ws.close()
         return ws
 
