@@ -85,6 +85,7 @@ class Platform(BaseModel):
     visual: bool
     compilingSettings: CompilingSettings | None = None
     components: Dict[str, Component]
+    mainFunction: bool = False
 
 
 @dataclass

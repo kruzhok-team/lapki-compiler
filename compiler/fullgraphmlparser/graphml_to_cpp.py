@@ -92,7 +92,8 @@ class CppFileWriter:
              'user_variables_c'),
             (Labels.USER_FUNC_C.value, 'user_methods_c'),
             (Labels.SETUP.value, 'setup'),
-            (Labels.LOOP.value, 'loop')
+            (Labels.LOOP.value, 'loop'),
+            (Labels.MAIN_FUNCTION.value, 'main_function')
         ]
 
         self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
@@ -260,6 +261,8 @@ class CppFileWriter:
                 await self._insert_file_template('defer_loop.txt')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
                 await self._insert_string('\n}')
+            if self.notes_dict['main_function']:
+                await self._insert_string(self.notes_dict['main_function'])
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n//Start of c code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
@@ -407,7 +410,7 @@ class CppFileWriter:
 
     async def _insert_string(self, s: str):
         await self.f.write(re.sub('[ ]*\n', '\n',
-                                  s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
+                                s.replace('STATE_MACHINE_NAME', self.sm_name).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name())))
 
     async def _insert_file_template(self, filename: str):
         async with async_open(os.path.join(MODULE_PATH, 'templates', filename)) as input_file:

@@ -89,8 +89,10 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
-                (r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$'
-                 r'(?P<postfix>w+)$'),
+                (
+                    r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$'
+                    r'(?P<postfix>w+)$'
+                ),
                 r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
                 r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
                 r'^\[(?P<condition>.+)\]$',
@@ -586,6 +588,17 @@ def _add_initials_to_states(
     return new_states
 
 
+def __generate_main_function() -> ParserNote:
+    """Generate main function, that call setup function and loop function."""
+    return create_note(Labels.MAIN_FUNCTION, """int main() {\
+\n\tsetup();\
+\n\twhile(1) {\
+\n\t\tloop();
+\n\t}
+}
+""")
+
+
 def __create_choices(
     choices: Dict[_VertexId, CGMLChoice],
     transitions: List[ParserTrigger]
@@ -723,6 +736,10 @@ async def parse(xml: str) -> StateMachine:
                                             all_triggers,
                                             parsed_components)
     ]
+
+    if platform.mainFunction:
+        notes.append(__generate_main_function())
+
     compiling_settings = SMCompilingSettings(
         included_libraries,
         build_files,
