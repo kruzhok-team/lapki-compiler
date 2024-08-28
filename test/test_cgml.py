@@ -121,7 +121,7 @@ async def test_compile_schemes(scheme_path: str):
             result = await compile_xml(data, path)
             await create_response(path, result)
             dir = AsyncPath(path + 'build/')
-            print(result.stderr)
+            print(result)
             filecount = len([file async for file in dir.iterdir()])
             print(platform_manager.versions_info)
             assert filecount != 0

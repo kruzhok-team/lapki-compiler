@@ -1,7 +1,11 @@
 """Module implements sending errors."""
 
 from aiohttp import web
-from compiler.types.inner_types import CompilerResponse
+from compiler.types.inner_types import (
+    CompilerResponse,
+    CommandResult,
+    LegacyResponse
+)
 
 
 class RequestError:
@@ -10,15 +14,33 @@ class RequestError:
     def __init__(self, _error: str):
         self.error = _error
 
-    async def dropConnection(self, ws: web.WebSocketResponse) -> None:
+    async def dropConnection(
+        self,
+        ws: web.WebSocketResponse,
+        legacy=False
+    ) -> None:
         """Drop connection and send error."""
         if (not ws.closed):
+            if (legacy):
+                await ws.send_json(
+                    LegacyResponse(
+                        result=self.error,
+                        return_code=-2,
+                        stderr='',
+                        stdout='',
+                        binary=[],
+                        source=[]
+                    )
+                )
             await ws.send_json(
                 CompilerResponse(
-                    result=self.error,
-                    return_code=-2,
-                    stdout='',
-                    stderr='',
+                    result='NOTOK',
+                    commands=[
+                        CommandResult(
+                            command='compiler work',
+                            return_code=-2,
+                            stderr=self.error,
+                            stdout='')],
                     binary=[],
                     source=[]
                 ).model_dump()
