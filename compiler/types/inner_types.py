@@ -74,8 +74,7 @@ class BuildFile:
     extension: str
     fileContent: bytes
 
-
-class CompilerResponse(BaseModel):
+class LegacyResponse(BaseModel):
     """Data, that compiler send."""
 
     result: str
@@ -86,8 +85,21 @@ class CompilerResponse(BaseModel):
     source: List[File]
 
     def __str__(self) -> str:
-        return (f'Response: {self.result}, {self.return_code},'
-                f'{self.stdout}, {self.stderr},{len(self.binary)}')
+        return (f'Response: {self.result}, {self.return_code}, {self.stderr},\
+            {len(self.binary)}')
+
+
+
+class CompilerResponse(BaseModel):
+    """Data, that compiler send."""
+
+    result: str
+    commands: List[CommandResult]
+    binary: List[File]
+    source: List[File]
+
+    def __str__(self) -> str:
+        return (f'Response: {self.result}, {self.commands},{len(self.binary)}')
 
 
 @dataclass

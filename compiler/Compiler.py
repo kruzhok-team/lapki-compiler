@@ -9,6 +9,7 @@ from aiopath import AsyncPath
 from aiofile import async_open
 from compiler.platform_manager import get_source_path
 from compiler.types.ide_types import SupportedCompilers
+from compiler.types.platform_types import CompilingSettings
 from compiler.config import get_config
 from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
@@ -93,7 +94,7 @@ class CompilerException(Exception):
 
 @dataclass
 class CompilerResult:
-    """Result of compiling Process."""
+    """(legacy) Result of compiling Process."""
 
     return_code: int
     stdout: str
@@ -132,26 +133,29 @@ class Compiler:
     @staticmethod
     async def compile_project(
         base_dir: str,
-        flags: List[str],
-        compiler: str
-    ) -> CompilerResult:
+        commands: List[CompilingSettings]
+    ) -> List[CommandResult]:
         """Compile project in base_dir by compiler with flags."""
-        process: Process = await asyncio.create_subprocess_exec(
-            compiler,
-            *flags,
-            cwd=base_dir,
-            text=False,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        await process.wait()
-        stdout, stderr = await process.communicate()
-        if process.returncode is None:
-            raise CompilerException('Process doesnt return code.')
-
-        return CompilerResult(process.returncode,
-                              str(stdout.decode('utf-8')),
-                              str(stderr.decode('utf-8')))
+        command_results: List[CommandResult] = []
+        for command in commands:
+            process: Process = await asyncio.create_subprocess_exec(
+                command.command,
+                *command.flags,
+                cwd=base_dir,
+                text=False,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            await process.wait()
+            stdout, stderr = await process.communicate()
+            if process.returncode is None:
+                raise CompilerException('Process doesnt return code.')
+            command_results.append(CommandResult(
+                command=command.command + ' ' + ' '.join(command.flags),
+                return_code=process.returncode,
+                stdout=str(stdout.decode('utf-8')),
+                stderr=str(stderr.decode('utf-8'))))
+        return command_results
 
     @staticmethod
     async def compile(base_dir: str,

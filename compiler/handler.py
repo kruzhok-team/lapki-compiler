@@ -19,6 +19,8 @@ from compiler.Compiler import (
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
+    CommandResult,
+    LegacyResponse
 )
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
@@ -40,18 +42,21 @@ BinaryFile = File
 
 async def create_response(
         base_dir: str,
-        compiler_result: CompilerResult) -> CompilerResponse:
+        compiler_result: List[CommandResult]) -> CompilerResponse:
     """
     Get source files, binary files from\
         directory and create CompilerResponse.
 
         Doesn't send anything.
     """
+    status = 'OK'
+    for command in compiler_result:
+        if (command.return_code):
+            status = 'NOTOK'
+            break
     response = CompilerResponse(
-        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
-        return_code=compiler_result.return_code,
-        stdout=compiler_result.stdout,
-        stderr=compiler_result.stderr,
+        result=status,
+        commands=compiler_result,
         binary=[],
         source=[]
     )
@@ -94,7 +99,7 @@ def get_default_libraries() -> Set[str]:
                )
 
 
-async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
+async def compile_xml(xml: str, base_dir_path: str) -> List[CommandResult]:
     """
     Compile CGML scheme.
 
@@ -116,12 +121,9 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
                                         settings.platform_version,
                                         settings.build_files,
                                         base_dir_path)
-    flags = settings.platform_compiler_settings.flags
-    compiler = settings.platform_compiler_settings.compiler
     return await Compiler.compile_project(
         base_dir_path,
-        flags,
-        compiler
+        settings.platform_compiler_settings
     )
 
 
@@ -166,7 +168,10 @@ class Handler:
             base_dir = os.path.join(
                 config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
+            compiler_result: List[CommandResult] = await compile_xml(
+                xml,
+                base_dir
+            )
             response = await create_response(base_dir, compiler_result)
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
@@ -255,7 +260,7 @@ class Handler:
                 set(),
                 ['compile', *flags],
                 compiler)
-            response = CompilerResponse(
+            response = LegacyResponse(
                 result='NOTOK',
                 return_code=result.return_code,
                 stdout=result.stdout,
