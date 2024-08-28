@@ -11,7 +11,7 @@
   "author": "Maxim Klypin",
   "visual": true,
   "compile": true,
-  "mainFunction": true,
+  "mainFunction": false,
   "compilingSettings": {
     "compiler": "arduino-cli",
     "flags": ["compile", "--export-binaries", "-b", "arduino:avr:micro"]
