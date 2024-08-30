@@ -208,7 +208,7 @@ class SMCompilingSettings:
     build_files: Set[str]
     platform_id: str
     platform_version: str
-    platform_compiler_settings: CompilingSettings
+    platform_compiler_settings: List[CompilingSettings]
 
 
 @dataclass

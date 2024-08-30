@@ -65,7 +65,7 @@ class Component:
 
 @dataclass
 class CompilingSettings:
-    compiler: SupportedCompilers
+    command: SupportedCompilers
     flags: List[str]
 
 
@@ -83,7 +83,9 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
-    compilingSettings: CompilingSettings | None = None
+    compilingSettings: List[CompilingSettings] | None = (
+        None
+    )
     components: Dict[str, Component]
     mainFunction: bool = False
 
