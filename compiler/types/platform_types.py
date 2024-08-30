@@ -65,7 +65,7 @@ class Component:
 
 @dataclass
 class CompilingSettings:
-    compiler: SupportedCompilers
+    command: SupportedCompilers
     flags: List[str]
 
 
@@ -85,7 +85,9 @@ class Platform(BaseModel):
     visual: bool
     defaultIncludeFiles: Set[str] = Field(default_factory=set)
     defaultBuildFiles: Set[str] = Field(default_factory=set)
-    compilingSettings: CompilingSettings | None = None
+    compilingSettings: List[CompilingSettings] | None = (
+        None
+    )
     components: Dict[str, Component]
     mainFunction: bool = False
 

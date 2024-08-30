@@ -46,7 +46,7 @@ CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
 
 class CommandResult(BaseModel):
     """The result of the command that was \
-        called during the raw compilation."""
+        called during the compilation."""
 
     command: str
     return_code: int | None
@@ -75,8 +75,12 @@ class BuildFile:
     fileContent: bytes
 
 
-class CompilerResponse(BaseModel):
-    """Data, that compiler send."""
+class LegacyResponse(BaseModel):
+    """
+    Data sent by a compiler.
+
+    Used to communicate with older versions of Lapki IDE
+    """
 
     result: str
     return_code: int
@@ -86,8 +90,20 @@ class CompilerResponse(BaseModel):
     source: List[File]
 
     def __str__(self) -> str:
-        return (f'Response: {self.result}, {self.return_code},'
-                f'{self.stdout}, {self.stderr},{len(self.binary)}')
+        return (f'Response: {self.result}, {self.return_code}, {self.stderr},\
+            {len(self.binary)}')
+
+
+class CompilerResponse(BaseModel):
+    """Data sent by a compiler."""
+
+    result: str
+    commands: List[CommandResult]
+    binary: List[File]
+    source: List[File]
+
+    def __str__(self) -> str:
+        return (f'Response: {self.result}, {self.commands},{len(self.binary)}')
 
 
 @dataclass
