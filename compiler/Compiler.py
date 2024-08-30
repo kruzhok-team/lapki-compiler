@@ -4,7 +4,6 @@ import asyncio
 from asyncio.subprocess import Process
 from typing import Dict, List, Set, TypedDict, AsyncGenerator
 
-from pydantic.dataclasses import dataclass
 from aiopath import AsyncPath
 from aiofile import async_open
 from compiler.platform_manager import get_source_path
