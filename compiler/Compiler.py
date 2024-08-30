@@ -92,15 +92,6 @@ class CompilerException(Exception):
     ...
 
 
-@dataclass
-class CompilerResult:
-    """(legacy) Result of compiling Process."""
-
-    return_code: int
-    stdout: str
-    stderr: str
-
-
 class SupportedCompiler(TypedDict):
     """Dict with information about awaialable flags and extensions."""
 
@@ -161,7 +152,7 @@ class Compiler:
     async def compile(base_dir: str,
                       build_files: Set[str],
                       flags: List[str],
-                      compiler: SupportedCompilers) -> CompilerResult:
+                      compiler: SupportedCompilers) -> CommandResult:
         """(Legacy, use compile_project) Run compiler with choosen settings."""
         match compiler:
             case 'g++' | 'gcc':
@@ -194,9 +185,10 @@ class Compiler:
         if process.returncode is None:
             raise CompilerException('Process doesnt return code.')
 
-        return CompilerResult(process.returncode,
-                              str(stdout.decode('utf-8')),
-                              str(stderr.decode('utf-8')))
+        return CommandResult(command='compile project',
+                             return_code=process.returncode,
+                             stdout=str(stdout.decode('utf-8')),
+                             stderr=str(stderr.decode('utf-8')))
 
     @staticmethod
     async def include_source_files(platform_id: str,

@@ -46,7 +46,7 @@ CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
 
 class CommandResult(BaseModel):
     """The result of the command that was \
-        called during the raw compilation."""
+        called during the compilation."""
 
     command: str
     return_code: int | None

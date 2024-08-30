@@ -13,9 +13,6 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import (
-    CompilerResult,
-)
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
@@ -255,16 +252,16 @@ class Handler:
                         path)
                     await Logger.logger.info(f'{libraries} included')
 
-            result: CompilerResult = await Compiler.compile(
+            result: CommandResult = await Compiler.compile(
                 path,
                 set(),
                 ['compile', *flags],
                 compiler)
             response = LegacyResponse(
                 result='NOTOK',
-                return_code=result.return_code,
-                stdout=result.stdout,
-                stderr=result.stderr,
+                return_code=result.return_code if result.return_code else 0,
+                stdout=str(result.stdout),
+                stderr=str(result.stderr),
                 binary=[],
                 source=[]
             )
