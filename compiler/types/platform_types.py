@@ -70,6 +70,7 @@ class CompilingSettings:
 
 
 class Platform(BaseModel):
+    """"""
     id: str = ''
     name: str
     description: str = ''
@@ -83,6 +84,8 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
+    defaultIncludeFiles: Set[str] = Field(default_factory=set)
+    defaultBuildFiles: Set[str] = Field(default_factory=set)
     compilingSettings: CompilingSettings | None = None
     components: Dict[str, Component]
     mainFunction: bool = False
