@@ -70,7 +70,6 @@ class CompilingSettings:
 
 
 class Platform(BaseModel):
-    """"""
     id: str = ''
     name: str
     description: str = ''
