@@ -301,7 +301,8 @@ class Handler:
             await Logger.logger.error('Invalid request, there isnt'
                                       f'{e.args[0]} key.')
             await RequestError('Invalid request, there isnt'
-                               f'{e.args[0]} key.').dropConnection(ws, True)
+                               f'{e.args[0]} key.').dropConnection(ws,
+                                                                   legacy=True)
             await ws.close()
         except ValidationError as e:
             await Logger.logger.info(e.errors())
@@ -310,7 +311,10 @@ class Handler:
             ).dropConnection(ws, True)
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong').dropConnection(ws, True)
+            await RequestError('Something went wrong').dropConnection(
+                ws,
+                legacy=True
+            )
             await ws.close()
         return ws
 
@@ -360,10 +364,15 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True
+                                                                  )
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong!').dropConnection(ws)
+            await RequestError('Something went wrong!').dropConnection(
+                ws,
+                legacy=True
+            )
 
         return ws
 
@@ -401,11 +410,13 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True)
             return ws
         except Exception as e:
             await Logger.logException()
             await RequestError('Something went wrong'
-                               f'{e.args[0]}').dropConnection(ws)
+                               f'{e.args[0]}').dropConnection(ws,
+                                                              legacy=True)
             return ws
         return ws

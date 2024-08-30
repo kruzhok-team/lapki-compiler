@@ -74,8 +74,13 @@ class BuildFile:
     extension: str
     fileContent: bytes
 
+
 class LegacyResponse(BaseModel):
-    """Data, that compiler send."""
+    """
+    Data sent by a compiler.
+
+    Used to communicate with older versions of Lapki IDE
+    """
 
     result: str
     return_code: int
@@ -89,9 +94,8 @@ class LegacyResponse(BaseModel):
             {len(self.binary)}')
 
 
-
 class CompilerResponse(BaseModel):
-    """Data, that compiler send."""
+    """Data sent by a compiler."""
 
     result: str
     commands: List[CommandResult]

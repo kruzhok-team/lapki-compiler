@@ -37,7 +37,7 @@ class RequestError:
                     result='NOTOK',
                     commands=[
                         CommandResult(
-                            command='compiler work',
+                            command='compiler job',
                             return_code=-2,
                             stderr=self.error,
                             stdout='')],
