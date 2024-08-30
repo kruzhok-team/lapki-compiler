@@ -496,7 +496,7 @@ def __generate_setup_function_code(
 def __get_include_libraries(platform: Platform,
                             components: List[InnerComponent]) -> Set[str]:
     """Get set of source files, that must be included."""
-    included_libraries: Set[str] = set()
+    included_libraries: Set[str] = deepcopy(platform.defaultIncludeFiles)
     for component in components:
         included_libraries.update(
             platform.components[component.type].importFiles)
@@ -518,7 +518,7 @@ def __get_build_files(
     components: List[InnerComponent]
 ) -> Set[str]:
     """Get set of files, that must be included for compiling."""
-    build_libraries: Set[str] = set()
+    build_libraries: Set[str] = deepcopy(platform.defaultBuildFiles)
     for component in components:
         build_libraries.update(
             platform.components[component.type].buildFiles)

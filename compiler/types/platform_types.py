@@ -83,6 +83,8 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
+    defaultIncludeFiles: Set[str] = Field(default_factory=set)
+    defaultBuildFiles: Set[str] = Field(default_factory=set)
     compilingSettings: List[CompilingSettings] | None = (
         None
     )
