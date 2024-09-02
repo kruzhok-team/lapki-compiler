@@ -65,7 +65,7 @@ class Component:
 
 @dataclass
 class CompilingSettings:
-    compiler: SupportedCompilers
+    command: SupportedCompilers
     flags: List[str]
 
 
@@ -83,8 +83,14 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
-    compilingSettings: CompilingSettings | None = None
+    defaultIncludeFiles: List[str] = Field(default_factory=list)
+    defaultBuildFiles: Set[str] = Field(default_factory=set)
+    compilingSettings: List[CompilingSettings] | None = (
+        None
+    )
     components: Dict[str, Component]
+    mainFunction: bool = False
+    mainFileExtension: str = ''
 
 
 @dataclass

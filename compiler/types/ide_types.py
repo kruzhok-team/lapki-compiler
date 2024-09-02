@@ -2,7 +2,8 @@ from typing import Literal, TypeAlias, Optional, List, Dict
 from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
-SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli']
+SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli',
+                                        'arm-none-eabi-g++', 'arm-none-eabi-objcopy']
 IncludeStr: TypeAlias = str  # include "blabla.h"
 
 

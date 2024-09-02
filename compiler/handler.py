@@ -13,12 +13,11 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import (
-    CompilerResult,
-)
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
+    CommandResult,
+    LegacyResponse
 )
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
@@ -40,23 +39,28 @@ BinaryFile = File
 
 async def create_response(
         base_dir: str,
-        compiler_result: CompilerResult) -> CompilerResponse:
+        compiler_result: List[CommandResult],
+        main_file_extension: str) -> CompilerResponse:
     """
     Get source files, binary files from\
         directory and create CompilerResponse.
 
         Doesn't send anything.
     """
+    status = 'OK'
+    for command in compiler_result:
+        if (command.return_code):
+            status = 'NOTOK'
+            break
     response = CompilerResponse(
-        result='NOTOK' if compiler_result.return_code != 0 else 'OK',
-        return_code=compiler_result.return_code,
-        stdout=compiler_result.stdout,
-        stderr=compiler_result.stderr,
+        result=status,
+        commands=compiler_result,
         binary=[],
         source=[]
     )
+
     build_path = os.path.join(base_dir, 'build/')
-    await AsyncPath(build_path).mkdir(exist_ok=True)
+
     async for path in AsyncPath(build_path).rglob('*'):
         if await path.is_file():
             async with async_open(path, 'rb') as f:
@@ -71,7 +75,7 @@ async def create_response(
                 )
     response.source.append(await Handler.readSourceFile(
         'sketch',
-        'ino',
+        main_file_extension,
         base_dir)
     )
     response.source.append(await Handler.readSourceFile(
@@ -94,7 +98,10 @@ def get_default_libraries() -> Set[str]:
                )
 
 
-async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
+async def compile_xml(
+    xml: str,
+    base_dir_path: str) -> tuple[List[CommandResult],
+                                 StateMachine]:
     """
     Compile CGML scheme.
 
@@ -103,8 +110,11 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
     Doesn't send anything.
     """
     sm: StateMachine = await parse(xml)
-    await CppFileWriter(sm, True, True).write_to_file(base_dir_path, 'ino')
+    await CppFileWriter(sm, True, True).write_to_file(base_dir_path,
+                                                      sm.main_file_extension)
     settings: SMCompilingSettings | None = sm.compiling_settings
+    build_path = os.path.join(base_dir_path, 'build/')
+    await AsyncPath(build_path).mkdir(exist_ok=True)
     if settings is None:
         raise Exception('Internal error!')
     default_library = get_default_libraries()
@@ -116,13 +126,10 @@ async def compile_xml(xml: str, base_dir_path: str) -> CompilerResult:
                                         settings.platform_version,
                                         settings.build_files,
                                         base_dir_path)
-    flags = settings.platform_compiler_settings.flags
-    compiler = settings.platform_compiler_settings.compiler
-    return await Compiler.compile_project(
+    return (await Compiler.compile_project(
         base_dir_path,
-        flags,
-        compiler
-    )
+        settings.platform_compiler_settings
+    ), sm)
 
 
 class HandlerException(Exception):
@@ -166,8 +173,14 @@ class Handler:
             base_dir = os.path.join(
                 config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result: CompilerResult = await compile_xml(xml, base_dir)
-            response = await create_response(base_dir, compiler_result)
+            compiler_result, sm = await compile_xml(
+                xml,
+                base_dir
+            )
+            response = await create_response(base_dir,
+                                             compiler_result,
+                                             sm.main_file_extension
+                                             )
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
         except CGMLException as e:
@@ -250,16 +263,16 @@ class Handler:
                         path)
                     await Logger.logger.info(f'{libraries} included')
 
-            result: CompilerResult = await Compiler.compile(
+            result: CommandResult = await Compiler.compile(
                 path,
                 set(),
                 ['compile', *flags],
                 compiler)
-            response = CompilerResponse(
+            response = LegacyResponse(
                 result='NOTOK',
-                return_code=result.return_code,
-                stdout=result.stdout,
-                stderr=result.stderr,
+                return_code=result.return_code if result.return_code else 0,
+                stdout=str(result.stdout),
+                stderr=str(result.stderr),
                 binary=[],
                 source=[]
             )
@@ -296,16 +309,20 @@ class Handler:
             await Logger.logger.error('Invalid request, there isnt'
                                       f'{e.args[0]} key.')
             await RequestError('Invalid request, there isnt'
-                               f'{e.args[0]} key.').dropConnection(ws)
+                               f'{e.args[0]} key.').dropConnection(ws,
+                                                                   legacy=True)
             await ws.close()
         except ValidationError as e:
             await Logger.logger.info(e.errors())
             await RequestError(
                 f'Validation error: {e.errors()}'
-            ).dropConnection(ws)
+            ).dropConnection(ws, True)
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong').dropConnection(ws)
+            await RequestError('Something went wrong').dropConnection(
+                ws,
+                legacy=True
+            )
             await ws.close()
         return ws
 
@@ -355,10 +372,15 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True
+                                                                  )
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong!').dropConnection(ws)
+            await RequestError('Something went wrong!').dropConnection(
+                ws,
+                legacy=True
+            )
 
         return ws
 
@@ -396,11 +418,13 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True)
             return ws
         except Exception as e:
             await Logger.logException()
             await RequestError('Something went wrong'
-                               f'{e.args[0]}').dropConnection(ws)
+                               f'{e.args[0]}').dropConnection(ws,
+                                                              legacy=True)
             return ws
         return ws

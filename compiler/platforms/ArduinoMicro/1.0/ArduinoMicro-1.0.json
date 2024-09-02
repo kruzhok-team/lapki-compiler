@@ -11,10 +11,14 @@
   "author": "Maxim Klypin",
   "visual": true,
   "compile": true,
-  "compilingSettings": {
-    "compiler": "arduino-cli",
-    "flags": ["compile", "--export-binaries", "-b", "arduino:avr:micro"]
-  },
+  "mainFunction": false,
+  "mainFileExtension": "ino",
+  "compilingSettings": [
+    {
+      "command": "arduino-cli",
+      "flags": ["compile", "--export-binaries", "-b", "arduino:avr:micro"]
+    }
+  ],
   "delimeter": ";",
   "components": {
     "Button": {

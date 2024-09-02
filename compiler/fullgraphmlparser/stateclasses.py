@@ -49,6 +49,7 @@ class Labels(Enum):
     CTOR_FIELDS = 'Constructor fields'
     STATE_FIELDS = 'State fields'
     EVENT_FIELDS = 'Event fields'
+    MAIN_FUNCTION = 'Main function'
 
 
 @runtime_checkable
@@ -203,11 +204,11 @@ class ParserState:
 
 @dataclass
 class SMCompilingSettings:
-    import_files: Set[str]
+    import_files: List[str]
     build_files: Set[str]
     platform_id: str
     platform_version: str
-    platform_compiler_settings: CompilingSettings
+    platform_compiler_settings: List[CompilingSettings]
 
 
 @dataclass
@@ -218,6 +219,7 @@ class StateMachine:
     notes: List[ParserNote]
     states: List[ParserState]
     signals: Set[str]
+    main_file_extension: str
     # Установлено дефолтное значение, чтобы не трогать легаси.
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     choices: List[ParserChoiceVertex] = Field(default_factory=list)
