@@ -4,8 +4,8 @@
 class DigitalOut {
     public:
         DigitalOut(uint8_t _pin);
-        void on();
-        void off();
+        void high();
+        void low();
         void init();
         void toggle();
 

@@ -5,14 +5,12 @@ DigitalOut::DigitalOut(uint8_t _pin) {
     value = LOW;
 }
 
-//
-void DigitalOut::on() {
+void DigitalOut::high() {
     digitalWrite(pin, HIGH);
     value = HIGH;
 }
 
-//
-void DigitalOut::off() {
+void DigitalOut::low() {
     digitalWrite(pin, LOW);
     value = LOW;
 }
