@@ -390,7 +390,6 @@
           "description": "Текущее значение на пине."
         }
       },
-      "loopActions": ["read"],
       "buildFiles": ["DigitalIn.h", "DigitalIn.ino"],
       "importFiles": ["DigitalIn.h"],
       "singletone": false
