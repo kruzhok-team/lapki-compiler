@@ -1,5 +1,3 @@
-#include "const.h"
-
 #define SYSCLOCK 64e6
 #define HCLK 64e6
 #define PCLK 16e6
@@ -203,7 +201,7 @@ extern "C" {
     void SystemInit(void) {
 
         initClock();
-        SysTick_Config((uint32_t)(HCLK /4 /1000)); // Почему оно в 2 раза быстрее? o_O //Работает, константы HPRE,PPRE верны, и славно
+        SysTick_Config((uint32_t)(HCLK /4 /1000));
     }
 
     volatile uint32_t waiter = 0;

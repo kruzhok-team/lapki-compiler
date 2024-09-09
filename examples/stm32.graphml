@@ -21,13 +21,13 @@
     <node id="coreMeta">
         <data key="dNote">formal</data>
         <data key="dName">CGML_META</data>
-        <data key="dData">platform/ ms-tuc-1
+        <data key="dData">platform/ tjc-ms1-main
 
 standardVersion/ 1.0
 
 platformVersion/ 1.0
 
-name/ МС-ТЮК блинкер
+name/ Центральная мигалка МС-ТЮК
 
 author/ Lapki IDE TEAM
 
@@ -46,7 +46,7 @@ name/ Светодиод
 
 description/ Встроенный в плату светодиод, чтобы им мигать
 
-pin/ 12
+pin/ 1
 
         </data>
     </node>

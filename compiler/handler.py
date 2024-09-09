@@ -126,10 +126,12 @@ async def compile_xml(
                                         settings.platform_version,
                                         settings.build_files,
                                         base_dir_path)
-    return (await Compiler.compile_project(
+
+    project = await Compiler.compile_project(
         base_dir_path,
         settings.platform_compiler_settings
-    ), sm)
+    )
+    return (project, sm)
 
 
 class HandlerException(Exception):
