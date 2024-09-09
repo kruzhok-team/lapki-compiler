@@ -119,30 +119,37 @@ async def test_compile_schemes(scheme_path: str):
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()
+    extension = 'cpp'
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
             data = f.read()
             print(path)
             result, sm = await compile_xml(data, path)
-            await create_response(path, result, 'cpp')
+            if (sm.compiling_settings is not None):
+                if (sm.compiling_settings.platform_id.startswith('Arduino')):
+                    extension = 'ino'
+            await create_response(path, result, extension)
             dir = AsyncPath(path + 'build/')
             print(result)
             filecount = len([file async for file in dir.iterdir()])
             print(platform_manager.versions_info)
+            # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
+            # поэтому нужно удалять версии вручную
+            versions = platform_manager._delete_from_version_registry(
+                'ArduinoUno', set(['1.0']))
+            platforms = (
+                platform_manager._delete_versions_from_platform_registry(
+                    'ArduinoUno', set(['1.0']))
+            )
+            platform_manager.platforms = platforms
+            platform_manager.platforms_info = versions
+            versions = platform_manager._delete_from_version_registry(
+                'tjc-ms1-main', set(['1.0']))
+            platforms = (
+                platform_manager._delete_versions_from_platform_registry(
+                    'tjc-ms1-main', set(['1.0']))
+            )
+            platform_manager.platforms = platforms
+            platform_manager.platforms_info = versions
             assert filecount != 0
-
-    # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
-    # поэтому нужно удалять версии вручную
-    versions = platform_manager._delete_from_version_registry(
-        'ArduinoUno', set(['1.0']))
-    platforms = platform_manager._delete_versions_from_platform_registry(
-        'ArduinoUno', set(['1.0']))
-    platform_manager.platforms = platforms
-    platform_manager.platforms_info = versions
-    versions = platform_manager._delete_from_version_registry(
-        'tjc-ms1-main', set(['1.0']))
-    platforms = platform_manager._delete_versions_from_platform_registry(
-        'tjc-ms1-main', set(['1.0']))
-    platform_manager.platforms = platforms
-    platform_manager.platforms_info = versions
