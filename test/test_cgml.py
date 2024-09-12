@@ -29,6 +29,10 @@ async def init_platform():
     if not platform_manager.platform_exist('tjc-ms1-main'):
         await platform_manager.load_platform('compiler/platforms/tjc-ms1-main/'
                                              '1.0/tjc-ms1-main-1.0.json')
+    if not platform_manager.platform_exist('tjc-ms1-mtrx-a1'):
+        await platform_manager.load_platform('compiler/platforms/'
+                                             'tjc-ms1-mtrx-a1/'
+                                             '1.0/tjc-ms1-mtrx-a1-1.0.json')
 
 
 @contextmanager
@@ -91,6 +95,9 @@ async def test_generating_code():
         'examples/CyberiadaFormat-Blinker.graphml'
     ),
     pytest.param(
+        'examples/mtrx.graphml'
+    ),
+    pytest.param(
         'examples/stm32.graphml'
     ),
     pytest.param(
@@ -115,6 +122,7 @@ async def test_generating_code():
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
     """Testing compiling and code generation from CGML-schemes."""
+    # TODO: Добавить платформу в качестве аргумента теста
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
@@ -147,6 +155,14 @@ async def test_compile_schemes(scheme_path: str):
             platforms = (
                 platform_manager._delete_versions_from_platform_registry(
                     'tjc-ms1-main', set(['1.0']))
+            )
+            platform_manager.platforms = platforms
+            platform_manager.platforms_info = versions
+            versions = platform_manager._delete_from_version_registry(
+                'tjc-ms1-mtrx-a1', set(['1.0']))
+            platforms = (
+                platform_manager._delete_versions_from_platform_registry(
+                    'tjc-ms1-mtrx-a1', set(['1.0']))
             )
             platform_manager.platforms = platforms
             platform_manager.platforms_info = versions
