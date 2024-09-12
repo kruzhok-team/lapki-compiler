@@ -44,7 +44,7 @@
   "mainFunction": true,
   "delimeter": ";",
   "defaultIncludeFiles": ["stm32g030xx.h", "system.c"],
-  "defaultBuildFiles": ["tjc-ms1-b2cc4e728f9bf8f6-usercode.ld", "system.c", "startup_stm32g030xx.s", "stm32g030xx.h", "STM32G030x6.ld", "core_cm0plus.h", "core_cmInstr.h", "cmsis_gcc.h", "core_cmFunc.h", "system_stm32g0xx.h"],
+  "defaultBuildFiles": ["tjc-ms1-b2cc4e728f9bf8f6-usercode.ld", "system.c", "startup_stm32g030xx.s", "stm32g030xx.h", "core_cm0plus.h", "core_cmInstr.h", "cmsis_gcc.h", "core_cmFunc.h", "system_stm32g0xx.h"],
   "components": {
         "LED": {
         "description": "Компонент для взаимодействия со светодиодом",
