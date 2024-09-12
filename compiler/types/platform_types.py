@@ -83,13 +83,14 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
-    defaultIncludeFiles: Set[str] = Field(default_factory=set)
+    defaultIncludeFiles: List[str] = Field(default_factory=list)
     defaultBuildFiles: Set[str] = Field(default_factory=set)
     compilingSettings: List[CompilingSettings] | None = (
         None
     )
     components: Dict[str, Component]
     mainFunction: bool = False
+    mainFileExtension: str = ''
 
 
 @dataclass

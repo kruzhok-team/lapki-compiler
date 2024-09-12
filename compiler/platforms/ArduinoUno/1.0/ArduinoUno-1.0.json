@@ -12,6 +12,7 @@
   "visual": true,
   "compile": true,
   "mainFunction": false,
+  "mainFileExtension": "ino",
   "compilingSettings": [
     {
       "command": "arduino-cli",

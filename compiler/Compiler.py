@@ -1,4 +1,5 @@
 """Module implements communication with compilers."""
+import asyncio.subprocess
 import os
 import asyncio
 from asyncio.subprocess import Process
@@ -127,6 +128,8 @@ class Compiler:
     ) -> List[CommandResult]:
         """Compile project in base_dir by compiler with flags."""
         command_results: List[CommandResult] = []
+        # FIXME: грязный хак, чтобы устранить проблему с пропадающим файлом
+        await asyncio.sleep(0.1)
         for command in commands:
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
@@ -178,6 +181,8 @@ class Compiler:
                     text=False,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE)
+            case _:
+                raise CompilerException('Not supported compiler')
         await process.wait()
         stdout, stderr = await process.communicate()
 

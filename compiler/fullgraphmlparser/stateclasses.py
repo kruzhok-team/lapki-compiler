@@ -204,7 +204,7 @@ class ParserState:
 
 @dataclass
 class SMCompilingSettings:
-    import_files: Set[str]
+    import_files: List[str]
     build_files: Set[str]
     platform_id: str
     platform_version: str
@@ -219,6 +219,7 @@ class StateMachine:
     notes: List[ParserNote]
     states: List[ParserState]
     signals: Set[str]
+    main_file_extension: str
     # Установлено дефолтное значение, чтобы не трогать легаси.
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
     choices: List[ParserChoiceVertex] = Field(default_factory=list)

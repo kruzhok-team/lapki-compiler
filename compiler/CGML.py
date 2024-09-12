@@ -494,17 +494,17 @@ def __generate_setup_function_code(
 
 
 def __get_include_libraries(platform: Platform,
-                            components: List[InnerComponent]) -> Set[str]:
+                            components: List[InnerComponent]) -> List[str]:
     """Get set of source files, that must be included."""
-    included_libraries: Set[str] = deepcopy(platform.defaultIncludeFiles)
+    included_libraries: List[str] = deepcopy(platform.defaultIncludeFiles)
     for component in components:
-        included_libraries.update(
+        included_libraries.extend(
             platform.components[component.type].importFiles)
     return included_libraries
 
 
 def __generate_includes_libraries_code(
-    included_libraries: Set[str]
+    included_libraries: List[str]
 ) -> List[ParserNote]:
     """Generate code for including libraries using _INCLUDE_TEMPLATE."""
     return [create_note(
@@ -595,6 +595,7 @@ def __generate_main_function() -> ParserNote:
 \n\twhile(1) {\
 \n\t\tloop();
 \n\t}
+\n\treturn 0;
 }
 """)
 
@@ -724,7 +725,7 @@ async def parse(xml: str) -> StateMachine:
     states_with_initials = _add_initials_to_states(
         initial_with_transition, states_with_parents)
     parsed_components = __parse_components(cgml_scheme.components)
-    included_libraries: Set[str] = __get_include_libraries(
+    included_libraries: List[str] = __get_include_libraries(
         platform, list(parsed_components.values()))
     build_files = __get_build_files(platform, list(parsed_components.values()))
     notes: List[ParserNote] = [
@@ -757,5 +758,6 @@ async def parse(xml: str) -> StateMachine:
         compiling_settings=compiling_settings,
         initial_states=[*initial_with_transition.values()],
         choices=list(choices.values()),
-        final_states=final_states
+        final_states=final_states,
+        main_file_extension=platform.mainFileExtension
     )

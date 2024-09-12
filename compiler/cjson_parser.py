@@ -538,7 +538,8 @@ class CJsonParser:
             start_action='',
             signals=set([*player_signals.keys(),
                          *self._addSignals(data.components, player_signals)]),
-            start_node=startNode
+            start_node=startNode,
+            main_file_extension='ino',
         )
 
     def getFiles(self, json_data):  # type: ignore
