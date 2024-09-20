@@ -139,7 +139,6 @@ async def test_generating_code():
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str, platform_id: str):
     """Testing compiling and code generation from CGML-schemes."""
-    # TODO: Добавить платформу в качестве аргумента теста
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
