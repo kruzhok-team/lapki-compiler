@@ -144,7 +144,8 @@ async def test_compile_schemes(scheme_path: str, platform_id: str):
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     platform_manager = PlatformManager()
     if not platform_manager.platform_exist(platform_id):
-        await platform_manager.load_platform(f'compiler/platforms/{platform_id}/'
+        await platform_manager.load_platform('compiler/platforms/'
+                                             f'{platform_id}/'
                                              f'1.0/{platform_id}-1.0.json')
     extension = 'cpp'
     with open(scheme_path, 'r') as f:
