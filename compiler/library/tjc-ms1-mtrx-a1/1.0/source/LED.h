@@ -88,7 +88,7 @@ static void initLeds() {
 }
 
 /* init function */
-static auto&& init = []() -> int {
+auto&& init = []() -> int {
     initLeds();
     return 0;
 }();

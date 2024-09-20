@@ -90,37 +90,54 @@ async def test_generating_code():
                 print(e)
 
 
-@pytest.mark.parametrize('scheme_path', [
+@pytest.mark.parametrize('scheme_path, platform_id', [
     pytest.param(
-        'examples/CyberiadaFormat-Blinker.graphml'
+        'examples/CyberiadaFormat-Blinker.graphml',
+        'ArduinoUno'
     ),
     pytest.param(
-        'examples/mtrx.graphml'
+        'examples/ms1-mtrx.graphml',
+        'tjc-ms1-mtrx-a1'
     ),
     pytest.param(
-        'examples/stm32.graphml'
+        'examples/ms1-main.graphml',
+        'tjc-ms1-main'
     ),
     pytest.param(
-        'examples/choices.graphml'
+        'examples/ms1-btn.graphml',
+        'tjc-ms1-btn-a2'
     ),
     pytest.param(
-        'examples/with-final.graphml'
+        'examples/ms1-lmp.graphml',
+        'tjc-ms1-lmp-a3'
     ),
     pytest.param(
-        'examples/two_choices.graphml'
+        'examples/choices.graphml',
+        'ArduinoUno'
     ),
     pytest.param(
-        'examples/initial_states.graphml'
+        'examples/with-final.graphml',
+        'ArduinoUno'
     ),
     pytest.param(
-        'examples/with-defer.xml'
+        'examples/two_choices.graphml',
+        'ArduinoUno'
     ),
     pytest.param(
-        'examples/with-propagate-block.graphml'
+        'examples/initial_states.graphml',
+        'ArduinoUno'
+    ),
+    pytest.param(
+        'examples/with-defer.xml',
+        'ArduinoUno'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml',
+        'ArduinoUno'
     ),
 ])
 @pytest.mark.asyncio
-async def test_compile_schemes(scheme_path: str):
+async def test_compile_schemes(scheme_path: str, platform_id: str):
     """Testing compiling and code generation from CGML-schemes."""
     # TODO: Добавить платформу в качестве аргумента теста
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
@@ -143,26 +160,10 @@ async def test_compile_schemes(scheme_path: str):
             # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
             # поэтому нужно удалять версии вручную
             versions = platform_manager._delete_from_version_registry(
-                'ArduinoUno', set(['1.0']))
+                platform_id, set(['1.0']))
             platforms = (
                 platform_manager._delete_versions_from_platform_registry(
-                    'ArduinoUno', set(['1.0']))
-            )
-            platform_manager.platforms = platforms
-            platform_manager.platforms_info = versions
-            versions = platform_manager._delete_from_version_registry(
-                'tjc-ms1-main', set(['1.0']))
-            platforms = (
-                platform_manager._delete_versions_from_platform_registry(
-                    'tjc-ms1-main', set(['1.0']))
-            )
-            platform_manager.platforms = platforms
-            platform_manager.platforms_info = versions
-            versions = platform_manager._delete_from_version_registry(
-                'tjc-ms1-mtrx-a1', set(['1.0']))
-            platforms = (
-                platform_manager._delete_versions_from_platform_registry(
-                    'tjc-ms1-mtrx-a1', set(['1.0']))
+                    platform_id, set(['1.0']))
             )
             platform_manager.platforms = platforms
             platform_manager.platforms_info = versions
