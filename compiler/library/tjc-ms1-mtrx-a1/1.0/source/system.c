@@ -1,10 +1,9 @@
+#define INLINE__ __attribute__((always_inline)) inline
+using byte = uint8_t;
+
 #define SYSCLOCK 64e6
 #define HCLK 64e6
 #define PCLK 16e6
-
-#define INLINE__ __attribute__((always_inline))
-
-using byte = uint8_t;
 
 /* m1.RegBlock [A] Здесь занимаемся настройкой тактовых частот контроллера
  * descr
@@ -200,8 +199,12 @@ extern "C" {
 
     void SystemInit(void) {
 
+        #define FLASH_BASE_ADDR 0x08003800
+        SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
+        __enable_irq();  //включаем все прерывания TODO
+
         initClock();
-        SysTick_Config((uint32_t)(HCLK /4 /1000));
+        SysTick_Config((uint32_t)(HCLK /4 /1000)); // Почему оно в 2 раза быстрее? o_O //Работает, константы HPRE,PPRE верны, и славно
     }
 
     volatile uint32_t waiter = 0;

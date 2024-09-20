@@ -54,6 +54,7 @@
           "description": "Текущее значение на пине"
         }
       },
+      "loopActions": ["scan"],
       "buildFiles": ["Button.h", "Button.ino"],
       "importFiles": ["Button.h"],
       "methods": {},
