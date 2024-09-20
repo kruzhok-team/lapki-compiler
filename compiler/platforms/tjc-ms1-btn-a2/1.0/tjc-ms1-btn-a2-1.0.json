@@ -1,7 +1,7 @@
 {
-  "name": "МС-ТЮК-1: Центральная плата",
-  "id": "tjc-ms1-main",
-  "description": "Платформа для программирования центральной платы МС-ТЮК-1.", 
+  "name": "МС-ТЮК-1: Кнопочница",
+  "id": "tjc-ms1-btn-a2",
+  "description": "Платформа для программирования кнопочницы МС-ТЮК-1.", 
   "icon": "",
   "staticComponents": false,
   "version": "1.0",
@@ -46,6 +46,44 @@
   "defaultIncludeFiles": ["stm32g030xx.h", "system.c"],
   "defaultBuildFiles": ["tjc-ms1-b2cc4e728f9bf8f6-usercode.ld", "system.c", "startup_stm32g030xx.s", "stm32g030xx.h", "core_cm0plus.h", "core_cmInstr.h", "cmsis_gcc.h", "core_cmFunc.h", "system_stm32g0xx.h"],
   "components": {
+        "Button": {
+      "description": "Компонент для взаимодействия с физической кнопкой",
+      "img": "arduino/button.svg",
+      "signals": {
+        "isPressed": {
+          "img": "arduino/isPressed.svg",
+          "description": "Создает сигнал, если кнопка была нажата",
+          "checkMethod": "isPressed"
+        },
+        "clicked": {
+          "img": "arduino/clicked.svg",
+          "description": "Создает сигнал, если кнопка была кликнута",
+          "checkMethod": "clicked"
+        }
+      },
+      "constructorParameters": {
+        "pin": {
+          "type": "uint8_t",
+          "description": "Пин, к которому подключена кнопка"
+        },
+        "buttonMode": {
+          "type": "uint8_t",
+          "description": "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor",
+          "optional": true            
+        }
+      },
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "type": "int",
+          "description": "Текущее значение на пине"
+        }
+      },
+      "buildFiles": ["Button.hpp"],
+      "importFiles": ["Button.hpp"],
+      "methods": {},
+      "singletone": false
+    },
         "LED": {
         "description": "Компонент для взаимодействия со светодиодом",
         "img": "arduino/led.svg",
