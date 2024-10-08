@@ -3,19 +3,19 @@ from typing import List, Optional, Set, Dict
 
 import aiohttp
 from aiohttp import web
-from compiler.Logger import Logger
-from compiler.PlatformManager import (
+from compiler.logger import Logger
+from compiler.platform_manager import (
     PlatformException,
     PlatformManager,
     PlatformId,
     PlatformMeta
 )
-from compiler.RequestError import RequestError
+from compiler.request_error import RequestError
 from compiler.access_controller import (
     AccessController,
     AccessControllerException
 )
-from compiler.config import MAX_MSG_SIZE
+from compiler.config import get_config
 from compiler.types.inner_types import File
 from compiler.types.platform_types import Platform
 
@@ -35,7 +35,8 @@ def _get_platforms_list() -> Dict[PlatformId, PlatformMeta]:
     return platform_manager.versions_info
 
 
-def _check_token(token: str) -> None:
+def check_token(token: str) -> None:
+    """Validate token."""
     access_controller = AccessController()
     if not access_controller.check_access_token(token):
         raise AccessControllerException('Invalid token.')
@@ -50,7 +51,7 @@ async def _delete_platform_by_versions(platform_id: str,
         platform_id,
         set_versions
     )
-    platform_manager.set_platforms_info(new_versions_info)
+    platform_manager.platforms_info = new_versions_info
 
 
 async def _add_platform(platform: Platform,
@@ -62,7 +63,7 @@ async def _add_platform(platform: Platform,
         platform,
         source_files,
         images)
-    platform_manager.set_platforms_info(new_versions_info)
+    platform_manager.platforms_info = new_versions_info
     return platform.id
 
 
@@ -75,7 +76,7 @@ async def _update_platform(new_platform: Platform,
         new_platform,
         source_files,
         images)
-    platform_manager.set_platforms_info(new_versions_info)
+    platform_manager.platforms_info = new_versions_info
 
 
 async def _get_platform(platform_id: str, version: str) -> str:
@@ -87,7 +88,7 @@ async def _get_platform(platform_id: str, version: str) -> str:
 async def _delete_platform(platform_id: str) -> None:
     platform_manager = PlatformManager()
     new_versions_info = await platform_manager.delete_platform(platform_id)
-    platform_manager.set_platforms_info(new_versions_info)
+    platform_manager.platforms_info = new_versions_info
 
 Images = List[File]
 SourceFiles = List[File]
@@ -132,7 +133,7 @@ async def _prepare_request(ws: Optional[web.WebSocketResponse],
                            request: web.Request) -> web.WebSocketResponse:
     if ws is None:
         ws = web.WebSocketResponse(
-            autoclose=False, max_msg_size=MAX_MSG_SIZE)
+            autoclose=False, max_msg_size=get_config().max_msg_size)
         await ws.prepare(request)
     return ws
 
@@ -151,7 +152,8 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
+            # TODO: Отлавливание ошибок и отправка их пользователю
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)
@@ -246,7 +248,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform = Platform(**await ws.receive_json())
             images, source_files = await _get_platform_sources(
                 ws, platform.visual, platform.compile)
@@ -277,7 +279,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform_id = await ws.receive_str()
             versions_to_delete = await ws.receive_str()
             await _delete_platform_by_versions(platform_id, versions_to_delete)
@@ -302,7 +304,7 @@ class PlatformHandler:
         try:
             if access_token is None:
                 access_token = await ws.receive_str()
-            _check_token(access_token)
+            check_token(access_token)
             platform_id = await ws.receive_str()
             await _delete_platform(platform_id)
             await ws.send_str('deleted')
@@ -320,7 +322,7 @@ class PlatformHandler:
         """Check token."""
         try:
             token = await ws.receive_str()
-            _check_token(token)
+            check_token(token)
             await ws.send_str('auth_success')
             return token
         except AccessControllerException as e:

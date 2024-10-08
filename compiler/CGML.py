@@ -5,7 +5,7 @@ from typing import Dict, List, Set, Any
 from copy import deepcopy
 from string import Template
 
-from compiler.PlatformManager import PlatformManager
+from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
 from compiler.types.inner_types import (
     InnerComponent,
@@ -93,8 +93,10 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
-                (r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$'
-                 r'(?P<postfix>w+)$'),
+                (
+                    r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$'
+                    r'(?P<postfix>w+)$'
+                ),
                 r'^(?P<trigger>[^\[\]]+) (?P<postfix>.+)$',
                 r'^(?P<trigger>[^\[\]]+)\[(?P<condition>.+)\]$',
                 r'^\[(?P<condition>.+)\]$',
@@ -496,17 +498,17 @@ def __generate_setup_function_code(
 
 
 def __get_include_libraries(platform: Platform,
-                            components: List[InnerComponent]) -> Set[str]:
+                            components: List[InnerComponent]) -> List[str]:
     """Get set of source files, that must be included."""
-    included_libraries: Set[str] = set()
+    included_libraries: List[str] = deepcopy(platform.defaultIncludeFiles)
     for component in components:
-        included_libraries.update(
+        included_libraries.extend(
             platform.components[component.type].importFiles)
     return included_libraries
 
 
 def __generate_includes_libraries_code(
-    included_libraries: Set[str]
+    included_libraries: List[str]
 ) -> List[ParserNote]:
     """Generate code for including libraries using _INCLUDE_TEMPLATE."""
     return [create_note(
@@ -520,7 +522,7 @@ def __get_build_files(
     components: List[InnerComponent]
 ) -> Set[str]:
     """Get set of files, that must be included for compiling."""
-    build_libraries: Set[str] = set()
+    build_libraries: Set[str] = deepcopy(platform.defaultBuildFiles)
     for component in components:
         build_libraries.update(
             platform.components[component.type].buildFiles)
@@ -588,6 +590,18 @@ def _add_initials_to_states(
         state.type = 'group'
 
     return new_states
+
+
+def __generate_main_function() -> ParserNote:
+    """Generate main function, that call setup function and loop function."""
+    return create_note(Labels.MAIN_FUNCTION, """int main() {\
+\n\tsetup();\
+\n\twhile(1) {\
+\n\t\tloop();
+\n\t}
+\n\treturn 0;
+}
+""")
 
 
 def __create_choices(
@@ -669,6 +683,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')
     state_machines: Dict[str, StateMachine] = {}
+
     for sm_id, state_machine in cgml_scheme.state_machines.items():
         sm_name: str | None = state_machine.name
         if not check_sm_id(sm_id):
@@ -735,7 +750,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
         states_with_initials = _add_initials_to_states(
             initial_with_transition, states_with_parents)
         parsed_components = __parse_components(state_machine.components)
-        included_libraries: Set[str] = __get_include_libraries(
+        included_libraries: List[str] = __get_include_libraries(
             platform, list(parsed_components.values()))
         build_files = __get_build_files(
             platform, list(parsed_components.values()))
@@ -752,6 +767,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
             included_libraries,
             build_files,
             platform.id,
+            platform_version,
             platform.compilingSettings
         )
         state_machines[sm_id] = StateMachine(
@@ -760,6 +776,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
             name=sm_name,
             start_action='',
             notes=notes,
+            main_file_extension=platform.mainFileExtension,
             states=[global_state, *list(states_with_initials.values())],
             signals=signals,
             compiling_settings=compiling_settings,

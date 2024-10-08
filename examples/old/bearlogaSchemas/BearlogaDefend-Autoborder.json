@@ -150,7 +150,7 @@
             "y": -530
          },
          "do": [],
-         "color": "#08B88C"
+         "color": "#F7A1FA"
       },
       {
          "source": "n0",
@@ -187,7 +187,7 @@
                "args": {}
             }
          ],
-         "color": "#F13574"
+         "color": "#68E77F"
       },
       {
          "source": "n3",
@@ -202,7 +202,7 @@
             "y": -203
          },
          "do": [],
-         "color": "#F75C62"
+         "color": "#2132D6"
       },
       {
          "source": "n0::n1",
@@ -217,7 +217,7 @@
             "y": 422
          },
          "do": [],
-         "color": "#6C7AA3"
+         "color": "#B0EDB3"
       },
       {
          "source": "n0::n2",
@@ -232,7 +232,7 @@
             "y": 573
          },
          "do": [],
-         "color": "#C05F9F"
+         "color": "#EBC579"
       }
    ],
    "components": {

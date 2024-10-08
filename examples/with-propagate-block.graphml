@@ -11,42 +11,74 @@
 <key id="dColor" for="edge"/>
 
 <graph id="G" edgedefault="directed">
-    <data key="dStateMachine"/>
-    <node id="">
-        <data key="dName">ArduinoUno</data>
-        <data key="dData">name/ Arduino-Blinker
-description/ Включение и выключение лампочки по таймеру
-        </data>
-    </node>
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ ArduinoUno
 
-    <node id="init">
-        <data key="dInitial"></data>
-        <data key="dGeometry" x="311" y="-94"></data>
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+name/ Arduino-Blinker
+
+description/ Включение и выключение лампочки по таймеру
+
+</data>
+</node>
+    <node id="mqnudktinpiciufanqnn">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-91" y="94.8125"></point>
+      </data>
     </node>
     
-    <node id="LED1">
-        <data key="dName">LED1</data>
-        <data key="dData">type/ LED
+    <node id="cLED1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED1
+
+type/ LED
+
 name/ Светодиод
+
 description/ Встроенный в плату светодиод, чтобы им мигать
+
 pin/ 12
-        </data>
+
+</data>
     </node>
 
-    <node id="timer1">
-        <data key="dName">timer1</data>
-        <data key="dData">type/ Timer
-name/ Светодиод
-description/ Программный таймер.
-        </data>
+    <node id="ctimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ timer1
+
+type/ Timer
+
+</data>
     </node>
 
-    <node id="timer2">
-        <data key="dName">timer2</data>
-        <data key="dData">type/ Timer
-name/ Светодиод
-description/ Программный таймер.
-        </data>
+    <node id="ctimer2">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ timer2
+
+type/ Timer
+
+</data>
+    </node>
+
+        <node id="cQHsmSerial">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ QHsmSerial
+
+type/ QHsmSerial
+
+baud/ 9600
+
+</data>
     </node>
 
     <node id="diod1">
@@ -56,10 +88,11 @@ LED1.on();
 timer1.start(1000);
 
 timer2.timeout propagate/
-Serial.println("geree");
+QHsmSerial::println("Propagate");
         </data>
-        <data key="dGeometry" x="82" y="57"
-            width="450.0" height="95" />
+      <data key="dGeometry">
+        <rect x="9" y="194.8125" width="450" height="95"></rect>
+      </data>
     </node>
 
     <node id="diod2">
@@ -69,25 +102,27 @@ LED1.off();
 timer1.start(1000);
 
 timer2.timeout block/
-Serial.println("geree");
+QHsmSerial::println("Blocked");
         </data>
-        <data key="dGeometry" x="81" y="334"
-            width="450" height="95" />
+      <data key="dGeometry">
+        <rect x="9" y="194.8125" width="450" height="95"></rect>
+      </data>
     </node>
-    
-    <edge id="edgeLED1" source="" target="LED1"></edge>
-    <edge id="edgetimer1" source="" target="timer1"></edge>
-    <edge id="edgetimer" source="" target="timer2"></edge>
-    <edge id="edge1" source="init" target="diod1"></edge>
+
+    <edge id="edge1" source="mqnudktinpiciufanqnn" target="diod1"></edge>
     <edge id="edge2" source="diod1" target="diod2">
         <data key="dData">timer1.timeout/</data>
         <data key="dColor">#F29727</data>
-        <data key="dGeometry" x="457" y="173"/>
+                      <data key="dLabelGeometry">
+        <point x="321.1500000000001" y="564.9615625"></point>
+      </data>
     </edge>
 
     <edge id="edge3" source="diod2" target="diod1">
         <data key="dData">timer1.timeout/</data>
-        <data key="dGeometry" x="16" y="175"/>
+                      <data key="dLabelGeometry">
+        <point x="321.1500000000001" y="564.9615625"></point>
+      </data>
         <data key="dColor">#F24C3D</data>
     </edge>
 

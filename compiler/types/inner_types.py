@@ -41,6 +41,19 @@ class InnerEvent:
     check: str | None = None
 
 
+CompileCommands = Literal['gcc', 'g++', 'make', 'cmake', 'avr-gcc']
+
+
+class CommandResult(BaseModel):
+    """The result of the command that was \
+        called during the compilation."""
+
+    command: str
+    return_code: int | None
+    stdout: str | bytes
+    stderr: str | bytes
+
+
 class File(BaseModel):
     filename: str
     extension: str
@@ -49,14 +62,33 @@ class File(BaseModel):
     @field_validator('filename', mode='after')
     @classmethod
     def check_file_path(cls, v: str) -> str:
-        """Check, that filepath doesn't is not relative."""
+        """Check, that filepath is not relative."""
         if '..' in v:
             raise ValueError('Path is not correct, remove all .. from path.')
         return v
 
 
 class StateMachineResult(BaseModel):
-    """State machine compiling result."""
+    result: Literal['OK', 'NOTOK']
+    name: str
+    commands: List[CommandResult]
+    binary: List[File]
+    source: List[File]
+
+
+@dataclass
+class BuildFile:
+    filename: str
+    extension: str
+    fileContent: bytes
+
+
+class LegacyResponse(BaseModel):
+    """
+    Data sent by a compiler.
+
+    Used to communicate with older versions of Lapki IDE
+    """
 
     result: str
     return_code: int
@@ -76,6 +108,9 @@ class CompilerResponse(BaseModel):
 
     result: str
     state_machines: Dict[str, StateMachineResult]
+
+    def __str__(self) -> str:
+        return (f'Response: {self.result}, {self.state_machines}')
 
 
 @dataclass

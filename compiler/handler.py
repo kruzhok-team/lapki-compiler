@@ -3,6 +3,7 @@ import json
 import base64
 import os
 import time
+import os.path
 from typing import Dict, List, Optional, Set
 from datetime import datetime
 from itertools import chain
@@ -12,11 +13,11 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
-from compiler.Compiler import CompilerResult
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
-    StateMachineId,
+    CommandResult,
+    LegacyResponse,
     StateMachineResult
 )
 from compiler.types.ide_types import CompilerSettings
@@ -25,25 +26,27 @@ from compiler.fullgraphmlparser.stateclasses import (
     SMCompilingSettings
 )
 from compiler.types.ide_types import IdeStateMachine
-from compiler.GraphmlParser import GraphmlParser
-from compiler.CJsonParser import CJsonParser
+from compiler.graphml_parser import GraphmlParser
+from compiler.cjson_parser import CJsonParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.Compiler import Compiler
-from compiler.JsonConverter import JsonConverter
-from compiler.RequestError import RequestError
-from compiler.config import BUILD_DIRECTORY, MAX_MSG_SIZE
-from compiler.Logger import Logger
+from compiler.json_converter import JsonConverter
+from compiler.request_error import RequestError
+from compiler.config import get_config
+from compiler.logger import Logger
+
+BinaryFile = File
 
 
 def get_sm_path(base_directory: str,
-                sm_id: str) -> StateMachineId:
+                sm_id: str) -> str:
     """Get str path to state machine project."""
     return os.path.join(base_directory, sm_id)
 
 
 async def create_response(
         base_dir: str,
-        compiler_results: Dict[StateMachineId, CompilerResult]
+        compiler_result: Dict[str, tuple[List[CommandResult], StateMachine]]
 ) -> CompilerResponse:
     """
     Get source files, binary files from\
@@ -51,48 +54,55 @@ async def create_response(
 
         Doesn't send anything.
     """
+    status = 'OK'
+
     compiler_response = CompilerResponse(
-        result='OK',
+        result=status,
         state_machines={}
     )
-    for sm_id, compiler_result in compiler_results.items():
+
+    build_path = os.path.join(base_dir, 'build/')
+
+    for sm_id, commands_result_and_sm in compiler_result.items():
+        commands_result, sm = commands_result_and_sm
         path_to_sm = get_sm_path(base_dir, sm_id)
-        if compiler_result.return_code == 0:
-            result = 'OK'
-        else:
-            result = 'NOTOK'
-            compiler_response.result = 'NOTOK'
+        sm_compile_status = 'OK'
+        for command in commands_result:
+            if (command.return_code):
+                sm_compile_status = 'NOTOK'
+                compiler_response.result = 'NOTOK'
+                break
         response = StateMachineResult(
-            result=result,
-            return_code=compiler_result.return_code,
-            stdout=compiler_result.stdout,
-            stderr=compiler_result.stderr,
+            name=sm_id,
+            result=sm_compile_status,
+            commands=[],
             binary=[],
             source=[]
         )
         build_path = os.path.join(path_to_sm, 'build/')
-        await AsyncPath(build_path).mkdir(exist_ok=True)
         async for path in AsyncPath(build_path).rglob('*'):
             if await path.is_file():
                 async with async_open(path, 'rb') as f:
                     binary = await f.read()
                     b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(File(
-                        filename=path.name.split('.')[0],
-                        extension=''.join(path.suffixes),
-                        fileContent=b64_data.decode('ascii'),
-                    ))
-        response.source.append(await Handler.read_source_file(
-            sm_id,
-            'ino',
-            path_to_sm)
+                    response.binary.append(
+                        File(
+                            filename=path.name.split('.')[0],
+                            extension=''.join(path.suffixes),
+                            fileContent=b64_data.decode('ascii'),
+                        )
+                    )
+        response.source.append(await Handler.readSourceFile(
+            'sketch',
+            sm.main_file_extension,
+            base_dir)
         )
-        response.source.append(await Handler.read_source_file(
-            sm_id,
+        response.source.append(await Handler.readSourceFile(
+            'sketch',
             'h',
-            path_to_sm)
+            base_dir)
         )
-        compiler_response.state_machines[sm_id] = response
+
     return compiler_response
 
 
@@ -117,45 +127,47 @@ async def create_sm_directory(base_directory: str,
     return path
 
 
-async def compile_xml(xml: str,
-                      base_dir_path: str
-                      ) -> Dict[StateMachineId, CompilerResult]:
+async def compile_xml(
+    xml: str,
+    base_dir_path: str) -> Dict[str, tuple[List[CommandResult],
+                                           StateMachine]]:
     """
     Compile CGML scheme.
 
     This function generate code from scheme, compile it.
 
-    A separate project is created for each state machine.
-    Each state machine is compiled separately.
-
     Doesn't send anything.
     """
     state_machines: Dict[str, StateMachine] = await parse(xml)
-    compiler_results: Dict[StateMachineId, CompilerResult] = {}
-    for sm_id, state_machine in state_machines.items():
+    compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
+    default_library = get_default_libraries()
+    for sm_id, sm in state_machines.items():
         path = await create_sm_directory(base_dir_path, sm_id)
-        await CppFileWriter(state_machine, True, True).write_to_file(
-            path, 'ino'
-        )
-        settings: SMCompilingSettings | None = state_machine.compiling_settings
-        if settings is None:
-            raise Exception('Internal error! Settings compile is None!')
-        default_library = get_default_libraries()
-        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                            default_library,
-                                            path)
-        await Compiler.include_source_files(settings.platform_id,
-                                            settings.build_files,
-                                            path)
-        flags = settings.platform_compiler_settings.flags
-        compiler = settings.platform_compiler_settings.compiler
-        compiler_results[sm_id] = await Compiler.compile_project(
+        await CppFileWriter(sm, True, True).write_to_file(
             path,
-            flags,
-            compiler
+            sm.main_file_extension)
+        settings: SMCompilingSettings | None = sm.compiling_settings
+        build_path = os.path.join(base_dir_path, 'build/')
+        await AsyncPath(build_path).mkdir(exist_ok=True)
+        if settings is None:
+            raise Exception('No settings!!')
+        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                            '1.0',  # TODO: Версия стандарта?
+                                            default_library,
+                                            base_dir_path)
+        await Compiler.include_source_files(settings.platform_id,
+                                            settings.platform_version,
+                                            settings.build_files,
+                                            base_dir_path)
+
+        commands_results = await Compiler.compile_project(
+            base_dir_path,
+            settings.platform_compiler_settings
         )
 
-    return compiler_results
+        compile_results[sm_id] = (commands_results, sm)
+
+    return compile_results
 
 
 class HandlerException(Exception):
@@ -171,11 +183,10 @@ class Handler:
         pass
 
     @staticmethod
-    async def read_source_file(
+    async def readSourceFile(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
-        async with async_open(os.path.join(path, f'{filename}.{extension}'),
-                              'r') as f:
+        async with async_open(f'{path}{filename}.{extension}', 'r') as f:
             data = await f.read()
         return File(
             filename=filename,
@@ -189,29 +200,31 @@ class Handler:
         ws: Optional[web.WebSocketResponse] = None
     ) -> web.WebSocketResponse:
         """Generate code from CGML-scheme and compile it."""
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
             base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                BUILD_DIRECTORY, base_dir.replace(' ', '_'))
+                config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result: Dict[StateMachineId, CompilerResult] = (
-                await compile_xml(xml, base_dir)
+            compiler_result = await compile_xml(
+                xml,
+                base_dir
             )
-            response = await create_response(base_dir, compiler_result)
+            response = await create_response(base_dir,
+                                             compiler_result,
+                                             )
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())
         except CGMLException as e:
-            await ws.send_str('error')
             await Logger.logException()
             await RequestError(', '.join(map(str, e.args))).dropConnection(ws)
         except Exception:
             await Logger.logException()
-            await ws.send_str('error')
             await RequestError('Internal error!').dropConnection(ws)
         return ws
 
@@ -225,9 +238,10 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
             ws = web.WebSocketResponse(
-                autoclose=False, max_msg_size=MAX_MSG_SIZE)
+                autoclose=False, max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         try:
             await Logger.logger.info(request)
@@ -241,7 +255,7 @@ class Handler:
             flags: List[str] = compiler_settings.flags
             dirname = str(datetime.now()) + '/'
             dirname = dirname.replace(' ', '_')
-            path = BUILD_DIRECTORY + dirname
+            path = os.path.join(config.build_directory, dirname)
             extension = Compiler.supported_compilers[compiler]['extension'][0]
             parser = CJsonParser()
             components = list(data.components.values())
@@ -254,11 +268,6 @@ class Handler:
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
                         libraries, Compiler.c_default_libraries)
-                    build_files = await Compiler.get_build_files(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
                     await Compiler.include_library_files(
                         libraries,
                         dirname,
@@ -275,52 +284,41 @@ class Handler:
                     # type: ignore
                     await CppFileWriter(sm).write_to_file(path, 'ino')
                     await Logger.logger.info('Parsed and wrote to ino')
-                    build_files = await Compiler.get_build_files(
-                        libraries,
-                        compiler,
-                        path,
-                        platform)
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.h',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.h',
-                        Compiler.DEFAULT_LIBRARY_ID
-                    )
-                    await Compiler.include_library_files(
-                        libraries,
-                        dirname,
-                        '.ino',
-                        platform)
-                    await Compiler.include_library_files(
-                        Compiler.c_default_libraries,
-                        dirname,
-                        '.c',
-                        Compiler.DEFAULT_LIBRARY_ID)
+                    ino_libraries = {f'{library}.ino'
+                                     for library in libraries}
+                    h_libraries = {f'{library}.h'
+                                   for library in libraries}
+                    libraries = h_libraries | ino_libraries
+                    await Compiler.include_source_files(platform,
+                                                        '1.0',
+                                                        libraries,
+                                                        path)
+                    await Compiler.include_source_files(
+                        Compiler.DEFAULT_LIBRARY_ID,
+                        '1.0',
+                        get_default_libraries(),
+                        path)
                     await Logger.logger.info(f'{libraries} included')
 
-            result: CompilerResult = await Compiler.compile(
+            result: CommandResult = await Compiler.compile(
                 path,
-                build_files,
+                set(),
                 ['compile', *flags],
                 compiler)
-            response = StateMachineResult(
+            response = LegacyResponse(
                 result='NOTOK',
-                return_code=result.return_code,
-                stdout=result.stdout,
-                stderr=result.stderr,
+                return_code=result.return_code if result.return_code else 0,
+                stdout=str(result.stdout),
+                stderr=str(result.stderr),
                 binary=[],
                 source=[]
             )
 
             if result.return_code == 0:
                 response.result = 'OK'
-                build_path = ''.join([BUILD_DIRECTORY, dirname, 'build/'])
-                source_path = ''.join([BUILD_DIRECTORY, dirname])
+                build_path = ''.join(
+                    [config.build_directory, dirname, 'build/'])
+                source_path = ''.join([config.build_directory, dirname])
                 async for path in AsyncPath(build_path).rglob('*'):
                     if await path.is_file():
                         async with async_open(path, 'rb') as f:
@@ -332,12 +330,12 @@ class Handler:
                                 fileContent=b64_data.decode('ascii'),
                             ))
 
-                response.source.append(await Handler.read_source_file(
+                response.source.append(await Handler.readSourceFile(
                     'sketch',
                     extension,
                     source_path)
                 )
-                response.source.append(await Handler.read_source_file(
+                response.source.append(await Handler.readSourceFile(
                     'sketch',
                     'h',
                     source_path)
@@ -348,100 +346,25 @@ class Handler:
             await Logger.logger.error('Invalid request, there isnt'
                                       f'{e.args[0]} key.')
             await RequestError('Invalid request, there isnt'
-                               f'{e.args[0]} key.').dropConnection(ws)
+                               f'{e.args[0]} key.').dropConnection(ws,
+                                                                   legacy=True)
             await ws.close()
         except ValidationError as e:
             await Logger.logger.info(e.errors())
             await RequestError(
                 f'Validation error: {e.errors()}'
-            ).dropConnection(ws)
+            ).dropConnection(ws, True)
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong').dropConnection(ws)
+            await RequestError('Something went wrong').dropConnection(
+                ws,
+                legacy=True
+            )
             await ws.close()
         return ws
 
     @staticmethod
-    async def handle_ws_compile_source(request: web.Request):
-        """
-        Legacy handler for compiling from source.
-
-        Send: CompilerResponse | RequestError
-        """
-        ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
-        await ws.prepare(request)
-        data = json.loads(await ws.receive_json())
-        await Logger.logger.info(data)
-        try:
-            source = data['source']
-            flags = data['compilerSettings']['flags']
-            compiler = data['compilerSettings']['compiler']
-        except KeyError as e:
-            await RequestError('Invalid request there'
-                               f' isnt key {e.args[0]}').dropConnection(ws)
-            return ws
-        if compiler not in Compiler.supported_compilers:
-            supported_compilers = list(map(
-                str,
-                Compiler.supported_compilers.keys())
-            )
-            await Logger.logger.error(f'Unsupported compiler {compiler}.')
-            await RequestError(f'Unsupported compiler {compiler}.'
-                               'Supported compilers:'
-                               f'{supported_compilers}').dropConnection(ws)
-
-        dirname = os.path.join(BUILD_DIRECTORY, str(datetime.now()), '/')
-        parser = CJsonParser()
-        if compiler == 'arduino-cli':
-            dirname += source[0]['filename'] + '/'
-
-        await AsyncPath(dirname).mkdir(parents=True, exist_ok=True)
-        files: List[File] = parser.getFiles(source)
-        for file in files:
-            path = ''.join([dirname, file.filename, file.extension])
-            async with async_open(path, 'w') as f:
-                await f.write(file.fileContent)
-        if compiler in ['g++', 'gcc']:
-            platform = 'cpp'
-        else:
-            platform = 'arduino'
-        build_files: Set[str] = await Compiler.get_build_files(
-            libraries=set(),
-            compiler=compiler,
-            directory=dirname,
-            platform=platform)
-        result: CompilerResult = await Compiler.compile(
-            dirname,
-            build_files,
-            flags,
-            compiler)
-        response = StateMachineResult(
-            result='OK',
-            return_code=result.return_code,
-            stdout=result.stdout,
-            stderr=result.stderr,
-            binary=[],
-            source=[]
-        )
-
-        async for path in AsyncPath(''.join([dirname, '/build/'])).rglob('*'):
-            if await path.is_file():
-                async with async_open(path, 'rb') as f:
-                    binary = await f.read()
-                    b64_data: bytes = base64.b64encode(binary)
-                    response.binary.append(File(
-                        filename=path.name,
-                        fileContent=b64_data.decode('ascii'),
-                        extension=''.join(path.suffixes),
-                    ))
-
-        await ws.send_json(response.model_dump())
-        await ws.close()
-
-        return ws
-
-    @staticmethod
-    def calculate_bearloga_id() -> str:
+    def calculateBearlogaId() -> str:
         """Generate unique Id for Bearloga's file."""
         return f'{(time.time() + 62135596800) * 10000000:f}'.split('.')[0]
 
@@ -454,8 +377,9 @@ class Handler:
 
         Send: CompilerResponse | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         unprocessed_xml = await ws.receive_str()
         filename_without_extension = await ws.receive_str()
@@ -476,7 +400,7 @@ class Handler:
                     'stderr': '',
                     'source': [{
                         'filename': f'{subplatform}_'
-                        f'{Handler.calculate_bearloga_id()}',
+                        f'{Handler.calculateBearlogaId()}',
                         'extension': '.json',
                         'fileContent': response
                     }],
@@ -485,10 +409,15 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True
+                                                                  )
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong!').dropConnection(ws)
+            await RequestError('Something went wrong!').dropConnection(
+                ws,
+                legacy=True
+            )
 
         return ws
 
@@ -501,8 +430,9 @@ class Handler:
 
         Send: File | RequestError
         """
+        config = get_config()
         if ws is None:
-            ws = web.WebSocketResponse(max_msg_size=MAX_MSG_SIZE)
+            ws = web.WebSocketResponse(max_msg_size=config.max_msg_size)
             await ws.prepare(request)
         data = IdeStateMachine(**json.loads(await ws.receive_str()))
         filename = await ws.receive_str()
@@ -517,8 +447,7 @@ class Handler:
             xml: str = await converter.parse(states_with_id, data.initialState)
             await ws.send_json(
                 {
-                    'filename': (f'{filename}_'
-                                 f'{Handler.calculate_bearloga_id()}'),
+                    'filename': f'{filename}_{Handler.calculateBearlogaId()}',
                     'extension': 'graphml',
                     'fileContent': xml
                 })
@@ -526,11 +455,13 @@ class Handler:
         except KeyError as e:
             await Logger.logException()
             await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws)
+                               f'key {e.args[0]}').dropConnection(ws,
+                                                                  legacy=True)
             return ws
         except Exception as e:
             await Logger.logException()
             await RequestError('Something went wrong'
-                               f'{e.args[0]}').dropConnection(ws)
+                               f'{e.args[0]}').dropConnection(ws,
+                                                              legacy=True)
             return ws
         return ws

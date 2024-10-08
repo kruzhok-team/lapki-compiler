@@ -9,28 +9,32 @@ from contextlib import contextmanager
 
 import pytest
 from aiopath import AsyncPath
-from compiler.config import BUILD_DIRECTORY
+from compiler.config import get_config
 from compiler.handler import compile_xml, create_response
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
-from compiler.types.inner_types import InnerEvent, InnerTrigger
 from compiler.types.platform_types import Platform
-from compiler.CGML import __parse_actions, parse
-from compiler.PlatformManager import PlatformManager
 from compiler.CGML import parse
+from compiler.platform_manager import PlatformManager
 
 pytest_plugins = ('pytest_asyncio',)
 
 
 async def init_platform():
+    """Init ArduinoUno platform."""
     platform_manager = PlatformManager()
-    # platform_manager.init_platforms()
     if not platform_manager.platform_exist('ArduinoUno'):
-        await platform_manager.load_platform('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json')
+        await platform_manager.load_platform('compiler/platforms/ArduinoUno/'
+                                             '1.0/ArduinoUno-1.0.json')
+    if not platform_manager.platform_exist('tjc-ms1-main'):
+        await platform_manager.load_platform('compiler/platforms/tjc-ms1-main/'
+                                             '1.0/tjc-ms1-main-1.0.json')
 
 
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
+    """Create test folder by path and delete it\
+        after exit from 'with' statement and wait time."""
     try:
         Path(path).mkdir(parents=True)
         yield
@@ -43,9 +47,7 @@ def create_test_folder(path: str, wait_time: int):
     'path',
     [
         pytest.param('examples/CyberiadaFormat-Blinker.graphml',
-                     id='parse ArduinoUno'),
-        pytest.param('examples/two-blinkers.graphml',
-                     id='parse multidocument')
+                     id='parse ArduinoUno')
     ]
 )
 def test_parse(path: str):
@@ -58,61 +60,19 @@ def test_parse(path: str):
 @pytest.mark.parametrize(
     'path',
     [
-        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json',
-                     id='create ArduinoUno platform'),
+        pytest.param('compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'),
     ]
 )
 def test_new_platform_creation(path: str):
+    """Test Platform object creation."""
     with open(path, 'r') as f:
         platform = Platform(**json.loads(f.read()))
     print(platform)
 
 
-@pytest.mark.parametrize(
-    'raw_trigger, expected',
-    [
-        pytest.param(
-            """entry/
-                LED1.on();
-                timer1.start(1000);
-                """,
-            [
-                InnerEvent(
-                    InnerTrigger(
-                        'entry',
-                        None,
-                        None
-                    ),
-                    """
-                LED1.on();
-                timer1.start(1000);
-                """
-                )
-            ]
-        ),
-        pytest.param(
-            'timer1.timeout/',
-            [
-                InnerEvent(
-                    InnerTrigger(
-                        'timer1_timeout',
-                        None,
-                        None
-                    ),
-                    '',
-                    check='timer1.timeout'
-                )
-            ]
-
-        )
-    ]
-)
-def test_parse_actions(raw_trigger: str, expected: str):
-    assert __parse_actions(raw_trigger) == expected
-
-
 @pytest.mark.asyncio
 async def test_generating_code():
+    """Test generating code without compiling."""
     await init_platform()
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
@@ -130,44 +90,66 @@ async def test_generating_code():
     pytest.param(
         'examples/CyberiadaFormat-Blinker.graphml'
     ),
-    # pytest.param(
-    #     'examples/choices.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/with-final.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/two_choices.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/initial_states.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/two-blinkers.graphml'
-    # ),
-    # pytest.param(
-    #     'examples/with-defer.xml'
-    # ), TODO: Переделать под новый формат
-    # pytest.param(
-    #     'examples/with-propagate-block.graphml'
-    # ), TODO: Переделать под новый формат
+    pytest.param(
+        'examples/stm32.graphml'
+    ),
+    pytest.param(
+        'examples/choices.graphml'
+    ),
+    pytest.param(
+        'examples/with-final.graphml'
+    ),
+    pytest.param(
+        'examples/two_choices.graphml'
+    ),
+    pytest.param(
+        'examples/initial_states.graphml'
+    ),
+    pytest.param(
+        'examples/with-defer.xml'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str):
-    # TODO: Пофиксить баг с повторной загрузкой платформы при
-    # запуске всех тестов сразу.
-    await AsyncPath(BUILD_DIRECTORY).mkdir(exist_ok=True)
+    """Testing compiling and code generation from CGML-schemes."""
+    await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
+    platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()
+    extension = 'cpp'
     with open(scheme_path, 'r') as f:
-        path = test_path + '/test_project/'
+        path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
             data = f.read()
-            parsed_data = await parse(data)
-            result = await compile_xml(data, path)
-            await create_response(path, result)
-            for sm_id in parsed_data.keys():
-                dir = AsyncPath(os.path.join(path, sm_id, 'build/'))
-                print(result[sm_id].stderr)
-                filecount = len([file async for file in dir.iterdir()])
-                assert filecount != 0
+            print(path)
+            result, sm = await compile_xml(data, path)
+            if (sm.compiling_settings is not None):
+                if (sm.compiling_settings.platform_id.startswith('Arduino')):
+                    extension = 'ino'
+            await create_response(path, result, extension)
+            dir = AsyncPath(path + 'build/')
+            print(result)
+            filecount = len([file async for file in dir.iterdir()])
+            print(platform_manager.versions_info)
+            # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
+            # поэтому нужно удалять версии вручную
+            versions = platform_manager._delete_from_version_registry(
+                'ArduinoUno', set(['1.0']))
+            platforms = (
+                platform_manager._delete_versions_from_platform_registry(
+                    'ArduinoUno', set(['1.0']))
+            )
+            platform_manager.platforms = platforms
+            platform_manager.platforms_info = versions
+            versions = platform_manager._delete_from_version_registry(
+                'tjc-ms1-main', set(['1.0']))
+            platforms = (
+                platform_manager._delete_versions_from_platform_registry(
+                    'tjc-ms1-main', set(['1.0']))
+            )
+            platform_manager.platforms = platforms
+            platform_manager.platforms_info = versions
+            assert filecount != 0

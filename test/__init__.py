@@ -1,3 +1,4 @@
+"""Module implements testing the compiler."""
 import sys
 sys.path.append('.')
 sys.path.append('./compiler/')

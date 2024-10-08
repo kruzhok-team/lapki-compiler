@@ -93,7 +93,8 @@ class CppFileWriter:
              'user_variables_c'),
             (Labels.USER_FUNC_C.value, 'user_methods_c'),
             (Labels.SETUP.value, 'setup'),
-            (Labels.LOOP.value, 'loop')
+            (Labels.LOOP.value, 'loop'),
+            (Labels.MAIN_FUNCTION.value, 'main_function')
         ]
 
         self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
@@ -261,6 +262,8 @@ class CppFileWriter:
                 await self._insert_file_template('defer_loop.txt')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
                 await self._insert_string('\n}')
+            if self.notes_dict['main_function']:
+                await self._insert_string(self.notes_dict['main_function'])
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n//Start of c code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
@@ -448,8 +451,8 @@ class CppFileWriter:
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
-            await self._insert_string('        case Q_VERTEX_SIG:')
             if state.initial_state:
+                await self._insert_string('        case Q_VERTEX_SIG:')
                 await self._insert_string(' {\n')
                 await self._insert_string(f'            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{state.initial_state});\n')
                 await self._insert_string('            inVertex = false;\n')
@@ -457,10 +460,6 @@ class CppFileWriter:
                 await self._insert_string('        }\n')
             else:
                 await self._insert_string('\n')
-            await self._insert_string('        case QEP_EMPTY_SIG_: {\n')
-            await self._insert_string('            status_ = Q_HANDLED();\n')
-            await self._insert_string('            break;\n')
-            await self._insert_string('        }\n')
             await self._insert_string('        case Q_EXIT_SIG: {\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.exit.split('\n')]) + '\n')
             await self._insert_string('            status_ = Q_HANDLED();\n')

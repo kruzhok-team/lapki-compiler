@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
-  <data key="gFormat">Cyberiada-GraphML</data>
-  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
-  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
-  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
-  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
-  <key for="edge" id="dGeometry"></key>
-  <key for="node" id="dGeometry"></key>
-  <key for="edge" id="dColor"></key>
-  <key for="node" id="dNote"></key>
-  <key for="node" id="dColor"></key>
+<data key="gFormat">Cyberiada-GraphML</data>
+<key id="dName" for="node" attr.name="name" attr.type="string"/>
+<key id="dData" for="edge" attr.name="data" attr.type="string"/>
+<key id="dData" for="node" attr.name="data" attr.type="string"/>
+<key id="dInitial" for="node" attr.name="initial" attr.type="string"/>
+<key id="dGeometry" for="edge"/>
+<key id="dGeometry" for="node"/>
+<key id="dColor" for="edge"/>
   <graph id="G">
     <data key="dStateMachine"/>
     <node id="coreMeta">
