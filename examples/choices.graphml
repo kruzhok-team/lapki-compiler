@@ -11,6 +11,7 @@
   <key for="node" id="dNote"></key>
   <key for="node" id="dColor"></key>
   <graph id="G">
+    <data key="dStateMachine"/>
     <node id="coreMeta">
       <data key="dNote">formal</data>
       <data key="dName">CGML_META</data>
