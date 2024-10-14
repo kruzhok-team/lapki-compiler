@@ -4,7 +4,7 @@ import base64
 import os
 import time
 import os.path
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 from datetime import datetime
 from itertools import chain
 
@@ -17,7 +17,8 @@ from compiler.types.inner_types import (
     CompilerResponse,
     File,
     CommandResult,
-    LegacyResponse
+    LegacyResponse,
+    StateMachineResult
 )
 from compiler.types.ide_types import CompilerSettings
 from compiler.fullgraphmlparser.stateclasses import (
@@ -37,10 +38,16 @@ from compiler.logger import Logger
 BinaryFile = File
 
 
+def get_sm_path(base_directory: str,
+                sm_id: str) -> str:
+    """Get str path to state machine project."""
+    return os.path.join(base_directory, sm_id, 'sketch/')
+
+
 async def create_response(
         base_dir: str,
-        compiler_result: List[CommandResult],
-        main_file_extension: str) -> CompilerResponse:
+        compiler_result: Dict[str, tuple[List[CommandResult], StateMachine]]
+) -> CompilerResponse:
     """
     Get source files, binary files from\
         directory and create CompilerResponse.
@@ -48,42 +55,56 @@ async def create_response(
         Doesn't send anything.
     """
     status = 'OK'
-    for command in compiler_result:
-        if (command.return_code):
-            status = 'NOTOK'
-            break
-    response = CompilerResponse(
+
+    compiler_response = CompilerResponse(
         result=status,
-        commands=compiler_result,
-        binary=[],
-        source=[]
+        state_machines={}
     )
 
     build_path = os.path.join(base_dir, 'build/')
 
-    async for path in AsyncPath(build_path).rglob('*'):
-        if await path.is_file():
-            async with async_open(path, 'rb') as f:
-                binary = await f.read()
-                b64_data: bytes = base64.b64encode(binary)
-                response.binary.append(
-                    File(
-                        filename=path.name.split('.')[0],
-                        extension=''.join(path.suffixes),
-                        fileContent=b64_data.decode('ascii'),
+    for sm_id, commands_result_and_sm in compiler_result.items():
+        commands_result, sm = commands_result_and_sm
+        path_to_sm = get_sm_path(base_dir, sm_id)
+        print(path_to_sm)
+        sm_compile_status = 'OK'
+        for command in commands_result:
+            if (command.return_code):
+                sm_compile_status = 'NOTOK'
+                compiler_response.result = 'NOTOK'
+                break
+        response = StateMachineResult(
+            name=sm_id,
+            result=sm_compile_status,
+            commands=[],
+            binary=[],
+            source=[]
+        )
+        build_path = os.path.join(path_to_sm, 'build/')
+        async for path in AsyncPath(build_path).rglob('*'):
+            if await path.is_file():
+                async with async_open(path, 'rb') as f:
+                    binary = await f.read()
+                    b64_data: bytes = base64.b64encode(binary)
+                    response.binary.append(
+                        File(
+                            filename=path.name.split('.')[0],
+                            extension=''.join(path.suffixes),
+                            fileContent=b64_data.decode('ascii'),
+                        )
                     )
-                )
-    response.source.append(await Handler.readSourceFile(
-        'sketch',
-        main_file_extension,
-        base_dir)
-    )
-    response.source.append(await Handler.readSourceFile(
-        'sketch',
-        'h',
-        base_dir)
-    )
-    return response
+        response.source.append(await Handler.readSourceFile(
+            'sketch',
+            sm.main_file_extension,
+            path_to_sm)
+        )
+        response.source.append(await Handler.readSourceFile(
+            'sketch',
+            'h',
+            path_to_sm)
+        )
+
+    return compiler_response
 
 
 def get_default_libraries() -> Set[str]:
@@ -98,10 +119,19 @@ def get_default_libraries() -> Set[str]:
                )
 
 
+async def create_sm_directory(base_directory: str,
+                              sm_id: str) -> str:
+    """Create project directory for state machine\
+        relative to base directory."""
+    path = get_sm_path(base_directory, sm_id)
+    await AsyncPath(path).mkdir(parents=True)
+    return path
+
+
 async def compile_xml(
     xml: str,
-    base_dir_path: str) -> tuple[List[CommandResult],
-                                 StateMachine]:
+    base_dir_path: str) -> Dict[str, tuple[List[CommandResult],
+                                           StateMachine]]:
     """
     Compile CGML scheme.
 
@@ -109,29 +139,37 @@ async def compile_xml(
 
     Doesn't send anything.
     """
-    sm: StateMachine = await parse(xml)
-    await CppFileWriter(sm, True, True).write_to_file(base_dir_path,
-                                                      sm.main_file_extension)
-    settings: SMCompilingSettings | None = sm.compiling_settings
-    build_path = os.path.join(base_dir_path, 'build/')
-    await AsyncPath(build_path).mkdir(exist_ok=True)
-    if settings is None:
-        raise Exception('Internal error!')
+    state_machines: Dict[str, StateMachine] = await parse(xml)
+    compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
     default_library = get_default_libraries()
-    await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                        '1.0',  # TODO: Версия стандарта?
-                                        default_library,
-                                        base_dir_path)
-    await Compiler.include_source_files(settings.platform_id,
-                                        settings.platform_version,
-                                        settings.build_files,
-                                        base_dir_path)
+    for sm_id, sm in state_machines.items():
+        path = await create_sm_directory(base_dir_path, sm_id)
+        print(path)
+        await CppFileWriter(sm, True, True).write_to_file(
+            path,
+            sm.main_file_extension)
+        settings: SMCompilingSettings | None = sm.compiling_settings
+        build_path = os.path.join(path, 'build/')
+        await AsyncPath(build_path).mkdir(exist_ok=True)
+        if settings is None:
+            raise Exception('No settings!!')
+        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
+                                            '1.0',  # TODO: Версия стандарта?
+                                            default_library,
+                                            path)
+        await Compiler.include_source_files(settings.platform_id,
+                                            settings.platform_version,
+                                            settings.build_files,
+                                            path)
 
-    project = await Compiler.compile_project(
-        base_dir_path,
-        settings.platform_compiler_settings
-    )
-    return (project, sm)
+        commands_results = await Compiler.compile_project(
+            path,
+            settings.platform_compiler_settings
+        )
+
+        compile_results[sm_id] = (commands_results, sm)
+
+    return compile_results
 
 
 class HandlerException(Exception):
@@ -150,7 +188,8 @@ class Handler:
     async def readSourceFile(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
-        async with async_open(f'{path}{filename}.{extension}', 'r') as f:
+        async with async_open(os.path.join(path, f'{filename}.{extension}'),
+                              'r') as f:
             data = await f.read()
         return File(
             filename=filename,
@@ -175,13 +214,12 @@ class Handler:
             base_dir = os.path.join(
                 config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result, sm = await compile_xml(
+            compiler_result = await compile_xml(
                 xml,
                 base_dir
             )
             response = await create_response(base_dir,
                                              compiler_result,
-                                             sm.main_file_extension
                                              )
             await Logger.logger.info(response)
             await ws.send_json(response.model_dump())

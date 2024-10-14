@@ -7,7 +7,12 @@ from string import Template
 
 from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
-from compiler.types.inner_types import InnerComponent, InnerEvent, InnerTrigger
+from compiler.types.inner_types import (
+    InnerComponent,
+    InnerEvent,
+    InnerTrigger,
+    StateMachineId
+)
 from compiler.types.platform_types import (
     ClassParameter,
     Component,
@@ -43,13 +48,12 @@ _TransitionId = str
 _StateId = str
 _VertexId = str
 _ComponentId = str
-
 _INCLUDE_TEMPLATE = Template('#include "$component_type"')
 _CALL_FUNCTION_TEMPLATE = Template('$id$delimeter$method($args);')
 _CHECK_SIGNAL_TEMPLATE = Template(
     """
 if($condition) {
-    SIMPLE_DISPATCH(the_sketch, $signal);
+    SIMPLE_DISPATCH(the_STATE_MACHINE_NAME, $signal);
 }
 """
 )
@@ -645,10 +649,20 @@ def __create_final_states(
     return finals
 
 
-async def parse(xml: str) -> StateMachine:
+def check_sm_id(sm_id: str) -> bool:
+    """
+    Check state machine id by regular expression.
+
+    return True if id match regular.
+    """
+    regex = re.match(sm_id, r'^\w+$')
+    return regex is not None
+
+
+async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
     """
     Parse XML with cyberiadaml-py library and convert it\
-        to StateMachine for CppWriter class.
+        to StateMachines for CppWriter class.
 
     Generate code:
     - creating component's variables;
@@ -667,97 +681,109 @@ async def parse(xml: str) -> StateMachine:
     if not platform.compile or platform.compilingSettings is None:
         raise CGMLException(
             f'Platform {platform.name} not supporting compiling!')
-    global_state = ParserState(
-        name='global',
-        type='group',
-        actions='',
-        trigs=[],
-        entry='',
-        exit='',
-        id='global',
-        new_id=['global'],
-        parent=None,
-        childs=[],
-        bounds=Bounds(
-            x=0,
-            y=0,
-            height=0,
-            width=0
+    state_machines: Dict[str, StateMachine] = {}
+
+    for sm_id, state_machine in cgml_scheme.state_machines.items():
+        sm_name: str | None = state_machine.name
+        if check_sm_id(sm_id):
+            raise CGMLException(f'Invalid id {sm_id}! State machine'
+                                ' id must contain only letters,'
+                                'numbers and _!')
+        global_state = ParserState(
+            name='global',
+            type='group',
+            actions='',
+            trigs=[],
+            entry='',
+            exit='',
+            id='global',
+            new_id=['global'],
+            parent=None,
+            childs=[],
+            bounds=Bounds(
+                x=0,
+                y=0,
+                height=0,
+                width=0
+            )
         )
-    )
-    # Parsing external transitions.
-    transitions: List[ParserTrigger] = []
-    cgml_transitions: Dict[_TransitionId,
-                           CGMLTransition] = cgml_scheme.transitions
-    for transition_id in cgml_transitions:
-        cgml_transition = cgml_transitions[transition_id]
-        transitions.append(__process_transition(
-            transition_id, cgml_transition))
-    # Parsing state's actions, internal triggers, entry/exit
-    states: Dict[_StateId, ParserState] = {}
-    cgml_states: Dict[_StateId, CGMLState] = cgml_scheme.states
-    for state_id in cgml_states:
-        cgml_state = cgml_states[state_id]
-        states[state_id] = __process_state(state_id, cgml_state)
-    states_with_transitions = __connect_transitions_to_states(
-        states,
-        transitions
-    )
-    states_with_parents = __connect_parents_to_states(
-        states_with_transitions, cgml_states, global_state)
-    if cgml_scheme.initial_states is None:
-        raise CGMLException('No initial state!')
+        # Parsing external transitions.
+        transitions: List[ParserTrigger] = []
+        cgml_transitions: Dict[_TransitionId,
+                               CGMLTransition] = state_machine.transitions
+        for transition_id in cgml_transitions:
+            cgml_transition = cgml_transitions[transition_id]
+            transitions.append(__process_transition(
+                transition_id, cgml_transition))
+        # Parsing state's actions, internal triggers, entry/exit
+        states: Dict[_StateId, ParserState] = {}
+        cgml_states: Dict[_StateId, CGMLState] = state_machine.states
+        for state_id in cgml_states:
+            cgml_state = cgml_states[state_id]
+            states[state_id] = __process_state(state_id, cgml_state)
+        states_with_transitions = __connect_transitions_to_states(
+            states,
+            transitions
+        )
+        states_with_parents = __connect_parents_to_states(
+            states_with_transitions, cgml_states, global_state)
+        if state_machine.initial_states is None:
+            raise CGMLException('No initial state!')
 
-    # Мы получаем список триггеров для того, чтобы потом:
-    # 1) Сформировать набор всех сигналов
-    # 2) Сгенерировать проверки для вызова сигналов
-    start_node, initials = __init_initial_states(cgml_scheme.initial_states)
-    initial_with_transition, transitions_without_initials = (
-        _add_transition_to_initials(initials, transitions)
-    )
-    choices, transitions_without_choices = __create_choices(
-        cgml_scheme.choices, transitions_without_initials)
-    final_states = __create_final_states(cgml_scheme.finals)
-    all_triggers = __get_all_triggers(
-        list(states_with_parents.values()),
-        transitions_without_choices)
-    signals = __get_signals_set(all_triggers)
-    states_with_initials = _add_initials_to_states(
-        initial_with_transition, states_with_parents)
-    parsed_components = __parse_components(cgml_scheme.components)
-    included_libraries: List[str] = __get_include_libraries(
-        platform, list(parsed_components.values()))
-    build_files = __get_build_files(platform, list(parsed_components.values()))
-    notes: List[ParserNote] = [
-        *__generate_create_components_code(parsed_components, platform),
-        *__generate_setup_function_code(parsed_components, platform),
-        *__generate_includes_libraries_code(included_libraries),
-        * __generate_loop_tick_actions_code(platform, parsed_components),
-        *__generate_loop_signal_checks_code(platform,
-                                            all_triggers,
-                                            parsed_components)
-    ]
+        # Мы получаем список триггеров для того, чтобы потом:
+        # 1) Сформировать набор всех сигналов
+        # 2) Сгенерировать проверки для вызова сигналов
+        start_node, initials = __init_initial_states(
+            state_machine.initial_states)
+        initial_with_transition, transitions_without_initials = (
+            _add_transition_to_initials(initials, transitions)
+        )
+        choices, transitions_without_choices = __create_choices(
+            state_machine.choices, transitions_without_initials)
+        final_states = __create_final_states(state_machine.finals)
+        all_triggers = __get_all_triggers(
+            list(states_with_parents.values()),
+            transitions_without_choices)
+        signals = __get_signals_set(all_triggers)
+        states_with_initials = _add_initials_to_states(
+            initial_with_transition, states_with_parents)
+        parsed_components = __parse_components(state_machine.components)
+        included_libraries: List[str] = __get_include_libraries(
+            platform, list(parsed_components.values()))
+        build_files = __get_build_files(
+            platform, list(parsed_components.values()))
+        notes: List[ParserNote] = [
+            *__generate_create_components_code(parsed_components, platform),
+            *__generate_setup_function_code(parsed_components, platform),
+            *__generate_includes_libraries_code(included_libraries),
+            * __generate_loop_tick_actions_code(platform, parsed_components),
+            *__generate_loop_signal_checks_code(platform,
+                                                all_triggers,
+                                                parsed_components)
+        ]
 
-    if platform.mainFunction:
-        notes.append(__generate_main_function())
+        if platform.mainFunction:
+            notes.append(__generate_main_function())
 
-    compiling_settings = SMCompilingSettings(
-        included_libraries,
-        build_files,
-        platform.id,
-        platform_version,
-        platform.compilingSettings,
-    )
-    return StateMachine(
-        start_node=start_node,
-        name='sketch',
-        start_action='',
-        notes=notes,
-        states=[global_state, *list(states_with_initials.values())],
-        signals=signals,
-        compiling_settings=compiling_settings,
-        initial_states=[*initial_with_transition.values()],
-        choices=list(choices.values()),
-        final_states=final_states,
-        main_file_extension=platform.mainFileExtension
-    )
+        compiling_settings = SMCompilingSettings(
+            included_libraries,
+            build_files,
+            platform.id,
+            platform_version,
+            platform.compilingSettings
+        )
+        state_machines[sm_id] = StateMachine(
+            start_node=start_node,
+            id=sm_id,
+            name=sm_name,
+            start_action='',
+            notes=notes,
+            main_file_extension=platform.mainFileExtension,
+            states=[global_state, *list(states_with_initials.values())],
+            signals=signals,
+            compiling_settings=compiling_settings,
+            initial_states=[*initial_with_transition.values()],
+            choices=list(choices.values()),
+            final_states=final_states
+        )
+    return state_machines

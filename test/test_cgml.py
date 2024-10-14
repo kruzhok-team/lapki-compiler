@@ -66,8 +66,7 @@ def test_parse(path: str):
 def test_new_platform_creation(path: str):
     """Test Platform object creation."""
     with open(path, 'r') as f:
-        platform = Platform(**json.loads(f.read()))
-    print(platform)
+        Platform(**json.loads(f.read()))
 
 
 @pytest.mark.asyncio
@@ -79,8 +78,9 @@ async def test_generating_code():
         path = './test/test_folder/'
         with create_test_folder(path, 0):
             try:
-                sm = await parse(data)
-                await CppFileWriter(sm, True).write_to_file(path, 'ino')
+                state_machines = await parse(data)
+                for sm in state_machines.values():
+                    await CppFileWriter(sm, True).write_to_file(path, 'ino')
                 print('Code generated!')
             except Exception as e:
                 print(e)
@@ -119,21 +119,19 @@ async def test_compile_schemes(scheme_path: str):
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform()
-    extension = 'cpp'
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
             data = f.read()
             print(path)
-            result, sm = await compile_xml(data, path)
-            if (sm.compiling_settings is not None):
-                if (sm.compiling_settings.platform_id.startswith('Arduino')):
-                    extension = 'ino'
-            await create_response(path, result, extension)
-            dir = AsyncPath(path + 'build/')
-            print(result)
-            filecount = len([file async for file in dir.iterdir()])
-            print(platform_manager.versions_info)
+            result = await compile_xml(data, path)
+            filecount = 0
+            for sm in result.keys():
+                print(result[sm][0])
+                await create_response(path, result)
+                dir = AsyncPath(path + sm + '/sketch/' + 'build/')
+                filecount = len([file async for file in dir.iterdir()])
+                assert filecount != 0
             # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
             # поэтому нужно удалять версии вручную
             versions = platform_manager._delete_from_version_registry(

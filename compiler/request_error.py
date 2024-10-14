@@ -4,7 +4,8 @@ from aiohttp import web
 from compiler.types.inner_types import (
     CompilerResponse,
     CommandResult,
-    LegacyResponse
+    LegacyResponse,
+    StateMachineResult
 )
 
 
@@ -35,14 +36,20 @@ class RequestError:
             await ws.send_json(
                 CompilerResponse(
                     result='NOTOK',
-                    commands=[
-                        CommandResult(
-                            command='compiler job',
-                            return_code=-2,
-                            stderr=self.error,
-                            stdout='')],
-                    binary=[],
-                    source=[]
+                    state_machines={
+                        '': StateMachineResult(
+                            result='NOTOK',
+                            name='',
+                            commands=[
+                                CommandResult(
+                                    command='compiler job',
+                                    return_code=-2,
+                                    stderr=self.error,
+                                    stdout='')
+                            ],
+                            binary=[],
+                            source=[])
+                    }
                 ).model_dump()
             )
             await ws.close()
