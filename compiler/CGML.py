@@ -761,6 +761,10 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
                                                 all_triggers,
                                                 parsed_components)
         ]
+
+        if platform.mainFunction:
+            notes.append(__generate_main_function())
+
         compiling_settings = SMCompilingSettings(
             included_libraries,
             build_files,
