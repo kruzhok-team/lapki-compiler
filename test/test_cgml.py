@@ -121,7 +121,7 @@ async def test_compile_schemes(scheme_path: str):
     await init_platform()
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 10):
+        with create_test_folder(path, 0):
             data = f.read()
             print(path)
             result = await compile_xml(data, path)
@@ -129,7 +129,7 @@ async def test_compile_schemes(scheme_path: str):
             for sm in result.keys():
                 print(result[sm][0])
                 await create_response(path, result)
-                dir = AsyncPath(path + sm + '/' + 'build/')
+                dir = AsyncPath(path + sm + '/sketch/' + 'build/')
                 filecount = len([file async for file in dir.iterdir()])
                 assert filecount != 0
             # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
