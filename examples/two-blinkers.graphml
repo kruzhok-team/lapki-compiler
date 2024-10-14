@@ -16,7 +16,7 @@
 
 <data key="gFormat">Cyberiada-GraphML-1.0</data>
 
-<graph id="G" edgedefault="directed">
+<graph id="Ga" edgedefault="directed">
     <data key="dStateMachine"/>
     <node id="coreMeta">
         <data key="dNote">formal</data>
@@ -116,7 +116,7 @@ timer1.start(1000);
     </edge>
 </graph>
 
-<graph id="O" edgedefault="directed">
+<graph id="Oa" edgedefault="directed">
     <data key="dStateMachine"/>
     <node id="cLED1">
         <data key="dNote">formal</data>

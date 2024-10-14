@@ -11,6 +11,7 @@
 <key id="dColor" for="edge"/>
 
 <graph id="G" edgedefault="directed">
+  <data key="dStateMachine"/>
     <node id="coreMeta">
       <data key="dNote">formal</data>
       <data key="dName">CGML_META</data>

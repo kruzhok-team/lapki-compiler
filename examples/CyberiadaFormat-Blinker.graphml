@@ -16,7 +16,7 @@
 
 <data key="gFormat">Cyberiada-GraphML-1.0</data>
 
-<graph id="G" edgedefault="directed">
+<graph id="Ga" edgedefault="directed">
     <data key="dStateMachine"/>
     <node id="coreMeta">
         <data key="dNote">formal</data>

@@ -41,7 +41,7 @@ BinaryFile = File
 def get_sm_path(base_directory: str,
                 sm_id: str) -> str:
     """Get str path to state machine project."""
-    return os.path.join(base_directory, sm_id)
+    return os.path.join(base_directory, sm_id, 'sketch/')
 
 
 async def create_response(
@@ -66,6 +66,7 @@ async def create_response(
     for sm_id, commands_result_and_sm in compiler_result.items():
         commands_result, sm = commands_result_and_sm
         path_to_sm = get_sm_path(base_dir, sm_id)
+        print(path_to_sm)
         sm_compile_status = 'OK'
         for command in commands_result:
             if (command.return_code):
@@ -95,12 +96,12 @@ async def create_response(
         response.source.append(await Handler.readSourceFile(
             'sketch',
             sm.main_file_extension,
-            base_dir)
+            path_to_sm)
         )
         response.source.append(await Handler.readSourceFile(
             'sketch',
             'h',
-            base_dir)
+            path_to_sm)
         )
 
     return compiler_response
@@ -143,25 +144,26 @@ async def compile_xml(
     default_library = get_default_libraries()
     for sm_id, sm in state_machines.items():
         path = await create_sm_directory(base_dir_path, sm_id)
+        print(path)
         await CppFileWriter(sm, True, True).write_to_file(
             path,
             sm.main_file_extension)
         settings: SMCompilingSettings | None = sm.compiling_settings
-        build_path = os.path.join(base_dir_path, 'build/')
+        build_path = os.path.join(path, 'build/')
         await AsyncPath(build_path).mkdir(exist_ok=True)
         if settings is None:
             raise Exception('No settings!!')
         await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                             '1.0',  # TODO: Версия стандарта?
                                             default_library,
-                                            base_dir_path)
+                                            path)
         await Compiler.include_source_files(settings.platform_id,
                                             settings.platform_version,
                                             settings.build_files,
-                                            base_dir_path)
+                                            path)
 
         commands_results = await Compiler.compile_project(
-            base_dir_path,
+            path,
             settings.platform_compiler_settings
         )
 
@@ -186,7 +188,8 @@ class Handler:
     async def readSourceFile(
             filename: str, extension: str, path: str) -> File:
         """Read file by path."""
-        async with async_open(f'{path}{filename}.{extension}', 'r') as f:
+        async with async_open(os.path.join(path, f'{filename}.{extension}'),
+                              'r') as f:
             data = await f.read()
         return File(
             filename=filename,

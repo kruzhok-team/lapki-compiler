@@ -68,9 +68,10 @@ class CppFileWriter:
                  state_machine: StateMachine,
                  create_setup=False,
                  create_loop=False) -> None:
+        self.filename = 'sketch'
         self.create_loop = create_loop
         self.create_setup = create_setup
-        self.sm_id = state_machine.id
+        self.sm_id = 'sketch'
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
         notes_mapping: List[Tuple[str, str]] = [
@@ -238,7 +239,7 @@ class CppFileWriter:
             await self._insert_string('}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
-        async with async_open(os.path.join(folder, f'{self.sm_id}.{extension}'), 'w') as f:
+        async with async_open(os.path.join(folder, f'{self.filename}.{extension}'), 'w') as f:
             self.f = f
             await self._insert_file_template('preamble_c.txt')
             await self._write_constructor()
@@ -302,7 +303,7 @@ class CppFileWriter:
         #     if self.notes_dict['user_methods_c']:
         #         await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
 
-        async with async_open(os.path.join(folder, '%s.h' % self.sm_id), 'w') as f:
+        async with async_open(os.path.join(folder, '%s.h' % self.filename), 'w') as f:
             self.f = f
 
             await self._insert_file_template('preamble_h.txt')

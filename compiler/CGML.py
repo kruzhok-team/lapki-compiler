@@ -655,7 +655,6 @@ def check_sm_id(sm_id: str) -> bool:
 
     return True if id match regular.
     """
-    print(sm_id)
     regex = re.match(sm_id, r'^\w+$')
     return regex is not None
 
@@ -686,8 +685,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
 
     for sm_id, state_machine in cgml_scheme.state_machines.items():
         sm_name: str | None = state_machine.name
-        if not check_sm_id(sm_id):
-            print('hereee')
+        if check_sm_id(sm_id):
             raise CGMLException(f'Invalid id {sm_id}! State machine'
                                 ' id must contain only letters,'
                                 'numbers and _!')
