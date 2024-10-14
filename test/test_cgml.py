@@ -66,7 +66,7 @@ def test_parse(path: str):
 def test_new_platform_creation(path: str):
     """Test Platform object creation."""
     with open(path, 'r') as f:
-        platform = Platform(**json.loads(f.read()))
+        Platform(**json.loads(f.read()))
 
 
 @pytest.mark.asyncio
