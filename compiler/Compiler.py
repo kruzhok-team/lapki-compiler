@@ -148,8 +148,6 @@ class Compiler:
                 return_code=process.returncode,
                 stdout=str(stdout.decode('utf-8')),
                 stderr=str(stderr.decode('utf-8'))))
-        print(base_dir)
-        print(commands)
         return command_results
 
     @staticmethod

@@ -66,7 +66,6 @@ async def create_response(
     for sm_id, commands_result_and_sm in compiler_result.items():
         commands_result, sm = commands_result_and_sm
         path_to_sm = get_sm_path(base_dir, sm_id)
-        print(path_to_sm)
         sm_compile_status = 'OK'
         for command in commands_result:
             if (command.return_code):
@@ -103,6 +102,7 @@ async def create_response(
             'h',
             path_to_sm)
         )
+        compiler_response.state_machines[sm_id] = response
 
     return compiler_response
 
@@ -144,7 +144,6 @@ async def compile_xml(
     default_library = get_default_libraries()
     for sm_id, sm in state_machines.items():
         path = await create_sm_directory(base_dir_path, sm_id)
-        print(path)
         await CppFileWriter(sm, True, True).write_to_file(
             path,
             sm.main_file_extension)
