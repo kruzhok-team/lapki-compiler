@@ -672,18 +672,20 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
-    platform_version = cgml_scheme.meta.values.get('platformVersion', None)
-    if platform_version is None:
-        raise CGMLException('Meta doesnt contains platformVersion.')
-
-    platform: Platform = await platfrom_manager.get_platform(
-        cgml_scheme.platform, platform_version)
-    if not platform.compile or platform.compilingSettings is None:
-        raise CGMLException(
-            f'Platform {platform.name} not supporting compiling!')
     state_machines: Dict[str, StateMachine] = {}
 
     for sm_id, state_machine in cgml_scheme.state_machines.items():
+        platform_version = state_machine.meta.values.get(
+            'platformVersion', None)
+        if platform_version is None:
+            raise CGMLException('Meta doesnt contains platformVersion.')
+
+        platform: Platform = await platfrom_manager.get_platform(
+            state_machine.platform, platform_version)
+        if not platform.compile or platform.compilingSettings is None:
+            continue
+            # raise CGMLException(
+            # f'Platform {platform.name} not supporting compiling!')
         sm_name: str | None = state_machine.name
         if check_sm_id(sm_id):
             raise CGMLException(f'Invalid id {sm_id}! State machine'
