@@ -75,7 +75,7 @@ async def create_response(
         response = StateMachineResult(
             name=sm_id,
             result=sm_compile_status,
-            commands=[],
+            commands=commands_result,
             binary=[],
             source=[]
         )
