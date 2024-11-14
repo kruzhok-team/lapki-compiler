@@ -38,11 +38,11 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин, к которому подключена кнопка"
         },
         "buttonMode": {
-          "type": "uint8_t",
+          "type": ["BUTTON_PULLUP", "BUTTON_PULLDOWN"],
           "description": "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor",
           "optional": true            
         }
@@ -66,7 +66,7 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин, к которому подключен светодиод"
         }
       },
@@ -303,7 +303,7 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": [3, 5, 6, 9, 10, 11],
           "description": "Пин, на котором будет установлен ШИМ"
         }
       },
@@ -331,7 +331,7 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин, на который будет подаваться сигнал."
         }
       },
@@ -379,7 +379,7 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин, с которого будут считываться данные."
         }
       },
@@ -414,7 +414,7 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": ["A0", "A1", "A2", "A3", "A4", "A5"],
           "description": "Пин, на который будет подаваться сигнал."
         }
       },
@@ -437,7 +437,7 @@
       "methods": {},
       "constructorParameters": {
         "pin": {
-          "type": "uint8_t",
+          "type": ["A0", "A1", "A2", "A3", "A4", "A5"],
           "description": "Пин, с которого будут считываться данные."
         }
       },
@@ -471,15 +471,15 @@
       },
       "constructorParameters": {
         "dataPin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин вход/выхода, на который выводятся биты"
         },
         "clockPin": {
-          "type": "uint8_t",
+          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
           "description": "Пин по которому производится синхронизация "
         },
         "bitOrder": {
-          "type": "uint8_t",
+          "type": ["MSBFIRST", "LSBFIRST"],
           "description": "Порядок битов. MSBFIRST - первый бит самый значимый, LSBFIRST - последний",
           "optional": true
         }
