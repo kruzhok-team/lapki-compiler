@@ -5,15 +5,13 @@ from pydantic.dataclasses import dataclass
 from compiler.types.ide_types import SupportedCompilers
 
 SupportLanguages: TypeAlias = Literal['C++']
-ParameterType: TypeAlias = Literal['int', 'str', 'uint8_t', 'byte', 'unsigned int',
-                                   'unsigned long', 'char[]', 'int | char[]']
 
 
 @dataclass
 class MethodParameter:
     name: str
     description: Optional[str] = None
-    type: Optional[ParameterType | List[str]] = None
+    type: Optional[str | List[str]] = None
 
 
 @dataclass
@@ -28,12 +26,12 @@ class Signal:
 class Variable:
     description: str
     img: str = ''
-    type: Optional[ParameterType] = None
+    type: Optional[str] = None
 
 
 @dataclass
 class ClassParameter:
-    type: ParameterType
+    type: str
     description: str
     optional: bool = False
 
