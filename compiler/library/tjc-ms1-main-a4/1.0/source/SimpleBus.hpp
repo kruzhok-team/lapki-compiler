@@ -1,19 +1,33 @@
 #pragma once
 
-#include "UART1.hpp"
+#include "UART.hpp"     // Если не было ошибок компиляции, то после включения файла должна быть определена константа: либо UART1__, либо UART2__. Также константа UART__num
 
 extern "C" {
 
-    void USART1_IRQHandler(void) {
+    #if defined(UART1__)
+        void USART1_IRQHandler(void) {
 
-        detail::hal::api::USART1_IRQHandlerSimpleBus();
-    }
+            detail::hal::api::USART1_IRQHandlerSimpleBus();
+        }
+    #elif defined(UART2__)
+        void USART2_IRQHandler(void) {
+
+            detail::hal::api::USART2_IRQHandlerSimpleBus();
+        }
+    #endif
 }
 
+// Если UART занят другим модулем (например, SimpleBus), то ошибка компиляции (в противном случае функция-прерывание будет перезаписана текущим модулем)
 #ifdef UART1_BUSY
     #error "CE: UART1 used by other hpp file (it is UB for uart interrupt function)"
 #else
     #define UART1_BUSY
+#endif
+
+#ifdef UART2_BUSY
+    #error "CE: UART2 used by other hpp file (it is UB for uart interrupt function)"
+#else
+    #define UART2_BUSY
 #endif
 
 namespace detail {
@@ -45,7 +59,7 @@ namespace detail {
 
 // Компонент для базового взаимодействия с общей шиной данных на основе простого протокола
 // Шина является полудуплексной – отправку в конкретный момент времени может отсуществлять только один участник
-// Использует UART1
+// Использует UART1 или UART2
 /*
     Структура пакета для протокола SimpleBus:
 
@@ -60,6 +74,8 @@ class SimpleBus {
 
 public:
 
+    uint8_t myAddress, lastData;
+
     // ctor
     SimpleBus(const uint32_t baudrate) {
 
@@ -68,6 +84,7 @@ public:
 
     void setAddress(const uint8_t addr) {
 
+        myAddress = addr;
         detail::simpleBusHelpers::addr = addr;
         detail::simpleBusHelpers::addrAsci = detail::helpers::addrToAsci(addr);
     }
@@ -94,18 +111,11 @@ public:
 
     bool packetReceived() {
 
-        return detail::simpleBusHelpers::isByteReceived;
-    }
+        const auto data = detail::simpleBusHelpers::Api::extractValue();
+        if (data.ok)
+            lastData = data.value;
 
-    uint8_t lastData() {
-
-        detail::simpleBusHelpers::isByteReceived = false;
-        return detail::simpleBusHelpers::receivedByte;
-    }
-
-    uint8_t getAddress() {
-
-        return detail::simpleBusHelpers::addr;
+        return data.ok;
     }
 
 private:
