@@ -32,7 +32,7 @@ class Variable:
 
 @dataclass
 class ClassParameter:
-    type: ParameterType
+    type: str
     description: str
     optional: bool = False
 
