@@ -4,14 +4,15 @@ from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 from compiler.types.ide_types import SupportedCompilers
 
-SupportLanguages: TypeAlias = Literal['C++']
+SupportLanguages: TypeAlias = Literal['C++', 'C']
+ParameterType: TypeAlias = str | List[str] | List[int]
 
 
 @dataclass
 class MethodParameter:
     name: str
     description: Optional[str] = None
-    type: Optional[str | List[str]] = None
+    type: Optional[ParameterType] = None
 
 
 @dataclass
