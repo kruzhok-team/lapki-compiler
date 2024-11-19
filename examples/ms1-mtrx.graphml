@@ -40,7 +40,7 @@ description/ Включение и выключение лампочки по т
         <data key="dName"> CGML_COMPONENT </data>
         <data key="dData">id/ LED1 
 
-type/ LED
+type/ Matrix
 
 name/ Светодиод
 
@@ -72,7 +72,7 @@ description/ Программный таймер.
    <node id="diod1">
         <data key="dName">Включен</data>
         <data key="dData">entry/
-LED1.on();
+LED1.setPattern({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25});
 timer1.start(1000);
 
         </data>
@@ -84,7 +84,7 @@ timer1.start(1000);
     <node id="diod2">
         <data key="dName">Выключен</data>
         <data key="dData">entry/
-LED1.off();
+LED1.offPixel(1, 0);
 timer1.start(1000);
 
         </data>

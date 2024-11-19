@@ -7,3 +7,4 @@ result
 logs.log
 *config.py
 ACCESS_TOKENS.txt
+.coverage

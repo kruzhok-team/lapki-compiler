@@ -29,6 +29,7 @@ flake8-docstrings = "^1.7.0"
 flake8-import-order = "^0.18.2"
 flake8-quotes = "^3.4.0"
 flake8-pyproject = "^1.2.3"
+pytest-coverage = "^0.0"
 
 [tool.flake8]
 import-order-style="pep8"
