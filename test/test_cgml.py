@@ -141,6 +141,11 @@ async def test_generating_code():
         'ArduinoUno',
         'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
     ),
+    pytest.param(
+        'examples/with-optional-parameter.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str,

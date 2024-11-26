@@ -352,7 +352,7 @@ def __create_parameters_sequence(
     """
     args: List[str] = []
     for parameter_name in platform_parameters:
-        parameter = component_parameters[parameter_name]
+        parameter = component_parameters.get(parameter_name)
         if parameter is None:
             if platform_parameters[parameter_name].optional:
                 continue
