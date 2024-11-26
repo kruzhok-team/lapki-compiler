@@ -20,15 +20,11 @@ from compiler.platform_manager import PlatformManager
 pytest_plugins = ('pytest_asyncio',)
 
 
-async def init_platform():
+async def init_platform(platform_id: str, platform_path: str):
     """Init ArduinoUno platform."""
     platform_manager = PlatformManager()
-    if not platform_manager.platform_exist('ArduinoUno'):
-        await platform_manager.load_platform('compiler/platforms/ArduinoUno/'
-                                             '1.0/ArduinoUno-1.0.json')
-    if not platform_manager.platform_exist('tjc-ms1-main'):
-        await platform_manager.load_platform('compiler/platforms/tjc-ms1-main/'
-                                             '1.0/tjc-ms1-main-1.0.json')
+    if not platform_manager.platform_exist(platform_id):
+        await platform_manager.load_platform(platform_path)
 
 
 @contextmanager
@@ -72,7 +68,10 @@ def test_new_platform_creation(path: str):
 @pytest.mark.asyncio
 async def test_generating_code():
     """Test generating code without compiling."""
-    await init_platform()
+    await init_platform(
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    )
     with open('examples/CyberiadaFormat-Blinker.graphml', 'r') as f:
         data = f.read()
         path = './test/test_folder/'
@@ -86,39 +85,72 @@ async def test_generating_code():
                 print(e)
 
 
-@pytest.mark.parametrize('scheme_path', [
+@pytest.mark.parametrize('scheme_path, platform_id, platform_path', [
     pytest.param(
-        'examples/CyberiadaFormat-Blinker.graphml'
+        'examples/CyberiadaFormat-Blinker.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
     ),
     pytest.param(
-        'examples/stm32.graphml'
+        'examples/ms1-mtrx.graphml',
+        'tjc-ms1-mtrx-a1',
+        'compiler/platforms/tjc-ms1-mtrx-a1/1.0/tjc-ms1-mtrx-a1-1.0.json'
     ),
     pytest.param(
-        'examples/choices.graphml'
+        'examples/ms1-main.graphml',
+        'tjc-ms1-main-a4',
+        'compiler/platforms/tjc-ms1-main-a4/1.0/tjc-ms1-main-a4-1.0.json'
     ),
     pytest.param(
-        'examples/with-final.graphml'
+        'examples/ms1-btn.graphml',
+        'tjc-ms1-btn-a2',
+        'compiler/platforms/tjc-ms1-btn-a2/1.0/tjc-ms1-btn-a2-1.0.json'
     ),
     pytest.param(
-        'examples/two_choices.graphml'
+        'examples/ms1-lmp.graphml',
+        'tjc-ms1-lmp-a3',
+        'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
     ),
     pytest.param(
-        'examples/initial_states.graphml'
+        'examples/choices.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
     ),
     pytest.param(
-        'examples/with-defer.xml'
+        'examples/with-final.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
     ),
     pytest.param(
-        'examples/with-propagate-block.graphml'
+        'examples/two_choices.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/initial_states.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-defer.xml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
     ),
 ])
 @pytest.mark.asyncio
-async def test_compile_schemes(scheme_path: str):
+async def test_compile_schemes(scheme_path: str,
+                               platform_id: str,
+                               platform_path: str):
     """Testing compiling and code generation from CGML-schemes."""
     await AsyncPath(get_config().build_directory).mkdir(exist_ok=True)
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-    await init_platform()
+    await init_platform(platform_id, platform_path)
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
@@ -135,18 +167,10 @@ async def test_compile_schemes(scheme_path: str):
             # Когда мы запускаем все тесты сразу, PlatformManager не очищается,
             # поэтому нужно удалять версии вручную
             versions = platform_manager._delete_from_version_registry(
-                'ArduinoUno', set(['1.0']))
+                platform_id, set(['1.0']))
             platforms = (
                 platform_manager._delete_versions_from_platform_registry(
-                    'ArduinoUno', set(['1.0']))
-            )
-            platform_manager.platforms = platforms
-            platform_manager.platforms_info = versions
-            versions = platform_manager._delete_from_version_registry(
-                'tjc-ms1-main', set(['1.0']))
-            platforms = (
-                platform_manager._delete_versions_from_platform_registry(
-                    'tjc-ms1-main', set(['1.0']))
+                    platform_id, set(['1.0']))
             )
             platform_manager.platforms = platforms
             platform_manager.platforms_info = versions
