@@ -42,7 +42,7 @@
     "staticActionDelimeter": "::",
     "defaultIncludeFiles": ["stm32g030xx.h", "system.c"],
     "defaultBuildFiles": [
-      "tjc-ms1-b2cc4e728f9bf8f6-usercode.ld",
+      "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
       "startup_stm32g030xx.s",
       "stm32g030xx.h",
