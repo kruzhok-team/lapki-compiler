@@ -77,9 +77,9 @@ public:
     uint8_t myAddress, lastData;
 
     // ctor
-    SimpleBus(const uint32_t baudrate) {
+    SimpleBus() {
 
-        detail::hal::initUART(baudrate);
+        detail::hal::initUART(9600);
     }
 
     void setAddress(const uint8_t addr) {

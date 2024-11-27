@@ -37,6 +37,8 @@ class DataBus {
 
 public:
 
+    DataBus(): DataBus(9600){}
+
     // ctor
     DataBus(const uint32_t baudrate) {
 
