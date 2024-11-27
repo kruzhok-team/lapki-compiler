@@ -21,7 +21,7 @@
           "-DSTM32G030x6",
           "-D_FIR_GIT_REV=\"GIT_NIY\"",
           "-T",
-          "./tjc-ms1-b2cc4e728f9bf8f6-usercode.ld",
+          "./tjc-ms1-b4272ba421624bbe-usercode.ld",
           "./startup_stm32g030xx.s",
           "-o",
           "./build/sketch.elf",
