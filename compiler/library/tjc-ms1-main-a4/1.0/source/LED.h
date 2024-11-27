@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../PWM.hpp"
+#include "PWM.hpp"
 
 class LED {
 
