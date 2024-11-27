@@ -93,8 +93,8 @@ async def test_generating_code():
     ),
     pytest.param(
         'examples/ms1-mtrx.graphml',
-        'tjc-ms1-mtrx-a1',
-        'compiler/platforms/tjc-ms1-mtrx-a1/1.0/tjc-ms1-mtrx-a1-1.0.json'
+        'tjc-ms1-mtrx-a2',
+        'compiler/platforms/tjc-ms1-mtrx-a2/1.0/tjc-ms1-mtrx-a2-1.0.json'
     ),
     pytest.param(
         'examples/ms1-main.graphml',
