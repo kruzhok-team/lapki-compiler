@@ -103,10 +103,10 @@ namespace detail {
             buffer[entityI].callbackAction = ptr;
         }
 
-        void addPWMEntity(const int8_t pin, const uint16_t triggerLevel, callbackPtr ptr) {
+        // void addPWMEntity(const int8_t pin, const uint16_t triggerLevel, callbackPtr ptr) {
 
-            addPWMEntity(pin, triggerLevel, ptr, defaultFrequency);
-        }
+        //     addPWMEntity(pin, triggerLevel, ptr, defaultFrequency);
+        // }
     }
 
     namespace hal {

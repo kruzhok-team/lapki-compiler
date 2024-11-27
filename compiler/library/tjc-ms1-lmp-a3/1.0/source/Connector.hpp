@@ -61,14 +61,14 @@ namespace Connector {
         actFuncType actFunc;
     };
 
-    const int SIZE = 3;
+    const int SIZEBuf = 3;
     const Entity pwmPins[] = {{1, actFuncs::led1}, {2, actFuncs::led2}, {3, actFuncs::led3}};
 
     namespace Api {
 
         bool isPwmPin(const uint8_t pin) {
 
-            for (int i = 0; i < Connector::SIZE; ++i) {
+            for (int i = 0; i < Connector::SIZEBuf; ++i) {
 
                 if (pwmPins[i].pin == pin)
                     return true;
@@ -79,7 +79,7 @@ namespace Connector {
 
         actFuncType getActFunc(const uint8_t pin) {
 
-            for (int i = 0; i < Connector::SIZE; ++i) {
+            for (int i = 0; i < Connector::SIZEBuf; ++i) {
 
                 if (pwmPins[i].pin == pin)
                     return pwmPins[i].actFunc;
