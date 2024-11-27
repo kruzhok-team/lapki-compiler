@@ -32,7 +32,7 @@ namespace detail {
     namespace data {
 
         // Количество пинов, которые можем шимовать
-        const int8_t SIZE = 3;
+        const int8_t SIZEPWM = 3;
 
         // Если ничего не работает - значит не хватает времени на обработку функции прерывания - необходимо увеличить период ниже
         const uint16_t PERIOD = 1000;
@@ -47,7 +47,7 @@ namespace detail {
         // Рекомендуемая частота ШИМ, устанавливаемая по умолчанию
         const uint32_t defaultFrequency = clkRate;
 
-        detail::bss::PWMEntity buffer[detail::data::SIZE];
+        detail::bss::PWMEntity buffer[detail::data::SIZEPWM];
     }
 
     namespace code {
@@ -59,7 +59,7 @@ namespace detail {
         
         void removePWMEntity(const int8_t pin) {
             
-            for (int i = 0; i < SIZE; ++i) {
+            for (int i = 0; i < SIZEPWM; ++i) {
 
                 if (buffer[i].pin == pin) {
                     buffer[i].pin = -1;
@@ -77,7 +77,7 @@ namespace detail {
             // find free entity
             int8_t entityI = -1;
 
-            for (int i = 0; i < SIZE; ++i) {
+            for (int i = 0; i < SIZEPWM; ++i) {
 
                 if (buffer[i].pin == -1) {
                     entityI = i;
@@ -122,7 +122,7 @@ namespace detail {
             NVIC_SetPriority(TIM14_IRQn, 90);
             NVIC_EnableIRQ(TIM14_IRQn);
 
-            for (int i = 0; i < detail::data::SIZE; ++i) {
+            for (int i = 0; i < detail::data::SIZEPWM; ++i) {
                 detail::data::buffer[i].pin = -1;   // pwm-entity is free
             }
         }
@@ -132,12 +132,12 @@ namespace detail {
             using namespace detail::data;
 
             // Функция-прерывание, срабатывает каждый тик
-            void TIM14_IRQHandler(void) {
+            void TIM14_IRQHandlerMRX(void) {
 
                 TIM14 -> SR &= ~TIM_SR_UIF;
 
                 // Идем по всем записям о ШИМ
-                for (int i = 0; i < SIZE; ++i) {
+                for (int i = 0; i < SIZEPWM; ++i) {
 
                     // if entity is free - skip it
                     if (buffer[i].pin == -1)
@@ -181,7 +181,7 @@ extern "C" {
 // interrupt function for TIM14
 void TIM14_IRQHandler(void) {
 
-    detail::hal::api::TIM14_IRQHandler();
+    detail::hal::api::TIM14_IRQHandlerMRX();
 }
 
 #ifdef __cplusplus

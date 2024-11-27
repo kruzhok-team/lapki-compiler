@@ -1,5 +1,5 @@
 #pragma once
-#define UART2__
+#define UART1__
 /*
     Здесь реализация модулей UART1 и UART2 для использования в user code (bootloader)
     UART 1: tested on main-a4, btn-a2
@@ -94,13 +94,13 @@ namespace detail {
         uint16_t addrAsci;  // for quick check in interrupt function
 
         // Обработка байт пакета при получении данных с шины юарта
-        uint8_t buffer[5];
+        uint8_t interruptBuffer[5];
         uint8_t packetIterator = 0;
 
         // Хранение полученных данных (ждут, пока пользовательский код считает их)
         // Буффер - аккумулирует значения (кольцевой)
-        const uint8_t SIZE = 5;
-        uint8_t userBuffer[SIZE];
+        const uint8_t SIZESimpleBus = 5;
+        uint8_t userBuffer[SIZESimpleBus];
         // 2 указателя
         // l - Указывает на очередной байт, который будет считан пользовательским кодом
         // r - Указывает на место, куда функция-прерывание будет записывать новый полученный байт
@@ -109,13 +109,13 @@ namespace detail {
 
         // Функция для безопасного инкремента l - указателя
         void shiftLPointer() {
-            if (++l >= SIZE)
+            if (++l >= SIZESimpleBus)
                 l = 0;
         }
 
         // Функция для безопасного инкремента r - указателя
         void shiftRPointer() {
-            if (++r >= SIZE)
+            if (++r >= SIZESimpleBus)
                 r = 0;
         }
 
@@ -315,28 +315,28 @@ namespace detail {
                 uint8_t gotByte = UARTConcat__(USART) -> RDR;
 
                 // save to buffer
-                buffer[packetIterator++] = gotByte;
+                interruptBuffer[packetIterator++] = gotByte;
 
                 // if packet ready (got 5 bytes in buffer) then parse
                 if (packetIterator >= 5) {
 
-                    if (buffer[0] == CR && buffer[4] == LF) {   // packet is correct
+                    if (interruptBuffer[0] == CR && interruptBuffer[4] == LF) {   // packet is correct
 
                         // pull addr (При сдвигах начинается лютая жесть, поэтому в целях совместимости с чипом лучше оставить так)
                         // uint16_t targetAddr = ((*reinterpret_cast<uint16_t*>(&buffer[1])) << 8) | buffer[2];
-                        uint16_t targetAddr = buffer[1];
-                        targetAddr = (targetAddr << 8) | buffer[2];
+                        uint16_t targetAddr = interruptBuffer[1];
+                        targetAddr = (targetAddr << 8) | interruptBuffer[2];
                         
                         if (targetAddr == addrAsci) {
 
-                            putValue(buffer[3]);
+                            putValue(interruptBuffer[3]);
                         }
                         packetIterator = 0; // reset buffer
                     }
                     else {  // packet not correct -> shift to one byte?
 
-                        *reinterpret_cast<uint16_t* const>(&buffer[0]) = *reinterpret_cast<uint16_t const * const>(&buffer[1]);
-                        *reinterpret_cast<uint16_t* const>(&buffer[2]) = *reinterpret_cast<uint16_t const * const>(&buffer[3]);
+                        *reinterpret_cast<uint16_t* const>(&interruptBuffer[0]) = *reinterpret_cast<uint16_t const * const>(&interruptBuffer[1]);
+                        *reinterpret_cast<uint16_t* const>(&interruptBuffer[2]) = *reinterpret_cast<uint16_t const * const>(&interruptBuffer[3]);
                         --packetIterator; // decrease buffer
                     }
                 }
