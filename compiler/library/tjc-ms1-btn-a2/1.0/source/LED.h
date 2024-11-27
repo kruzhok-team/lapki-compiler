@@ -1,7 +1,13 @@
-#ifndef LED_H
-#define LED_H
+#pragma once
+
+#include "../PWM.hpp"
 
 class LED {
+
+private:
+    uint8_t map(uint8_t x, uint8_t in_min, uint8_t in_max, uint8_t out_min, uint8_t out_max) {
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    }
 
 public:
     LED(uint8_t ledPin) {
@@ -25,16 +31,38 @@ public:
         return value;
     }
 
-    void on() {
+    void on(const uint8_t brightness = 100) {
 
-        GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + pin));
+        // change state
         value = 1;
+
+        // Если на всю яркость - все просто
+        if (brightness == 100) {
+            GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + pin));
+            return;
+        }
+
+        // Если яркость == 0, то выключаем светодиод (меняем состояние класса)
+        if (brightness == 0) {
+            off();
+            return;
+        }
+
+        // Иначе подключаем ШИМ
+
+        // mapping [0.255] -> [0..100]
+        const uint8_t val = brightness; //const uint8_t val = map(brightness, 0, 255, 0, 100);
+        
+        PWM().write(val, pin -4);
     }
 
     void off() {
 
         GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + pin));
         value = 0;
+
+        // Выключаем ШИМ, если включение было через него
+        PWM().write(0, pin -4);
     }
 
     void toggle() {
@@ -75,6 +103,3 @@ public:
 private:
     uint8_t pin;
 };
-
-#endif
-// LED_H

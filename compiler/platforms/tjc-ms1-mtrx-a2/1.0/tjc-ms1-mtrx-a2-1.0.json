@@ -1,7 +1,7 @@
 {
-    "name": "МС-ТЮК-1: Лампочница",
-    "id": "tjc-ms1-lmp-a3",
-    "description": "Платформа для программирования лампочницы МС-ТЮК-1.",
+    "name": "МС-ТЮК-1: Матрица",
+    "id": "tjc-ms1-mtrx-a2",
+    "description": "Платформа для программирования матрицы МС-ТЮК-1.",
     "icon": "",
     "staticComponents": false,
     "version": "1.0",
@@ -12,6 +12,7 @@
     "visual": true,
     "compile": true,
     "mainFileExtension": "cpp",
+    "staticActionDelimeter": "::",
     "compilingSettings": [
       {
         "command": "arm-none-eabi-g++",
@@ -20,7 +21,7 @@
           "-DSTM32G030x6",
           "-D_FIR_GIT_REV=\"GIT_NIY\"",
           "-T",
-          "./tjc-ms1-b2cc4e728f9bf8f6-usercode.ld",
+          "./tjc-ms1-b4272ba421624bbe-usercode.ld",
           "./startup_stm32g030xx.s",
           "-o",
           "./build/sketch.elf",
@@ -28,8 +29,13 @@
           "./sketch.cpp",
           "-mthumb",
           "--specs=nosys.specs",
-          "-O2",
-          "qhsm.c"
+          "-Os",
+          "qhsm.c",
+          "-fno-exceptions",
+          "-ffunction-sections",
+          "-fdata-sections",
+          "-Xlinker",
+          "--gc-sections"
         ]
       },
       {
@@ -39,10 +45,9 @@
     ],
     "mainFunction": true,
     "delimeter": ";",
-    "staticActionDelimeter": "::",
-    "defaultIncludeFiles": ["stm32g030xx.h", "system.c"],
+    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
     "defaultBuildFiles": [
-      "tjc-ms1-b2cc4e728f9bf8f6-usercode.ld",
+      "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
       "startup_stm32g030xx.s",
       "stm32g030xx.h",
@@ -50,7 +55,10 @@
       "core_cmInstr.h",
       "cmsis_gcc.h",
       "core_cmFunc.h",
-      "system_stm32g0xx.h"
+      "system_stm32g0xx.h",
+      "UART.hpp",
+      "Pins.hpp",
+      "macros.hpp"
     ],
     "components": {
       "SimpleBus": {
@@ -151,63 +159,80 @@
         "singletone": false
       },
       
-      "LED": {
-        "description": "Компонент для взаимодействия со светодиодом",
+      "Matrix": {
+        "description": "Компонент для взаимодействия со светодиодной матрицы.",
         "img": "arduino/led.svg",
         "signals": {},
-        "constructorParameters": {
-          "pin": {
-            "type": ["1", "2", "3"],
-            "description": "Пин, к которому подключен светодиод"
-          }
-        },
-        "variables": {
-          "value": {
-            "img": "common/value.svg",
-            "type": "int",
-            "description": "Текущее значение на пине"
-          }
-        },
         "methods": {
-          "on": {
-            "img": "arduino/switch-on.svg",
-            "parameters": [
-              {
-                "name": "brightness",
-                "type": "uint8_t",
-                "description": "Яркость светодиода (по умолчанию: 100)",
-                "optional": true
-              }
-            ],
-            "description": "Зажечь светодиод"
-          },
-          "off": {
-            "img": "arduino/switch-off.svg",
-            "description": "Выключить светодиод"
-          },
-          "toggle": {
-            "img": "arduino/toggle.svg",
-            "description": "Меняет состояние светодиода на противоположное"
-          },
-          "blink": {
+          "setPixel": {
             "img": "arduino/blink.svg",
+            "description": "Включить или выключить светодиод.",
             "parameters": [
               {
-                "name": "times",
-                "type": "byte",
-                "description": "Количество миганий"
+                "name": "row",
+                "type": "uint8_t",
+                "description": "Номер строки, на которой расположен светодиод."
               },
               {
-                "name": "interval",
-                "type": "unsigned int",
-                "description": "Длительность мигания"
+                "name": "col",
+                "type": "uint8_t",
+                "description": "Номер столбца, на котором расположен светодиод."
+              },
+              {
+                "name": "value",
+                "type": ["0", "1"],
+                "description": "Состояние светодиода вкл./выкл."
               }
-            ],
-            "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
+            ]
+          },
+          "offPixel": {
+            "img": "arduino/blink.svg",
+            "description": "Выключить светодиод.",
+            "parameters": [
+              {
+                "name": "row",
+                "type": "uint8_t",
+                "description": "Номер строки, на которой расположен светодиод."
+              },
+              {
+                "name": "col",
+                "type": "uint8_t",
+                "description": "Номер столбца, на котором расположен светодиод."
+              }
+            ]
+          },
+          "setPattern": {
+            "img": "arduino/blink.svg",
+            "description": "Изобразить паттерн на матрице.",
+            "parameters": [
+              {
+                "name": "pattern",
+                "type": "Matrix5x5",
+                "description": "Паттерн, который будет изображен на матрице."
+              }
+            ]
+          },
+          "fill": {
+            "img": "arduino/blink.svg",
+            "description": "Установить уровень яркости на каждый светодиод.",
+            "parameters": [
+              {
+                "name": "value",
+                "type": "uint8_t",
+                "description": "Уровень яркости, который будет установлен на каждый светодиод."
+              }
+            ]
+          },
+          "clear": {
+            "img": "arduino/blink.svg",
+            "description": "Выключить все светодиоды.",
+            "parameters": []
           }
         },
-        "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
-        "importFiles": ["LED.h"],
+        "variables": {},
+        "constructorParameters": {},
+        "buildFiles": ["Matrix.hpp"],
+        "importFiles": ["Matrix.hpp"],
         "singletone": false
       },
   
