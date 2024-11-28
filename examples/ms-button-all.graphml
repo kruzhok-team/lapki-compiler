@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="G">
+    <data key="dStateMachine"></data>
+    <data key="dGeometry">
+      <rect x="0" y="0" width="450" height="100"></rect>
+    </data>
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ tjc-ms1-btn-a2
+
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+lapkiVisual/ true
+
+</data>
+    </node>
+    <node id="dkhdpihjzfmzmujlwemm">
+      <data key="dName">Состояние</data>
+      <data key="dData"></data>
+      <data key="dGeometry">
+        <rect x="127.19998168945312" y="178" width="450" height="100"></rect>
+      </data>
+    </node>
+    <node id="magbpbcqxhkuuvbpaxyg">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-74.80001831054688" y="29"></point>
+      </data>
+    </node>
+
+    <node id="cDataBus1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ DataBus1
+
+type/ DataBus
+
+baudrate/ 9600
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="0" y="0"></point>
+      </data>
+    </node>
+    <node id="cButton1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Button1
+
+type/ Button
+
+pin/ 1
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="0" y="0"></point>
+      </data>
+    </node>
+    <node id="cLED1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED1
+
+type/ LED
+
+pin/ 1
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="0" y="0"></point>
+      </data>
+    </node>
+    <node id="cTimer1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer1
+
+type/ Timer
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="0" y="0"></point>
+      </data>
+    </node>
+    <node id="cCounter1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Counter1
+
+type/ Counter
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="0" y="0"></point>
+      </data>
+    </node>
+    <edge id="jmycaipezszehygsqnfo" source="magbpbcqxhkuuvbpaxyg" target="dkhdpihjzfmzmujlwemm"></edge>
+  </graph>
+</graphml>

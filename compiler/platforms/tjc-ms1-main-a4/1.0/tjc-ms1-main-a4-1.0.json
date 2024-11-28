@@ -30,7 +30,11 @@
           "-mthumb",
           "--specs=nosys.specs",
           "-O2",
-          "qhsm.c"
+          "qhsm.c",
+          "-I",
+          "Counter.h",
+          "Counter.cpp",
+          "-w"
         ]
       },
       {
@@ -108,7 +112,7 @@
             "description": "Отправляет символ по адресу."
           }
         },
-        "buildFiles": ["SimpleBus.hpp", "UART.hpp"],
+        "buildFiles": ["SimpleBus.hpp", "Pins.hpp", "UART.hpp"],
         "importFiles": ["SimpleBus.hpp"],
         "singletone": false
       },
@@ -149,7 +153,7 @@
             "description": "Отправить байт в шину."
           }
         },
-        "buildFiles": ["DataBus.hpp", "UART.hpp"],
+        "buildFiles": ["DataBus.hpp", "Pins.hpp","UART.hpp"],
         "importFiles": ["DataBus.hpp"],
         "singletone": false
       },

@@ -40,7 +40,7 @@
     "mainFunction": true,
     "delimeter": ";",
     "staticActionDelimeter": "::",
-    "defaultIncludeFiles": ["stm32g030xx.h", "system.c"],
+    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "macros.hpp"],
     "defaultBuildFiles": [
       "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
@@ -50,7 +50,8 @@
       "core_cmInstr.h",
       "cmsis_gcc.h",
       "core_cmFunc.h",
-      "system_stm32g0xx.h"
+      "system_stm32g0xx.h",
+      "macros.hpp"
     ],
     "components": {
       "SimpleBus": {
@@ -105,7 +106,7 @@
             "description": "Отправляет символ по адресу."
           }
         },
-        "buildFiles": ["SimpleBus.hpp", "UART.hpp"],
+        "buildFiles": ["SimpleBus.hpp", "Pins.hpp", "UART.hpp"],
         "importFiles": ["SimpleBus.hpp"],
         "singletone": false
       },
@@ -146,7 +147,7 @@
             "description": "Отправить байт в шину."
           }
         },
-        "buildFiles": ["DataBus.hpp", "UART.hpp"],
+        "buildFiles": ["DataBus.hpp","Pins.hpp", "UART.hpp"],
         "importFiles": ["DataBus.hpp"],
         "singletone": false
       },
