@@ -1,4 +1,4 @@
-{ lib, python3Packages, arduino-cli, cargo, maturin, rustc, rustPlatform, fetchFromGitHub }:
+{ lib, gnumake, gcc-arm-embedded,  python3Packages, arduino-cli, cargo, maturin, rustc, rustPlatform, fetchFromGitHub }:
 with python3Packages;
 
 let
@@ -95,11 +95,11 @@ clang = buildPythonPackage rec {
 
 cyberiadaml-py = buildPythonPackage rec {
   pname = "cyberiadaml_py";
-  version = "1.0";
+  version = "1.2";
   pyproject = true;
   src = python.pkgs.fetchPypi {
     inherit pname version;
-    sha256 = "sha256-HTTk0WuOtVNYWniHd7gzSwsOfv0CtMYBcXTijDr+eME=";
+    sha256 = "sha256-+Psv0NMtzNYxTjXTFGAQ7lRF6dCfrd5jPrQ1SVViYnI=";
   };
   doCheck = false;
   propagatedBuildInputs = with pkgs; [
@@ -206,6 +206,8 @@ buildPythonApplication {
     clang
     pydantic
     arduino-cli
+    gnumake
+    gcc-arm-embedded 
     argcomplete
     typed-argument-parser
     flake8
