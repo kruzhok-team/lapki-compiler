@@ -108,7 +108,7 @@
             "description": "Отправляет символ по адресу."
           }
         },
-        "buildFiles": ["SimpleBus.hpp", "UART.hpp"],
+        "buildFiles": ["SimpleBus.hpp", "Pins.hpp", "UART.hpp"],
         "importFiles": ["SimpleBus.hpp"],
         "singletone": false
       },
@@ -149,7 +149,7 @@
             "description": "Отправить байт в шину."
           }
         },
-        "buildFiles": ["DataBus.hpp", "UART.hpp"],
+        "buildFiles": ["DataBus.hpp", "Pins.hpp", "UART.hpp"],
         "importFiles": ["DataBus.hpp"],
         "singletone": false
       },
@@ -365,7 +365,7 @@
             "type": "int"
           }
         },
-        "buildFiles": ["Counter.h", "Counter.cpp"],
+        "buildFiles": ["Counter.h"],
         "importFiles": ["Counter.h"],
         "singletone": false
       }
