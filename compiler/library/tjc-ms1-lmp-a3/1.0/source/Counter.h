@@ -3,13 +3,35 @@
 
 class Counter {
     public:
-        Counter();
-        void add(int value);
-        void sub(int value);
-        void reset();
-        bool isEqual(int value);
-        bool isLess(int value);
-        bool isGreater(int value);
+        Counter() {
+            value = 0;
+        }
+
+        void add(int value) {
+            this->value += value;
+        }
+
+        void sub(int value) {
+            this->value -= value;
+        }
+
+        void reset() {
+            this->value = 0;
+        }
+
+        //Signals
+        bool isEqual(int value) {
+            return this->value == value;
+        }
+
+        bool isLess(int value) {
+            return this->value < value;
+        }
+
+        bool isGreater(int value) {
+            return this->value > value;
+        }
+
         int value;
 };
 

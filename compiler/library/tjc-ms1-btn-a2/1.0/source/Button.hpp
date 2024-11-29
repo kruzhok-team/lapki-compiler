@@ -20,8 +20,7 @@
 
 /* Begin Functions for bit manipulation */
 
-template <typename T>
-void bitWrite(T&& x, int n, bool b) {
+void bitWrite(uint8_t& x, int n, bool b) {
 	if (b) {
 		x = x | (1ULL << n);
 	} else {

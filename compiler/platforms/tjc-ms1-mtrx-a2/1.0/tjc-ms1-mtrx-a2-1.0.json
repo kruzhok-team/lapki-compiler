@@ -355,7 +355,7 @@
             "type": "int"
           }
         },
-        "buildFiles": ["Counter.h", "Counter.cpp"],
+        "buildFiles": ["Counter.h"],
         "importFiles": ["Counter.h"],
         "singletone": false
       }
