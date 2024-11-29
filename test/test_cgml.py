@@ -86,86 +86,86 @@ async def test_generating_code():
 
 
 @pytest.mark.parametrize('scheme_path, platform_id, platform_path', [
-    # pytest.param(
-    #     'examples/CyberiadaFormat-Blinker.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms1-mtrx.graphml',
-    #     'tjc-ms1-mtrx-a2',
-    #     'compiler/platforms/tjc-ms1-mtrx-a2/1.0/tjc-ms1-mtrx-a2-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms1-main.graphml',
-    #     'tjc-ms1-main-a4',
-    #     'compiler/platforms/tjc-ms1-main-a4/1.0/tjc-ms1-main-a4-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms1-btn.graphml',
-    #     'tjc-ms1-btn-a2',
-    #     'compiler/platforms/tjc-ms1-btn-a2/1.0/tjc-ms1-btn-a2-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms1-lmp.graphml',
-    #     'tjc-ms1-lmp-a3',
-    #     'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/choices.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/with-final.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/two_choices.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/initial_states.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/with-defer.xml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/with-propagate-block.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/with-optional-parameter.graphml',
-    #     'ArduinoUno',
-    #     'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms-mtrx-all.graphml',
-    #     'tjc-ms1-mtrx-a2',
-    #     'compiler/platforms/tjc-ms1-mtrx-a2/1.0/tjc-ms1-mtrx-a2-1.0.json'
-    # ),
+    pytest.param(
+        'examples/CyberiadaFormat-Blinker.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms1-mtrx.graphml',
+        'tjc-ms1-mtrx-a2',
+        'compiler/platforms/tjc-ms1-mtrx-a2/1.0/tjc-ms1-mtrx-a2-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms1-main.graphml',
+        'tjc-ms1-main-a4',
+        'compiler/platforms/tjc-ms1-main-a4/1.0/tjc-ms1-main-a4-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms1-btn.graphml',
+        'tjc-ms1-btn-a2',
+        'compiler/platforms/tjc-ms1-btn-a2/1.0/tjc-ms1-btn-a2-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms1-lmp.graphml',
+        'tjc-ms1-lmp-a3',
+        'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
+    ),
+    pytest.param(
+        'examples/choices.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-final.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/two_choices.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/initial_states.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-defer.xml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-propagate-block.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/with-optional-parameter.graphml',
+        'ArduinoUno',
+        'compiler/platforms/ArduinoUno/1.0/ArduinoUno-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms-mtrx-all.graphml',
+        'tjc-ms1-mtrx-a2',
+        'compiler/platforms/tjc-ms1-mtrx-a2/1.0/tjc-ms1-mtrx-a2-1.0.json'
+    ),
     pytest.param(
         'examples/ms-main-all.graphml',
         'tjc-ms1-main-a4',
         'compiler/platforms/tjc-ms1-main-a4/1.0/tjc-ms1-main-a4-1.0.json'
     ),
-    # pytest.param(
-    #     'examples/ms-button-all.graphml',
-    #     'tjc-ms1-btn-a2',
-    #     'compiler/platforms/tjc-ms1-btn-a2/1.0/tjc-ms1-btn-a2-1.0.json'
-    # ),
-    # pytest.param(
-    #     'examples/ms-lmp-all.graphml',
-    #     'tjc-ms1-lmp-a3',
-    #     'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
-    # ),
+    pytest.param(
+        'examples/ms-button-all.graphml',
+        'tjc-ms1-btn-a2',
+        'compiler/platforms/tjc-ms1-btn-a2/1.0/tjc-ms1-btn-a2-1.0.json'
+    ),
+    pytest.param(
+        'examples/ms-lmp-all.graphml',
+        'tjc-ms1-lmp-a3',
+        'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str,
