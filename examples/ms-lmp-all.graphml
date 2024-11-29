@@ -41,18 +41,6 @@ lapkiVisual/ true
         <point x="51.199981689453125" y="133"></point>
       </data>
     </node>
-    <node id="cSimpleBus1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT</data>
-      <data key="dData">id/ SimpleBus1
-
-type/ SimpleBus
-
-</data>
-      <data key="dLapkiSchemePosition">
-        <point x="0" y="0"></point>
-      </data>
-    </node>
     <node id="cDataBus1">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT</data>
