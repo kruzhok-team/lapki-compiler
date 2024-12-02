@@ -184,6 +184,7 @@
         "buildFiles": ["Button.hpp"],
         "importFiles": ["Button.hpp"],
         "methods": {},
+        "loopActions": ["scan"],
         "singletone": false
       },
       "LED": {
