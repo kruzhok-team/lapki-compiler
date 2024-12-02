@@ -34,7 +34,7 @@ pytest-coverage = "^0.0"
 [tool.flake8]
 import-order-style="pep8"
 inline-quotes = "single"
-ignore=["D107", "W504", "D301"]
+ignore=["D107", "W504", "D301", "D105"]
 include = ["compiler", "test"]
 exclude=[
     "**/__pycache__",
