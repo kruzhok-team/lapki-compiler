@@ -93,7 +93,7 @@ class CGMLException(Exception):
 def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
     """Get condition and trigger by regexes."""
     if trigger is None or trigger == '':
-        raise _InnerCGMLException('Trigger is None!')
+        raise _InnerCGMLException('Отсутствует триггер.')
     for regex in regexes:
         regex_match = re.match(regex, trigger)
         if regex_match is None:
@@ -103,7 +103,9 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
         parsed_trigger = regex_dict.get('trigger', None)
         postfix = regex_dict.get('postfix', None)
         return InnerTrigger(parsed_trigger, condition, postfix)
-    raise _InnerCGMLException(f'Trigger({trigger}) doesnt match any regex!')
+    raise _InnerCGMLException(
+        f'Триггер({trigger}) не соответствует'
+        'ни одному регулярному выражению для парсинга триггеров.')
 
 
 def __parse_actions(actions: str) -> List[InnerEvent]:
@@ -155,7 +157,8 @@ def __process_state(state_id: str,
     for inner in inner_triggers:
         trigger = inner.event.trigger
         if trigger is None:
-            raise _InnerCGMLException('No trigger for state event!')
+            raise _InnerCGMLException('Отсутствует триггер для'
+                                      'события в состоянии!')
         match trigger:
             case 'entry':
                 entry = inner.actions
@@ -173,7 +176,7 @@ def __process_state(state_id: str,
                         case '_':
                             raise _InnerCGMLException(
                                 f'Неизвестный постфикс {inner.event.postfix} '
-                                'допустимые значения "propagate", "block"'
+                                'допустимые значения: "propagate", "block"'
                             )
                 parser_triggers.append(
                     ParserTrigger(
@@ -222,7 +225,7 @@ def __process_transition(
         )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
     if len(inner_triggers) == 0:
-        raise Exception('No trigger for transition!')
+        raise Exception('Отсутствует триггер для перехода!')
     # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
@@ -721,7 +724,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
                 'platformVersion', None)
             if platform_version is None:
                 raise _InnerCGMLException(
-                    'Meta doesnt contains platformVersion.')
+                    'Отсутствует информация о версии платформы.')
 
             platform: Platform = await platfrom_manager.get_platform(
                 state_machine.platform, platform_version)
