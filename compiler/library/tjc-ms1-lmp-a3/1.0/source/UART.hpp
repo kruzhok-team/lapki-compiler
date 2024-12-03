@@ -350,3 +350,10 @@ namespace detail {
         }
     }
 }
+
+auto&& initUartL = []() -> int {
+
+    detail::hal::initUART(9600);
+
+    return 0;
+}();
