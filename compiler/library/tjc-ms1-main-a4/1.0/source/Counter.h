@@ -6,6 +6,7 @@ class Counter {
         Counter();
         void add(int value);
         void sub(int value);
+        void set(int value);
         void reset();
         bool isEqual(int value);
         bool isLess(int value);

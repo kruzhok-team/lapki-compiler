@@ -12,6 +12,10 @@ void Counter::sub(int value){
     this->value -= value;
 }
 
+void Counter::set(int value){
+    this->value = value;
+}
+
 void Counter::reset(){
     this->value = 0;
 }
