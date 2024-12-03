@@ -351,7 +351,7 @@ namespace detail {
     }
 }
 
-auto&& init = []() -> int {
+auto&& initUartL = []() -> int {
 
     detail::hal::initUART(9600);
 
