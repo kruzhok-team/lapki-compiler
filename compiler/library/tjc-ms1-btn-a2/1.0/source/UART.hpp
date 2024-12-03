@@ -280,10 +280,26 @@ namespace detail {
         }
 
         namespace api {
+
+            bool isDataBusActive = false;
+            bool isSimpleBusActive = false;
             
             // Ниже функции для прерывания, нужно выбрать одну подходящую.
             // Но их линкер не найдет. Поэтому требуется функция обертка, которую он найдет
             // Эта функция-обертка находится непосредственно, либо в DataBus.hpp, либо в SimpleBus.hpp
+
+            // Функция затычка UART1 и UART2 (чтобы плата молчала и не мешала другим общаться, если не используются явно serial-протоколы на ней)
+            void UARTInsertion__(USART, _IRQHandlerPlug) (void) {
+
+                // Читаем пришедшее значение (других источников у этого прерывания нет)
+                uint8_t gotByte = UARTConcat__(USART) -> RDR;
+
+                // TODO: Не нужно, этот флаг сбрасывается сразу при чтении из RDR
+                UARTConcat__(USART) -> RQR |= USART_RQR_RXFRQ;
+
+                // debug
+                detail::debug::debugLedIndicator = true;
+            }
             
             // Функция для DataBus UART1 и UART2
             void UARTInsertion__(USART, _IRQHandlerDataBus)(void) {
@@ -357,3 +373,18 @@ auto&& initUartL = []() -> int {
 
     return 0;
 }();
+
+extern "C" {
+
+    void UARTInsertion__(USART, _IRQHandler) (void) {
+
+        if (detail::hal::api::isSimpleBusActive) {
+            UARTInsertion__(detail::hal::api::USART, _IRQHandlerSimpleBus)();
+        }
+        else if (detail::hal::api::isDataBusActive) {
+            UARTInsertion__(detail::hal::api::USART, _IRQHandlerDataBus)();
+        } else {
+            UARTInsertion__(detail::hal::api::USART, _IRQHandlerPlug)();
+        }
+    }
+}

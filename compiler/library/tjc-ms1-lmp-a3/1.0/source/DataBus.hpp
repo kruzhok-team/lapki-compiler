@@ -2,21 +2,6 @@
 
 #include "UART.hpp"     // Если не было ошибок компиляции, то после включения файла должна быть определена константа: либо UART1__, либо UART2__. Также константа UART__num
 
-extern "C" {
-
-    #if defined(UART1__)
-        void USART1_IRQHandler(void) {
-
-            detail::hal::api::USART1_IRQHandlerDataBus();
-        }
-    #elif defined(UART2__)
-        void USART2_IRQHandler(void) {
-
-            detail::hal::api::USART2_IRQHandlerDataBus();
-        }
-    #endif
-}
-
 // Если UART занят другим модулем (например, SimpleBus), то ошибка компиляции (в противном случае функция-прерывание будет перезаписана текущим модулем)
 #ifdef UART1_BUSY
     #error "CE: UART1 used by other hpp file (it is UB for uart interrupt function)"
@@ -45,6 +30,8 @@ public:
         detail::hal::initUART(baudrate);
         // Прикрепляем адрес переменной lastByte к модулю UART (чтобы она изменялась в функции-прерывании)
         detail::dataBusHelpers::receivedByte = &lastByte;
+
+        detail::hal::api::isDataBusActive = true;
     }
 
     // Процедура отправки байта
