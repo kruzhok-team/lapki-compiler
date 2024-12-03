@@ -15,6 +15,10 @@ class Counter {
             this->value -= value;
         }
 
+        void set(int value) {
+            this->value = value;
+        }
+
         void reset() {
             this->value = 0;
         }
