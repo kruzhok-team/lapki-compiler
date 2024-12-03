@@ -13,6 +13,7 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
 from compiler.CGML import parse, CGMLException
+from compiler.platform_manager import PlatformException
 from compiler.types.inner_types import (
     CompilerResponse,
     File,
@@ -151,7 +152,8 @@ async def compile_xml(
         build_path = os.path.join(path, 'build/')
         await AsyncPath(build_path).mkdir(exist_ok=True)
         if settings is None:
-            raise Exception('No settings!!')
+            raise PlatformException(
+                'У платформы отсутствуют настройки компиляции.')
         await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                             '1.0',  # TODO: Версия стандарта?
                                             default_library,
@@ -224,7 +226,10 @@ class Handler:
             await ws.send_json(response.model_dump())
         except CGMLException as e:
             await Logger.logException()
-            await RequestError(', '.join(map(str, e.args))).dropConnection(ws)
+            await RequestError(e.error_data.message).dropConnection(
+                ws,
+                sm_id=e.error_data.sm_id
+            )
         except Exception:
             await Logger.logException()
             await RequestError('Internal error!').dropConnection(ws)

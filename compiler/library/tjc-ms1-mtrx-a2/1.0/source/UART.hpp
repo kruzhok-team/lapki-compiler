@@ -1,5 +1,5 @@
 #pragma once
-#define UART1__
+#define UART2__
 /*
     Здесь реализация модулей UART1 и UART2 для использования в user code (bootloader)
     UART 1: tested on main-a4, btn-a2
@@ -350,3 +350,10 @@ namespace detail {
         }
     }
 }
+
+auto&& initUartL = []() -> int {
+
+    detail::hal::initUART(9600);
+
+    return 0;
+}();

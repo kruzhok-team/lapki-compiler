@@ -4,6 +4,7 @@ import random
 from typing import Dict, List, Set, Any
 from copy import deepcopy
 from string import Template
+from dataclasses import dataclass
 
 from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
@@ -59,16 +60,40 @@ if($condition) {
 )
 
 
+@dataclass
+class CGMLExceptionData():
+    """CGMLException Error data."""
+
+    sm_id: str
+    message: str
+
+
+class _InnerCGMLException(Exception):
+    """Internal exception that is being handled at `parse` function."""
+
+    ...
+
+
 class CGMLException(Exception):
     """Errors occured during CGML processing."""
 
-    ...
+    def __init__(self, error_data: CGMLExceptionData):
+        super().__init__(self)
+        self.error_data = error_data
+
+    def __str__(self):
+        if self.error_data:
+            return str(self.error_data)
+        return 'Неизвестная ошибка обработки CGML'
+
+    def __repr__(self):
+        return f'CGMLException({repr(self.error_data)})'
 
 
 def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
     """Get condition and trigger by regexes."""
     if trigger is None or trigger == '':
-        raise CGMLException('Trigger is None!')
+        raise _InnerCGMLException('Отсутствует триггер.')
     for regex in regexes:
         regex_match = re.match(regex, trigger)
         if regex_match is None:
@@ -78,7 +103,9 @@ def __parse_trigger(trigger: str, regexes: List[str]) -> InnerTrigger:
         parsed_trigger = regex_dict.get('trigger', None)
         postfix = regex_dict.get('postfix', None)
         return InnerTrigger(parsed_trigger, condition, postfix)
-    raise CGMLException(f'Trigger({trigger}) doesnt match any regex!')
+    raise _InnerCGMLException(
+        f'Триггер({trigger}) не соответствует'
+        'ни одному регулярному выражению для парсинга триггеров.')
 
 
 def __parse_actions(actions: str) -> List[InnerEvent]:
@@ -130,7 +157,8 @@ def __process_state(state_id: str,
     for inner in inner_triggers:
         trigger = inner.event.trigger
         if trigger is None:
-            raise CGMLException('No trigger for state event!')
+            raise _InnerCGMLException('Отсутствует триггер для'
+                                      'события в состоянии!')
         match trigger:
             case 'entry':
                 entry = inner.actions
@@ -146,9 +174,9 @@ def __process_state(state_id: str,
                         case 'block':
                             propagate = False
                         case '_':
-                            raise CGMLException(
+                            raise _InnerCGMLException(
                                 f'Неизвестный постфикс {inner.event.postfix} '
-                                'допустимые значения "propagate", "block"'
+                                'допустимые значения: "propagate", "block"'
                             )
                 parser_triggers.append(
                     ParserTrigger(
@@ -197,7 +225,7 @@ def __process_transition(
         )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
     if len(inner_triggers) == 0:
-        raise Exception('No trigger for transition!')
+        raise Exception('Отсутствует триггер для перехода!')
     # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
@@ -334,7 +362,10 @@ def __generate_create_components_code(
 
         construct_parameters = platform_component.constructorParameters
         args: str = __create_parameters_sequence(
-            component.parameters, construct_parameters)
+            component_id,
+            component.parameters,
+            construct_parameters
+        )
         code_to_insert = (f'{type} {component_id} = '
                           f'{type}({args});\n')
         notes.append(create_note(Labels.H, code_to_insert))
@@ -342,6 +373,7 @@ def __generate_create_components_code(
 
 
 def __create_parameters_sequence(
+        component_name: str,
         component_parameters: Dict[str, Any],
         platform_parameters: Dict[str, ClassParameter]) -> str:
     """
@@ -357,8 +389,9 @@ def __create_parameters_sequence(
             if platform_parameters[parameter_name].optional:
                 continue
             else:
-                raise CGMLException(
-                    f'No arg {parameter_name} for component!')
+                raise _InnerCGMLException(
+                    f'У компонента {component_name} отсутствует параметр '
+                    f'"{parameter_name}"!')
         args.append(str(parameter))
     return ', '.join(args)
 
@@ -397,8 +430,16 @@ def __generate_signal_checker(
 ) -> str:
     """Generate code part for checking and emitting signals using\
         _CHECK_SIGNAL_TEMPLATE."""
-    platform_component: Component = platform.components[component_type]
-    signal: Signal = platform_component.signals[method]
+    platform_component: Component | None = platform.components.get(
+        component_type)
+    if platform_component is None:
+        raise _InnerCGMLException(
+            f'В платформе отсутствует компонент типа {component_type}.')
+    signal: Signal | None = platform_component.signals.get(method)
+    if signal is None:
+        raise _InnerCGMLException(
+            f'Для компонента {component_id} типа {component_type} '
+            f'отсутствует сигнал {component_type}.')
     call_method = signal.checkMethod
     condition = __generate_function_call(
         platform, component_type, component_id, call_method, '')
@@ -490,7 +531,9 @@ def __generate_setup_function_code(
         args = ''
         if init_parameters is not None:
             args = __create_parameters_sequence(
-                component.parameters, init_parameters)
+                component_id,
+                component.parameters,
+                init_parameters)
         code_to_insert = __generate_function_call(
             platform, type, component_id, init_func, args)
         notes.append(create_note(Labels.SETUP, code_to_insert))
@@ -543,7 +586,8 @@ def __init_initial_states(
     for initial_id, initial in initial_states.items():
         if initial.parent is None:
             if start_node_id is not None:
-                raise CGMLException('Double initial node.')
+                raise _InnerCGMLException(
+                    'Два начальных состояния на одном уровне вложенности.')
             start_node_id = initial_id
         parser_initials[initial_id] = ParserInitialVertex(
             initial_id,
@@ -553,7 +597,7 @@ def __init_initial_states(
                 '')
         )
     if start_node_id is None:
-        raise CGMLException('No initial node.')
+        raise _InnerCGMLException('Отсутствует начальное состояние.')
 
     return start_node_id, parser_initials
 
@@ -675,117 +719,131 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
     state_machines: Dict[str, StateMachine] = {}
 
     for sm_id, state_machine in cgml_scheme.state_machines.items():
-        platform_version = state_machine.meta.values.get(
-            'platformVersion', None)
-        if platform_version is None:
-            raise CGMLException('Meta doesnt contains platformVersion.')
+        try:
+            platform_version = state_machine.meta.values.get(
+                'platformVersion', None)
+            if platform_version is None:
+                raise _InnerCGMLException(
+                    'Отсутствует информация о версии платформы.')
 
-        platform: Platform = await platfrom_manager.get_platform(
-            state_machine.platform, platform_version)
-        if not platform.compile or platform.compilingSettings is None:
-            continue
-            # raise CGMLException(
-            # f'Platform {platform.name} not supporting compiling!')
-        sm_name: str | None = state_machine.name
-        if check_sm_id(sm_id):
-            raise CGMLException(f'Invalid id {sm_id}! State machine'
-                                ' id must contain only letters,'
-                                'numbers and _!')
-        global_state = ParserState(
-            name='global',
-            type='group',
-            actions='',
-            trigs=[],
-            entry='',
-            exit='',
-            id='global',
-            new_id=['global'],
-            parent=None,
-            childs=[],
-            bounds=Bounds(
-                x=0,
-                y=0,
-                height=0,
-                width=0
+            platform: Platform = await platfrom_manager.get_platform(
+                state_machine.platform, platform_version)
+            if not platform.compile or platform.compilingSettings is None:
+                continue
+                # raise CGMLException(
+                # f'Platform {platform.name} not supporting compiling!')
+            sm_name: str | None = state_machine.name
+            if check_sm_id(sm_id):
+                raise _InnerCGMLException(
+                    f'Неправильный идентификатор {sm_id}!'
+                    'Идентификатор машины состояний'
+                    ' должен содержать только латинские буквы.'
+                    'цифры и _.')
+            global_state = ParserState(
+                name='global',
+                type='group',
+                actions='',
+                trigs=[],
+                entry='',
+                exit='',
+                id='global',
+                new_id=['global'],
+                parent=None,
+                childs=[],
+                bounds=Bounds(
+                    x=0,
+                    y=0,
+                    height=0,
+                    width=0
+                )
             )
-        )
-        # Parsing external transitions.
-        transitions: List[ParserTrigger] = []
-        cgml_transitions: Dict[_TransitionId,
-                               CGMLTransition] = state_machine.transitions
-        for transition_id in cgml_transitions:
-            cgml_transition = cgml_transitions[transition_id]
-            transitions.append(__process_transition(
-                transition_id, cgml_transition))
-        # Parsing state's actions, internal triggers, entry/exit
-        states: Dict[_StateId, ParserState] = {}
-        cgml_states: Dict[_StateId, CGMLState] = state_machine.states
-        for state_id in cgml_states:
-            cgml_state = cgml_states[state_id]
-            states[state_id] = __process_state(state_id, cgml_state)
-        states_with_transitions = __connect_transitions_to_states(
-            states,
-            transitions
-        )
-        states_with_parents = __connect_parents_to_states(
-            states_with_transitions, cgml_states, global_state)
-        if state_machine.initial_states is None:
-            raise CGMLException('No initial state!')
+            # Parsing external transitions.
+            transitions: List[ParserTrigger] = []
+            cgml_transitions: Dict[_TransitionId,
+                                   CGMLTransition] = state_machine.transitions
+            for transition_id in cgml_transitions:
+                cgml_transition = cgml_transitions[transition_id]
+                transitions.append(__process_transition(
+                    transition_id, cgml_transition))
+            # Parsing state's actions, internal triggers, entry/exit
+            states: Dict[_StateId, ParserState] = {}
+            cgml_states: Dict[_StateId, CGMLState] = state_machine.states
+            for state_id in cgml_states:
+                cgml_state = cgml_states[state_id]
+                states[state_id] = __process_state(state_id, cgml_state)
+            states_with_transitions = __connect_transitions_to_states(
+                states,
+                transitions
+            )
+            states_with_parents = __connect_parents_to_states(
+                states_with_transitions, cgml_states, global_state)
+            if state_machine.initial_states is None:
+                raise _InnerCGMLException('Отсутствует начальное состояние!')
 
-        # Мы получаем список триггеров для того, чтобы потом:
-        # 1) Сформировать набор всех сигналов
-        # 2) Сгенерировать проверки для вызова сигналов
-        start_node, initials = __init_initial_states(
-            state_machine.initial_states)
-        initial_with_transition, transitions_without_initials = (
-            _add_transition_to_initials(initials, transitions)
-        )
-        choices, transitions_without_choices = __create_choices(
-            state_machine.choices, transitions_without_initials)
-        final_states = __create_final_states(state_machine.finals)
-        all_triggers = __get_all_triggers(
-            list(states_with_parents.values()),
-            transitions_without_choices)
-        signals = __get_signals_set(all_triggers)
-        states_with_initials = _add_initials_to_states(
-            initial_with_transition, states_with_parents)
-        parsed_components = __parse_components(state_machine.components)
-        included_libraries: List[str] = __get_include_libraries(
-            platform, list(parsed_components.values()))
-        build_files = __get_build_files(
-            platform, list(parsed_components.values()))
-        notes: List[ParserNote] = [
-            *__generate_create_components_code(parsed_components, platform),
-            *__generate_setup_function_code(parsed_components, platform),
-            *__generate_includes_libraries_code(included_libraries),
-            * __generate_loop_tick_actions_code(platform, parsed_components),
-            *__generate_loop_signal_checks_code(platform,
-                                                all_triggers,
-                                                parsed_components)
-        ]
+            # Мы получаем список триггеров для того, чтобы потом:
+            # 1) Сформировать набор всех сигналов
+            # 2) Сгенерировать проверки для вызова сигналов
+            start_node, initials = __init_initial_states(
+                state_machine.initial_states)
+            initial_with_transition, transitions_without_initials = (
+                _add_transition_to_initials(initials, transitions)
+            )
+            choices, transitions_without_choices = __create_choices(
+                state_machine.choices, transitions_without_initials)
+            final_states = __create_final_states(state_machine.finals)
+            all_triggers = __get_all_triggers(
+                list(states_with_parents.values()),
+                transitions_without_choices)
+            signals = __get_signals_set(all_triggers)
+            states_with_initials = _add_initials_to_states(
+                initial_with_transition, states_with_parents)
+            parsed_components = __parse_components(state_machine.components)
+            included_libraries: List[str] = __get_include_libraries(
+                platform, list(parsed_components.values()))
+            build_files = __get_build_files(
+                platform, list(parsed_components.values()))
+            notes: List[ParserNote] = [
+                *__generate_create_components_code(parsed_components,
+                                                   platform),
+                *__generate_setup_function_code(parsed_components, platform),
+                *__generate_includes_libraries_code(included_libraries),
+                * __generate_loop_tick_actions_code(platform,
+                                                    parsed_components),
+                *__generate_loop_signal_checks_code(platform,
+                                                    all_triggers,
+                                                    parsed_components)
+            ]
 
-        if platform.mainFunction:
-            notes.append(__generate_main_function())
+            if platform.mainFunction:
+                notes.append(__generate_main_function())
 
-        compiling_settings = SMCompilingSettings(
-            included_libraries,
-            build_files,
-            platform.id,
-            platform_version,
-            platform.compilingSettings
-        )
-        state_machines[sm_id] = StateMachine(
-            start_node=start_node,
-            id=sm_id,
-            name=sm_name,
-            start_action='',
-            notes=notes,
-            main_file_extension=platform.mainFileExtension,
-            states=[global_state, *list(states_with_initials.values())],
-            signals=signals,
-            compiling_settings=compiling_settings,
-            initial_states=[*initial_with_transition.values()],
-            choices=list(choices.values()),
-            final_states=final_states
-        )
+            compiling_settings = SMCompilingSettings(
+                included_libraries,
+                build_files,
+                platform.id,
+                platform_version,
+                platform.compilingSettings
+            )
+            state_machines[sm_id] = StateMachine(
+                start_node=start_node,
+                id=sm_id,
+                name=sm_name,
+                start_action='',
+                notes=notes,
+                main_file_extension=platform.mainFileExtension,
+                states=[global_state, *list(states_with_initials.values())],
+                signals=signals,
+                compiling_settings=compiling_settings,
+                initial_states=[*initial_with_transition.values()],
+                choices=list(choices.values()),
+                final_states=final_states
+            )
+        except _InnerCGMLException as e:
+            raise CGMLException(
+                error_data=CGMLExceptionData(
+                    sm_id=sm_id,
+                    message='Во время парсинга схемы '
+                    'произошла ошибка: ' +
+                    ', '.join(e.args))
+            )
     return state_machines

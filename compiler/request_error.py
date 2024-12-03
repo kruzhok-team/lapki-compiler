@@ -18,7 +18,8 @@ class RequestError:
     async def dropConnection(
         self,
         ws: web.WebSocketResponse,
-        legacy=False
+        legacy=False,
+        sm_id=''
     ) -> None:
         """Drop connection and send error."""
         if (not ws.closed):
@@ -37,7 +38,7 @@ class RequestError:
                 CompilerResponse(
                     result='NOTOK',
                     state_machines={
-                        '': StateMachineResult(
+                        sm_id: StateMachineResult(
                             result='NOTOK',
                             name='',
                             commands=[
