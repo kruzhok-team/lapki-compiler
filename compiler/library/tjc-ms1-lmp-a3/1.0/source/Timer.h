@@ -4,6 +4,9 @@
 class Timer {
     
 public:
+
+    unsigned long difference;
+
     Timer() {
 
         _active = false;
@@ -27,6 +30,7 @@ public:
 
     bool timeout() {
 
+        difference -= millis() - _previous;
         if (_active && (millis() - _previous >= _interval))
         {
             _previous = millis();
@@ -45,6 +49,7 @@ public:
         setInterval(interval);
         reset();
         enable();
+        difference = interval;
     }
 
 private:
