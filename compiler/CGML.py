@@ -18,6 +18,7 @@ from compiler.types.platform_types import (
     ClassParameter,
     Component,
     Platform,
+    SetupFunction,
     Signal
 )
 from cyberiadaml_py.cyberiadaml_parser import CGMLParser
@@ -507,6 +508,17 @@ def __generate_loop_tick_actions_code(
     return notes
 
 
+def __generate_default_setup_function(
+    default_functions: List[SetupFunction]
+) -> List[ParserNote]:
+    return [
+        create_note(
+            Labels.SETUP, f'{default_function.functionName}'
+            f'({", ".join(default_function.args)});'
+        ) for default_function in default_functions
+    ]
+
+
 def __generate_setup_function_code(
         components: Dict[_ComponentId, InnerComponent],
         platform: Platform) -> List[ParserNote]:
@@ -517,10 +529,16 @@ def __generate_setup_function_code(
 
     Generated code example:
     ```cpp
+    // Платформо-зависимые функции
+    initUART(9600);
+
+    // Компоненто-зависимые функции
     QHsmSerial::init(9600);
     ```
     """
-    notes: List[ParserNote] = []
+    notes: List[ParserNote] = [
+        *__generate_default_setup_function(platform.defaultSetupFunctions)
+    ]
     for component_id, component in components.items():
         type = component.type
         platform_component = platform.components[type]

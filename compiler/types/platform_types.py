@@ -67,6 +67,10 @@ class CompilingSettings:
     command: SupportedCompilers
     flags: List[str]
 
+@dataclass
+class SetupFunction:
+    functionName: str
+    args: List[str]
 
 class Platform(BaseModel):
     id: str = ''
@@ -87,6 +91,7 @@ class Platform(BaseModel):
     compilingSettings: List[CompilingSettings] | None = (
         None
     )
+    defaultSetupFunctions: List[SetupFunction] = Field(default_factory=list)
     components: Dict[str, Component]
     mainFunction: bool = False
     mainFileExtension: str = ''
