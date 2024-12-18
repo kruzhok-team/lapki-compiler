@@ -39,9 +39,9 @@ $offset}
 
 DEFER = string.Template("""
 $offset if (!signalDefer) {
-$offset defer[defer_i] = $trigger_name_SIG;\n')
-$offset defer_i++;\n'
-$offset}'
+$offset defer[defer_i] = $trigger_name;\n
+$offset defer_i++;\n
+$offset}
 """)
 
 
@@ -442,7 +442,7 @@ class CppFileWriter:
                 await self._insert_string(str(line))
 
     def _generate_defer(self, trigger_name: str, offset='\t\t') -> str:
-        return DEFER.safe_substitute({'trigger_name': trigger_name, 'offset': offset})
+        return DEFER.safe_substitute({'trigger_name': trigger_name + '_SIG', 'offset': offset})
 
     async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
