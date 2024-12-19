@@ -46,7 +46,7 @@
     "mainFunction": true,
     "delimeter": ";",
     "staticActionDelimeter": "::",
-    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "macros.hpp"],
+    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
     "defaultBuildFiles": [
       "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
@@ -57,7 +57,9 @@
       "cmsis_gcc.h",
       "core_cmFunc.h",
       "system_stm32g0xx.h",
-      "macros.hpp"
+      "macros.hpp",
+      "UART.hpp",
+      "Pins.hpp"
     ],
     "components": {
       "SimpleBus": {
