@@ -13,6 +13,12 @@
     "compile": true,
     "mainFileExtension": "cpp",
     "staticActionDelimeter": "::",
+    "defaultSetupFunctions": [
+      {
+        "functionName": "detail::hal::initUART",
+        "args": ["9600"]
+      }
+    ],
     "compilingSettings": [
       {
         "command": "arm-none-eabi-g++",
