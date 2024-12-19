@@ -117,7 +117,15 @@ def __parse_actions(actions: str) -> List[InnerEvent]:
     events: List[InnerEvent] = []
     raw_events = actions.split('\n\n')
     for raw_event in raw_events:
-        raw_trigger, do = raw_event.split('/')
+        parsed_event = re.search(
+            r'^(?P<event>[^\/]+)\/(?P<actions>.*)$', raw_event, flags=re.S)
+        if parsed_event is None:
+            continue
+        parsed_dict = parsed_event.groupdict()
+        raw_trigger: str | None = parsed_dict.get('event')
+        do: str | None = parsed_dict.get('actions')
+        if (do is None or raw_trigger is None):
+            continue
         inner_trigger = __parse_trigger(
             raw_trigger,
             [
