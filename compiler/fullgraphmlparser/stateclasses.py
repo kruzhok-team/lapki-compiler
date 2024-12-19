@@ -53,6 +53,12 @@ class Labels(Enum):
 
 
 @runtime_checkable
+class Condition(Protocol):
+    guard: str
+    action: str
+
+
+@runtime_checkable
 class GeometryBounds(Protocol):
     x: float
     y: float
@@ -133,7 +139,7 @@ class UnconditionalTransition:
 class ChoiceTransition:
     action: str
     target: str
-    condition: str = 'else'
+    guard: str = 'else'
 
 
 @dataclass

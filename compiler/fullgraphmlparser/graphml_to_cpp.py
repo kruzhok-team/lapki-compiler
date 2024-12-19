@@ -7,35 +7,42 @@ from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
-    ChoiceTransition,
     CodeGenerationException,
     ParserState,
     ParserTrigger,
     StateMachine,
     Labels,
     UnconditionalTransition,
-    BaseParserVertex
+    BaseParserVertex,
+    Condition
 )
 from compiler.fullgraphmlparser.graphml import *
 
 MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-IF_EXPRESSION = string.Template('''if ($condition) {
+IF_EXPRESSION = string.Template("""$offset if ($condition) {
 $actions
-status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
-}''')
+$offset}""")
+
+TRANSITION = string.Template(
+    'status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);')
 
 FINAL_ACTION = 'status_ = Q_HANDLED();'
 
-ELSE_IF_EXPRESSION = string.Template('''else if ($condition) {
+ELSE_IF_EXPRESSION = string.Template("""$offset else if ($condition) {
 $actions
-status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
-}''')
+$offset }""")
 
-ELSE_EXPRESSION = string.Template('''else {
+ELSE_EXPRESSION = string.Template("""$offset else {
 $actions
-status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_$target);
-}
-''')
+$offset}
+""")
+
+DEFER = string.Template("""
+$offset if (!signalDefer) {
+$offset defer[defer_i] = $trigger_name;\n
+$offset defer_i++;\n
+$offset}
+""")
 
 
 def get_enum(text_labels: List[str]) -> str:
@@ -142,45 +149,57 @@ class CppFileWriter:
         for vertex in vertexes:
             await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const *const e);\n' % vertex.id)
 
-    async def _write_choice_vertex_definition(self):
-        """
-        Generate choice vertex definition.
+    async def _generate_condition(self,
+                                  triggers: Sequence[Condition],
+                                  offset='\t\t') -> str:
+        """Generate if else code using IF_EXPRESSIONS,\
+            ELSE_IF_EXPRESSION, ELSE_EXPRESSION templates."""
+        if len(triggers) == 0:
+            return offset + 'status_ = UN_HANDLED();'
 
-        This function generate if else code using IF_EXPRESSIONS,\
-            ELSE_IF_EXPRESSION, ELSE_EXPRESSION template.
-        """
-        for choice in self.choices:
-            else_transition: ChoiceTransition | None = None
-            if len(choice.transitions) == 0:
-                actions = 'status_ = UN_HANDLED();'
-                await self._write_vertex_definition(actions, choice, 'Choice')
-                continue
-            start_transition = choice.transitions[0]
-            actions = IF_EXPRESSION.safe_substitute({
-                'condition': start_transition.condition,
-                'actions': start_transition.action,
-                'target': start_transition.target
+        start_trigger = triggers[0]
+        actions = IF_EXPRESSION.safe_substitute({
+            'condition': start_trigger.guard,
+            'actions': start_trigger.action,
+            'offset': offset
+        }) + '\n'
+
+        else_condition: Condition | None = None
+
+        for i in range(1, len(triggers)):
+            transition = triggers[i]
+            if transition.guard == 'else':
+                if else_condition is None:
+                    else_condition = transition
+                    continue
+                else:
+                    raise CodeGenerationException(
+                        'Too many else for choice pseudonode.')
+            actions += ELSE_IF_EXPRESSION.safe_substitute({
+                'condition': transition.guard,
+                'actions': transition.action,
+                'offset': offset
             }) + '\n'
-            for i in range(1, len(choice.transitions)):
-                transition = choice.transitions[i]
-                if transition.condition == 'else':
-                    if else_transition is None:
-                        else_transition = transition
-                        continue
-                    else:
-                        raise CodeGenerationException(
-                            'Too many else for choice pseudonode.')
-                actions += ELSE_IF_EXPRESSION.safe_substitute({
-                    'condition': transition.condition,
-                    'actions': transition.action,
-                    'target': transition.target
-                }) + '\n'
-            if else_transition is not None:
-                actions += ELSE_EXPRESSION.safe_substitute({
-                    'actions': else_transition.action,
-                    'target': else_transition.target
-                }) + '\n'
-            await self._write_vertex_definition(actions, choice, 'Choice')
+        if else_condition is not None:
+            actions += ELSE_EXPRESSION.safe_substitute({
+                'actions': else_condition.action,
+                'offset': offset
+            }) + '\n'
+
+        return actions
+
+    async def _write_choice_vertex_definition(self):
+        """Generate choice vertex definition."""
+        for choice in self.choices:
+            for transition in choice.transitions:
+                transition.action += '\t' + \
+                    TRANSITION.safe_substitute(
+                        {'target': transition.target})
+            await self._write_vertex_definition(
+                await self._generate_condition(choice.transitions),
+                choice,
+                'Choice'
+            )
 
     async def _write_initial_vertexes_definition(self) -> None:
         """Write initial vertexes definition."""
@@ -422,11 +441,8 @@ class CppFileWriter:
             async for line in input_file:
                 await self._insert_string(str(line))
 
-    async def _insert_defer(self, trigger_name: str) -> None:
-        await self._insert_string('                if (!signalDefer) {')
-        await self._insert_string(f'                                defer[defer_i] = {trigger_name}_SIG;\n')
-        await self._insert_string('                                defer_i++;\n')
-        await self._insert_string('                }')
+    def _generate_defer(self, trigger_name: str, offset='\t\t') -> str:
+        return DEFER.safe_substitute({'trigger_name': trigger_name + '_SIG', 'offset': offset})
 
     async def _write_states_definitions_recursively(self, state: ParserState, state_path: str):
         state_path = state_path + '::' + state.name
@@ -482,35 +498,22 @@ class CppFileWriter:
             key=lambda t: name_to_position[t[0]])
 
         for event_name, triggers in triggers_merged:
-            await self._insert_string('        /*.${%s::%s} */\n' % (state_path, event_name))
+            await self._insert_string('        /*.${%s::%s} */\n' % (
+                state_path,
+                event_name)
+            )
             await self._insert_string('        case %s_SIG: {\n' % event_name)
-            if len(triggers) == 1:
-                if triggers[0].guard:
-                    await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
-                    await self._insert_string('            if (%s) {\n' % triggers[0].guard)
-                    await self._write_trigger(self.f, triggers[0], state_path, event_name, state, '    ')
-                    await self._insert_string('            }\n')
-                    await self._insert_string('            else {\n')
-                    await self._insert_string('                status_ = Q_UNHANDLED();\n')
-                    await self._insert_string('            }\n')
-                else:
-                    await self._write_trigger(self.f, triggers[0], state_path, event_name, state=state)
-            elif len(triggers) == 2:
-                if triggers[0].guard == 'else':
-                    triggers[0], triggers[1] = triggers[1], triggers[0]
-                await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
-                await self._insert_string('            if (%s) {\n' % triggers[0].guard)
-                await self._write_trigger(self.f, triggers[0], state_path, event_name, state, '    ')
-                await self._insert_string('            }\n')
-                await self._write_guard_comment(self.f, state_path, event_name, triggers[1].guard)
+
+            for trigger in triggers:
+                trigger.action = self._generate_trigger(trigger, state)
+            await self._insert_string(await self._generate_condition(triggers, '\t\t\t'))
+            if not any(trigger.guard == 'else' for trigger in triggers):
                 await self._insert_string('            else {\n')
-                await self._write_trigger(self.f, triggers[1], state_path, event_name, state, '    ')
+                await self._insert_string('                '
+                                          'status_ = Q_UNHANDLED();\n')
                 await self._insert_string('            }\n')
-            else:
-                raise Exception('"else if" guards are not supported')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
-
         await self._insert_string('        default: {\n')
         if state.parent:
             await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
@@ -536,40 +539,30 @@ class CppFileWriter:
         for child_state in state.childs:
             await self._write_states_declarations_recursively(child_state)
 
-    async def _write_trigger(self, f, trigger: ParserTrigger, state_path: str, event_name: str, state: ParserState, offset=''):
+    def _generate_trigger(self,
+                          trigger: ParserTrigger,
+                          state: ParserState,
+                          offset='') -> str:
+        """Generate trigger body."""
+        actions = ''
         if trigger.defer:
-            await self._insert_defer(trigger.name)
+            actions += self._generate_defer(trigger.name)
         elif trigger.action and not trigger.type == 'choice_start':
-            await self._insert_string('\n'.join(
-                [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n')
+            actions += '\n'.join(
+                [offset + '            ' + line for line in trigger.action.split('\n')]) + '\n'
         if trigger.type == 'internal':
             if trigger.propagate:
                 if state.parent:
-                    await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
+                    actions += '            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id
                 else:
-                    await self._insert_string('            status_ = Q_SUPER(&QHsm_top);\n')
+                    actions += '            status_ = Q_SUPER(&QHsm_top);\n'
             else:
-                await self._insert_string(offset + '            status_ = Q_HANDLED();\n')
+                actions += offset + '            status_ = Q_HANDLED();\n'
         elif trigger.type == 'external' or trigger.type == 'choice_result':
-            await self._insert_string(offset + '            stateChanged = true;\n')
-            await self._insert_string(offset + '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target)
-        elif trigger.type == 'choice_start':
-            target_choice_node = next((s for s in self.states if s.id ==
-                                      trigger.target and s.type == 'choice'), None)
-            assert target_choice_node
-            assert len(target_choice_node.trigs) == 2
-            triggers = target_choice_node.trigs
-            if triggers[0].guard == 'else':
-                triggers[0], triggers[1] = triggers[1], triggers[0]
-            triggers[0].action = trigger.action + triggers[0].action
-            triggers[1].action = trigger.action + triggers[1].action
-            await self._write_guard_comment(self.f, state_path, event_name, triggers[0].guard)
-            await self._insert_string(offset + '            if (%s) {\n' % triggers[0].guard)
-            await self._write_trigger(self.f, triggers[0], state_path, event_name, state, offset + '    ')
-            await self._insert_string(offset + '            }\n')
-            await self._write_guard_comment(self.f, state_path, event_name, triggers[1].guard)
-            await self._insert_string(offset + '            else {\n')
-            await self._write_trigger(self.f, triggers[1], state_path, event_name, state, offset + '    ')
-            await self._insert_string(offset + '            }\n')
+            actions += offset + '            stateChanged = true;\n'
+            actions += offset + \
+                '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target
         else:
             raise Exception('Unknown trigger type: %s' % trigger.type)
+
+        return actions
