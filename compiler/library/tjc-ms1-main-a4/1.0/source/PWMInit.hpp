@@ -62,8 +62,8 @@ namespace detail {
             for (int i = 0; i < SIZEPWM; ++i) {
 
                 if (buffer[i].pin == pin) {
-                    buffer[i].pin = -1;
                     buffer[i].callbackAction(false);
+                    buffer[i].pin = -1;
                     break;
                 }
             }
@@ -88,9 +88,6 @@ namespace detail {
             if (entityI == -1)
                 return; // no more free entities
 
-            // init a new pwm entity
-            buffer[entityI].pin = pin;  // pin == id
-
             buffer[entityI].frequencyPSC = clkRate /frequency;
             // check range possible values for frequencyPSC [1..]
             if (buffer[entityI].frequencyPSC < 1)
@@ -101,6 +98,9 @@ namespace detail {
             buffer[entityI].currentLevel = 0;
 
             buffer[entityI].callbackAction = ptr;
+
+            // init a new pwm entity
+            buffer[entityI].pin = pin;  // pin == id
         }
 
         // void addPWMEntity(const int8_t pin, const uint16_t triggerLevel, callbackPtr ptr) {
