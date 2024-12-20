@@ -239,7 +239,7 @@ bool Button::uniquePress(void) const
 || | Return > 0 if the button is clicked, or 0 if not.
 || #
 */
-unsigned int Button::clicked(void)
+unsigned int Button::isClicked(void)
 {
   if (bitRead(state, CLICKSENT) == false &&
       bitRead(state, CURRENT) == false &&

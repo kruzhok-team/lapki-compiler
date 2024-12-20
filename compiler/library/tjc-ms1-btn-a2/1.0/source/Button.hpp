@@ -259,7 +259,7 @@ class Button
   		return (isPressed() && stateChanged());
     }
 
-    unsigned int clicked() {
+    unsigned int isClicked() {
 
 		if (bitRead(state, CLICKSENT) == false &&
 			bitRead(state, CURRENT) == false &&

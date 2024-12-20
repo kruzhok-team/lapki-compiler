@@ -47,7 +47,7 @@ class Button
     bool isPressed() const;
     bool stateChanged() const;
     bool uniquePress() const;
-    unsigned int clicked();
+    unsigned int isClicked();
     bool held(unsigned long time = 0);
     bool heldFor(unsigned long time) const;
 
