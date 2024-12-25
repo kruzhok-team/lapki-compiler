@@ -14,7 +14,8 @@
     "mainFileExtension": "cpp",
     "defaultSetupFunctions": [
       {
-        "functionName": "detail::hal::initUartWrapper"
+        "functionName": "detail::hal::initUartWrapper",
+        "args": []
       }
     ],
     "compilingSettings": [
