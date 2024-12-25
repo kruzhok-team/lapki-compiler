@@ -199,6 +199,36 @@ extern "C" {
 
     void SystemInit(void) {
 
+        // init modules        
+        // GPIO (A, B, C, D, F)
+        // A
+        RCC->IOPRSTR |= RCC_IOPRSTR_GPIOARST_Msk;
+        RCC->IOPRSTR &= ~RCC_IOPRSTR_GPIOARST_Msk;
+
+        // B
+        RCC->IOPRSTR |= RCC_IOPRSTR_GPIOBRST_Msk;
+        RCC->IOPRSTR &= ~RCC_IOPRSTR_GPIOBRST_Msk;
+
+        // C
+        RCC->IOPRSTR |= RCC_IOPRSTR_GPIOCRST_Msk;
+        RCC->IOPRSTR &= ~RCC_IOPRSTR_GPIOCRST_Msk;
+
+        // D
+        RCC->IOPRSTR |= RCC_IOPRSTR_GPIODRST_Msk;
+        RCC->IOPRSTR &= ~RCC_IOPRSTR_GPIODRST_Msk;
+
+        // F
+        RCC->IOPRSTR |= RCC_IOPRSTR_GPIOFRST_Msk;
+        RCC->IOPRSTR &= ~RCC_IOPRSTR_GPIOFRST_Msk;
+
+        // USART2
+        RCC->APBRSTR1 |= RCC_APBRSTR1_USART2RST_Msk;
+        RCC->APBRSTR1 &= ~RCC_APBRSTR1_USART2RST_Msk;
+
+        // DMA
+        RCC->AHBRSTR |= RCC_AHBRSTR_DMA1RST_Msk;
+        RCC->AHBRSTR &= ~RCC_AHBRSTR_DMA1RST_Msk;
+
         #define FLASH_BASE_ADDR 0x08003800
         SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
         __enable_irq();  //включаем все прерывания TODO
