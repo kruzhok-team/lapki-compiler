@@ -15,8 +15,8 @@
     "staticActionDelimeter": "::",
     "defaultSetupFunctions": [
       {
-        "functionName": "detail::hal::initUART",
-        "args": ["9600"]
+        "functionName": "detail::hal::initUartWrapper",
+        "args": []
       }
     ],
     "compilingSettings": [

@@ -154,10 +154,14 @@ namespace detail {
 
     namespace hal {
 
+        bool isUARTInit = false;
+
         // Настройка USART2
         // t127 p826 RM0454 // Таблица прерываний UART
             INLINE__ STATIC__ 
             void initUART(const uint32_t baudrate) {
+
+            isUARTInit = true;
             
             // 1. Включить тактование
             #if defined(UART1__)
@@ -238,6 +242,14 @@ namespace detail {
             // Инициализируем и переводим в режим приёма пин ReDe
             detail::helper::initReDe();
             detail::helper::setReDe(detail::constants::RECEIVE_MODE);
+        }
+
+        void initUartWrapper() {
+
+            // Только если пользователь не инициализировал раньше нас
+            if (isUARTInit == false) {
+                initUART(9600);
+            }
         }
 
         // Обёртка над setReDe, уменьшающая путаницу (ждём, чтобы модуль UART завершил передачу, затем включаем приём)
