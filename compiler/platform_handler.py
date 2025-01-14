@@ -10,7 +10,7 @@ from compiler.platform_manager import (
     PlatformId,
     PlatformMeta
 )
-from compiler.request_error import RequestError
+from compiler.request_error import send_error
 from compiler.access_controller import (
     AccessController,
     AccessControllerException
@@ -161,12 +161,12 @@ class PlatformHandler:
             await ws.send_str('id')
             await ws.send_str(platform_id)
         except AccessControllerException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -183,10 +183,10 @@ class PlatformHandler:
             await ws.send_str('raw-platform-scheme')
             await ws.send_str(raw_platform)
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -207,10 +207,10 @@ class PlatformHandler:
                 await ws.send_json(source.model_dump())
             await ws.send_str('end-sources-send')
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -231,10 +231,10 @@ class PlatformHandler:
                 await ws.send_json(image.model_dump())
             await ws.send_str('end-images-send')
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -257,12 +257,12 @@ class PlatformHandler:
                                    images)
             await ws.send_str('updated')
         except AccessControllerException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -285,12 +285,12 @@ class PlatformHandler:
             await _delete_platform_by_versions(platform_id, versions_to_delete)
             await ws.send_str('deleted')
         except AccessControllerException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -309,12 +309,12 @@ class PlatformHandler:
             await _delete_platform(platform_id)
             await ws.send_str('deleted')
         except AccessControllerException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except PlatformException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws
 
     @staticmethod
@@ -326,10 +326,10 @@ class PlatformHandler:
             await ws.send_str('auth_success')
             return token
         except AccessControllerException as e:
-            await RequestError(str(e)).dropConnection(ws)
+            await send_error(ws, str(e))
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return None
 
     @staticmethod
@@ -344,5 +344,5 @@ class PlatformHandler:
             return ws
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error.').dropConnection(ws)
+            await send_error(ws, 'Internal error!')
         return ws

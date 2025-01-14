@@ -1,10 +1,9 @@
-"""Module for work with CyberiadaMl."""
+"""Module for parse CyberiadaMl schemes and generate code from ."""
 import re
 import random
 from typing import Dict, List, Set, Any
 from copy import deepcopy
 from string import Template
-from dataclasses import dataclass
 
 from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
@@ -59,14 +58,8 @@ if($condition) {
 }
 """
 )
-
-
-@dataclass
-class CGMLExceptionData():
-    """CGMLException Error data."""
-
-    sm_id: str
-    message: str
+STATE_MACHINE_ID = str
+ERROR = str
 
 
 class _InnerCGMLException(Exception):
@@ -78,7 +71,7 @@ class _InnerCGMLException(Exception):
 class CGMLException(Exception):
     """Errors occured during CGML processing."""
 
-    def __init__(self, error_data: CGMLExceptionData):
+    def __init__(self, error_data: Dict[STATE_MACHINE_ID, ERROR]):
         super().__init__(self)
         self.error_data = error_data
 
@@ -743,6 +736,7 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
     state_machines: Dict[str, StateMachine] = {}
+    errors: Dict[STATE_MACHINE_ID, ERROR] = {}
 
     for sm_id, state_machine in cgml_scheme.state_machines.items():
         try:
@@ -865,11 +859,14 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
                 final_states=final_states
             )
         except _InnerCGMLException as e:
-            raise CGMLException(
-                error_data=CGMLExceptionData(
-                    sm_id=sm_id,
-                    message='Во время парсинга схемы '
-                    'произошла ошибка: ' +
-                    ', '.join(e.args))
+            errors[sm_id] = (
+                'Во время парсинга схемы '
+                'произошла ошибка: ' +
+                ', '.join(e.args)
             )
+
+    if len(errors) != 0:
+        raise CGMLException(
+            error_data=errors
+        )
     return state_machines

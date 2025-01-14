@@ -32,7 +32,7 @@ from compiler.cjson_parser import CJsonParser
 from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.Compiler import Compiler
 from compiler.json_converter import JsonConverter
-from compiler.request_error import RequestError
+from compiler.request_error import send_sm_error
 from compiler.config import get_config
 from compiler.logger import Logger
 
@@ -226,13 +226,13 @@ class Handler:
             await ws.send_json(response.model_dump())
         except CGMLException as e:
             await Logger.logException()
-            await RequestError(e.error_data.message).dropConnection(
+            await send_sm_error(
                 ws,
-                sm_id=e.error_data.sm_id
+                e.error_data
             )
         except Exception:
             await Logger.logException()
-            await RequestError('Internal error!').dropConnection(ws)
+            await send_sm_error(ws, {'': 'Internal error!'})
         return ws
 
     @staticmethod
@@ -352,19 +352,27 @@ class Handler:
         except KeyError as e:
             await Logger.logger.error('Invalid request, there isnt'
                                       f'{e.args[0]} key.')
-            await RequestError('Invalid request, there isnt'
-                               f'{e.args[0]} key.').dropConnection(ws,
-                                                                   legacy=True)
+            await send_sm_error(
+                ws,
+                {
+                    '': 'Invalid request, there isnt'
+                    f'{e.args[0]} key.'
+
+                },
+                legacy=True)
             await ws.close()
         except ValidationError as e:
             await Logger.logger.info(e.errors())
-            await RequestError(
-                f'Validation error: {e.errors()}'
-            ).dropConnection(ws, True)
+            await send_sm_error(ws, {
+                '': f'Validation error: {e.errors()}'
+            }, True)
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong').dropConnection(
+            await send_sm_error(
                 ws,
+                {
+                    '': 'Something went wrong'
+                },
                 legacy=True
             )
             await ws.close()
@@ -415,14 +423,19 @@ class Handler:
                 })
         except KeyError as e:
             await Logger.logException()
-            await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws,
-                                                                  legacy=True
-                                                                  )
+            await send_sm_error(
+                ws,
+                {
+                    '': 'There isnt'
+                    f'key {e.args[0]}'
+                },
+                legacy=True
+            )
         except Exception:
             await Logger.logException()
-            await RequestError('Something went wrong!').dropConnection(
+            await send_sm_error(
                 ws,
+                {'': 'Something went wrong!'},
                 legacy=True
             )
 
@@ -461,14 +474,20 @@ class Handler:
             await Logger.logger.info('Converted!')
         except KeyError as e:
             await Logger.logException()
-            await RequestError('There isnt'
-                               f'key {e.args[0]}').dropConnection(ws,
-                                                                  legacy=True)
+            await send_sm_error(
+                ws,
+                {
+                    '': 'There isnt'
+                    f'key {e.args[0]}'
+                },
+                legacy=True)
             return ws
         except Exception as e:
             await Logger.logException()
-            await RequestError('Something went wrong'
-                               f'{e.args[0]}').dropConnection(ws,
-                                                              legacy=True)
+            await send_sm_error(
+                ws,
+                {'': 'Something went wrong'
+                 f'{e.args[0]}'},
+                legacy=True)
             return ws
         return ws
