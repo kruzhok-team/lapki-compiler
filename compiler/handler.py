@@ -182,9 +182,6 @@ class HandlerException(Exception):
 class Handler:
     """Class for processing requests."""
 
-    def __init__(self):
-        pass
-
     @staticmethod
     async def readSourceFile(
             filename: str, extension: str, path: str) -> File:
@@ -211,9 +208,11 @@ class Handler:
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
-            base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
+                config.build_directory,
+                str(datetime.now()).replace(' ', '_'),
+                'sketch'
+            )
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result = await compile_xml(
                 xml,
