@@ -12,10 +12,11 @@ from compiler.platform_manager import PlatformManager
 from compiler.access_controller import AccessController
 from compiler.logger import Logger
 from compiler.types.config_types import ArgumentParser
-
+from compiler.os_commands import init_os_commands
 
 async def main() -> NoReturn:
     """Config and running app."""
+    init_os_commands()
     args_parser = ArgumentParser()
     app = web.Application()
     setup_routes(app)

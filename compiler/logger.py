@@ -46,6 +46,6 @@ class Logger:
             error = (f'Exception type: {exception_type},'
                      f'File name: {file} , Line number: {line_number}')
         if exception_object is not None:
-            error += f'Exception args: {exception_object.args}'
+            error += f'Exception args: {exception_object.args}'.encode('utf-8').decode('utf-8')
 
-        await Logger.logger.exception(error, exc_info=False)
+        await Logger.logger.exception(error.encode('utf-8').decode('utf-8'), exc_info=False)

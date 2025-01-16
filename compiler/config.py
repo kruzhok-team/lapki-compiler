@@ -7,7 +7,7 @@ from typing import TypeVar
 from compiler.types.config_types import ArgumentParser, Config
 
 _MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
-_BASE_DIRECTORY = _MODULE_PATH + '/'  # "server/"
+_BASE_DIRECTORY = _MODULE_PATH  # "server/"
 
 # НАЧАЛО ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 _SERVER_PORT = 8081
@@ -15,8 +15,8 @@ _SERVER_HOST = 'localhost'
 _ACCESS_TOKENS_FILE = os.path.join(
     _MODULE_PATH, 'ACCESS_TOKENS.txt')
 _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
-_LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library/')
-_PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms/')
+_LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
+_PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 50  # Максимальный размер сообщения от клиента.
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
