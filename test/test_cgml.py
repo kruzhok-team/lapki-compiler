@@ -27,6 +27,7 @@ async def init_platform(platform_id: str, platform_path: str):
     if not platform_manager.platform_exist(platform_id):
         await platform_manager.load_platform(platform_path)
 
+
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
     """Create test folder by path and delete it\
