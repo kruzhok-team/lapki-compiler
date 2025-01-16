@@ -16,6 +16,7 @@ from compiler.fullgraphmlparser.graphml_to_cpp import CppFileWriter
 from compiler.types.platform_types import Platform
 from compiler.CGML import parse
 from compiler.platform_manager import PlatformManager
+from compiler.os_commands import init_os_commands
 
 pytest_plugins = ('pytest_asyncio',)
 
@@ -26,11 +27,11 @@ async def init_platform(platform_id: str, platform_path: str):
     if not platform_manager.platform_exist(platform_id):
         await platform_manager.load_platform(platform_path)
 
-
 @contextmanager
 def create_test_folder(path: str, wait_time: int):
     """Create test folder by path and delete it\
         after exit from 'with' statement and wait time."""
+    init_os_commands()
     try:
         Path(path).mkdir(parents=True)
         yield
