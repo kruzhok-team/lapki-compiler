@@ -14,6 +14,7 @@ from compiler.logger import Logger
 from compiler.types.config_types import ArgumentParser
 from compiler.os_commands import init_os_commands
 
+
 async def main() -> NoReturn:
     """Config and running app."""
     init_os_commands()

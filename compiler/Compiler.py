@@ -15,6 +15,7 @@ from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
 from compiler.os_commands import os_commands
 
+
 async def get_build_files(
         project_path: AsyncPath) -> AsyncGenerator[BuildFile, None]:
     """
@@ -205,8 +206,9 @@ class Compiler:
         path = get_source_path(platform_id, platform_version)
         path_to_libs = set([os.path.join(path, library)
                            for library in libraries])
-        
-        await os_commands.copy(path_to_libs, target_directory, get_config().build_directory)
+
+        await os_commands.copy(path_to_libs, target_directory,
+                               get_config().build_directory)
 
     @staticmethod
     async def include_library_files(
@@ -222,6 +224,7 @@ class Compiler:
                 library,
                 extension]
         ) for library in libraries}
-        
-        await os_commands.copy(paths_to_libs, target_directory, get_config().build_directory)
 
+        await os_commands.copy(paths_to_libs,
+                               target_directory,
+                               get_config().build_directory)

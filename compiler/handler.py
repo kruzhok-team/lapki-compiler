@@ -155,7 +155,7 @@ async def compile_xml(
         if settings is None:
             raise PlatformException(
                 'У платформы отсутствуют настройки компиляции.')
-            
+
         await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                             '1.0',  # TODO: Версия стандарта?
                                             default_library,
@@ -214,7 +214,9 @@ class Handler:
         try:
             xml = await ws.receive_str()
             base_dir = os.path.join(
-                config.build_directory, str(datetime.now()).replace(' ', '_').replace(':','_'), 'sketch')
+                config.build_directory,
+                str(datetime.now()).replace(' ', '_').replace(':', '_'),
+                'sketch')
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result = await compile_xml(
                 xml,
@@ -231,8 +233,7 @@ class Handler:
                 ws,
                 sm_id=e.error_data.sm_id
             )
-        except Exception as e:
-            
+        except Exception:
             await Logger.logException()
             await RequestError('Internal error!').dropConnection(ws)
         return ws
