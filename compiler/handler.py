@@ -42,7 +42,7 @@ BinaryFile = File
 def get_sm_path(base_directory: str,
                 sm_id: str) -> str:
     """Get str path to state machine project."""
-    return os.path.join(base_directory, sm_id, 'sketch/')
+    return os.path.join(base_directory, sm_id, 'sketch')
 
 
 async def create_response(
@@ -143,17 +143,19 @@ async def compile_xml(
     state_machines: Dict[str, StateMachine] = await parse(xml)
     compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
     default_library = get_default_libraries()
+    # breakpoint()
     for sm_id, sm in state_machines.items():
         path = await create_sm_directory(base_dir_path, sm_id)
         await CppFileWriter(sm, True, True).write_to_file(
             path,
             sm.main_file_extension)
         settings: SMCompilingSettings | None = sm.compiling_settings
-        build_path = os.path.join(path, 'build/')
+        build_path = os.path.join(path, 'build')
         await AsyncPath(build_path).mkdir(exist_ok=True)
         if settings is None:
             raise PlatformException(
                 'У платформы отсутствуют настройки компиляции.')
+
         await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
                                             '1.0',  # TODO: Версия стандарта?
                                             default_library,
@@ -211,9 +213,10 @@ class Handler:
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
-            base_dir = str(datetime.now()) + '/'
             base_dir = os.path.join(
-                config.build_directory, base_dir.replace(' ', '_'), 'sketch/')
+                config.build_directory,
+                str(datetime.now()).replace(' ', '_').replace(':', '_'),
+                'sketch')
             await AsyncPath(base_dir).mkdir(parents=True)
             compiler_result = await compile_xml(
                 xml,

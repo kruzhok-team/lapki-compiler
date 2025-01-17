@@ -64,7 +64,7 @@ def _get_img_path(id: str, version: str) -> str:
     return os.path.join(_gen_platform_path(get_config().library_path,
                                            id,
                                            version),
-                        'img/')
+                        'img')
 
 
 def get_source_path(id: str, version: str) -> str:
@@ -76,7 +76,7 @@ def get_source_path(id: str, version: str) -> str:
     return os.path.join(_gen_platform_path(
         get_config().library_path,
         id,
-        version), 'source/')
+        version), 'source')
 
 
 def get_path_to_platform(id: str, version: str) -> str:
