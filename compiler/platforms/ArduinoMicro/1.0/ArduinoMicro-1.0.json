@@ -505,6 +505,7 @@
       "description": "Генерация псевдо-случайного числа",
       "img": "arduino/timer.svg",
       "constructorParameters": {},
+      "signals": {},
       "methods": {
         "doRandom": {
           "img": "arduino/start.svg",
