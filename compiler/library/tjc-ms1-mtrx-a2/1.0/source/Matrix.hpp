@@ -297,7 +297,7 @@ private:
 
         // logic toggle led for optimize calling from setPattern etc
 
-        const auto&& state = detail::leds[idx].state;
+        const auto state = detail::leds[idx].state;
 
         if (func(state, value))
             detail::service::onLed(detail::leds[idx]);
