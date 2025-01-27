@@ -20,12 +20,12 @@ public:
 
     Random() {
         state.a = millis();
-    
+    }
 
     void setSeed(const uint32_t seed) {
         
-        state = detail::random::state{seed, 2, 3, 4};
-    }}
+        state = stateRandom{seed, 2, 3, 4};
+    }
 
     /* Снимаемые значения: знаковое и беззнаковое */
     uint32_t uValue;
