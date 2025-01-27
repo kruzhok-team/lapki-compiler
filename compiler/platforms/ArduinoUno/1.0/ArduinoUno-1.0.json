@@ -507,6 +507,16 @@
       "constructorParameters": {},
       "signals": {},
       "methods": {
+        "setSeed": {
+          "img": "common/randomRoll.svg",
+          "parameters": [
+            {
+              "name": "seed",
+              "type": "unsigned long"
+            }
+          ],
+          "description": "Сбросить состояние генератора и установить новый seed"
+        },
         "doRandom": {
           "img": "common/randomRoll.svg",
           "description": "Сгенерировать случайное число"
