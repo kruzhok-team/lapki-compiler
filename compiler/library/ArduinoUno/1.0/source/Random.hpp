@@ -18,7 +18,14 @@ class Random {
 
 public:
 
-    Random() {}
+    Random() {
+        state.a = millis();
+    
+
+    void setSeed(const uint32_t seed) {
+        
+        state = detail::random::state{seed, 2, 3, 4};
+    }}
 
     /* Снимаемые значения: знаковое и беззнаковое */
     uint32_t uValue;
@@ -36,13 +43,13 @@ public:
         state.c = state.b;
         state.b = state.a;
 
-        const uint32_t s = millis();    // seed
+        const uint32_t s = state.a;
         state.a = t ^ s ^ (s >> 19);
 
         // put to value fields
         value = state.a;
         uValue = value;
-        if ((millis() &1) == 0) {
+        if ((s &1) == 0) {
             value = - value;
         }
 
