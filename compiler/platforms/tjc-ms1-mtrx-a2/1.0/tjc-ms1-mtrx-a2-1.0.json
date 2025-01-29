@@ -374,6 +374,76 @@
         "buildFiles": ["Counter.h"],
         "importFiles": ["Counter.h"],
         "singletone": false
+      },
+  
+      "Array": {
+        "description": "Статический массив",
+        "img": "arduino/timer.svg",
+        "signals": {},
+        "constructorParameters": {
+          "size": {
+            "type": "uint16_t",
+            "description": "Размер массива.",
+            "optional" : false
+          }
+        },
+        "methods": {
+          "set": {
+            "img": "common/set-value.svg",
+            "description": "Установить значение элементу с заданным индексом",
+            "variables": {
+              "index": {
+                "img": "common/arrayIndex.svg",
+                "description": "Индекс элемента",
+                "type": "uint16_t"
+              },
+              "value": {
+                "img": "common/value.svg",
+                "description": "Новое значение для элемента",
+                "type": "int16_t"
+              }
+            }
+          },
+          "peek": {
+            "img": "common/arrayPeek.svg",
+            "description": "Переместиться на элемент с заданным индексом",
+            "variables": {
+              "index": {
+                "img": "common/arrayIndex.svg",
+                "description": "Индекс элемента",
+                "type": "uint16_t"
+              }
+            }
+          },
+          "next": {
+            "img": "common/arrayNext.svg",
+            "description": "Переместиться на элемент со следующим индексом"
+          },
+          "prev": {
+            "img": "common/arrayPrev.svg",
+            "description": "Переместиться на элемент с предыдущим индексом"
+          }
+        },
+        "buildFiles": ["Array.hpp"],
+        "importFiles": ["Array.hpp"],
+        "singletone": false,
+        "variables": {
+          "value": {
+            "img": "common/value.svg",
+            "type": "int16_t",
+            "description": "Значение элемента с текущим индексом."
+          },
+          "index": {
+            "img": "common/arrayIndex.svg",
+            "type": "uint16_t",
+            "description": "Текущий индекс."
+          },
+          "size": {
+            "img": "common/arraySize.svg",
+            "type": "uint16_t",
+            "description": "Размер массива."
+          }
+        }
       }
     }
   }
