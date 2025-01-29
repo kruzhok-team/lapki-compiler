@@ -394,16 +394,16 @@
 
       "Alarm": {
         "description": "Компонент для взаимодействия с общей сигнальной линией (писатель)",
-        "img": "arduino/timer.svg",
+        "img": "tjc-ms/alarm.svg",
         "signals": {},
         "constructorParameters": {},
         "methods": {
           "call": {
-            "img": "arduino/reset.svg",
+            "img": "tjc-ms/alarmSet.svg",
             "description": "Поднять сигнальную линию"
           },
           "release": {
-            "img": "arduino/timer-stop.svg",
+            "img": "tjc-ms/alarmStop.svg",
             "description": "Отпустить сигнальную линию"
           }
         },
@@ -415,10 +415,10 @@
 
       "AlarmListener": {
         "description": "Компонент для взаимодействия с общей сигнальной линией (читатель)",
-        "img": "arduino/timer.svg",
+        "img": "tjc-ms/alarmGet.svg",
         "signals": {
           "onAlarm": {
-            "img": "arduino/timeout.svg",
+            "img": "tjc-ms/alarmSet.svg",
             "description": "Сигнал на линии",
             "checkMethod": "onAlarm"
           }
