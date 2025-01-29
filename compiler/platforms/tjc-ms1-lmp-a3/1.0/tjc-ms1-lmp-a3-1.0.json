@@ -232,7 +232,7 @@
         "signals": {},
         "methods": {
           "setSeed": {
-            "img": "common/randomRoll.svg",
+            "img": "common/randomSeed.svg",
             "parameters": [
               {
                 "name": "seed",
