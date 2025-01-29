@@ -363,19 +363,19 @@
         "img": "arduino/led.svg",
         "signals": {
           "isOverflow": {
-            "img": "arduino/byteReceived.svg",
+            "img": "math/overflow.svg",
             "description": "Переполнение счетчика.",
             "checkMethod": "isOverflow"
           },
           "isZeroDivision": {
-            "img": "arduino/byteReceived.svg",
+            "img": "math/divZero.svg",
             "description": "Деление на ноль.",
             "checkMethod": "isZeroDivision"
           }
         },
         "methods": {
           "set": {
-            "img": "arduino/blink.svg",
+            "img": "common/set-value.svg",
             "description": "Установить значение счетчика.",
             "parameters": [
               {
@@ -386,7 +386,7 @@
             ]
           },
           "add": {
-            "img": "arduino/blink.svg",
+            "img": "math/add.svg",
             "description": "Прибавить значение к счетчику.",
             "parameters": [
               {
@@ -397,7 +397,7 @@
             ]
           },
           "sub": {
-            "img": "arduino/blink.svg",
+            "img": "math/sub.svg",
             "description": "Вычесть значение из счетчика.",
             "parameters": [
               {
@@ -408,7 +408,7 @@
             ]
           },
           "mul": {
-            "img": "arduino/blink.svg",
+            "img": "math/mul.svg",
             "description": "Умножить значение счетчика.",
             "parameters": [
               {
@@ -419,7 +419,7 @@
             ]
           },
           "div": {
-            "img": "arduino/blink.svg",
+            "img": "math/div.svg",
             "description": "Целочисленное деление значения счетчика.",
             "parameters": [
               {
@@ -430,7 +430,7 @@
             ]
           },
           "mod": {
-            "img": "arduino/blink.svg",
+            "img": "math/mod.svg",
             "description": "Остаток от деления счетчика.",
             "parameters": [
               {
@@ -441,17 +441,17 @@
             ]
           },
           "neg": {
-            "img": "arduino/blink.svg",
+            "img": "math/neg.svg",
             "description": "Поменять знак у счетчика.",
             "parameters": []
           },
           "abs": {
-            "img": "arduino/blink.svg",
+            "img": "math/abs.svg",
             "description": "Установить абсолютное значение для счетчика.",
             "parameters": []
           },
           "bitAnd": {
-            "img": "arduino/blink.svg",
+            "img": "math/bitAnd.svg",
             "description": "Побитовое И для значения счетчика.",
             "parameters": [
               {
@@ -462,7 +462,7 @@
             ]
           },
           "bitOr": {
-            "img": "arduino/blink.svg",
+            "img": "math/bitOr.svg",
             "description": "Побитовое ИЛИ для значения счетчика.",
             "parameters": [
               {
@@ -473,7 +473,7 @@
             ]
           },
           "bitXor": {
-            "img": "arduino/blink.svg",
+            "img": "math/bitXor.svg",
             "description": "Побитовая операция XOR для значения счетчика.",
             "parameters": [
               {
@@ -484,12 +484,12 @@
             ]
           },
           "bitNot": {
-            "img": "arduino/blink.svg",
+            "img": "math/bitNot.svg",
             "description": "Побитовое отрицание для значения счетчика.",
             "parameters": []
           },
           "shiftLeft": {
-            "img": "arduino/blink.svg",
+            "img": "math/shiftLeft.svg",
             "description": "Побитовый сдвиг влево для значения счетчика.",
             "parameters": [
               {
@@ -500,7 +500,7 @@
             ]
           },
           "shiftRight": {
-            "img": "arduino/blink.svg",
+            "img": "math/shiftRight.svg",
             "description": "Побитовый сдвиг вправо для значения счетчика.",
             "parameters": [
               {
@@ -529,19 +529,19 @@
         "img": "arduino/led.svg",
         "signals": {
           "isOverflow": {
-            "img": "arduino/byteReceived.svg",
+            "img": "math/overflow.svg",
             "description": "Переполнение счетчика.",
             "checkMethod": "isOverflow"
           },
           "isZeroDivision": {
-            "img": "arduino/byteReceived.svg",
+            "img": "math/divZero.svg",
             "description": "Деление на ноль.",
             "checkMethod": "isZeroDivision"
           }
         },
         "methods": {
           "set": {
-            "img": "arduino/blink.svg",
+            "img": "common/set-value.svg",
             "description": "Установить значение счетчика.",
             "parameters": [
               {
@@ -552,7 +552,7 @@
             ]
           },
           "add": {
-            "img": "arduino/blink.svg",
+            "img": "math/add.svg",
             "description": "Прибавить значение к счетчику.",
             "parameters": [
               {
@@ -563,7 +563,7 @@
             ]
           },
           "sub": {
-            "img": "arduino/blink.svg",
+            "img": "math/sub.svg",
             "description": "Вычесть значение из счетчика.",
             "parameters": [
               {
@@ -574,7 +574,7 @@
             ]
           },
           "mul": {
-            "img": "arduino/blink.svg",
+            "img": "math/mul.svg",
             "description": "Умножить значение счетчика.",
             "parameters": [
               {
@@ -585,7 +585,7 @@
             ]
           },
           "div": {
-            "img": "arduino/blink.svg",
+            "img": "math/div.svg",
             "description": "Деление значения счетчика.",
             "parameters": [
               {
@@ -596,7 +596,7 @@
             ]
           },
           "mod": {
-            "img": "arduino/blink.svg",
+            "img": "math/mod.svg",
             "description": "Остаток от деления счетчика.",
             "parameters": [
               {
@@ -607,33 +607,33 @@
             ]
           },
           "neg": {
-            "img": "arduino/blink.svg",
+            "img": "math/neg.svg",
             "description": "Поменять знак у счетчика.",
             "parameters": []
           },
           "abs": {
-            "img": "arduino/blink.svg",
+            "img": "math/abs.svg",
             "description": "Установить абсолютное значение для счетчика.",
             "parameters": []
           },
           "pow": {
-            "img": "arduino/blink.svg",
+            "img": "math/pow.svg",
             "description": "Возвести значение счетчика в степень.",
             "parameters": [
               {
-                "name": "power",
+                "name": "power",  
                 "type": "float",
                 "description": "Значение для операции (возводимая степень)."
               }
             ]
           },
           "sqrt": {
-            "img": "arduino/blink.svg",
+            "img": "math/sqrt.svg",
             "description": "Взять квадратный корень от значения счетчика.",
             "parameters": []
           },
           "log": {
-            "img": "arduino/blink.svg",
+            "img": "math/log.svg",
             "description": "Логарифм от счетчика с задаваемым основанием.",
             "parameters": [
               {
