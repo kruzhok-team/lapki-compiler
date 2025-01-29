@@ -235,7 +235,7 @@
             "parameters": []
           },
           "maskPixel": {
-            "img": "arduino/blink.svg",
+            "img": "tjc-ms/maskCell.svg",
             "description": "Включить или выключить светодиод, используя битовую маску.",
             "parameters": [
               {
@@ -261,7 +261,7 @@
             ]
           },
           "maskRow": {
-            "img": "arduino/blink.svg",
+            "img": "tjc-ms/maskRow.svg",
             "description": "Включить или выключить строку светодиодов, используя битовую маску.",
             "parameters": [
               {
@@ -282,7 +282,7 @@
             ]
           },
           "maskCol": {
-            "img": "arduino/blink.svg",
+            "img": "tjc-ms/maskCol.svg",
             "description": "Включить или выключить столбец светодиодов, используя битовую маску.",
             "parameters": [
               {
@@ -303,7 +303,7 @@
             ]
           },
           "maskPattern": {
-            "img": "arduino/blink.svg",
+            "img": "tjc-ms/maskGrid.svg",
             "description": "Изобразить паттерн на матрице, используя битовую маску.",
             "parameters": [
               {
