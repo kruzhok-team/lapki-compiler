@@ -43,16 +43,18 @@ public:
 
     void next() {
 
-        ++index;
-        if (isValidIndex(index)) {
+        if (isValidIndex(index +1)) {
+            
+            ++index;
             value = data[index];
         }
     }
 
     void prev() {
 
-        --index;
-        if (isValidIndex(index)) {
+        if (isValidIndex(index -1)) {
+
+            --index;
             value = data[index];
         }
     }
