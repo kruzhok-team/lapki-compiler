@@ -357,6 +357,45 @@
         "buildFiles": ["Counter.h"],
         "importFiles": ["Counter.h"],
         "singletone": false
+      },
+
+      "Alarm": {
+        "description": "Компонент для взаимодействия с общей сигнальной линией (писатель)",
+        "img": "tjc-ms/alarm.svg",
+        "signals": {},
+        "constructorParameters": {},
+        "methods": {
+          "call": {
+            "img": "tjc-ms/alarmSet.svg",
+            "description": "Поднять сигнальную линию"
+          },
+          "release": {
+            "img": "tjc-ms/alarmStop.svg",
+            "description": "Отпустить сигнальную линию"
+          }
+        },
+        "buildFiles": ["Alarm.hpp"],
+        "importFiles": ["Alarm.hpp"],
+        "singletone": false,
+        "variables": {}
+      },
+
+      "AlarmListener": {
+        "description": "Компонент для взаимодействия с общей сигнальной линией (читатель)",
+        "img": "tjc-ms/alarmGet.svg",
+        "signals": {
+          "onAlarm": {
+            "img": "tjc-ms/alarmSet.svg",
+            "description": "Сигнал на линии",
+            "checkMethod": "onAlarm"
+          }
+        },
+        "constructorParameters": {},
+        "methods": {},
+        "buildFiles": ["AlarmListener.hpp"],
+        "importFiles": ["AlarmListener.hpp"],
+        "singletone": false,
+        "variables": {}
       }
     }
   }
