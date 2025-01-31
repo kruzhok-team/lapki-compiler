@@ -365,7 +365,7 @@
         "constructorParameters": {
           "size": {
             "type": "uint16_t",
-            "description": "Размер массива.",
+            "description": "Размер массива (должен быть не более, чем 65535 элементов)",
             "optional" : false
           }
         },
