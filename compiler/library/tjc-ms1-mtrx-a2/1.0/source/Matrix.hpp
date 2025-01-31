@@ -17,6 +17,8 @@ namespace detail {
 
         GPIO_TypeDef* port;
         uint8_t num;
+
+        bool state;
     };
 
     Led_t leds[detail::constants::NUM_LEDS];
@@ -32,12 +34,16 @@ namespace detail {
             led.port->BSRR |= ( 0b01 << ( GPIO_BSRR_BS0_Pos + led.num ));    // set bit on ODR
         }
 
-        void onLed(const Led_t& led) {
+        void onLed(Led_t& led) {
             led.port->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + led.num));
+
+            led.state = true;
         }
 
-        void offLed(const Led_t& led) {
+        void offLed(Led_t& led) {
             led.port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + led.num));
+
+            led.state = false;
         }
     }
 
@@ -103,6 +109,11 @@ struct Pattern {
     uint8_t a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25;
 };
 
+struct Pattern5 {
+
+    uint8_t a1, a2, a3, a4, a5;
+};
+
 /* 
     init function
 */
@@ -112,6 +123,63 @@ auto&& init = []() -> int {
     detail::init::initLeds();
     return 0;
 }();
+
+
+// Тип операнда
+enum Operand {
+
+    mask_and,
+    mask_or,
+    mask_xor,
+};
+
+namespace detail {
+
+    namespace matrix {
+
+        namespace mask {
+
+            using OpFunc = bool (*)(bool a, bool b);
+
+            namespace func {
+
+                bool AND(const bool a, const bool b) {
+
+                    return a & b;
+                }
+                
+                bool OR(const bool a, const bool b) {
+
+                    return a | b;
+                }
+
+                bool XOR(const bool a, const bool b) {
+
+                    return a ^ b;
+                }
+            }
+            
+            // Логика по маппингу функтора для операнда
+            OpFunc getOpFunc(const Operand op) {
+
+                switch (op) {
+
+                    case Operand::mask_and:
+
+                        return func::AND;
+                    case Operand::mask_or:
+                    
+                        return func::OR;
+                    case Operand::mask_xor:
+
+                        return func::XOR;
+                }
+
+                return func::AND;
+            }
+        }
+    }
+}
 
 
 // TODO descr
@@ -176,5 +244,64 @@ public:
 
             offPixel(i);
         }
+    }
+
+    // Далее функции, работающие с масками
+
+    // Аналогична setPixel с дополнительным аргументом, задающим бинарную маску для установки пикселя
+    void maskPixel(const uint8_t row, const uint8_t col, const uint8_t value, const Operand op) {
+
+        maskPixel(row * detail::constants::ROW_SZ + col, value, op);
+    }
+
+    // Аналогична setPixel с дополнительным аргументом, задающим бинарную маску для установки пикселя
+    void maskPixel(const uint8_t idx, const uint8_t value, const Operand op) {
+
+        maskPixel(idx, value, detail::matrix::mask::getOpFunc(op));
+    }
+
+    void maskRow(const uint8_t idx, const Pattern5& pattern, const Operand op) {
+
+        const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
+
+        for (int i(0); i < detail::constants::COL_SZ; ++i) {
+
+            maskPixel(idx, i, ptrPattern[i], op);
+        }
+    }
+
+    void maskCol(const uint8_t idx, const Pattern5& pattern, const Operand op) {
+        
+        const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
+        
+        for (int i(0); i < detail::constants::ROW_SZ; ++i) {
+
+            maskPixel(i, idx, ptrPattern[i], op);
+        }
+    }
+
+    void maskPattern(const Pattern& pattern, const Operand op) {
+
+        const auto&& func = detail::matrix::mask::getOpFunc(op);
+        const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
+
+        for (int i = 0; i < detail::constants::NUM_LEDS; ++i) {
+
+            maskPixel(i, ptrPattern[i], func);
+        }
+    }
+
+private:
+
+    void maskPixel(const uint8_t idx, const uint8_t value, const detail::matrix::mask::OpFunc func) {
+
+        // logic toggle led for optimize calling from setPattern etc
+
+        const auto state = detail::leds[idx].state;
+
+        if (func(state, value))
+            detail::service::onLed(detail::leds[idx]);
+        else
+            detail::service::offLed(detail::leds[idx]);
     }
 };

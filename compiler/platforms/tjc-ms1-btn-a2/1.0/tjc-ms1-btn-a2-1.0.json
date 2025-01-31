@@ -257,6 +257,58 @@
         "importFiles": ["LED.h"],
         "singletone": false
       },
+
+      "Random": {
+        "description": "Генерация псевдо-случайного числа",
+        "img": "common/random.svg",
+        "constructorParameters": {},
+        "signals": {},
+        "methods": {
+          "setSeed": {
+            "img": "common/randomSeed.svg",
+            "parameters": [
+              {
+                "name": "seed",
+                "type": "unsigned long"
+              }
+            ],
+            "description": "Сбросить состояние генератора и установить новый seed"
+          },
+          "doRandom": {
+            "img": "common/randomRoll.svg",
+            "description": "Сгенерировать случайное число"
+          },
+          "doRangeRandom": {
+            "img": "common/randomRange.svg",
+            "parameters": [
+              {
+                "name": "begin",
+                "type": "signed long long"
+              },
+              {
+                "name": "end",
+                "type": "signed long long"
+              }
+            ],
+            "description": "Сгенерировать случайное число в заданном диапазоне [begin; end)"
+          }
+        },
+        "buildFiles": ["Random.hpp"],
+        "importFiles": ["Random.hpp"],
+        "singletone": false,
+        "variables": {
+          "value": {
+            "img": "common/valueSigned.svg",
+            "type": "signed long",
+            "description": "Сгенерированное целое число со знаком"
+          },
+          "uValue": {
+            "img": "common/valueUnsigned.svg",
+            "type": "unsigned long",
+            "description": "Сгенерированное безнаковое целое число"
+          }
+        }
+      },
   
       "Timer": {
         "description": "Программный таймер",
@@ -460,6 +512,45 @@
             "description": "Размер массива."
           }
         }
+      },
+
+      "Alarm": {
+        "description": "Компонент для взаимодействия с общей сигнальной линией (писатель)",
+        "img": "tjc-ms/alarm.svg",
+        "signals": {},
+        "constructorParameters": {},
+        "methods": {
+          "call": {
+            "img": "tjc-ms/alarmSet.svg",
+            "description": "Поднять сигнальную линию"
+          },
+          "release": {
+            "img": "tjc-ms/alarmStop.svg",
+            "description": "Отпустить сигнальную линию"
+          }
+        },
+        "buildFiles": ["Alarm.hpp"],
+        "importFiles": ["Alarm.hpp"],
+        "singletone": false,
+        "variables": {}
+      },
+
+      "AlarmListener": {
+        "description": "Компонент для взаимодействия с общей сигнальной линией (читатель)",
+        "img": "tjc-ms/alarmGet.svg",
+        "signals": {
+          "onAlarm": {
+            "img": "tjc-ms/alarmSet.svg",
+            "description": "Сигнал на линии",
+            "checkMethod": "onAlarm"
+          }
+        },
+        "constructorParameters": {},
+        "methods": {},
+        "buildFiles": ["AlarmListener.hpp"],
+        "importFiles": ["AlarmListener.hpp"],
+        "singletone": false,
+        "variables": {}
       }
     }
   }
