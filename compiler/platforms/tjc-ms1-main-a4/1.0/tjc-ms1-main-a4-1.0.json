@@ -359,8 +359,8 @@
       },
       
       "CalcInt": {
-        "description": "Компонент для целочисленных вычислений.",
-        "img": "arduino/led.svg",
+        "description": "Компонент для целочисленных вычислений. Хранит счётчик (32-разрядное знаковое число), над которым можно совершать арифметические и битовые операции.",
+        "img": "math/calcInt.svg",
         "signals": {
           "isOverflow": {
             "img": "math/overflow.svg",
@@ -392,7 +392,7 @@
               {
                 "name": "value",
                 "type": "int32_t",
-                "description": "Значение для операции."
+                "description": "Слагаемое для операции."
               }
             ]
           },
@@ -403,7 +403,7 @@
               {
                 "name": "value",
                 "type": "int32_t",
-                "description": "Значение для операции."
+                "description": "Вычитаемое для операции."
               }
             ]
           },
@@ -414,29 +414,29 @@
               {
                 "name": "value",
                 "type": "int32_t",
-                "description": "Значение для операции."
+                "description": "Множитель для операции."
               }
             ]
           },
           "div": {
             "img": "math/div.svg",
-            "description": "Целочисленное деление значения счетчика.",
+            "description": "Целочисленное деление значения счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
             "parameters": [
               {
                 "name": "value",
                 "type": "int32_t",
-                "description": "Значение для операции."
+                "description": "Делитель для операции."
               }
             ]
           },
           "mod": {
             "img": "math/mod.svg",
-            "description": "Остаток от деления счетчика.",
+            "description": "Остаток от деления счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
             "parameters": [
               {
                 "name": "value",
                 "type": "int32_t",
-                "description": "Значение для операции."
+                "description": "Делитель для операции."
               }
             ]
           },
@@ -525,8 +525,8 @@
       },
       
       "CalcFloat": {
-        "description": "Компонент для вычислений c плавающей точкой.",
-        "img": "arduino/led.svg",
+        "description": "Компонент для вычислений c плавающей точкой. Хранит счётчик (вещественное число), над которым можно совершать арифметические операции.",
+        "img": "math/calcFloat.svg",
         "signals": {
           "isOverflow": {
             "img": "math/overflow.svg",
@@ -558,7 +558,7 @@
               {
                 "name": "value",
                 "type": "float",
-                "description": "Значение для операции."
+                "description": "Слагаемое для операции."
               }
             ]
           },
@@ -569,7 +569,7 @@
               {
                 "name": "value",
                 "type": "float",
-                "description": "Значение для операции."
+                "description": "Вычитаемое для операции."
               }
             ]
           },
@@ -580,29 +580,29 @@
               {
                 "name": "value",
                 "type": "float",
-                "description": "Значение для операции."
+                "description": "Множитель для операции."
               }
             ]
           },
           "div": {
             "img": "math/div.svg",
-            "description": "Деление значения счетчика.",
+            "description": "Деление значения счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
             "parameters": [
               {
                 "name": "value",
                 "type": "float",
-                "description": "Значение для операции."
+                "description": "Делитель для операции."
               }
             ]
           },
           "mod": {
             "img": "math/mod.svg",
-            "description": "Остаток от деления счетчика.",
+            "description": "Остаток от деления счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
             "parameters": [
               {
                 "name": "value",
                 "type": "float",
-                "description": "Значение для операции."
+                "description": "Делитель для операции."
               }
             ]
           },
