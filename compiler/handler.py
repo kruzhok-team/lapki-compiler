@@ -65,6 +65,21 @@ async def create_response(
 
     build_path = os.path.join(base_dir, 'build/')
 
+    for sm_id, error in validation_errors.items():
+        response = StateMachineResult(
+            name=sm_id,
+            result='NOTOK',
+            commands=[CommandResult(
+                command='Валидация МС',
+                return_code=-1,
+                stderr=error,
+                stdout=''
+            )],
+            binary=[],
+            source=[]
+        )
+        compiler_response.state_machines[sm_id] = response
+
     for sm_id, commands_result_and_sm in compiler_result.items():
         commands_result, sm = commands_result_and_sm
         path_to_sm = get_sm_path(base_dir, sm_id)
@@ -103,21 +118,6 @@ async def create_response(
             'sketch',
             'h',
             path_to_sm)
-        )
-        compiler_response.state_machines[sm_id] = response
-
-    for sm_id, error in validation_errors.items():
-        response = StateMachineResult(
-            name=sm_id,
-            result='NOTOK',
-            commands=[CommandResult(
-                command='Валидация МС',
-                return_code=-1,
-                stderr=error,
-                stdout=''
-            )],
-            binary=[],
-            source=[]
         )
         compiler_response.state_machines[sm_id] = response
 
