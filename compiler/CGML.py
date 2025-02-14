@@ -722,7 +722,8 @@ def check_sm_id(sm_id: str) -> bool:
     return regex is not None
 
 
-async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
+async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
+                                   Dict[StateMachineId, StateMachine]]:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachines for CppWriter class.
@@ -865,8 +866,4 @@ async def parse(xml: str) -> Dict[StateMachineId, StateMachine]:
                 ', '.join(e.args)
             )
 
-    if len(errors) != 0:
-        raise CGMLException(
-            error_data=errors
-        )
-    return state_machines
+    return (errors, state_machines)
