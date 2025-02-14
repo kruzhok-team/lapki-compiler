@@ -46,6 +46,7 @@ def get_sm_path(base_directory: str,
 
 
 async def create_response(
+        validation_errors: Dict[str, str],
         base_dir: str,
         compiler_result: Dict[str, tuple[List[CommandResult], StateMachine]]
 ) -> CompilerResponse:
@@ -55,7 +56,7 @@ async def create_response(
 
         Doesn't send anything.
     """
-    status = 'OK'
+    status = 'OK' if len(validation_errors) == 0 else 'NOTOK'
 
     compiler_response = CompilerResponse(
         result=status,
@@ -63,6 +64,21 @@ async def create_response(
     )
 
     build_path = os.path.join(base_dir, 'build/')
+
+    for sm_id, error in validation_errors.items():
+        response = StateMachineResult(
+            name=sm_id,
+            result='NOTOK',
+            commands=[CommandResult(
+                command='Валидация МС',
+                return_code=-1,
+                stderr=error,
+                stdout=''
+            )],
+            binary=[],
+            source=[]
+        )
+        compiler_response.state_machines[sm_id] = response
 
     for sm_id, commands_result_and_sm in compiler_result.items():
         commands_result, sm = commands_result_and_sm
@@ -131,8 +147,13 @@ async def create_sm_directory(base_directory: str,
 
 async def compile_xml(
     xml: str,
-    base_dir_path: str) -> Dict[str, tuple[List[CommandResult],
-                                           StateMachine]]:
+    base_dir_path: str) -> tuple[Dict[str, str],
+                                 Dict[str,
+                                      tuple[
+                                          List[CommandResult],
+                                          StateMachine]
+                                      ]
+                                 ]:
     """
     Compile CGML scheme.
 
@@ -140,7 +161,7 @@ async def compile_xml(
 
     Doesn't send anything.
     """
-    state_machines: Dict[str, StateMachine] = await parse(xml)
+    errors, state_machines = await parse(xml)
     compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
     default_library = get_default_libraries()
     # breakpoint()
@@ -172,7 +193,7 @@ async def compile_xml(
 
         compile_results[sm_id] = (commands_results, sm)
 
-    return compile_results
+    return (errors, compile_results)
 
 
 class HandlerException(Exception):
@@ -218,11 +239,11 @@ class Handler:
                 str(datetime.now()).replace(' ', '_').replace(':', '_'),
                 'sketch')
             await AsyncPath(base_dir).mkdir(parents=True)
-            compiler_result = await compile_xml(
+            validation_errors, compiler_result = await compile_xml(
                 xml,
                 base_dir
             )
-            response = await create_response(base_dir,
+            response = await create_response(validation_errors, base_dir,
                                              compiler_result,
                                              )
             await Logger.logger.info(response)

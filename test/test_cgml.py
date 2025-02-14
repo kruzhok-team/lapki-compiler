@@ -79,7 +79,7 @@ async def test_generating_code():
         path = './test/test_folder/'
         with create_test_folder(path, 0):
             try:
-                state_machines = await parse(data)
+                state_machines = (await parse(data))[1]
                 for sm in state_machines.values():
                     await CppFileWriter(sm, True).write_to_file(path, 'ino')
                 print('Code generated!')
@@ -183,11 +183,11 @@ async def test_compile_schemes(scheme_path: str,
         with create_test_folder(path, 0):
             data = f.read()
             print(path)
-            result = await compile_xml(data, path)
+            errors, result = await compile_xml(data, path)
             filecount = 0
             for sm in result.keys():
                 print(result[sm][0])
-                await create_response(path, result)
+                await create_response(errors, path, result)
                 dir = AsyncPath(path + sm + '/sketch/' + 'build/')
                 filecount = len([file async for file in dir.iterdir()])
                 assert filecount != 0
