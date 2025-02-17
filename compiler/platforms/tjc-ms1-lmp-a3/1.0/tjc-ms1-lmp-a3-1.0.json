@@ -206,16 +206,16 @@
           "blink": {
             "img": "arduino/blink.svg",
             "parameters": [
-              {
-                "name": "times",
-                "type": "byte",
-                "description": "Количество миганий"
-              },
-              {
-                "name": "interval",
-                "type": "unsigned int",
-                "description": "Длительность мигания"
-              }
+            {
+              "name": "interval",
+              "type": "unsigned int",
+              "description": "Длительность каждого мигания (мс)"
+            },
+            {
+              "name": "times",
+              "type": "byte",
+              "description": "Количество миганий"
+            }
             ],
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
