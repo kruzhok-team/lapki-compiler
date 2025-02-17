@@ -46,10 +46,10 @@ namespace detail {
                 if (a == std::numeric_limits<ArgType>::min() && b == -1)
                     return true;    // overflow
 
-                if (b != 0 && a > std::numeric_limits<ArgType>::max() / b)
+                if (b > 0 && a > std::numeric_limits<ArgType>::max() / b)
                     return true;    // overflow
                 
-                if (b != 0 && a < std::numeric_limits<ArgType>::min() / b)
+                if (b < 0 && a > std::numeric_limits<ArgType>::min() / b)
                     return true;    // underflow
 
                 return false;
