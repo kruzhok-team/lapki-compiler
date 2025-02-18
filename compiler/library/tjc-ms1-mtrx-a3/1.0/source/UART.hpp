@@ -1,5 +1,5 @@
 #pragma once
-#define UART2__
+#define UART1__
 /*
     Здесь реализация модулей UART1 и UART2 для использования в user code (bootloader)
     UART 1: tested on main-a4, btn-a2
@@ -180,12 +180,10 @@ namespace detail {
             // Настраиваем ноги контроллера для работы с UART
             #if defined(UART1__)
                 // UART1 на ногах PB6 {AF=1, Tx}, PB7 {AF=1, Rx}
-                initPin_AF_OD ( GPIOB, 6, 0 ); //[A.1][B.2]
-                initPin_AF_OD ( GPIOB, 7, 0 ); //[A.2][B.2]
-            #elif defined(UART2__)
-                // UART2 на ногах PA2 {AF=1, Tx}, PA3 {AF=1, Rx}
                 initPin_AF_OD ( GPIOA, 9, 1 ); //[A.1][B.2]
                 initPin_AF_OD ( GPIOA, 10, 1 ); //[A.2][B.2]
+            #elif defined(UART2__)
+                #error "mtrx-a3 not have UART 2"
             #endif
 
             // 3. Настроить скорость
