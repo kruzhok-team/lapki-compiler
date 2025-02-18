@@ -379,13 +379,6 @@ namespace detail {
     }
 }
 
-auto&& initUartL = []() -> int {
-
-    detail::hal::initUART(9600);
-
-    return 0;
-}();
-
 extern "C" {
 
     void UARTInsertion__(USART, _IRQHandler) (void) {
