@@ -157,7 +157,17 @@ class CppFileWriter:
         if len(triggers) == 0:
             return offset + 'status_ = UN_HANDLED();'
 
+        else_count = sum([trigger.guard == 'else' for trigger in triggers])
+        if (else_count > 1):
+            raise CodeGenerationException(
+                'Должно быть лишь одно else для перехода.')
+        start_trigger_index = 0
         start_trigger = triggers[0]
+        for i in range(len(triggers)):
+            if triggers[i].guard != 'else':
+                start_trigger_index = i
+                start_trigger = triggers[i]
+                break
         actions = IF_EXPRESSION.safe_substitute({
             'condition': start_trigger.guard,
             'actions': start_trigger.action,
@@ -166,15 +176,14 @@ class CppFileWriter:
 
         else_condition: Condition | None = None
 
-        for i in range(1, len(triggers)):
+        for i in range(0, len(triggers)):
+            if start_trigger_index == i:
+                continue
+            print(triggers[i])
             transition = triggers[i]
             if transition.guard == 'else':
-                if else_condition is None:
-                    else_condition = transition
-                    continue
-                else:
-                    raise CodeGenerationException(
-                        'Too many else for choice pseudonode.')
+                else_condition = transition
+                continue
             actions += ELSE_IF_EXPRESSION.safe_substitute({
                 'condition': transition.guard,
                 'actions': transition.action,
@@ -185,7 +194,6 @@ class CppFileWriter:
                 'actions': else_condition.action,
                 'offset': offset
             }) + '\n'
-
         return actions
 
     async def _write_choice_vertex_definition(self):
