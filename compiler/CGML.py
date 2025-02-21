@@ -227,7 +227,7 @@ def __process_transition(
         )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
     if len(inner_triggers) == 0:
-        raise Exception('Отсутствует триггер для перехода!')
+        raise _InnerCGMLException('Отсутствует триггер для перехода!')
     # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
