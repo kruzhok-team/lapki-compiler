@@ -12,6 +12,7 @@ from aiohttp import web
 from aiofile import async_open
 from aiopath import AsyncPath
 from pydantic import ValidationError
+from compiler.fullgraphmlparser.stateclasses import CodeGenerationException
 from compiler.CGML import parse, CGMLException
 from compiler.platform_manager import PlatformException
 from compiler.types.inner_types import (
@@ -166,32 +167,37 @@ async def compile_xml(
     default_library = get_default_libraries()
     # breakpoint()
     for sm_id, sm in state_machines.items():
-        path = await create_sm_directory(base_dir_path, sm_id)
-        await CppFileWriter(sm, True, True).write_to_file(
-            path,
-            sm.main_file_extension)
-        settings: SMCompilingSettings | None = sm.compiling_settings
-        build_path = os.path.join(path, 'build')
-        await AsyncPath(build_path).mkdir(exist_ok=True)
-        if settings is None:
-            raise PlatformException(
-                'У платформы отсутствуют настройки компиляции.')
+        try:
+            path = await create_sm_directory(base_dir_path, sm_id)
+            await CppFileWriter(sm, True, True).write_to_file(
+                path,
+                sm.main_file_extension)
+            settings: SMCompilingSettings | None = sm.compiling_settings
+            build_path = os.path.join(path, 'build')
+            await AsyncPath(build_path).mkdir(exist_ok=True)
+            if settings is None:
+                raise PlatformException(
+                    'У платформы отсутствуют настройки компиляции.')
 
-        await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                            '1.0',  # TODO: Версия стандарта?
-                                            default_library,
-                                            path)
-        await Compiler.include_source_files(settings.platform_id,
-                                            settings.platform_version,
-                                            settings.build_files,
-                                            path)
+            await Compiler.include_source_files(
+                Compiler.DEFAULT_LIBRARY_ID,
+                '1.0',  # TODO: Версия стандарта?
+                default_library,
+                path
+            )
+            await Compiler.include_source_files(settings.platform_id,
+                                                settings.platform_version,
+                                                settings.build_files,
+                                                path)
 
-        commands_results = await Compiler.compile_project(
-            path,
-            settings.platform_compiler_settings
-        )
+            commands_results = await Compiler.compile_project(
+                path,
+                settings.platform_compiler_settings
+            )
 
-        compile_results[sm_id] = (commands_results, sm)
+            compile_results[sm_id] = (commands_results, sm)
+        except CodeGenerationException as e:
+            errors[sm_id] = f'Ошибка во время генерации кода! {e.error_data}'
 
     return (errors, compile_results)
 

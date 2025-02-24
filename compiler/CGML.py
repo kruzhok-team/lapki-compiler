@@ -227,7 +227,7 @@ def __process_transition(
         )
     inner_triggers: List[InnerEvent] = __parse_actions(cgml_transition.actions)
     if len(inner_triggers) == 0:
-        raise Exception('Отсутствует триггер для перехода!')
+        raise _InnerCGMLException('Отсутствует триггер для перехода!')
     # TODO: Обработка нескольких событий для триггера
     inner_event: InnerEvent = inner_triggers[0]
     inner_trigger: InnerTrigger = inner_event.event
@@ -698,7 +698,10 @@ def __create_choices(
                 transition.source, choice.parent,
                 [choice_transition]
             )
-
+    for parser_choice in parser_choices.values():
+        if (len(parser_choice.transitions) == 1 and
+                parser_choice.transitions[0].guard == 'else'):
+            parser_choice.transitions[0].guard = 'true'
     return parser_choices, new_transitions
 
 

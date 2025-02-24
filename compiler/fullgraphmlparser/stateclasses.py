@@ -235,4 +235,14 @@ class StateMachine:
 
 
 class CodeGenerationException(Exception):
-    ...
+    def __init__(self, error_data: str):
+        super().__init__(self)
+        self.error_data = error_data
+
+    def __str__(self):
+        if self.error_data:
+            return str(self.error_data)
+        return 'Неизвестная ошибка генерации кода!'
+
+    def __repr__(self):
+        return f'CodeGenerationException({repr(self.error_data)})'
