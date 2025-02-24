@@ -736,10 +736,8 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
     - initialization components in setup function;
     - signal checks in loop function;
     """
-    print(xml)
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
-    print(cgml_scheme)
     platfrom_manager = PlatformManager()
     state_machines: Dict[str, StateMachine] = {}
     errors: Dict[STATE_MACHINE_ID, ERROR] = {}

@@ -179,10 +179,12 @@ async def compile_xml(
                 raise PlatformException(
                     'У платформы отсутствуют настройки компиляции.')
 
-            await Compiler.include_source_files(Compiler.DEFAULT_LIBRARY_ID,
-                                                '1.0',  # TODO: Версия стандарта?
-                                                default_library,
-                                                path)
+            await Compiler.include_source_files(
+                Compiler.DEFAULT_LIBRARY_ID,
+                '1.0',  # TODO: Версия стандарта?
+                default_library,
+                path
+            )
             await Compiler.include_source_files(settings.platform_id,
                                                 settings.platform_version,
                                                 settings.build_files,

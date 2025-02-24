@@ -150,6 +150,8 @@ class CppFileWriter:
             await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const *const e);\n' % vertex.id)
 
     async def _generate_condition(self,
+                                  id: str,
+                                  type: str,
                                   triggers: Sequence[Condition],
                                   offset='\t\t') -> str:
         """Generate if else code using IF_EXPRESSIONS,\
@@ -160,7 +162,7 @@ class CppFileWriter:
         else_count = sum([trigger.guard == 'else' for trigger in triggers])
         if (else_count > 1):
             raise CodeGenerationException(
-                'Должно быть лишь одно else для перехода.')
+                f'{type}({id}): Может быть лишь один переход с условием else.')
         start_trigger_index = 0
         start_trigger = triggers[0]
         for i in range(len(triggers)):
@@ -179,7 +181,6 @@ class CppFileWriter:
         for i in range(0, len(triggers)):
             if start_trigger_index == i:
                 continue
-            print(triggers[i])
             transition = triggers[i]
             if transition.guard == 'else':
                 else_condition = transition
@@ -204,7 +205,7 @@ class CppFileWriter:
                     TRANSITION.safe_substitute(
                         {'target': transition.target})
             await self._write_vertex_definition(
-                await self._generate_condition(choice.transitions),
+                await self._generate_condition(choice.id, 'Псевдосостояние выбора', choice.transitions),
                 choice,
                 'Choice'
             )
@@ -514,7 +515,13 @@ class CppFileWriter:
 
             for trigger in triggers:
                 trigger.action = self._generate_trigger(trigger, state)
-            await self._insert_string(await self._generate_condition(triggers, '\t\t\t'))
+            await self._insert_string(await self._generate_condition(
+                state.id if state.name is None else state.name,
+                'Состояние',
+                triggers,
+                '\t\t\t'
+            )
+            )
             if not any(trigger.guard == 'else' for trigger in triggers):
                 await self._insert_string('            else {\n')
                 await self._insert_string('                '
