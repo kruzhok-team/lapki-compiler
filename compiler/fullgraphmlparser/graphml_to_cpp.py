@@ -296,9 +296,7 @@ class CppFileWriter:
             if self.notes_dict['main_function']:
                 await self._insert_string(self.notes_dict['main_function'])
             if self.notes_dict['raw_cpp_code']:
-                await self._insert_string('\n//Start of c code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
-                await self._insert_string('//End of c code from diagram\n\n\n')
             self.f = None
         # async with async_open(os.path.join(folder, 'User.h'), "w") as f:
         #     self.f = f
@@ -344,8 +342,6 @@ class CppFileWriter:
                 await self._insert_string('\n'.join(self.notes_dict['raw_h_code'].split('\n')[1:]) + '\n')
                 await self._insert_string('//End of h code from diagram\n\n\n')
 
-            await self._write_full_line_comment('.$declare${SMs::STATE_MACHINE_CAPITALIZED_NAME}', 'v')
-            await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '.')
             await self._insert_string('typedef struct {\n')
             await self._insert_string('/* protected: */\n')
             await self._insert_string('    QHsm super;\n')
@@ -363,7 +359,6 @@ class CppFileWriter:
                                                     ])
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
-            await self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '^')
             await self._insert_string('extern QHsm * const the_STATE_MACHINE_LOWERED_NAME; /* opaque pointer to the STATE_MACHINE_LOWERED_NAME HSM */\n\n')
 
             await self._insert_string('typedef struct STATE_MACHINE_LOWERED_NAMEQEvt {\n')
@@ -373,8 +368,6 @@ class CppFileWriter:
             await self._insert_string('} STATE_MACHINE_LOWERED_NAMEQEvt;\n\n')
             await self._insert_string(get_enum(self.player_signal) + '\n')
             await self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_LOWERED_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
-            await self._write_full_line_comment('.$declare${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
-            await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
             await self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
             constructor_fields: str = self.notes_dict['constructor_fields']
             if constructor_fields:
@@ -382,7 +375,6 @@ class CppFileWriter:
                     '\n    ' + ',\n    '.join(constructor_fields.replace(';', '').split('\n')[1:]) + ');\n')
             else:
                 await self._insert_string('void);\n')
-            await self._write_full_line_comment('.$enddecl${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '^')
             if self.notes_dict['declare_h_code']:
                 await self._insert_string('//Start of h code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['declare_h_code'].split('\n')[1:]) + '\n')
@@ -391,8 +383,6 @@ class CppFileWriter:
             self.f = None
 
     async def _write_constructor(self):
-        await self._write_full_line_comment('.$define${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', 'v')
-        await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '.')
         await self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
         constructor_fields: str = self.notes_dict['constructor_fields']
         if constructor_fields:
@@ -406,15 +396,10 @@ class CppFileWriter:
         await self._insert_string('\n')
         await self._insert_string('    QHsm_ctor(&me->super, Q_STATE_CAST(&DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial));\n')
         await self._insert_string('}\n')
-        await self._write_full_line_comment('.$enddef${SMs::STATE_MACHINE_CAPITALIZED_NAME_ctor}', '^')
 
     async def _write_initial(self):
-        await self._write_full_line_comment('.$define${SMs::STATE_MACHINE_CAPITALIZED_NAME}', 'v')
-        await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME}', '.')
-        await self._write_full_line_comment('.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM}', '.')
         await self._insert_string(
             'QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par) {\n')
-        await self._insert_string('    /*.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM::initial} */\n')
         await self._insert_string('    %s\n' % self.start_action)
         await self._insert_string(
             '    return Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % self.start_node)

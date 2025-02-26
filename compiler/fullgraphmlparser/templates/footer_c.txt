@@ -19,6 +19,3 @@ QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * con
     return status_;
 }
 #endif
-
-
-/*tranlated from diagrams code*/
