@@ -1,4 +1,4 @@
 #ifdef __cplusplus
 }
 #endif
-#endif /* STATE_MACHINE_NAME_h */
+#endif
