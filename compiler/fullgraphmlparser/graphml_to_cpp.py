@@ -576,7 +576,8 @@ class CppFileWriter:
         elif trigger.type == 'external' or trigger.type == 'choice_result':
             actions += offset + '            stateChanged = true;\n'
             actions += offset + \
-                '            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % trigger.target
+                f'            status_ = Q_TRAN(&STATE_MACHINE_CAPITALIZED_NAME_{trigger.target});  ' + \
+                f'// target: {trigger.target_name} \n'
         else:
             raise Exception('Unknown trigger type: %s' % trigger.type)
 
