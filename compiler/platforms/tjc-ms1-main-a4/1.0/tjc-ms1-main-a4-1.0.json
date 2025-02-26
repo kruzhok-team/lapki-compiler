@@ -7,11 +7,12 @@
     "version": "1.0",
     "standardVersion": "1.0",
     "formatVersion": "1.0",
-    "language": "C++",
+    "language": "cpp",
     "author": "Vladislav Sizykh",
     "visual": true,
     "compile": true,
     "mainFileExtension": "cpp",
+    "headerFileExtension": "hpp",
     "staticActionDelimeter": "::",
     "defaultSetupFunctions": [
       {
@@ -36,7 +37,7 @@
           "-mthumb",
           "--specs=nosys.specs",
           "-Os",
-          "qhsm.c",
+          "qhsm.cpp",
           "-fno-exceptions",
           "-ffunction-sections",
           "-fdata-sections",

@@ -7,12 +7,13 @@
   "version": "1.0",
   "standardVersion": "1.0",
   "formatVersion": "1.0",
-  "language": "C++",
+  "language": "c",
   "author": "Maxim Klypin",
   "visual": true,
   "compile": true,
   "mainFunction": false,
   "mainFileExtension": "ino",
+  "headerFileExtension": "h",
   "compilingSettings": [
     {
       "command": "arduino-cli",

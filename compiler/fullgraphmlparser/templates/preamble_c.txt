@@ -5,7 +5,7 @@
 *
 */
 /*.$endhead${.::STATE_MACHINE_NAME.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-#include "qhsm.h"
+#include "qhsm.HEADER_EXTENSION"
 #include "STATE_MACHINE_NAME.h"
 #include <stdint.h>
 //Q_DEFINE_THIS_FILE

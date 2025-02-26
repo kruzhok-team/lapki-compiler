@@ -7,9 +7,6 @@
 /*.$endhead${.::STATE_MACHINE_NAME.h} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 #ifndef STATE_MACHINE_NAME_h
 #define STATE_MACHINE_NAME_h
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 QSignal defer[64];
 int defer_i = 0;

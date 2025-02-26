@@ -410,7 +410,7 @@ def __generate_function_call(
     Check component's static and platform's static.
     """
     delimeter = '.'
-    if (platform.staticComponents or
+    if (platform.static_components or
             platform.components[component_type].singletone):
         delimeter = '::'
     return _CALL_FUNCTION_TEMPLATE.substitute(
@@ -538,7 +538,7 @@ def __generate_setup_function_code(
     ```
     """
     notes: List[ParserNote] = [
-        *__generate_default_setup_function(platform.defaultSetupFunctions)
+        *__generate_default_setup_function(platform.default_setup_functions)
     ]
     for component_id, component in components.items():
         type = component.type
@@ -562,7 +562,7 @@ def __generate_setup_function_code(
 def __get_include_libraries(platform: Platform,
                             components: List[InnerComponent]) -> List[str]:
     """Get set of source files, that must be included."""
-    included_libraries: List[str] = deepcopy(platform.defaultIncludeFiles)
+    included_libraries: List[str] = deepcopy(platform.default_include_files)
     for component in components:
         included_libraries.extend(
             platform.components[component.type].importFiles)
@@ -584,7 +584,7 @@ def __get_build_files(
     components: List[InnerComponent]
 ) -> Set[str]:
     """Get set of files, that must be included for compiling."""
-    build_libraries: Set[str] = deepcopy(platform.defaultBuildFiles)
+    build_libraries: Set[str] = deepcopy(platform.default_build_files)
     for component in components:
         build_libraries.update(
             platform.components[component.type].buildFiles)
@@ -752,7 +752,7 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
 
             platform: Platform = await platfrom_manager.get_platform(
                 state_machine.platform, platform_version)
-            if not platform.compile or platform.compilingSettings is None:
+            if not platform.compile or platform.compiling_settings is None:
                 continue
                 # raise CGMLException(
                 # f'Platform {platform.name} not supporting compiling!')
@@ -838,7 +838,7 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                                                     parsed_components)
             ]
 
-            if platform.mainFunction:
+            if platform.main_function:
                 notes.append(__generate_main_function())
 
             compiling_settings = SMCompilingSettings(
@@ -846,7 +846,7 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 build_files,
                 platform.id,
                 platform_version,
-                platform.compilingSettings
+                platform.compiling_settings
             )
             state_machines[sm_id] = StateMachine(
                 start_node=start_node,
@@ -854,13 +854,15 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 name=sm_name,
                 start_action='',
                 notes=notes,
-                main_file_extension=platform.mainFileExtension,
+                main_file_extension=platform.main_file_extension,
                 states=[global_state, *list(states_with_initials.values())],
                 signals=signals,
                 compiling_settings=compiling_settings,
                 initial_states=[*initial_with_transition.values()],
                 choices=list(choices.values()),
-                final_states=final_states
+                final_states=final_states,
+                language=platform.language,
+                header_file_extension=platform.header_file_extension
             )
         except _InnerCGMLException as e:
             errors[sm_id] = (
