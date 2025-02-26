@@ -117,7 +117,7 @@ async def create_response(
         )
         response.source.append(await Handler.readSourceFile(
             'sketch',
-            'h',
+            sm.header_file_extension,
             path_to_sm)
         )
         compiler_response.state_machines[sm_id] = response

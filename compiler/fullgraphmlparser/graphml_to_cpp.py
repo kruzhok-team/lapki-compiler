@@ -333,7 +333,7 @@ class CppFileWriter:
         #     if self.notes_dict['user_methods_c']:
         #         await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
 
-        async with async_open(os.path.join(folder, '%s.h' % self.filename), 'w') as f:
+        async with async_open(os.path.join(folder, f'{self.filename}.{self.header_file_extension}'), 'w') as f:
             self.f = f
 
             await self._insert_file_template(f'preamble_{self.header_file_extension}.txt')
