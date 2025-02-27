@@ -117,7 +117,7 @@ async def create_response(
         )
         response.source.append(await Handler.readSourceFile(
             'sketch',
-            'h',
+            sm.header_file_extension,
             path_to_sm)
         )
         compiler_response.state_machines[sm_id] = response
@@ -125,14 +125,16 @@ async def create_response(
     return compiler_response
 
 
-def get_default_libraries() -> Set[str]:
+def get_default_libraries(main_file_extension: str,
+                          header_file_extension: str) -> Set[str]:
     """
     Get set of default libraries.
 
     Return example: 'qhsm.c', 'qhsm.h'
     """
     return set(list(
-        chain.from_iterable((f'{library}.c', f'{library}.h')
+        chain.from_iterable((f'{library}.{main_file_extension}',
+                             f'{library}.{header_file_extension}')
                             for library in Compiler.c_default_libraries))
                )
 
@@ -164,10 +166,14 @@ async def compile_xml(
     """
     errors, state_machines = await parse(xml)
     compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
-    default_library = get_default_libraries()
-    # breakpoint()
     for sm_id, sm in state_machines.items():
         try:
+            default_library = get_default_libraries(
+                (
+                    'c' if sm.main_file_extension == 'ino'
+                    else sm.main_file_extension
+                ),
+                sm.header_file_extension)
             path = await create_sm_directory(base_dir_path, sm_id)
             await CppFileWriter(sm, True, True).write_to_file(
                 path,
@@ -333,7 +339,7 @@ class Handler:
                     await Compiler.include_source_files(
                         Compiler.DEFAULT_LIBRARY_ID,
                         '1.0',
-                        get_default_libraries(),
+                        get_default_libraries('c', 'h'),
                         path)
                     await Logger.logger.info(f'{libraries} included')
 

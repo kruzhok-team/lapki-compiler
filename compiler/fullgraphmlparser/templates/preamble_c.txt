@@ -1,13 +1,5 @@
-/*.$file${.::STATE_MACHINE_NAME.cpp} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
-/*
-* Model: STATE_MACHINE_NAME.qm
-* File:  ${.::STATE_MACHINE_NAME.cpp}
-*
-*/
-/*.$endhead${.::STATE_MACHINE_NAME.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-#include "qhsm.h"
-#include "STATE_MACHINE_NAME.h"
+#include "qhsm.HEADER_EXTENSION"
+#include "STATE_MACHINE_NAME.HEADER_EXTENSION"
 #include <stdint.h>
-//Q_DEFINE_THIS_FILE
-/* global-scope definitions -----------------------------------------*/
-QHsm * const the_STATE_MACHINE_NAME = (QHsm *) &STATE_MACHINE_LOWERED_NAME; /* the opaque pointer *
+
+QHsm * const the_STATE_MACHINE_NAME = (QHsm *) &STATE_MACHINE_LOWERED_NAME;

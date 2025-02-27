@@ -67,10 +67,12 @@ class CompilingSettings:
     command: SupportedCompilers
     flags: List[str]
 
+
 @dataclass
 class SetupFunction:
     functionName: str
     args: List[str]
+
 
 class Platform(BaseModel):
     id: str = ''
@@ -82,19 +84,27 @@ class Platform(BaseModel):
     format_version: str = Field(alias='formatVersion')
     standard_version: str = Field(alias='standardVersion')
     version: str
-    staticComponents: bool
+    static_components: bool = Field(alias='staticComponents')
     language: str = ''
     delimeter: str
     visual: bool
-    defaultIncludeFiles: List[str] = Field(default_factory=list)
-    defaultBuildFiles: Set[str] = Field(default_factory=set)
-    compilingSettings: List[CompilingSettings] | None = (
-        None
+    default_include_files: List[str] = Field(
+        default_factory=list, alias='defaultIncludeFiles')
+    default_build_files: Set[str] = Field(
+        default_factory=set, alias='defaultBuildFiles')
+    compiling_settings: List[CompilingSettings] | None = Field(
+        default=None,
+        alias='compilingSettings'
     )
-    defaultSetupFunctions: List[SetupFunction] = Field(default_factory=list)
+    default_setup_functions: List[SetupFunction] = Field(
+        default_factory=list, alias='defaultSetupFunctions')
     components: Dict[str, Component]
-    mainFunction: bool = False
-    mainFileExtension: str = ''
+    main_function: bool = Field(
+        default=False, alias='mainFunction')
+    main_file_extension: str = Field(
+        default='', alias='mainFileExtension')
+    header_file_extension: str = Field(
+        default='', alias='headerFileExtension')
 
 
 @dataclass

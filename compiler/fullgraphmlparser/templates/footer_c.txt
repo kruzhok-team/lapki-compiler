@@ -1,6 +1,5 @@
 
 #ifdef DESKTOP
-/*.${SMs::STATE_MACHINE_CAPITALIZED_NAME::SM::final} .........................................*/
 QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e) {
     QState status_;
     switch (e->sig) {
@@ -19,9 +18,4 @@ QState STATE_MACHINE_CAPITALIZED_NAME_final(STATE_MACHINE_CAPITALIZED_NAME * con
     }
     return status_;
 }
-#endif /* def DESKTOP */
-
-/*.$enddef${SMs::STATE_MACHINE_CAPITALIZED_NAME} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-
-
-/*tranlated from diagrams code*/
+#endif

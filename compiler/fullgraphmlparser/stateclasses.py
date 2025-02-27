@@ -226,6 +226,8 @@ class StateMachine:
     states: List[ParserState]
     signals: Set[str]
     main_file_extension: str
+    header_file_extension: str
+    language: str
     # Установлено дефолтное значение, чтобы не трогать легаси.
     id: str = 'sketch'
     initial_states: List[ParserInitialVertex] = Field(default_factory=list)
