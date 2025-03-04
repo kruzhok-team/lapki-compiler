@@ -1,4 +1,4 @@
-#include "qhsm.hpp"
+#include "qhsm.h"
 
 #include <stddef.h>
 
