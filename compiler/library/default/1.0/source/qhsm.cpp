@@ -44,23 +44,26 @@ static void do_transition(QHsm *me)
     ptrdiff_t lca = -1;
 
     path[0] = target;
-
+    // Формируем путь от текущего состояния до самого дальнего родителя
     while (target != &QHsm_top) {
         target(me, &standard_events[QEP_EMPTY_SIG_]);
         target = me->effective_;
         path[++top] = target;
 
-        if (target == source) {
+        if (target == source) { // Если вышли на самих себя, то выходим?
             lca = top;
             break;
         }
     }
 
     while (lca == -1) {
+        // Выходим из состояний.
         source(me, &standard_events[Q_EXIT_SIG]);
         source(me, &standard_events[QEP_EMPTY_SIG_]);
         source = me->effective_;
 
+        // Если текущее состояние является родителем, то выходим из цикла
+        // Пока не вижу ситуаций, когда мы делаем в этом цикле больше одной итерации
         for (ptrdiff_t i = 0; i <= top; ++i) {
             if (path[i] == source) {
                 lca = i;
@@ -70,6 +73,10 @@ static void do_transition(QHsm *me)
     }
 
     target = path[lca];
+
+    if (lca == 0) {
+        target(me, &standard_events[Q_ENTRY_SIG]);
+    }
 
     for (ptrdiff_t i = lca - 1; i >= 0; --i) {
         target = path[i];
