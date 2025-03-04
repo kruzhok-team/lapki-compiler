@@ -168,6 +168,11 @@ async def test_generating_code():
         'tjc-ms1-lmp-a3',
         'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
     ),
+    pytest.param(
+        'examples/test_parent_transitions.graphml',
+        'tjc-ms1-lmp-a3',
+        'compiler/platforms/tjc-ms1-lmp-a3/1.0/tjc-ms1-lmp-a3-1.0.json'
+    ),
 ])
 @pytest.mark.asyncio
 async def test_compile_schemes(scheme_path: str,
