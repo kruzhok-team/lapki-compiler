@@ -18,8 +18,10 @@ auto&& init = []() -> int {
         GPIOA->OTYPER &= ~(GPIO_OTYPER_OT0 << i);       // output mode pin (PP)
         GPIOA->PUPDR &= ~(0b11 << (GPIO_PUPDR_PUPD0_Pos + i * 2U)); // no pull-up, no pull-down
         GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + i));           // set bit on ODR
-    }
 
+        GPIOA->BSRR |= ( GPIO_BSRR_BR0 << i );
+    }
+    
     return 0;
 }();
 
