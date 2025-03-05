@@ -146,7 +146,7 @@ class Button
 		
 		unsigned long now = millis();
 		int sample = digitalRead(&btns[pin]);
-		value = sample;
+		value = !sample;
 		if (sample != bitRead(state, SAMPLE))
 			debounceStartTime = now;                                            // Invalidate debounce timer (i.e. we bounced)
 
