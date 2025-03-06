@@ -190,7 +190,7 @@ async def test_compile_schemes(scheme_path: str,
     await init_platform(platform_id, platform_path)
     with open(scheme_path, 'r') as f:
         path = test_path + '/test_project/sketch/'
-        with create_test_folder(path, 60):
+        with create_test_folder(path, 0):
             data = f.read()
             print(path)
             errors, result = await compile_xml(data, path)
