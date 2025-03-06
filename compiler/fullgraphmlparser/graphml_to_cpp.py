@@ -313,7 +313,7 @@ class CppFileWriter:
         def get_casted_state(target_id: str | None) -> str:
             if target_id is None:
                 target_id = 'QHsm_top'
-            return f'Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
+            return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
         insert_strings = [
             f'QStateHandler shallowHistory[{len(self.shallow_history)}] = ' + '{'
         ]
@@ -324,7 +324,7 @@ class CppFileWriter:
             f'{get_casted_state(lh.default_value)},'
             for lh in shallow_history_sorted_by_index]
         insert_strings.extend(insert_shallows)
-        insert_strings.append('}')
+        insert_strings.append('};')
 
         await self._insert_string('\n'.join(insert_strings))
 
@@ -338,7 +338,7 @@ class CppFileWriter:
                 // ...стандартный код
 
                 case Q_VERTEX_SIG: {
-                    status_ = Q_TRAN(localHistory[{shallow_history.index}])
+                    status_ = Q_TRAN(shallowHistory[{shallow_history.index}])
                     inVertex = false;   // IMPL
                     break;
                 }
@@ -350,7 +350,7 @@ class CppFileWriter:
         """
         for shallow_history in self.shallow_history.values():
             await self._write_vertex_definition(
-                f'status_ = Q_TRAN(localHistory[{shallow_history.index}]);\n',
+                f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
                 shallow_history,
                 'Shallow history')
 
@@ -423,10 +423,14 @@ class CppFileWriter:
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
-            await self._write_vertexes_declaration([*self.initial_states,
-                                                    *self.choices,
-                                                    *self.final_states
-                                                    ])
+            await self._write_vertexes_declaration([
+                *self.initial_states,
+                *self.choices,
+                *self.final_states,
+                *list(
+                    self.shallow_history.values()
+                )
+            ])
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
             await self._insert_string('extern QHsm * const the_STATE_MACHINE_LOWERED_NAME; /* opaque pointer to the STATE_MACHINE_LOWERED_NAME HSM */\n\n')
@@ -540,7 +544,7 @@ class CppFileWriter:
                     await self._insert_string(
                         f'shallowHistory[{shallow_history.index}] '
                         '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
-                        f'{state.id})')
+                        f'{state.id});')
 
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
