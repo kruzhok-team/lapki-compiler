@@ -172,15 +172,15 @@ class GeneratorChoiceVertex(BaseParserVertex):
 
 
 @dataclass
-class GeneratorLocalHistory(BaseParserVertex):
+class GeneratorShallowHistory(BaseParserVertex):
     """
     Псевдосостояние локальной истории.
 
     Генерация псевдосостояния истории помимо генерации стандартного вертекса
     состоит из инициализации массива и хранении последних последних посещений.
     ```cpp
-    // инициализация 
-    QStateHandler localHistory[3] = {
+    // инициализация
+    QStateHandler shallowHistory[3] = {
         Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
         Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
         Q_STATE_CAST(QHsm_top) // default value
@@ -189,7 +189,7 @@ class GeneratorLocalHistory(BaseParserVertex):
 
     ```cpp
     // Совершили переход и сохранили состояние
-    localHistory[0] = {  Q_STATE_CAST(Sketch_mlqctlmxugztidzjjhfz) };
+    shallowHistory[0] = {  Q_STATE_CAST(Sketch_mlqctlmxugztidzjjhfz) };
     ```
     `index`: индекс в массиве локальных историй.
 
@@ -268,7 +268,7 @@ class StateMachine:
     initial_states: List[GeneratorInitialVertex] = Field(default_factory=list)
     choices: List[GeneratorChoiceVertex] = Field(default_factory=list)
     final_states: List[GeneratorFinalVertex] = Field(default_factory=list)
-    local_history: List[GeneratorLocalHistory] = Field(default=list)
+    shallow_history: List[GeneratorShallowHistory] = Field(default=list)
     compiling_settings: Optional[SMCompilingSettings] = None
 
 

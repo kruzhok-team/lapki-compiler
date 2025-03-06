@@ -28,7 +28,8 @@ from cyberiadaml_py.types.elements import (
     CGMLComponent,
     CGMLInitialState,
     CGMLChoice,
-    CGMLFinal
+    CGMLFinal,
+    CGMLShallowHistory
 )
 from compiler.fullgraphmlparser.stateclasses import (
     StateMachine,
@@ -42,7 +43,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     SMCompilingSettings,
     GeneratorInitialVertex,
     UnconditionalTransition,
-    GeneratorFinalVertex
+    GeneratorFinalVertex,
+    GeneratorShallowHistory
 )
 _StartNodeId = str
 _TransitionId = str
@@ -698,11 +700,42 @@ def __create_choices(
                 transition.source, choice.parent,
                 [choice_transition]
             )
+    # Если у нас только один переход по триггеру
+    # и его условие равно else, то конвертируем его в
+    # if (true)
     for parser_choice in parser_choices.values():
         if (len(parser_choice.transitions) == 1 and
                 parser_choice.transitions[0].guard == 'else'):
             parser_choice.transitions[0].guard = 'true'
     return parser_choices, new_transitions
+
+
+def __create_shallow_history(
+    shallow_histories: Dict[_VertexId, CGMLShallowHistory],
+    transitions: List[ParserTrigger]
+) -> tuple[List[GeneratorShallowHistory],
+           List[ParserTrigger]]:
+    """
+    Подготовка элементов локальной истории к генерации кода.
+
+    Возвращает данные для генерации и триггеры без переходов
+    из локальных состояний.
+    """
+    generator_shallow_histories: Dict[str, GeneratorShallowHistory] = {}
+    new_transitions: List[ParserTrigger] = []
+
+    for i, sh in enumerate(shallow_histories.items()):
+        id, val = sh
+        generator_shallow_histories[id] = (
+            GeneratorShallowHistory(id, val.parent, index=i)
+        )
+    for transition in transitions:
+        sh = generator_shallow_histories.get(transition.source)
+        if sh is None:
+            new_transitions.append(transition)
+            continue
+        sh.default_value = transition.target
+    return list(generator_shallow_histories.values()), new_transitions
 
 
 def __create_final_states(
@@ -815,10 +848,15 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
             )
             choices, transitions_without_choices = __create_choices(
                 state_machine.choices, transitions_without_initials)
+            shallow_history, transitions_without_shallow_history = (
+                __create_shallow_history(
+                    state_machine.shallow_history, transitions_without_choices
+                )
+            )
             final_states = __create_final_states(state_machine.finals)
             all_triggers = __get_all_triggers(
                 list(states_with_parents.values()),
-                transitions_without_choices)
+                transitions_without_shallow_history)
             signals = __get_signals_set(all_triggers)
             states_with_initials = _add_initials_to_states(
                 initial_with_transition, states_with_parents)
@@ -863,7 +901,8 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 choices=list(choices.values()),
                 final_states=final_states,
                 language=platform.language,
-                header_file_extension=platform.header_file_extension
+                header_file_extension=platform.header_file_extension,
+                shallow_history=shallow_history
             )
         except _InnerCGMLException as e:
             errors[sm_id] = (

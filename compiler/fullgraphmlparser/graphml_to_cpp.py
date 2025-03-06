@@ -16,7 +16,7 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     BaseParserVertex,
     Condition,
-    GeneratorLocalHistory
+    GeneratorShallowHistory
 )
 from compiler.fullgraphmlparser.graphml import *
 
@@ -130,8 +130,8 @@ class CppFileWriter:
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.states = state_machine.states
-        self.local_history = self.__convert_local_history_to_dict(
-            state_machine.local_history)
+        self.shallow_history = self.__convert_local_history_to_dict(
+            state_machine.shallow_history)
         for state in self.states:
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
@@ -143,8 +143,8 @@ class CppFileWriter:
 
     def __convert_local_history_to_dict(
         self,
-        local_history: List[GeneratorLocalHistory]
-    ) -> Dict[str, GeneratorLocalHistory]:
+        shallow_history: List[GeneratorShallowHistory]
+    ) -> Dict[str, GeneratorShallowHistory]:
         """
         Конвертировать массив локальных историй в словарь, где ключом является\
             id родителя.
@@ -156,20 +156,20 @@ class CppFileWriter:
         - `CodeGeneratorException` - если на одном уровне находится\
             более одной локальной истории
         """
-        lh_dict: Dict[str, GeneratorLocalHistory] = {}
+        sh_dict: Dict[str, GeneratorShallowHistory] = {}
 
-        for lh in local_history:
-            if lh.parent is None:
-                lh.parent = 'global'
-            is_exist = lh_dict.get(lh.parent) is not None
+        for sh in shallow_history:
+            if sh.parent is None:
+                sh.parent = 'global'
+            is_exist = sh_dict.get(sh.parent) is not None
             if is_exist:
                 raise CodeGenerationException(
-                    f'У элемента {lh.parent} более одной'
+                    f'У элемента {sh.parent} более одной'
                     ' дочерней локальной истории.'
                 )
-            lh_dict[lh.parent] = lh
+            sh_dict[sh.parent] = sh
 
-        return lh_dict
+        return sh_dict
 
     async def _write_unconditional_transition(
         self,
@@ -303,7 +303,7 @@ class CppFileWriter:
 
         ```cpp
         // Пример кода инициализации
-        QStateHandler localHistory[3] = {
+        QStateHandler shallowHistory[3] = {
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
             Q_STATE_CAST(QHsm_top) // если default_value отсутствует
@@ -315,15 +315,15 @@ class CppFileWriter:
                 target_id = 'QHsm_top'
             return f'Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
         insert_strings = [
-            f'QStateHandler localHistory[{len(self.local_history)}] = ' + '{'
+            f'QStateHandler shallowHistory[{len(self.shallow_history)}] = ' + '{'
         ]
-        local_history_sorted_by_index = sorted(
-            self.local_history.values(), key=lambda lh: lh.index)
+        shallow_history_sorted_by_index = sorted(
+            self.shallow_history.values(), key=lambda lh: lh.index)
 
-        insert_locals = [
+        insert_shallows = [
             f'{get_casted_state(lh.default_value)},'
-            for lh in local_history_sorted_by_index]
-        insert_strings.extend(insert_locals)
+            for lh in shallow_history_sorted_by_index]
+        insert_strings.extend(insert_shallows)
         insert_strings.append('}')
 
         await self._insert_string('\n'.join(insert_strings))
@@ -338,7 +338,7 @@ class CppFileWriter:
                 // ...стандартный код
 
                 case Q_VERTEX_SIG: {
-                    status_ = Q_TRAN(localHistory[{local_history.index}])
+                    status_ = Q_TRAN(localHistory[{shallow_history.index}])
                     inVertex = false;   // IMPL
                     break;
                 }
@@ -348,11 +348,11 @@ class CppFileWriter:
         }
         ```
         """
-        for local_history in self.local_history.values():
+        for shallow_history in self.shallow_history.values():
             await self._write_vertex_definition(
-                f'status_ = Q_TRAN(localHistory[{local_history.index}]);\n',
-                local_history,
-                'Local history')
+                f'status_ = Q_TRAN(localHistory[{shallow_history.index}]);\n',
+                shallow_history,
+                'Shallow history')
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
@@ -535,10 +535,10 @@ class CppFileWriter:
             # Если локальная история находится на одном уровне,
             # то добавляем посещение состояния в массив
             if state.parent is not None:
-                local_history = self.local_history.get(state.parent.id)
-                if local_history is not None:
+                shallow_history = self.shallow_history.get(state.parent.id)
+                if shallow_history is not None:
                     await self._insert_string(
-                        f'localHistory[{local_history.index}] '
+                        f'shallowHistory[{shallow_history.index}] '
                         '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
                         f'{state.id})')
 
