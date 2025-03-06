@@ -3,6 +3,7 @@ import inspect
 import re
 import string
 from collections import defaultdict
+from tkinter import INSERT
 from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
@@ -14,7 +15,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     Labels,
     UnconditionalTransition,
     BaseParserVertex,
-    Condition
+    Condition,
+    GeneratorShallowHistory
 )
 from compiler.fullgraphmlparser.graphml import *
 
@@ -128,6 +130,8 @@ class CppFileWriter:
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.states = state_machine.states
+        self.shallow_history = self.__convert_local_history_to_dict(
+            state_machine.shallow_history)
         for state in self.states:
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
@@ -136,6 +140,36 @@ class CppFileWriter:
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
         self.final_states = state_machine.final_states
+
+    def __convert_local_history_to_dict(
+        self,
+        shallow_history: List[GeneratorShallowHistory]
+    ) -> Dict[str, GeneratorShallowHistory]:
+        """
+        Конвертировать массив локальных историй в словарь, где ключом является\
+            id родителя.
+
+        Словарь в дальнейшем используется при генерации состоянии, чтобы
+        отслеживать, находится ли локальная история на уровне состояния.
+
+        Вызываемые исключения:
+        - `CodeGeneratorException` - если на одном уровне находится\
+            более одной локальной истории
+        """
+        sh_dict: Dict[str, GeneratorShallowHistory] = {}
+
+        for sh in shallow_history:
+            if sh.parent is None:
+                sh.parent = 'global'
+            is_exist = sh_dict.get(sh.parent) is not None
+            if is_exist:
+                raise CodeGenerationException(
+                    f'У элемента {sh.parent} более одной'
+                    ' дочерней локальной истории.'
+                )
+            sh_dict[sh.parent] = sh
+
+        return sh_dict
 
     async def _write_unconditional_transition(
         self,
@@ -207,7 +241,11 @@ class CppFileWriter:
                     TRANSITION.safe_substitute(
                         {'target': transition.target})
             await self._write_vertex_definition(
-                await self._generate_condition(choice.id, 'Псевдосостояние выбора', choice.transitions),
+                await self._generate_condition(
+                    choice.id,
+                    'Псевдосостояние выбора',
+                    choice.transitions
+                ),
                 choice,
                 'Choice'
             )
@@ -259,6 +297,63 @@ class CppFileWriter:
         await self._insert_string('\n         return status_;')
         await self._insert_string('\n}\n\n')
 
+    async def _write_local_history_initialization(self) -> None:
+        """
+        Генерация иниализации массива локальной истории для sketch.h.
+
+        ```cpp
+        // Пример кода инициализации
+        QStateHandler shallowHistory[3] = {
+            Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
+            Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
+            Q_STATE_CAST(QHsm_top) // если default_value отсутствует
+        };
+        ```
+        """
+        def get_casted_state(target_id: str | None) -> str:
+            if target_id is None:
+                target_id = 'QHsm_top'
+            return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
+        insert_strings = [
+            f'QStateHandler shallowHistory[{len(self.shallow_history)}] = ' + '{'
+        ]
+        shallow_history_sorted_by_index = sorted(
+            self.shallow_history.values(), key=lambda lh: lh.index)
+
+        insert_shallows = [
+            f'{get_casted_state(lh.default_value)},'
+            for lh in shallow_history_sorted_by_index]
+        insert_strings.extend(insert_shallows)
+        insert_strings.append('};')
+
+        await self._insert_string('\n'.join(insert_strings))
+
+    async def _write_local_history_definition(self):
+        """
+        Генерация тела локальных историй и запись их в файл.
+
+        ```cpp
+        QState local_history_id(Sketch * const me, QEvt const * const e) {
+            switch (e->sig) {
+                // ...стандартный код
+
+                case Q_VERTEX_SIG: {
+                    status_ = Q_TRAN(shallowHistory[{shallow_history.index}])
+                    inVertex = false;   // IMPL
+                    break;
+                }
+
+                // ...стандартный код
+            }
+        }
+        ```
+        """
+        for shallow_history in self.shallow_history.values():
+            await self._write_vertex_definition(
+                f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
+                shallow_history,
+                'Shallow history')
+
     async def _write_final_states_definition(self):
         for final in self.final_states:
             await self._write_full_line_comment(f'Final pseudostate {final.id}', ' ')
@@ -269,6 +364,14 @@ class CppFileWriter:
             await self._insert_string('}\n\n')
 
     async def write_to_file(self, folder: str, extension: str):
+        """
+        Главная функция для генерации проекта.
+
+        Генерирует файлы:
+        - filename.extension
+        - filename.header_file_extension\
+            (header_file_extension передается в конструкторе)
+        """
         async with async_open(os.path.join(folder, f'{self.filename}.{extension}'), 'w') as f:
             self.f = f
             await self._insert_file_template(f'preamble_c.txt')
@@ -278,11 +381,10 @@ class CppFileWriter:
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
+            await self._write_local_history_definition()
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
-                # Ставим дилей, так как без него в Serial
-                # не выводится сообщения из глобального начального состояния
                 await self._insert_string('\n\tSTATE_MACHINE_CAPITALIZED_NAME_ctor();')
                 await self._insert_string('\n\tQEvt event;')
                 await self._insert_string(f'\n\tQMsm_init(the_{self.sm_id}, &event);')
@@ -298,38 +400,6 @@ class CppFileWriter:
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
             self.f = None
-        # async with async_open(os.path.join(folder, 'User.h'), "w") as f:
-        #     self.f = f
-        #     await self._insert_file_template('user_preamble_h.txt')
-
-        #     if self.notes_dict['user_variables_h']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
-        #         self.userFlag = True
-        #     if self.notes_dict['user_methods_c']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
-        #         self.userFlag = True
-        #     await self._insert_file_template('user_footer_h.txt')
-
-        # async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
-        #     self.f = f
-
-        #     if self.notes_dict['user_variables_h']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_h'].split('\n')[1:]) + '\n')
-
-        #     if self.notes_dict['user_methods_h']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_h'].split('\n')[1:]) + '\n')
-
-        # async with async_open(os.path.join(folder, f'User.{extension}'), "w") as f:
-        #     self.f = f
-        #     await self._insert_file_template('user_preamble_c.txt')
-
-        #     await self._insert_string('// Start variables\n')
-        #     if self.notes_dict['user_variables_c']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_variables_c'].split('\n')[1:]) + '\n')
-        #     await self._insert_string('// end variables\n')
-
-        #     if self.notes_dict['user_methods_c']:
-        #         await self._insert_string('\n'.join(self.notes_dict['user_methods_c'].split('\n')[1:]) + '\n')
 
         async with async_open(os.path.join(folder, f'{self.filename}.{self.header_file_extension}'), 'w') as f:
             self.f = f
@@ -353,10 +423,14 @@ class CppFileWriter:
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
-            await self._write_vertexes_declaration([*self.initial_states,
-                                                    *self.choices,
-                                                    *self.final_states
-                                                    ])
+            await self._write_vertexes_declaration([
+                *self.initial_states,
+                *self.choices,
+                *self.final_states,
+                *list(
+                    self.shallow_history.values()
+                )
+            ])
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
             await self._insert_string('extern QHsm * const the_STATE_MACHINE_LOWERED_NAME; /* opaque pointer to the STATE_MACHINE_LOWERED_NAME HSM */\n\n')
@@ -375,6 +449,7 @@ class CppFileWriter:
                     '\n    ' + ',\n    '.join(constructor_fields.replace(';', '').split('\n')[1:]) + ');\n')
             else:
                 await self._insert_string('void);\n')
+            await self._write_local_history_initialization()
             if self.notes_dict['declare_h_code']:
                 await self._insert_string('//Start of h code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['declare_h_code'].split('\n')[1:]) + '\n')
@@ -460,6 +535,17 @@ class CppFileWriter:
                 await self._insert_string('            inVertex = true;\n')
             else:
                 await self._insert_string('            inVertex = false;\n')
+
+            # Если локальная история находится на одном уровне,
+            # то добавляем посещение состояния в массив
+            if state.parent is not None:
+                shallow_history = self.shallow_history.get(state.parent.id)
+                if shallow_history is not None:
+                    await self._insert_string(
+                        f'shallowHistory[{shallow_history.index}] '
+                        '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
+                        f'{state.id});')
+
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            break;\n')
@@ -502,12 +588,13 @@ class CppFileWriter:
 
             for trigger in triggers:
                 trigger.action = self._generate_trigger(trigger, state)
-            await self._insert_string(await self._generate_condition(
-                state.id if state.name is None else state.name,
-                'Состояние',
-                triggers,
-                '\t\t\t'
-            )
+            await self._insert_string(
+                await self._generate_condition(
+                    state.id if state.name is None else state.name,
+                    'Состояние',
+                    triggers,
+                    '\t\t\t'
+                )
             )
             if not any(trigger.guard == 'else' for trigger in triggers):
                 await self._insert_string('            else {\n')
