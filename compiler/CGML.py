@@ -36,13 +36,13 @@ from compiler.fullgraphmlparser.stateclasses import (
     ParserTrigger,
     ParserNote,
     Labels,
-    ParserChoiceVertex,
+    GeneratorChoiceVertex,
     ChoiceTransition,
     create_note,
     SMCompilingSettings,
-    ParserInitialVertex,
+    GeneratorInitialVertex,
     UnconditionalTransition,
-    ParserFinalVertex
+    GeneratorFinalVertex
 )
 _StartNodeId = str
 _TransitionId = str
@@ -593,7 +593,7 @@ def __get_build_files(
 
 def __init_initial_states(
     initial_states: Dict[str, CGMLInitialState],
-) -> tuple[_StartNodeId, Dict[str, ParserInitialVertex]]:
+) -> tuple[_StartNodeId, Dict[str, GeneratorInitialVertex]]:
     """
     Класс для инициализации начальных состояний.
 
@@ -601,14 +601,14 @@ def __init_initial_states(
         _add_transition_to_initials, чтобы добавить переходы к узлам.
     """
     start_node_id: str | None = None
-    parser_initials: Dict[str, ParserInitialVertex] = {}
+    parser_initials: Dict[str, GeneratorInitialVertex] = {}
     for initial_id, initial in initial_states.items():
         if initial.parent is None:
             if start_node_id is not None:
                 raise _InnerCGMLException(
                     'Два начальных состояния на одном уровне вложенности.')
             start_node_id = initial_id
-        parser_initials[initial_id] = ParserInitialVertex(
+        parser_initials[initial_id] = GeneratorInitialVertex(
             initial_id,
             initial.parent,
             UnconditionalTransition(
@@ -622,11 +622,11 @@ def __init_initial_states(
 
 
 def _add_transition_to_initials(
-    initial_states: Dict[str, ParserInitialVertex],
+    initial_states: Dict[str, GeneratorInitialVertex],
     transitions: List[ParserTrigger]
-) -> tuple[Dict[str, ParserInitialVertex], List[ParserTrigger]]:
+) -> tuple[Dict[str, GeneratorInitialVertex], List[ParserTrigger]]:
     new_initial_states: Dict[str,
-                             ParserInitialVertex] = deepcopy(initial_states)
+                             GeneratorInitialVertex] = deepcopy(initial_states)
     new_transitions: List[ParserTrigger] = []
     for trigger in transitions:
         vertex = new_initial_states.get(trigger.source, None)
@@ -641,7 +641,7 @@ def _add_transition_to_initials(
 
 
 def _add_initials_to_states(
-    initials: Dict[str, ParserInitialVertex],
+    initials: Dict[str, GeneratorInitialVertex],
     states: Dict[str, ParserState]
 ) -> Dict[str, ParserState]:
     new_states = deepcopy(states)
@@ -670,7 +670,7 @@ def __generate_main_function() -> ParserNote:
 def __create_choices(
     choices: Dict[_VertexId, CGMLChoice],
     transitions: List[ParserTrigger]
-) -> tuple[Dict[_VertexId, ParserChoiceVertex],
+) -> tuple[Dict[_VertexId, GeneratorChoiceVertex],
            List[ParserTrigger]]:
     """
     Create choice-pseudostates for code generation from CGMLChoice.
@@ -678,7 +678,7 @@ def __create_choices(
     Return ParserChoices and transitions without transitions,\
         that the source is choice.
     """
-    parser_choices: Dict[_VertexId, ParserChoiceVertex] = {}
+    parser_choices: Dict[_VertexId, GeneratorChoiceVertex] = {}
     new_transitions: List[ParserTrigger] = []
     for transition in transitions:
         choice = choices.get(transition.source, None)
@@ -694,7 +694,7 @@ def __create_choices(
         if parser_choice is not None:
             parser_choice.transitions.append(choice_transition)
         else:
-            parser_choices[transition.source] = ParserChoiceVertex(
+            parser_choices[transition.source] = GeneratorChoiceVertex(
                 transition.source, choice.parent,
                 [choice_transition]
             )
@@ -707,11 +707,11 @@ def __create_choices(
 
 def __create_final_states(
     cgml_finals: Dict[str, CGMLFinal]
-) -> List[ParserFinalVertex]:
-    finals: List[ParserFinalVertex] = []
+) -> List[GeneratorFinalVertex]:
+    finals: List[GeneratorFinalVertex] = []
     for final_id, cgml_final in cgml_finals.items():
         # Родитель в дальнейшем не используется
-        finals.append(ParserFinalVertex(final_id, cgml_final.parent))
+        finals.append(GeneratorFinalVertex(final_id, cgml_final.parent))
     return finals
 
 
@@ -781,6 +781,7 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                     width=0
                 )
             )
+
             # Parsing external transitions.
             transitions: List[ParserTrigger] = []
             cgml_transitions: Dict[_TransitionId,
