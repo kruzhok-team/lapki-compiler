@@ -151,24 +151,56 @@ class BaseParserVertex:
 
 
 @dataclass
-class ParserFinalVertex(BaseParserVertex):
+class GeneratorFinalVertex(BaseParserVertex):
     """Класс, обозначающий финальное состояние."""
 
     ...
 
 
 @dataclass
-class ParserInitialVertex(BaseParserVertex):
+class GeneratorInitialVertex(BaseParserVertex):
     """Класс, обозначающий начальное псевдосостояние."""
 
     transition: UnconditionalTransition
 
 
 @dataclass
-class ParserChoiceVertex(BaseParserVertex):
+class GeneratorChoiceVertex(BaseParserVertex):
     """Класс, обозначающий псевдосостояние выбора."""
 
     transitions: List[ChoiceTransition]
+
+
+@dataclass
+class GeneratorShallowHistory(BaseParserVertex):
+    """
+    Псевдосостояние локальной истории.
+
+    Генерация псевдосостояния истории помимо генерации стандартного вертекса
+    состоит из инициализации массива и хранении последних последних посещений.
+    ```cpp
+    // инициализация
+    QStateHandler shallowHistory[3] = {
+        Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
+        Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
+        Q_STATE_CAST(QHsm_top) // default value
+    };
+    ```
+
+    ```cpp
+    // Совершили переход и сохранили состояние
+    shallowHistory[0] = {  Q_STATE_CAST(Sketch_mlqctlmxugztidzjjhfz) };
+    ```
+    `index`: индекс в массиве локальных историй.
+
+    `default_value`: идентификатор состояния, в которое ведет переход
+    в локальную историю, если на уровне локального
+    состояния не было совершено переходов.
+
+    """
+
+    index: int
+    default_value: str | None = None
 
 
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
@@ -219,6 +251,9 @@ class SMCompilingSettings:
 
 @dataclass
 class StateMachine:
+    """
+    Данные машины состояний, на основе которых генерируется кода
+    """
     name: str | None
     start_node: str
     start_action: str
@@ -230,9 +265,10 @@ class StateMachine:
     language: str
     # Установлено дефолтное значение, чтобы не трогать легаси.
     id: str = 'sketch'
-    initial_states: List[ParserInitialVertex] = Field(default_factory=list)
-    choices: List[ParserChoiceVertex] = Field(default_factory=list)
-    final_states: List[ParserFinalVertex] = Field(default_factory=list)
+    initial_states: List[GeneratorInitialVertex] = Field(default_factory=list)
+    choices: List[GeneratorChoiceVertex] = Field(default_factory=list)
+    final_states: List[GeneratorFinalVertex] = Field(default_factory=list)
+    shallow_history: List[GeneratorShallowHistory] = Field(default=list)
     compiling_settings: Optional[SMCompilingSettings] = None
 
 

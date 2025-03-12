@@ -482,13 +482,13 @@ toml = ["tomli"]
 
 [[package]]
 name = "cyberiadaml-py"
-version = "1.2"
+version = "1.2.2"
 description = "The Python 3 library for processing the CyberiadaML state machine graphs"
 optional = false
 python-versions = "<3.11,>=3.10"
 files = [
-    {file = "cyberiadaml_py-1.2-py3-none-any.whl", hash = "sha256:8fe9998c50bb067b4ff6171a8e46a63af2d688c92d1e13bb4e1f69fd93b253eb"},
-    {file = "cyberiadaml_py-1.2.tar.gz", hash = "sha256:f8fb2fd0d32dccd6314e35d3146010ee5445e9d09fadde633eb4354955626272"},
+    {file = "cyberiadaml_py-1.2.2-py3-none-any.whl", hash = "sha256:f00b72b63508833895472cc09b8f0fbaed35a992068d4a0f38bace1bb5af9cc3"},
+    {file = "cyberiadaml_py-1.2.2.tar.gz", hash = "sha256:8f6c90d1d34b820275950e253abb3b0f2b75dd574be0b08dcdb52b826b8e14d0"},
 ]
 
 [package.dependencies]
