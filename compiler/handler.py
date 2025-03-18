@@ -106,7 +106,7 @@ async def create_response(
                     response.binary.append(
                         File(
                             filename=path.name.split('.')[0],
-                            extension=''.join(path.suffixes),
+                            extension=''.join(path.suffixes)[1:],
                             fileContent=b64_data.decode('ascii'),
                         )
                     )
