@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="MS1Lamp2">
+    <data key="dStateMachine"></data>
+    <data key="dName">Ведомый</data>
+    <data key="dGeometry">
+      <rect x="0" y="0" width="450" height="100"></rect>
+    </data>
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+lapkiVisual/ true
+
+platform/ tjc-ms1-lmp-a3
+
+</data>
+    </node>
+    <node id="zjejixbfnljnbxalwltt">
+      <data key="dName">Внимание, скоро загорится красный</data>
+      <data key="dData">entry/
+LED4.off();
+LED5.on();
+LED6.off();
+Timer4.start(1000);
+
+</data>
+      <data key="dGeometry">
+        <rect x="904.7595654296872" y="1620.6501068115276" width="450" height="100"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="hsmpputdwnjmzdqxinim">
+      <data key="dName">Движение запрещено</data>
+      <data key="dData">entry/
+Timer4.start(5000);
+LED4.on();
+LED5.off();
+LED6.off();
+
+</data>
+      <data key="dGeometry">
+        <rect x="1673.3095654296844" y="698.9701068115221" width="450" height="100"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+      <graph id="hsmpputdwnjmzdqxinim">
+        <node id="dzollqabgoewhabzmipn">
+          <data key="dName">Ожидание</data>
+          <data key="dData">entry/
+Timer3.start(4000);
+
+</data>
+          <data key="dGeometry">
+            <rect x="272.91999999999985" y="225.24000000000012" width="450" height="100"></rect>
+          </data>
+          <data key="dColor">#FFFFFF</data>
+        </node>
+        <node id="vsmpqwtqfmuevclepulj">
+          <data key="dName">Мигание</data>
+          <data key="dData">entry/
+Timer6.start(200);
+
+</data>
+          <data key="dGeometry">
+            <rect x="235.88000000000073" y="466.4101068115212" width="450" height="100"></rect>
+          </data>
+          <data key="dColor">#FFFFFF</data>
+          <graph id="vsmpqwtqfmuevclepulj">
+            <node id="kbluidupkjmazlyheuya">
+              <data key="dName">Включен</data>
+              <data key="dData">entry/
+LED4.off();
+
+</data>
+              <data key="dGeometry">
+                <rect x="115" y="135" width="450" height="100"></rect>
+              </data>
+              <data key="dColor">#FFFFFF</data>
+            </node>
+            <node id="ahexalelxhoofddposct">
+              <data key="dName">Выключен</data>
+              <data key="dData">entry/
+LED4.on();
+
+</data>
+              <data key="dGeometry">
+                <rect x="111.78043457031156" y="380.37983978271495" width="450" height="100"></rect>
+              </data>
+              <data key="dColor">#FFFFFF</data>
+            </node>
+            <node id="zfzwdiytawsfztqfubwt">
+              <data key="dVertex">initial</data>
+              <data key="dGeometry">
+                <rect x="15" y="115" width="-1" height="-1"></rect>
+              </data>
+            </node>
+          </graph>
+        </node>
+        <node id="bhmiedzjveueqgwinwuz">
+          <data key="dVertex">initial</data>
+          <data key="dGeometry">
+            <rect x="73.28" y="184.55999999999997" width="-1" height="-1"></rect>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="oddqthooagtamsqcubxc">
+      <data key="dName">Внимание, скоро загорится зеленый</data>
+      <data key="dData">entry/
+LED4.off();
+LED5.on();
+LED6.off();
+Timer4.start(1000);
+
+</data>
+      <data key="dGeometry">
+        <rect x="934.0522436523468" y="671.8301068115275" width="450" height="100"></rect>
+      </data>
+      <data key="dColor">#FFFFFF</data>
+    </node>
+    <node id="kajqhcjqaiwlztifaxsu">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="740.914782714844" y="1439.670053405763"></point>
+      </data>
+    </node>
+    <node id="cTimer3">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer3
+
+type/ Timer
+
+label/ миг
+
+name/ ТаймерМигания
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cTimer4">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer4
+
+type/ Timer
+
+label/ фаз
+
+name/ ТаймерФазы
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cLED4">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED4
+
+type/ LED
+
+pin/ 1
+
+label/ кра
+
+labelColor/ #ff0000
+
+name/ Красный
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cLED5">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED5
+
+type/ LED
+
+pin/ 2
+
+labelColor/ #d4b00c
+
+label/ ЖЕЛ
+
+name/ Желтый
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cLED6">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED6
+
+type/ LED
+
+pin/ 3
+
+labelColor/ #06ff1a
+
+label/ ЗЕЛ
+
+name/ Зеленый
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cTimer5">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer5
+
+type/ Timer
+
+label/ ИНИ
+
+name/ ТаймерИнициализации
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cTimer6">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Timer6
+
+type/ Timer
+
+name/ ТаймерОдногоМигания
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cSimpleBus1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ SimpleBus1
+
+type/ SimpleBus
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <edge id="fbpylcsyhhycdsabhogg" source="kajqhcjqaiwlztifaxsu" target="zjejixbfnljnbxalwltt"></edge>
+    <edge id="xqbiatgqjkqjmzumvfaq" source="bhmiedzjveueqgwinwuz" target="dzollqabgoewhabzmipn"></edge>
+    <edge id="mbfkzqdaelwtwnuwqmhi" source="zfzwdiytawsfztqfubwt" target="kbluidupkjmazlyheuya"></edge>
+    <edge id="jssyktgxceaehimyvgqs" source="dzollqabgoewhabzmipn" target="vsmpqwtqfmuevclepulj">
+      <data key="dData">Timer3.timeout/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="1995.8100000000056" y="1058.9150534057635"></point>
+      </data>
+    </edge>
+    <edge id="uwzdcnvvhfncqlajheey" source="kbluidupkjmazlyheuya" target="ahexalelxhoofddposct">
+      <data key="dData">Timer6.timeout/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="1941.1152172851578" y="1432.284919891362"></point>
+      </data>
+    </edge>
+    <edge id="sbkumpidmszygjwgwqpd" source="ahexalelxhoofddposct" target="kbluidupkjmazlyheuya">
+      <data key="dData">Timer6.timeout/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="2165.920217285157" y="1456.4799198913604"></point>
+      </data>
+    </edge>
+    <edge id="kzzyvbsitmamyqdwjjfi" source="zjejixbfnljnbxalwltt" target="hsmpputdwnjmzdqxinim">
+      <data key="dData">Timer4.timeout/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="1408.3650000000002" y="1359.8649999999998"></point>
+      </data>
+    </edge>
+    <edge id="sbbpgmdklgznovcxaelg" source="hsmpputdwnjmzdqxinim" target="oddqthooagtamsqcubxc">
+      <data key="dData">Timer4.timeout/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="1469.7063391113302" y="663.1100000000024"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>
