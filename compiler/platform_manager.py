@@ -234,6 +234,48 @@ class PlatformManager:
         if images is not None:
             await _write_source(img_path, images)
 
+    async def _resolve_dependencies(
+        self, platform: Platform, _loaded_deps: list[Platform] | None = None
+    ) -> list[Platform]:
+        """
+        Разрешить зависимости платформы.
+
+        Рекурсивно идем по зависимостям платформ,
+        передавая список загруженных платформ.
+        _loaded_deps используется для передачи
+        загруженных платформ по рекурсии.
+        """
+        loaded_deps: List[Platform] = (
+            [*_loaded_deps] if _loaded_deps
+            is not None else []
+        )
+        new_deps: List[Platform] = []
+        for dep in platform.inherits:
+            if dep.platform_id == platform.id:
+                raise PlatformException(
+                    f'Platfom ({platform.id}): dependency resolution error. '
+                    'Inheriting from itself is forbidden.')
+            dep_platform = await self.get_platform(
+                dep.platform_id,
+                dep.version
+            )
+            if dep_platform not in loaded_deps:
+                new_deps.append(dep_platform)
+                loaded_deps.append(dep_platform)
+                resolved = await self._resolve_dependencies(
+                    dep_platform,
+                    loaded_deps
+                )
+                if platform.id in [resolved_platform.id for
+                                   resolved_platform in resolved]:
+                    raise PlatformException(
+                        f'Platfom ({platform.id}): '
+                        'dependency resolution error. '
+                        'Circular inheritance.')
+                new_deps.extend(resolved)
+                loaded_deps.extend(resolved)
+        return new_deps
+
     async def load_platform(self,
                             path_to_platform: str | AsyncPath) -> Platform:
         """Load platform from file and add it to dict."""
@@ -254,10 +296,13 @@ class PlatformManager:
                         f'Platform with id {platform.id} and version '
                         f'{platform.version} is already loaded.')
                 if self.__versions_info.get(platform.id) is None:
+                    deps = await self._resolve_dependencies(platform)
                     self.__versions_info[platform.id] = PlatformMeta(
                         set([platform.version]),
                         platform.name,
-                        platform.author)
+                        platform.author,
+                        deps
+                    )
                 else:
                     self.__versions_info[platform.id].versions.add(
                         platform.version)
@@ -303,11 +348,6 @@ class PlatformManager:
 
         if platform is not None:
             return platform
-
-        if (version not in
-                self.__versions_info[platform_id].versions):
-            raise PlatformException(
-                f'Unsupported platform {platform_id}, version {version}')
 
         return await self.load_platform(
             get_path_to_platform(platform_id, version))

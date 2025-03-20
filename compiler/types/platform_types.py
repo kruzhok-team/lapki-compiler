@@ -2,6 +2,7 @@ from typing import Dict, TypeAlias, Literal, List, Optional, Set
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
+from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import SupportedCompilers
 
 SupportLanguages: TypeAlias = Literal['C++', 'C']
@@ -74,6 +75,12 @@ class SetupFunction:
     args: List[str]
 
 
+@dataclass
+class Inheritance:
+    version: str
+    platform_id: str = Field(alias='id')
+
+
 class Platform(BaseModel):
     id: str = ''
     name: str
@@ -88,6 +95,7 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
+    inherits: List[Inheritance] = Field(default_factory=list)
     default_include_files: List[str] = Field(
         default_factory=list, alias='defaultIncludeFiles')
     default_build_files: Set[str] = Field(
@@ -106,6 +114,26 @@ class Platform(BaseModel):
     header_file_extension: str = Field(
         default='', alias='headerFileExtension')
 
+    def get_resolved_component(self, component_id: str) -> Component | None:
+        """Получить компонент с учетом наследования."""
+        component: Component | None = self.components.get(component_id)
+
+        if component is not None:
+            return component
+
+        platform_manager = PlatformManager()
+        platforms_meta = platform_manager.platforms_info.get(self.id)
+
+        if platforms_meta is None:
+            return None
+
+        for parent_platform in platforms_meta.dependencies:
+            component = parent_platform.components.get(component_id)
+            if component is not None:
+                return component
+
+        return None
+
 
 @dataclass
 class PlatformMeta:
@@ -115,3 +143,4 @@ class PlatformMeta:
     versions: Set[str] = Field(default_factory=set)
     name: str = ''
     author: str = ''
+    dependencies: List[Platform] = Field(default_factory=list)
