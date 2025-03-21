@@ -1,0 +1,66 @@
+{
+  "name": "Пустая платформа",
+  "id": "with_serial",
+  "nameTag": "empty",
+  "description": "Пустая платформа без компонентов.",
+  "icon": "путь/до/иконки",
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "author": "Maxim Klypin",
+  "visual": false,
+  "compile": false,
+  "staticComponents": true,
+  "mainFileExtension": "graphml",
+  "staticActionDelimeter": ".",
+  "delimeter": "",
+  "components": {
+    "Serial": {
+        "description": "Компонент для низкоуровневого взаимодействия с общей шиной данных. Шина является полудуплексной – отправку в конкретный момент времени может отсуществлять только один участник.",
+        "img": "arduino/serial.svg",
+        "signals": {
+          "isByteReceived": {
+            "img": "arduino/byteReceived.svg",
+            "description": "Получен байт.",
+            "checkMethod": "isByteReceived"
+          }
+        },
+        "constructorParameters": {
+          "baudrate": {
+            "type": "uint32_t",
+            "description": "Частота работы.",
+            "optional" : true
+          }
+        },
+        "variables": {
+          "lastByte": {
+            "img": "common/value.svg",
+            "type": "uint8_t",
+            "description": "Последний полученный байт."
+          }
+        },
+        "methods": {
+          "sendByte": {
+            "img": "arduino/blink.svg",
+            "parameters": [
+              {
+                "name": "data",
+                "type": "byte",
+                "description": "Байт данных (сообщение)."
+              }
+            ],
+            "description": "Отправить байт в шину."
+          }
+        },
+        "buildFiles": ["DataBus.hpp", "Pins.hpp", "UART.hpp"],
+        "importFiles": ["DataBus.hpp"],
+        "singletone": false
+    }
+    },
+    "inherits": [
+        {
+        "id": "with_led",
+        "version": "1.0"
+        }
+    ]
+}

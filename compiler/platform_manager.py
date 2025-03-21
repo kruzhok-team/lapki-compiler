@@ -21,7 +21,7 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from compiler.config import get_config
 from compiler.types.inner_types import File
-from compiler.types.platform_types import PlatformMeta, Platform
+from compiler.types.platform_types import Component, PlatformMeta, Platform
 
 PlatformId = str
 PlatformVersion = str
@@ -196,7 +196,8 @@ class PlatformManager:
         new_versions_info[platform.id] = PlatformMeta(
             versions=set((platform.version,)),
             name=platform.name,
-            author=platform.author)
+            author=platform.author,
+        )
 
         return new_versions_info
 
@@ -234,6 +235,48 @@ class PlatformManager:
         if images is not None:
             await _write_source(img_path, images)
 
+    async def _resolve_dependencies(
+        self, platform: Platform, _loaded_deps: list[Platform] | None = None
+    ) -> list[Platform]:
+        """
+        Разрешить зависимости платформы.
+
+        Рекурсивно идем по зависимостям платформ,
+        передавая список загруженных платформ.
+        _loaded_deps используется для передачи
+        загруженных платформ по рекурсии.
+        """
+        loaded_deps: List[Platform] = (
+            [*_loaded_deps] if _loaded_deps
+            is not None else []
+        )
+        new_deps: List[Platform] = []
+        for dep in platform.inherits:
+            if dep.platform_id == platform.id:
+                raise PlatformException(
+                    f'Platfom ({platform.id}): dependency resolution error. '
+                    'Inheriting from itself is forbidden.')
+            dep_platform = await self.get_platform(
+                dep.platform_id,
+                dep.version
+            )
+            if dep_platform not in loaded_deps:
+                new_deps.append(dep_platform)
+                loaded_deps.append(dep_platform)
+                resolved = await self._resolve_dependencies(
+                    dep_platform,
+                    loaded_deps
+                )
+                if platform.id in [resolved_platform.id for
+                                   resolved_platform in resolved]:
+                    raise PlatformException(
+                        f'Platfom ({platform.id}): '
+                        'dependency resolution error. '
+                        'Circular inheritance.')
+                new_deps.extend(resolved)
+                loaded_deps.extend(resolved)
+        return new_deps
+
     async def load_platform(self,
                             path_to_platform: str | AsyncPath) -> Platform:
         """Load platform from file and add it to dict."""
@@ -254,10 +297,14 @@ class PlatformManager:
                         f'Platform with id {platform.id} and version '
                         f'{platform.version} is already loaded.')
                 if self.__versions_info.get(platform.id) is None:
+                    # TODO: вынести resolve dependencies в другое место
+                    deps = await self._resolve_dependencies(platform)
                     self.__versions_info[platform.id] = PlatformMeta(
                         set([platform.version]),
                         platform.name,
-                        platform.author)
+                        platform.author,
+                        deps
+                    )
                 else:
                     self.__versions_info[platform.id].versions.add(
                         platform.version)
@@ -303,11 +350,6 @@ class PlatformManager:
 
         if platform is not None:
             return platform
-
-        if (version not in
-                self.__versions_info[platform_id].versions):
-            raise PlatformException(
-                f'Unsupported platform {platform_id}, version {version}')
 
         return await self.load_platform(
             get_path_to_platform(platform_id, version))
@@ -493,3 +535,25 @@ class PlatformManager:
         if len(new_versions_info[platform_id].versions) == 0:
             del new_versions_info[platform_id]
         return new_versions_info
+
+    def get_resolved_component(self,
+                               platform: Platform,
+                               component_id: str
+                               ) -> Component | None:
+        """Получить компонент с учетом наследования."""
+        component: Component | None = platform.components.get(component_id)
+
+        if component is not None:
+            return component
+
+        platforms_meta = self.platforms_info.get(platform.id)
+
+        if platforms_meta is None:
+            return None
+
+        for parent_platform in platforms_meta.dependencies:
+            component = parent_platform.components.get(component_id)
+            if component is not None:
+                return component
+
+        return None
