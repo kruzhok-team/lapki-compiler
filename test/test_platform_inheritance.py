@@ -14,25 +14,33 @@ pytest_plugins = ('pytest_asyncio',)
 
 test_platforms_path = ('test/test_platform_inheritance'
                        '/test_resolve_dependencies/')
+test_resolve_components_path = ('test/test_platform_inheritance/'
+                                'test_resolve_components'
+                                )
 
 
 @asynccontextmanager
 async def add_platforms(platforms: List[Platform],
                         source_files: List[List[File]],
                         images: List[List[File]],
-                        autodelete: bool = True):
+                        autodelete: bool = True,
+                        with_resolving: bool = False,):
     """Add platform to PlatformManager. Delete platform after\
         "with" statement."""
     platform_manager = PlatformManager()
     try:
         for i, platform in enumerate(platforms):
-            platform_manager.platforms_info = (
+            new_platforms_info = (
                 await platform_manager.add_platform(
                     platform,
                     source_files[i],
                     images[i])
             )
 
+            if with_resolving:
+                deps = await platform_manager._resolve_dependencies(platform)
+                new_platforms_info[platform.id].dependencies = deps
+            platform_manager.platforms_info = new_platforms_info
         yield platforms
     finally:
         if autodelete:
@@ -77,6 +85,7 @@ async def circular_platforms() -> List[Platform]:
 async def test_resolve_dependencies(empty_platforms: List[Platform],
                                     circular_platforms: List[Platform]):
     """Test _resolve_dependencies function."""
+    # TODO: resolve versions
     platform_manager = PlatformManager()
     async with add_platforms(empty_platforms,
                              [[] for _ in range(len(empty_platforms))],
@@ -102,3 +111,37 @@ async def test_resolve_dependencies(empty_platforms: List[Platform],
                                  ) as platforms:
             await platform_manager._resolve_dependencies(
                 circular_platforms[0])
+
+
+@pytest.fixture
+async def platforms_with_components():
+    """Get test platforms with components."""
+    files = ['with_button', 'with_led', 'with_serial']
+    platforms: List[Platform] = []
+    for file in files:
+        with open(os.path.join(test_resolve_components_path, f'{file}.json'),
+                  'r') as f:
+            platform = Platform(**json.load(f))
+            platforms.append(platform)
+
+    return platforms
+
+
+@pytest.mark.asyncio
+async def test_resolve_components(platforms_with_components: List[Platform]):
+    """Test resolving components."""
+    platform_manager = PlatformManager()
+    async with add_platforms(
+            platforms_with_components,
+            [[]for _ in range(len(platforms_with_components))],
+            [[] for _ in range(len(platforms_with_components))], True, True
+    ) as platforms:
+        platform = platforms[-1]
+        assert platform_manager.get_resolved_component(
+            platform, 'LED') is not None
+        assert platform_manager.get_resolved_component(
+            platform, 'Button'
+        ) is not None
+        assert platform_manager.get_resolved_component(
+            platform, 'Serial'
+        ) is not None

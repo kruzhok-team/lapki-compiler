@@ -21,7 +21,7 @@ from aiofile import async_open
 from aiopath import AsyncPath
 from compiler.config import get_config
 from compiler.types.inner_types import File
-from compiler.types.platform_types import PlatformMeta, Platform
+from compiler.types.platform_types import Component, PlatformMeta, Platform
 
 PlatformId = str
 PlatformVersion = str
@@ -297,6 +297,7 @@ class PlatformManager:
                         f'Platform with id {platform.id} and version '
                         f'{platform.version} is already loaded.')
                 if self.__versions_info.get(platform.id) is None:
+                    # TODO: вынести resolve dependencies в другое место
                     deps = await self._resolve_dependencies(platform)
                     self.__versions_info[platform.id] = PlatformMeta(
                         set([platform.version]),
@@ -534,3 +535,25 @@ class PlatformManager:
         if len(new_versions_info[platform_id].versions) == 0:
             del new_versions_info[platform_id]
         return new_versions_info
+
+    def get_resolved_component(self,
+                               platform: Platform,
+                               component_id: str
+                               ) -> Component | None:
+        """Получить компонент с учетом наследования."""
+        component: Component | None = platform.components.get(component_id)
+
+        if component is not None:
+            return component
+
+        platforms_meta = self.platforms_info.get(platform.id)
+
+        if platforms_meta is None:
+            return None
+
+        for parent_platform in platforms_meta.dependencies:
+            component = parent_platform.components.get(component_id)
+            if component is not None:
+                return component
+
+        return None

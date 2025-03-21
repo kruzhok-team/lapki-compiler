@@ -1,0 +1,84 @@
+{
+  "name": "Пустая платформа",
+  "id": "with_led",
+  "nameTag": "empty",
+  "description": "Пустая платформа без компонентов.",
+  "icon": "путь/до/иконки",
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "author": "Maxim Klypin",
+  "visual": false,
+  "compile": false,
+  "staticComponents": true,
+  "mainFileExtension": "graphml",
+  "staticActionDelimeter": ".",
+  "delimeter": "",
+  "components": {
+        "LED": {
+            "description": "Компонент для взаимодействия со светодиодом",
+            "img": "arduino/led.svg",
+            "signals": {},
+            "constructorParameters": {
+            "pin": {
+                "type": ["1", "2", "3"],
+                "description": "Пин, к которому подключен светодиод"
+            }
+            },
+            "variables": {
+            "value": {
+                "img": "common/value.svg",
+                "type": "int",
+                "description": "Текущее значение на пине"
+            }
+            },
+            "methods": {
+            "on": {
+                "img": "arduino/switch-on.svg",
+                "parameters": [
+                {
+                    "name": "brightness",
+                    "type": "uint8_t",
+                    "description": "Яркость светодиода (по умолчанию: 100)",
+                    "optional": true
+                }
+                ],
+                "description": "Зажечь светодиод"
+            },
+            "off": {
+                "img": "arduino/switch-off.svg",
+                "description": "Выключить светодиод"
+            },
+            "toggle": {
+                "img": "arduino/toggle.svg",
+                "description": "Меняет состояние светодиода на противоположное"
+            },
+            "blink": {
+                "img": "arduino/blink.svg",
+                "parameters": [
+                {
+                "name": "interval",
+                "type": "unsigned int",
+                "description": "Длительность каждого мигания (мс)"
+                },
+                {
+                "name": "times",
+                "type": "byte",
+                "description": "Количество миганий"
+                }
+                ],
+                "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
+            }
+            },
+            "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
+            "importFiles": ["LED.h"],
+            "singletone": false
+        }
+    },
+    "inherits": [
+        {
+        "id": "with_button",
+        "version": "1.0"
+        }
+    ]
+}

@@ -113,27 +113,6 @@ class Platform(BaseModel):
     header_file_extension: str = Field(
         default='', alias='headerFileExtension')
 
-    def get_resolved_component(self, component_id: str) -> Component | None:
-        """Получить компонент с учетом наследования."""
-        # component: Component | None = self.components.get(component_id)
-
-        # if component is not None:
-        #     return component
-
-        # platform_manager = PlatformManager()
-        # platforms_meta = platform_manager.platforms_info.get(self.id)
-
-        # if platforms_meta is None:
-        #     return None
-
-        # for parent_platform in platforms_meta.dependencies:
-        #     component = parent_platform.components.get(component_id)
-        #     if component is not None:
-        #         return component
-
-        # return None
-        ...
-
 
 @dataclass
 class PlatformMeta:

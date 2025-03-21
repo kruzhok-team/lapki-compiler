@@ -15,7 +15,7 @@
   "staticActionDelimeter": ".",
   "delimeter": "",
   "components": {},
-    "inherits": [
+  "inherits": [
     {
       "id": "circular1",
       "version": "1.0"
