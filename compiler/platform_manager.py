@@ -196,7 +196,8 @@ class PlatformManager:
         new_versions_info[platform.id] = PlatformMeta(
             versions=set((platform.version,)),
             name=platform.name,
-            author=platform.author)
+            author=platform.author,
+        )
 
         return new_versions_info
 

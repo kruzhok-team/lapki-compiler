@@ -2,7 +2,6 @@ from typing import Dict, TypeAlias, Literal, List, Optional, Set
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
-from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import SupportedCompilers
 
 SupportLanguages: TypeAlias = Literal['C++', 'C']
@@ -116,23 +115,24 @@ class Platform(BaseModel):
 
     def get_resolved_component(self, component_id: str) -> Component | None:
         """Получить компонент с учетом наследования."""
-        component: Component | None = self.components.get(component_id)
+        # component: Component | None = self.components.get(component_id)
 
-        if component is not None:
-            return component
+        # if component is not None:
+        #     return component
 
-        platform_manager = PlatformManager()
-        platforms_meta = platform_manager.platforms_info.get(self.id)
+        # platform_manager = PlatformManager()
+        # platforms_meta = platform_manager.platforms_info.get(self.id)
 
-        if platforms_meta is None:
-            return None
+        # if platforms_meta is None:
+        #     return None
 
-        for parent_platform in platforms_meta.dependencies:
-            component = parent_platform.components.get(component_id)
-            if component is not None:
-                return component
+        # for parent_platform in platforms_meta.dependencies:
+        #     component = parent_platform.components.get(component_id)
+        #     if component is not None:
+        #         return component
 
-        return None
+        # return None
+        ...
 
 
 @dataclass
