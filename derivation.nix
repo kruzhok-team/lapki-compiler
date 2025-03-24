@@ -95,11 +95,11 @@ clang = buildPythonPackage rec {
 
 cyberiadaml-py = buildPythonPackage rec {
   pname = "cyberiadaml_py";
-  version = "1.2";
+  version = "1.2.2";
   pyproject = true;
   src = python.pkgs.fetchPypi {
     inherit pname version;
-    sha256 = "sha256-+Psv0NMtzNYxTjXTFGAQ7lRF6dCfrd5jPrQ1SVViYnI=";
+    sha256 = "sha256-j2yQ0dNLggJ1lQ4lOrs7Dyt13VdL4LCNzbUrgmuOFNA=";
   };
   doCheck = false;
   propagatedBuildInputs = with pkgs; [
