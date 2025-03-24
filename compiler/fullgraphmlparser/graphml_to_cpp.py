@@ -3,7 +3,6 @@ import inspect
 import re
 import string
 from collections import defaultdict
-from tkinter import INSERT
 from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
