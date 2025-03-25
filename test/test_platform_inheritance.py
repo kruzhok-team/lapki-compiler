@@ -1,10 +1,12 @@
 """Test platform inheritance functions."""
 from contextlib import asynccontextmanager
 import os
-from typing import List
+from typing import Dict, List
 import json
 
+import aiofile
 import pytest
+from aiopath import AsyncPath
 from compiler.platform_manager import PlatformException, PlatformManager
 from compiler.types.inner_types import File
 from compiler.types.platform_types import Platform
@@ -145,3 +147,43 @@ async def test_resolve_components(platforms_with_components: List[Platform]):
         assert platform_manager.get_resolved_component(
             platform, 'Serial'
         ) is not None
+
+
+@pytest.fixture
+async def source_files(
+    platform_ids: List[str],
+    paths: List[str]
+) -> Dict[str, List[File]]:
+    """Получить исходные файлы платформ из указанных папок."""
+    source_files: Dict[str, List[File]] = {}
+
+    for i, path in enumerate(paths):
+        async for file in AsyncPath(path).rglob('*'):
+            source_files[platform_ids[i]] = []
+            if await file.is_file():
+                async with aiofile.async_open(path, 'r') as f:
+                    source_files[platform_ids[i]].append(
+                        File(
+                            fileContent=await f.read(),
+                            filename=file.name,
+                            extension=''.join(file.suffixes)[1:]
+                        )
+                    )
+
+    return source_files
+
+
+@pytest.mark.parametrize('platform_ids, paths', [
+    ['with_button', 'with_led', 'with_serial'],
+    [
+        os.path.join(test_resolve_components_path, 'source/with_button'),
+        os.path.join(test_resolve_components_path, 'source/with_led'),
+        os.path.join(test_resolve_components_path, 'source/with_serial')
+    ]
+], indirect=True)
+@pytest.mark.asyncio
+async def test_resolve_file(platform_with_components: List[Platform], source_files):
+    """Тестирование получения файла из родительских платформ."""
+    platform_manager = PlatformManager()
+    print(source_files)
+    # get_resolved_file()

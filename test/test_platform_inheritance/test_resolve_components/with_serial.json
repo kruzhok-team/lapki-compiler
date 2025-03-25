@@ -52,8 +52,8 @@
             "description": "Отправить байт в шину."
           }
         },
-        "buildFiles": ["DataBus.hpp", "Pins.hpp", "UART.hpp"],
-        "importFiles": ["DataBus.hpp"],
+        "buildFiles": ["Serial.c"],
+        "importFiles": ["Serial.c"],
         "singletone": false
     }
     },

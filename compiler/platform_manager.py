@@ -55,7 +55,7 @@ async def _delete_platform(platform_id: str) -> None:
         await asyncio.create_subprocess_exec('rm', '-r', path_to_platform)
 
 
-def _get_img_path(id: str, version: str) -> str:
+def get_img_path(id: str, version: str) -> str:
     """
     Get path to images dir.
 
@@ -219,7 +219,7 @@ class PlatformManager:
         platform_library_path = _gen_platform_path(
             config.library_path, platform.id, platform.version)
         source_path = get_source_path(platform.id, platform.version)
-        img_path = _get_img_path(platform.id, platform.version)
+        img_path = get_img_path(platform.id, platform.version)
         json_platform = platform.model_dump_json(indent=4, by_alias=True)
         await AsyncPath(platform_path).mkdir(parents=True, exist_ok=False)
         await AsyncPath(platform_library_path).mkdir(parents=True,
@@ -448,7 +448,7 @@ class PlatformManager:
             platform_id: str,
             version: str) -> AsyncGenerator[File, Any]:
         """Get platform images by id and version."""
-        source_dir = _get_img_path(platform_id, version)
+        source_dir = get_img_path(platform_id, version)
         return _read_platform_files(source_dir, 'rb')
 
     async def delete_platform_by_versions(
@@ -555,5 +555,25 @@ class PlatformManager:
             component = parent_platform.components.get(component_id)
             if component is not None:
                 return component
+
+        return None
+
+    async def get_resolved_file(
+        self,
+        platform: Platform,
+        filename: str,
+        in_source: bool = True
+    ) -> str | None:
+        """Найти путь до файла с учетом наследования."""
+        dependencies = [platform, *
+                        self.__versions_info[platform.id].dependencies]
+        for dep in dependencies:
+            path = await AsyncPath(get_source_path(
+                dep.id, dep.version) if in_source else get_img_path(
+                    platform.id, platform.version
+            )
+            ).absolute()
+            async for f in path.rglob(filename):
+                return str(await f.absolute())
 
         return None

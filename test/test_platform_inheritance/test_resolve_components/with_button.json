@@ -43,8 +43,8 @@
                 "description": "Текущее значение на пине"
             }
             },
-            "buildFiles": ["Button.hpp"],
-            "importFiles": ["Button.hpp"],
+            "buildFiles": ["Button.c"],
+            "importFiles": ["Button.c"],
             "methods": {},
             "loopActions": ["scan"],
             "singletone": false

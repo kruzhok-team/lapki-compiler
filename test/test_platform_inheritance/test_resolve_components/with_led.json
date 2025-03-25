@@ -70,8 +70,8 @@
                 "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
             }
             },
-            "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
-            "importFiles": ["LED.h"],
+            "buildFiles": ["LED.c"],
+            "importFiles": ["LED.c"],
             "singletone": false
         }
     },
