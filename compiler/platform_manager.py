@@ -13,7 +13,8 @@ from typing import (
     List,
     Any,
     Optional,
-    Set
+    Set,
+    TypeVar
 )
 from pprint import pprint
 
@@ -25,6 +26,8 @@ from compiler.types.platform_types import Component, PlatformMeta, Platform
 
 PlatformId = str
 PlatformVersion = str
+
+T = TypeVar('T')
 
 
 async def _write_source(path: str, source_files: List[File]) -> None:
@@ -577,3 +580,74 @@ class PlatformManager:
                 return str(await f.absolute())
 
         return None
+
+    def __resolve_lists(
+            self,
+            dependencies: List[Platform],
+            field: Literal[
+                'default_include_files',
+                'default_build_files',
+                'default_setup_functions']) -> List[Any]:
+        """Собрать списки из родительских платформ в единый список."""
+        result: List[Any] = []
+        for dep in dependencies:
+            attr_list: List[Any] = getattr(dep, field)
+            for attr in attr_list:
+                if attr not in result:
+                    result.append(attr)
+
+        return result
+
+    async def get_resolved_default_includes(
+        self,
+        platform: Platform
+    ) -> List[str]:
+        """
+        Собрать все уникальные инклюды в default_include_files\
+            из родительских платформ в\
+            единый список (включая свои инклюды).
+
+        Инклюды идут от самых глубоких платформ к самым верхним.
+        """
+        dependencies = [
+            platform, *self.__versions_info[platform.id].dependencies
+        ][::-1]
+
+        return self.__resolve_lists(
+            dependencies, 'default_include_files')
+
+    async def get_resolved_default_build_files(
+        self,
+        platform: Platform
+    ) -> List[str]:
+        """
+        Собрать все уникальные файлы проекта в default_build_files\
+            из родительских платформ в\
+            единый список (включая свои файлы проекта).
+
+        Файлы проекта идут от самых глубоких платформ к самым верхним.
+        """
+        dependencies = [
+            platform, *self.__versions_info[platform.id].dependencies
+        ][::-1]
+
+        return self.__resolve_lists(
+            dependencies, 'default_build_files')
+
+    async def get_resolved_default_setup_functions(
+        self,
+        platform: Platform
+    ) -> List[str]:
+        """
+        Собрать все уникальные вызовы в setup в default_setup_functions\
+            из родительских платформ в\
+            единый список (включая свои вызовы в setup).
+
+        Вызовы идут от самых глубоких платформ к самым верхним.
+        """
+        dependencies = [
+            platform, *self.__versions_info[platform.id].dependencies
+        ][::-1]
+
+        return self.__resolve_lists(
+            dependencies, 'default_setup_functions')

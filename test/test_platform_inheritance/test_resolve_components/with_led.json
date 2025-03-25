@@ -14,6 +14,18 @@
   "mainFileExtension": "graphml",
   "staticActionDelimeter": ".",
   "delimeter": "",
+  "defaultIncludeFiles": ["LED.c", "Serial.c"],
+  "defaultBuildFiles": ["LED.c", "Serial.c"],
+  "defaultSetupFunctions": [
+    {
+        "functionName": "initLed",
+        "args": []
+    }, 
+    {
+        "functionName": "initSerial",
+        "args": []
+    }
+    ],
   "components": {
         "LED": {
             "description": "Компонент для взаимодействия со светодиодом",

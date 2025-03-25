@@ -1,8 +1,7 @@
 """Test platform inheritance functions."""
-import asyncio
 from contextlib import asynccontextmanager
 import os
-from typing import Dict, List
+from typing import Any, Callable, Dict, List, Awaitable
 import json
 
 import aiofile
@@ -10,7 +9,7 @@ import pytest
 from aiopath import AsyncPath
 from compiler.platform_manager import PlatformException, PlatformManager
 from compiler.types.inner_types import File
-from compiler.types.platform_types import Platform
+from compiler.types.platform_types import Platform, SetupFunction
 from compiler.platform_handler import _delete_platform
 
 pytest_plugins = ('pytest_asyncio',)
@@ -230,3 +229,50 @@ async def test_resolve_file(source_files: Dict[str, List[File]],
             platform,
             'blabla.c'
         ) is None
+
+
+@pytest.mark.parametrize('resolve_func_name, expected',
+                         [
+                             pytest.param(
+                                 'get_resolved_default_includes',
+                                 ['Button.c', 'Serial.c', 'LED.c'],
+                                 id='get_resolved_default_includes'
+                             ),
+                             pytest.param(
+                                 'get_resolved_default_build_files',
+                                 ['Button.c', 'Serial.c',
+                                  'LED.c', 'SerialHelper.c'],
+                                 id='get_resolved_default_build_files'
+                             ),
+                             pytest.param(
+                                 'get_resolved_default_setup_functions',
+                                 [
+                                     SetupFunction(
+                                         functionName='initButtons', args=[]),
+                                     SetupFunction(
+                                         functionName='initLed', args=[]),
+                                     SetupFunction(
+                                         functionName='initSerial', args=[]
+                                     ),
+                                     SetupFunction(
+                                         functionName='initBaud', args=[])
+                                 ],
+                                 id='get_resolved_default_setup_functions'
+                             )
+                         ])
+@pytest.mark.asyncio
+async def test_resolve_list(platforms_with_components: List[Platform],
+                            resolve_func_name: str,
+                            expected: List[str]):
+    """Тест сбора единого списка значений с учетом наследования."""
+    platform_manager = PlatformManager()
+    async with add_platforms(
+            platforms_with_components,
+            [[]
+             for _ in range(len(platforms_with_components))],
+            [[] for _ in range(len(platforms_with_components))],
+            with_resolving=True) as platforms:
+        platform = platforms[-1]
+        resolve_func: Callable[[Platform], Awaitable[List[Any]]] = getattr(
+            platform_manager, resolve_func_name)
+        assert await resolve_func(platform) == expected

@@ -14,6 +14,18 @@
   "mainFileExtension": "graphml",
   "staticActionDelimeter": ".",
   "delimeter": "",
+  "defaultIncludeFiles": ["Serial.c"],
+  "defaultBuildFiles": ["Serial.c", "SerialHelper.c"],
+  "defaultSetupFunctions": [
+    {
+        "functionName": "initSerial",
+        "args": []
+    },
+    {
+        "functionName": "initBaud",
+        "args": []
+    }
+  ],
   "components": {
     "Serial": {
         "description": "Компонент для низкоуровневого взаимодействия с общей шиной данных. Шина является полудуплексной – отправку в конкретный момент времени может отсуществлять только один участник.",
