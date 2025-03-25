@@ -1,4 +1,5 @@
 """Test platform inheritance functions."""
+import asyncio
 from contextlib import asynccontextmanager
 import os
 from typing import Dict, List
@@ -28,7 +29,11 @@ async def add_platforms(platforms: List[Platform],
                         autodelete: bool = True,
                         with_resolving: bool = False,):
     """Add platform to PlatformManager. Delete platform after\
-        "with" statement."""
+        "with" statement.
+
+    with_resolving - resolve platform dependencies
+    autodelete - delete platform after with
+    """
     platform_manager = PlatformManager()
     try:
         for i, platform in enumerate(platforms):
@@ -151,21 +156,21 @@ async def test_resolve_components(platforms_with_components: List[Platform]):
 
 @pytest.fixture
 async def source_files(
-    platform_ids: List[str],
-    paths: List[str]
+    request: pytest.FixtureRequest,
 ) -> Dict[str, List[File]]:
     """Получить исходные файлы платформ из указанных папок."""
     source_files: Dict[str, List[File]] = {}
-
+    parameters: tuple[List[str], List[str]] = request.param
+    platform_ids, paths = parameters
     for i, path in enumerate(paths):
         async for file in AsyncPath(path).rglob('*'):
             source_files[platform_ids[i]] = []
             if await file.is_file():
-                async with aiofile.async_open(path, 'r') as f:
+                async with aiofile.async_open(file, 'r') as f:
                     source_files[platform_ids[i]].append(
                         File(
                             fileContent=await f.read(),
-                            filename=file.name,
+                            filename=file.name.split('.')[0],
                             extension=''.join(file.suffixes)[1:]
                         )
                     )
@@ -173,17 +178,55 @@ async def source_files(
     return source_files
 
 
-@pytest.mark.parametrize('platform_ids, paths', [
-    ['with_button', 'with_led', 'with_serial'],
-    [
-        os.path.join(test_resolve_components_path, 'source/with_button'),
-        os.path.join(test_resolve_components_path, 'source/with_led'),
-        os.path.join(test_resolve_components_path, 'source/with_serial')
-    ]
-], indirect=True)
+@pytest.mark.parametrize('source_files',
+                         [
+                             [
+                                 ['with_serial', 'with_button', 'with_led'],
+                                 [
+                                     os.path.join(
+                                         test_resolve_components_path,
+                                         'source/with_serial/'
+                                     ),
+                                     os.path.join(
+                                         test_resolve_components_path,
+                                         'source/with_button/'
+                                     ),
+                                     os.path.join(
+                                         test_resolve_components_path,
+                                         'source/with_led/')
+                                 ]
+                             ]
+                         ],
+                         indirect=True
+                         )
 @pytest.mark.asyncio
-async def test_resolve_file(platform_with_components: List[Platform], source_files):
+async def test_resolve_file(source_files: Dict[str, List[File]],
+                            platforms_with_components: List[Platform]):
     """Тестирование получения файла из родительских платформ."""
     platform_manager = PlatformManager()
-    print(source_files)
-    # get_resolved_file()
+    async with add_platforms(
+            platforms_with_components,
+            [
+                source_files['with_button'],
+                source_files['with_led'],
+                source_files['with_serial']
+            ],
+            [[], [], []],
+            with_resolving=True
+    ) as platforms:
+        platform = platforms[-1]
+        assert await platform_manager.get_resolved_file(
+            platform, 'Button.c'
+        ) is not None  # У дальнего предка
+        assert await platform_manager.get_resolved_file(
+            platform,
+            'Serial.c'
+        ) is not None  # У себя
+        assert await platform_manager.get_resolved_file(
+            platform,
+            'LED.c'
+        ) is not None  # У родителя
+        assert await platform_manager.get_resolved_file(
+            platform,
+            'blabla.c'
+        ) is None

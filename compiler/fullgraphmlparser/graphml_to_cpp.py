@@ -363,7 +363,7 @@ class CppFileWriter:
             await self._insert_string('         return status_;\n')
             await self._insert_string('}\n\n')
 
-    async def write_to_file(self, folder: str, extension: str):
+    async def write_to_file(self, folder: str, extension: str) -> None:
         """
         Главная функция для генерации проекта.
 
