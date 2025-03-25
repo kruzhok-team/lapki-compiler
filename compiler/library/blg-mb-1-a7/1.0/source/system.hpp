@@ -49,6 +49,9 @@ void SystemInit ( void ) {
 
   //initClock();
   SysTick_Config ((uint32_t)(HCLK/1000));
+
+  GPIOE->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + 1));
+  // GPIOD->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + 1));
 }
 
 uint32_t waiter = 0;

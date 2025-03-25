@@ -326,7 +326,7 @@ class CppFileWriter:
         insert_strings.extend(insert_shallows)
         insert_strings.append('};')
 
-        await self._insert_string('\n'.join(insert_strings))
+        await self._insert_string('\n'.join(insert_strings) + '\n')
 
     async def _write_local_history_definition(self):
         """

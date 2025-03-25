@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Connector.hpp"
-#include "PwmInit.hpp"
+#include "PWMInit.hpp"
 
 namespace detail {
 

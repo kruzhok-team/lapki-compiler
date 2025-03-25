@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PwmHelpers.hpp"
+#include "PWMHelpers.hpp"
 
 namespace detail {
 
