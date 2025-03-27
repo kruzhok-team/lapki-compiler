@@ -6,7 +6,7 @@
 #include "system.hpp"
 #include "Pins.hpp"
 #include "RGBController.hpp"
-// #include "SoundController.hpp"
+#include "SoundController.hpp"
 
 namespace mrx {
 
@@ -516,6 +516,122 @@ namespace mrx {
                     ADC2 -> CR |= ADC_CR_ADSTART;
                 }
             }
+
+        }
+        namespace speaker {
+
+            GPIO_TypeDef* port = GPIOA;
+            const uint8_t num = 4;
+
+            // 24 кГц
+            const uint32_t speakerPwm = 24000;
+            uint16_t currLevel{};
+            const uint16_t level = mrx::env::clkRate /mrx::hal::pwm::period /mrx::env::pwmTimPSC /speakerPwm;
+
+            ::detail::hal::SoundController soundController{};
+
+            namespace detail {
+
+                __attribute__((always_inline)) inline void setDAC(uint16_t value) {
+
+                    // ch1
+                    DAC1 -> DHR12R1 = value;
+                    DAC1 -> SWTRIGR |= DAC_SWTRIGR_SWTRIG1;
+                }
+
+                void initDAC(void) {
+
+                    // power
+                    // * GPIO enabled in system init file
+                    RCC -> AHB2ENR |= RCC_AHB2ENR_DAC1EN;
+
+                    // set-up DAC
+
+                    // ch1
+                    DAC1 -> CR |= DAC_CR_EN1;
+                    while(( DAC1 -> SR & DAC_SR_DAC1RDY ) == 0 );
+
+                    DAC1 -> CR &= ~DAC_CR_TSEL1;
+                    DAC1 -> CR |= ( 0b000 << DAC_CR_TSEL1_Pos );
+
+                    DAC1 -> MCR &= ~DAC_MCR_MODE1;
+                    DAC1 -> MCR |= ( 0b001 << DAC_MCR_MODE1_Pos );
+
+                    setDAC(2048);
+
+                    // init pins
+                    stm32g431::periphery::initPin_Analog(port, num);  // out 1
+                }
+            
+                __attribute__((always_inline)) inline void resetSound() {
+
+                    // Сначала сбрасываем указатель
+                    soundController.sound = nullptr;
+
+                    soundController.index = 0;
+
+                    soundController.curr = 0;
+                    soundController.total = 0;
+                }
+            
+                // map duration (ms) to cycles
+                uint32_t dur2Cycles(const uint32_t duration) {
+
+                    // cycles in 1 ms
+                    const uint32_t part = speakerPwm /1000;     // 1000 ms in 1 second
+
+                    return duration *part;
+                }
+            }
+
+            // init DAC (but not timer!)
+            const auto&& init = []() {
+
+                detail::initDAC();
+            };
+
+            const auto&& startSound = [](Sound* sound, const uint32_t duration) {
+                
+                detail::resetSound();
+
+                const auto&& cycles = detail::dur2Cycles(duration);
+
+                soundController.total = cycles;
+                // Устанавливаем указатель после того, как остальные поля заполнены
+                soundController.sound = sound;
+            };
+
+            __attribute__((always_inline)) inline void stopSound() {
+
+                detail::resetSound();
+            }
+
+            __attribute__((always_inline)) inline void interruptFunc() {
+
+                // if playing
+                if (soundController.sound != nullptr) {
+
+                    // play
+                    detail::setDAC(soundController.sound->sound[soundController.index]);
+
+                    // inc progress
+                    ++soundController.curr;
+                    // is end?
+                    if (soundController.curr == soundController.total) {
+                        stopSound();
+                        return;
+                    }
+
+                    // inc index
+                    ++soundController.index;
+                    // Check range index
+                    if (soundController.index >= soundController.sound->size) {
+
+                        soundController.index = 0;
+                    }
+                }
+            }
+
 
             namespace api {
                 

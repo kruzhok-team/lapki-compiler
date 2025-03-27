@@ -30,7 +30,7 @@ void TIM2_IRQHandler(void) {
     // Speaker has a unique frequency
     // if ((++mrx::hal::speaker::currLevel) >= mrx::hal::speaker::level) {
 
-        // mrx::hal::speaker::interruptFunc();
+    mrx::hal::speaker::interruptFunc();
         // mrx::hal::speaker::currLevel = 0;
     // }
 

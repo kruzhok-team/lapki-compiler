@@ -67,7 +67,10 @@
       "system_stm32g4xx.h",
       "Pins.hpp",
       "RGBController.hpp",
-      "Color.hpp"
+      "Color.hpp",
+      "SoundController.hpp",
+      "CommonSound.hpp",
+      "RgbLed.hpp"
     ],
     "components": {
     "Button": {
@@ -104,6 +107,43 @@
       "methods": {},
       "singletone": false
     },
+    "Speaker": {
+      "description": "Компонент для взаимодействия с динамиком.",
+      "img": "arduino/timeout.svg",
+      "signals": {
+        "isSoundEnd": {
+          "img": "arduino/isPressed.svg",
+          "description": "Создает сигнал, если звук закончен.",
+          "checkMethod": "isSoundEnd"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {},
+      "buildFiles": ["Sounds.hpp", "Speaker.hpp", "CommonSound.hpp"],
+      "importFiles": ["Speaker.hpp"],
+      "methods": {
+        "play": {
+            "img": "arduino/start.svg",
+            "parameters": [
+              {
+                "name": "sound",
+                "type": ["&TestSound"],
+                "description": "Проигрываемый звук.",
+                "optional": false
+              },
+              {
+                "name": "duration",
+                "type": "uint16_t",
+                "description": "Длительность звука (мс).",
+                "optional": false
+              }
+            ],
+            "description": "Включить звук."
+          }
+      },
+      "singletone": false
+    },
+    
     "PhotoDiode": {
       "description": "Компонент, вычисляющий уровень освещенности. Искусственный свет не считается.",
       "img": "arduino/led.svg",
