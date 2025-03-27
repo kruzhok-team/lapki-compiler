@@ -12,7 +12,12 @@ struct Pattern5 {
     uint8_t a1, a2, a3, a4, a5;
 };
 
-struct Pattern25 {
+struct Pattern7 {
+
+    uint8_t a1, a2, a3, a4, a5, a6, a7;
+};
+
+struct Pattern35 {
 
     uint8_t a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34, a35;
 };
@@ -22,7 +27,7 @@ struct Pattern25 {
 */
 
 // Тип операнда
-enum class Operand {
+enum Operand {
 
     AND,
     OR,
@@ -118,7 +123,7 @@ public:
     }
 
     // idx == linear index of led
-    void setPixel(const uint8_t idx, const uint8_t value) {
+    void setPixel(const uint8_t idx, const uint8_t value = 100) {
 
         detail::matrix::leds[idx].on(value);
     }
@@ -133,7 +138,7 @@ public:
         }
     }
 
-    void setCol(const uint8_t idx, const Pattern5& pattern) {
+    void setCol(const uint8_t idx, const Pattern7& pattern) {
         
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
         
@@ -143,7 +148,7 @@ public:
         }
     }
 
-    void setPattern(const Pattern25& pattern) {
+    void setPattern(const Pattern35& pattern) {
 
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
 
@@ -193,7 +198,7 @@ public:
         }
     }
 
-    void maskCol(const uint8_t idx, const Pattern5& pattern, const Operand op) {
+    void maskCol(const uint8_t idx, const Pattern7& pattern, const Operand op) {
         
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
         
@@ -203,7 +208,7 @@ public:
         }
     }
 
-    void maskPattern(const Pattern25& pattern, const Operand op) {
+    void maskPattern(const Pattern35& pattern, const Operand op) {
 
         const auto&& func = detail::matrix::mask::getOpFunc(op);
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);

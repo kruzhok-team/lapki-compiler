@@ -24,7 +24,7 @@ void TIM2_IRQHandler(void) {
         mrx::hal::pwm::interruptFunc();
 
     // rgb leds
-    // mrx::hal::rgbLed::interruptFunc();
+    mrx::hal::rgbLed::interruptFunc();
     
     // Speaker
     // Speaker has a unique frequency

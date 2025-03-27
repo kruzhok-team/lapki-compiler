@@ -44,7 +44,7 @@ typedef void (*buttonEventHandler)(Button&);
 class Button
 {
   public:
-
+	Button(){}
     // Ctor
 	// WARNING: MODE for button IGNORED
     Button(uint8_t buttonPin, const uint8_t buttonMode = BUTTON_PULLUP_INTERNAL) {

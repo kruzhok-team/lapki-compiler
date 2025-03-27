@@ -9,9 +9,9 @@ class LED {
     }
 
 public:
-    LED(const uint8_t ledPin) {
-        GPIOD->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + 1));
+    LED(){}
 
+    LED(const uint8_t ledPin) {
         pin = ledPin;
 
         if (pin < mrx::hal::led::minPin || pin > mrx::hal::led::maxPin)
@@ -19,7 +19,7 @@ public:
 
         mrx::hal::led::initPin(pin);
         value = 0;
-        // off();
+        off();
     }
 
     bool getState() const {
@@ -30,7 +30,7 @@ public:
     void on(uint8_t brightness = 100) {
 
         // Отключаем ШИМ, если вдруг он использовался ранее
-        // off();
+        off();
 
         // Если яркость == 0, то выключаем светодиод (меняем состояние класса) (выключили выше)
         if (brightness == 0) {

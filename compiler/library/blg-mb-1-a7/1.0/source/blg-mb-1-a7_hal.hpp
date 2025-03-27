@@ -5,6 +5,7 @@
 #include "stm32g431xx.h"  // CMSIS
 #include "system.hpp"
 #include "Pins.hpp"
+#include "RGBController.hpp"
 // #include "SoundController.hpp"
 
 namespace mrx {
@@ -168,133 +169,133 @@ namespace mrx {
             const uint8_t LEDS_COUNT = COL_COUNT *ROW_COUNT;
         }
 
-        // namespace rgbLed {
+        namespace rgbLed {
 
-        //     const uint8_t minPin = 1;
-        //     const uint8_t maxPin = 2;
+            const uint8_t minPin = 1;
+            const uint8_t maxPin = 2;
 
-        //     const uint8_t rgbLedsCount = maxPin -minPin +1;
+            const uint8_t rgbLedsCount = maxPin -minPin +1;
 
-        //     struct RgbLedPort {
+            struct RgbLedPort {
 
-        //         mrx::hal::led::LedPort rgbLeds[3];   // red, green, blue
-        //     };
+                mrx::hal::led::LedPort rgbLeds[3];   // red, green, blue
+            };
 
-        //     RgbLedPort leds[rgbLedsCount] = {
+            RgbLedPort leds[rgbLedsCount] = {
 
-        //         { {{GPIOE, 9 }, {GPIOE, 10}, {GPIOE, 11}} },     // left eye
-        //         { {{GPIOE, 13}, {GPIOE, 14}, {GPIOE, 15}} },     // right eye
-        //     };
+                { {{GPIOE, 9 }, {GPIOE, 10}, {GPIOE, 11}} },     // left eye
+                { {{GPIOE, 13}, {GPIOE, 14}, {GPIOE, 15}} },     // right eye
+            };
 
-        //     // Это действие сркыто от компонента (RgbLed, PWM)
-        //     const auto&& mapPin = [](const uint8_t pin) {
+            // Это действие сркыто от компонента (RgbLed, PWM)
+            const auto&& mapPin = [](const uint8_t pin) {
 
-        //         // Возвращаем структуру, где содержиться порт и пин светодиода
-        //         // -1 для конвертации в индексы
-        //         return leds[pin -1];
-        //     };
+                // Возвращаем структуру, где содержиться порт и пин светодиода
+                // -1 для конвертации в индексы
+                return leds[pin -1];
+            };
 
-        //     const auto&& initPin = [](const uint8_t pin) {
+            const auto&& initPin = [](const uint8_t pin) {
 
-        //         auto&& mappedPin = mapPin(pin);
+                auto&& mappedPin = mapPin(pin);
 
-        //         // GPIO enabled in system init file
+                // GPIO enabled in system init file
 
-        //         for (int i(0); i < 3; ++i) {    // red, green, blue
+                for (int i(0); i < 3; ++i) {    // red, green, blue
 
-        //             mappedPin.rgbLeds[i].port->MODER &= ~(0b11 << (GPIO_MODER_MODE0_Pos + mappedPin.rgbLeds[i].num * 2U)); // reset pin mode
-        //             mappedPin.rgbLeds[i].port->MODER |= (0b01 << (GPIO_MODER_MODE0_Pos + mappedPin.rgbLeds[i].num * 2U));  // set general purpose mode (GP output mode)
-        //             mappedPin.rgbLeds[i].port->OTYPER |= (0b01 << (GPIO_OTYPER_OT0_Pos + mappedPin.rgbLeds[i].num));       // output mode pin (open drain)
-        //             mappedPin.rgbLeds[i].port->PUPDR &= ~(0b11 << (GPIO_PUPDR_PUPD0_Pos + mappedPin.rgbLeds[i].num * 2U)); // no pull-up, no pull-down
-        //             mappedPin.rgbLeds[i].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[i].num));           // set bit on ODR
-        //         }
-        //     };
+                    mappedPin.rgbLeds[i].port->MODER &= ~(0b11 << (GPIO_MODER_MODE0_Pos + mappedPin.rgbLeds[i].num * 2U)); // reset pin mode
+                    mappedPin.rgbLeds[i].port->MODER |= (0b01 << (GPIO_MODER_MODE0_Pos + mappedPin.rgbLeds[i].num * 2U));  // set general purpose mode (GP output mode)
+                    mappedPin.rgbLeds[i].port->OTYPER |= (0b01 << (GPIO_OTYPER_OT0_Pos + mappedPin.rgbLeds[i].num));       // output mode pin (open drain)
+                    mappedPin.rgbLeds[i].port->PUPDR &= ~(0b11 << (GPIO_PUPDR_PUPD0_Pos + mappedPin.rgbLeds[i].num * 2U)); // no pull-up, no pull-down
+                    mappedPin.rgbLeds[i].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[i].num));           // set bit on ODR
+                }
+            };
 
-        //     detail::hal::RGBController rgbControllers[rgbLedsCount] = {};
+            detail::hal::RGBController rgbControllers[rgbLedsCount] = {};
 
-        //     __attribute__((always_inline)) inline void onPin(const uint8_t pin) {
+            __attribute__((always_inline)) inline void onPin(const uint8_t pin) {
 
-        //         auto&& mappedPin = mapPin(pin);
-        //         auto&& c = rgbControllers[pin-1];
+                auto&& mappedPin = mapPin(pin);
+                auto&& c = rgbControllers[pin-1];
 
-        //         // Защита от бесконечного цикла при неправильно заданном цвете
-        //         // TODO: Если таких цветов в системе не будет, или будет проверятся в месте, где это можно проверить единожды, то лучше вынести туда
-        //         // if (!c.color->colorsValue[0] && !c.color->colorsValue[1] && !c.color->colorsValue[2] && !c.color->colorsValue[3]) {
-        //         //     return;
-        //         // }
+                // Защита от бесконечного цикла при неправильно заданном цвете
+                // TODO: Если таких цветов в системе не будет, или будет проверятся в месте, где это можно проверить единожды, то лучше вынести туда
+                // if (!c.color->colorsValue[0] && !c.color->colorsValue[1] && !c.color->colorsValue[2] && !c.color->colorsValue[3]) {
+                //     return;
+                // }
 
-        //         bool isChanged = false;
+                bool isChanged = false;
 
-        //         // Если пора менять цвет
-        //         while (c.value == c.color->colorsValue[c.currColor]) {
+                // Если пора менять цвет
+                while (c.value == c.color->colorsValue[c.currColor]) {
 
-        //             // Выключаем старый, если он был включён (+ скипаем выключение чёрного)
-        //             if (c.value > 0 && c.currColor < 3) {
-        //                 mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[c.currColor].num));
-        //             }
-        //             c.value = 0;
-        //             c.currColor = c.currColor == 3 ? 0 : ++c.currColor;
-        //             isChanged =  true;
-        //         }
+                    // Выключаем старый, если он был включён (+ скипаем выключение чёрного)
+                    if (c.value > 0 && c.currColor < 3) {
+                        mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[c.currColor].num));
+                    }
+                    c.value = 0;
+                    c.currColor = c.currColor == 3 ? 0 : ++c.currColor;
+                    isChanged =  true;
+                }
 
-        //         // activate need color if need
-        //         if (isChanged) {
+                // activate need color if need
+                if (isChanged) {
 
-        //             if (c.currColor < 3) {
+                    if (c.currColor < 3) {
 
-        //                 mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + mappedPin.rgbLeds[c.currColor].num));
-        //             }
-        //         }
+                        mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + mappedPin.rgbLeds[c.currColor].num));
+                    }
+                }
 
-        //         ++c.value;
-        //     }
+                ++c.value;
+            }
 
-        //     const auto&& offPin = [](const uint8_t pin) {
+            const auto&& offPin = [](const uint8_t pin) {
 
-        //         auto&& mappedPin = mapPin(pin);
-        //         auto&& c = rgbControllers[pin-1];
+                auto&& mappedPin = mapPin(pin);
+                auto&& c = rgbControllers[pin-1];
 
-        //         // turn off rgb controller
-        //         c.color = nullptr;
+                // turn off rgb controller
+                c.color = nullptr;
                 
-        //         // off last led (строго после выключения контроллера, потому что в любой момент может вызваться функция-прерывание)
-        //         if (c.currColor < 3)
-        //             mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[c.currColor].num));
+                // off last led (строго после выключения контроллера, потому что в любой момент может вызваться функция-прерывание)
+                if (c.currColor < 3)
+                    mappedPin.rgbLeds[c.currColor].port->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + mappedPin.rgbLeds[c.currColor].num));
 
-        //         // reset rgb controller
-        //         c.currColor = 0;
-        //         c.value = 0;
-        //     };
+                // reset rgb controller
+                c.currColor = 0;
+                c.value = 0;
+            };
             
-        //     const auto&& registerPin = [](const uint8_t pin, detail::Color* color) {
+            const auto&& registerPin = [](const uint8_t pin, detail::Color* color) {
 
-        //         offPin(pin);
+                offPin(pin);
 
-        //         rgbControllers[pin-1].color = color;
-        //     };
+                rgbControllers[pin-1].color = color;
+            };
 
-        //     const auto&& unregisterPin = [](const uint8_t pin) {
+            const auto&& unregisterPin = [](const uint8_t pin) {
 
-        //         rgbControllers[pin-1].color = nullptr;
-        //         offPin(pin);
-        //     };
+                rgbControllers[pin-1].color = nullptr;
+                offPin(pin);
+            };
         
-        //     __attribute__((always_inline)) inline void interruptFunc() {
+            __attribute__((always_inline)) inline void interruptFunc() {
 
-        //         // handle rgb leds
-        //         for (int i(0); i < rgbLedsCount; i++) {
+                // handle rgb leds
+                for (int i(0); i < rgbLedsCount; i++) {
 
-        //             auto& c = rgbControllers[i];
+                    auto& c = rgbControllers[i];
 
-        //             if (c.color != nullptr) {
+                    if (c.color != nullptr) {
 
-        //                 onPin(i+1);
-        //             }
-        //         }
-        //     }
+                        onPin(i+1);
+                    }
+                }
+            }
 
-        //     // #include "RgbLed.hpp"
-        // }
+            // #include "RgbLed.hpp"
+        }
 
         namespace photoDiode {
 
