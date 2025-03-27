@@ -7,7 +7,11 @@ import json
 import aiofile
 import pytest
 from aiopath import AsyncPath
-from compiler.platform_manager import PlatformException, PlatformManager
+from compiler.platform_manager import PlatformManager
+from compiler.dependencies_resolver import (
+    DependenciesResolver,
+    DependencyError
+)
 from compiler.types.inner_types import File
 from compiler.types.platform_types import Platform, SetupFunction
 from compiler.platform_handler import _delete_platform
@@ -31,9 +35,11 @@ async def add_platforms(platforms: List[Platform],
         "with" statement.
 
     with_resolving - resolve platform dependencies
+
     autodelete - delete platform after with
     """
     platform_manager = PlatformManager()
+    resolver = DependenciesResolver()
     try:
         for i, platform in enumerate(platforms):
             new_platforms_info = (
@@ -44,7 +50,9 @@ async def add_platforms(platforms: List[Platform],
             )
 
             if with_resolving:
-                deps = await platform_manager._resolve_dependencies(platform)
+                deps = await resolver.resolve_dependencies(
+                    platform
+                )
                 new_platforms_info[platform.id].dependencies = deps
             platform_manager.platforms_info = new_platforms_info
         yield platforms
@@ -93,29 +101,30 @@ async def test_resolve_dependencies(empty_platforms: List[Platform],
     """Test _resolve_dependencies function."""
     # TODO: resolve versions
     platform_manager = PlatformManager()
+    resolver = DependenciesResolver()
     async with add_platforms(empty_platforms,
                              [[] for _ in range(len(empty_platforms))],
                              [[] for _ in range(len(empty_platforms))]
                              ) as platforms:
         platform = platforms[-1]
-        deps = await platform_manager._resolve_dependencies(platform)
+        deps = await resolver.resolve_dependencies(platform)
         deps_platform_id = [
             'empty1', 'empty4', 'empty2', 'empty5', 'empty3', 'empty6'
         ]
         assert [dep.id for dep in deps] == deps_platform_id
 
-    with pytest.raises(PlatformException):
+    with pytest.raises(DependencyError):
         platform = await platform_manager.load_platform(
             f'{test_platforms_path}/self_inherit.json')
 
-        await platform_manager._resolve_dependencies(platform)
+        await resolver.resolve_dependencies(platform)
 
-    with pytest.raises(PlatformException):
+    with pytest.raises(DependencyError):
         async with add_platforms(circular_platforms,
                                  [[] for _ in range(len(circular_platforms))],
                                  [[] for _ in range(len(circular_platforms))]
                                  ) as platforms:
-            await platform_manager._resolve_dependencies(
+            await resolver.resolve_dependencies(
                 circular_platforms[0])
 
 
@@ -136,19 +145,19 @@ async def platforms_with_components():
 @pytest.mark.asyncio
 async def test_resolve_components(platforms_with_components: List[Platform]):
     """Test resolving components."""
-    platform_manager = PlatformManager()
+    resolver = DependenciesResolver()
     async with add_platforms(
             platforms_with_components,
             [[]for _ in range(len(platforms_with_components))],
             [[] for _ in range(len(platforms_with_components))], True, True
     ) as platforms:
         platform = platforms[-1]
-        assert platform_manager.get_resolved_component(
+        assert resolver.get_resolved_component(
             platform, 'LED') is not None
-        assert platform_manager.get_resolved_component(
+        assert resolver.get_resolved_component(
             platform, 'Button'
         ) is not None
-        assert platform_manager.get_resolved_component(
+        assert resolver.get_resolved_component(
             platform, 'Serial'
         ) is not None
 
@@ -202,7 +211,7 @@ async def source_files(
 async def test_resolve_file(source_files: Dict[str, List[File]],
                             platforms_with_components: List[Platform]):
     """Тестирование получения файла из родительских платформ."""
-    platform_manager = PlatformManager()
+    resolver = DependenciesResolver()
     async with add_platforms(
             platforms_with_components,
             [
@@ -214,18 +223,18 @@ async def test_resolve_file(source_files: Dict[str, List[File]],
             with_resolving=True
     ) as platforms:
         platform = platforms[-1]
-        assert await platform_manager.get_resolved_file(
+        assert await resolver.get_resolved_file(
             platform, 'Button.c'
         ) is not None  # У дальнего предка
-        assert await platform_manager.get_resolved_file(
+        assert await resolver.get_resolved_file(
             platform,
             'Serial.c'
         ) is not None  # У себя
-        assert await platform_manager.get_resolved_file(
+        assert await resolver.get_resolved_file(
             platform,
             'LED.c'
         ) is not None  # У родителя
-        assert await platform_manager.get_resolved_file(
+        assert await resolver.get_resolved_file(
             platform,
             'blabla.c'
         ) is None
@@ -265,7 +274,7 @@ async def test_resolve_list(platforms_with_components: List[Platform],
                             resolve_func_name: str,
                             expected: List[str]):
     """Тест сбора единого списка значений с учетом наследования."""
-    platform_manager = PlatformManager()
+    resolver = DependenciesResolver()
     async with add_platforms(
             platforms_with_components,
             [[]
@@ -274,5 +283,22 @@ async def test_resolve_list(platforms_with_components: List[Platform],
             with_resolving=True) as platforms:
         platform = platforms[-1]
         resolve_func: Callable[[Platform], Awaitable[List[Any]]] = getattr(
-            platform_manager, resolve_func_name)
+            resolver, resolve_func_name)
         assert await resolve_func(platform) == expected
+
+
+@pytest.mark.asyncio
+async def test_resolve_main_function(
+    platforms_with_components: List[Platform]
+):
+    """Тест наследования main-функции."""
+    resolver = DependenciesResolver()
+    async with add_platforms(
+            platforms_with_components,
+            [[]for _ in range(len(platforms_with_components))],
+            [[] for _ in range(len(platforms_with_components))],
+            True,
+            True
+    ) as platforms:
+        platform = platforms[-1]
+        assert resolver.resolve_main_function(platform) is True

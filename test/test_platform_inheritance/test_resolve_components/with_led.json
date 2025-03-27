@@ -14,6 +14,7 @@
   "mainFileExtension": "graphml",
   "staticActionDelimeter": ".",
   "delimeter": "",
+  "mainFunction": true,
   "defaultIncludeFiles": ["LED.c", "Serial.c"],
   "defaultBuildFiles": ["LED.c", "Serial.c"],
   "defaultSetupFunctions": [
