@@ -21,12 +21,12 @@ public:
         isActive = true;
     }
 
-    void break_() {
+    void stop() {
 
         isActive = false;
     }
 
-    void onIteration() {
+    bool onIteration() {
 
         if (isActive) {
 
@@ -35,10 +35,12 @@ public:
                 isActive = false;
             }
         }
+
+        return isActive;
     }
 
     bool onEnd() {
 
-        return isActive;
+        return !isActive;
     }
 };
