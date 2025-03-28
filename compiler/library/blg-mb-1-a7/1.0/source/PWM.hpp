@@ -42,7 +42,14 @@ class PWM {
         // pin value use more as an identifier
         void write(const uint8_t duty, const int8_t pin) const {
 
-            write(duty, pin, detail::data::defaultFrequency);
+            // if need to turn on pwm on pin
+            if (duty != 0) {
+                if (connector::isPwmPin(pin) != -1)
+                    detail::code::addPWMEntity(pin, duty);
+            }
+            else {
+                detail::code::removePWMEntity(pin);
+            }
         }
 
         // overload for write(...) with specified frequency argument
@@ -55,14 +62,9 @@ class PWM {
             else if (frequency > detail::data::pwmRate)
                 frequency = detail::data::pwmRate;
 
-            // if need to turn on pwm on pin
-            if (duty != 0) {
-                if (connector::isPwmPin(pin) != -1)
-                    detail::code::addPWMEntity(pin, duty, frequency);
-            }
-            else {
-                detail::code::removePWMEntity(pin);
-            }
+            detail::code::setFrequency(frequency);
+
+            write(duty, pin);
         }
 
         // Generate a PWM signal with a specified frequency and duty cycle on a specified pin

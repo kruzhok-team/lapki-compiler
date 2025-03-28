@@ -6,16 +6,15 @@ namespace detail {
 
     namespace bss {
 
+        // Частота ШИМ, должна быть <= частоты таймера и делиться на нее нацело (желательно)
+        // uint16_t frequency;
+        // Вспомогательная переменная, помогает следить за нужной частотой для пина
+        // Действие похоже на то, что наблюдается у прескейлера у таймера
+        uint16_t frequencyPSC;
+        uint16_t frequencyPSC_CNT;  // Теневой регистр, изменяемый в прерывании
+
         // Класс, позволяющий описать информацию о пине, на который подается сигнал ШИМ
         struct PWMEntity {
-
-            // Частота ШИМ, должна быть <= частоты таймера и делиться на нее нацело (желательно)
-            // uint16_t frequency;
-
-            // Вспомогательная переменная, помогает следить за нужной частотой для пина
-            // Действие похоже на то, что наблюдается у прескейлера у таймера
-            uint16_t frequencyPSC;
-            uint16_t frequencyPSC_CNT;  // Теневой регистр, изменяемый в прерывании
 
             // Уровень, до которого пин активен, а после которого - неактивен (pwm duty cycle (скважность))
             uint16_t triggerLevel;
@@ -58,52 +57,24 @@ namespace detail {
         using namespace detail::bss;
         using namespace detail::data;
         
-        void removePWMEntity(const int8_t pin) {
-            
-            for (int i = 0; i < SIZE; ++i) {
+        __attribute__((always_inline)) inline void removePWMEntity(const int8_t pin) {
 
-                if (buffer[i].pin == pin) {
-                    
-                    // forget pin
-                    buffer[i].pin = -1;
+            // forget pin
+            buffer[pin].pin = -1;
 
-                    // Теперь, когда функция-прерывание не дернет этот пин, мы можем сбросить состояние на нем
-
-                    // off pin
-                    detail::data::callbackAction(pin, false);
-                    break;
-                }
-            }
+            // Теперь, когда функция-прерывание не дернет этот пин, мы можем сбросить состояние на нем
+            // off pin
+            detail::data::callbackAction(pin, false);
         }
 
-        void addPWMEntity(const int8_t pin, const uint16_t triggerLevel, const uint32_t frequency) {
+        void addPWMEntity(const int8_t pin, const uint16_t triggerLevel) {
 
             // remove old record about entity for this pin (if exist)
             removePWMEntity(pin);
 
-            // find free entity
-            int8_t entityI = -1;
-
-            for (int i = 0; i < SIZE; ++i) {
-
-                if (buffer[i].pin == -1) {
-                    entityI = i;
-                    break;
-                }
-            }
-
-            if (entityI == -1)
-                return; // no more free entities
-
             // fill fields of entity
-            buffer[entityI].frequencyPSC = pwmRate /frequency;
-            // check range possible values for frequencyPSC [1..]
-            if (buffer[entityI].frequencyPSC < 1)
-                buffer[entityI].frequencyPSC = 1;
-            buffer[entityI].frequencyPSC_CNT = buffer[entityI].frequencyPSC;   // Когда 0 - срабатывает инкремент уровня (эмуляуция PSC в кристаллах)
-
-            buffer[entityI].triggerLevel = triggerLevel;
-            buffer[entityI].currentLevel = detail::data::MAX_LEVEL;
+            buffer[pin].triggerLevel = triggerLevel;
+            buffer[pin].currentLevel = detail::data::MAX_LEVEL;
             
             // init a new pwm entity
             // Пин устанавливается последним, так как в любой момент может вызваться функция-прерывание
@@ -111,12 +82,18 @@ namespace detail {
             // И мы можем попасть в UB
             // Для функции remoteEntity выше логика такая-же
             // Только там сначала затираем пин, делая запись неактивной, а потом уже затираем остальные поля
-            buffer[entityI].pin = pin;  // pin == id
+            buffer[pin].pin = pin;  // pin == id
         }
+        
+        void setFrequency(const uint32_t frequency) {
+            
+            auto frequencyPSC__ = pwmRate /frequency;
+            // check range possible values for frequencyPSC [1..]
+            if (frequencyPSC__ < 1)
+                frequencyPSC__ = 1;
 
-        void addPWMEntity(const int8_t pin, const uint16_t triggerLevel) {
-
-            addPWMEntity(pin, triggerLevel, defaultFrequency);
+            frequencyPSC = frequencyPSC__;
+            frequencyPSC_CNT = frequencyPSC;
         }
     }
 
@@ -133,34 +110,31 @@ namespace detail {
         namespace api {
 
             using namespace detail::data;
+            using detail::bss::frequencyPSC_CNT;
+            using detail::bss::frequencyPSC;
 
             // Функция-прерывание, срабатывает каждый тик
             void PwmHandler(void) {
 
-                // Идем по всем записям о ШИМ
-                for (int i = 0; i < SIZE; ++i) {
+                // Обработка пинов: 2 этапа
 
-                    // Если запись пустая - пропускаем ее
-                    if (buffer[i].pin == -1)
-                        continue;
+                // 1 этап: Инкремент уровня пина + соблюдение диапазона уровня
+                // Сначала обработаем прескейлер
+                // Из-за декремента его инициализирующее значение не может быть меньше 1
+                --frequencyPSC_CNT;
 
-                    // Дергать функцию будем только при надобности (изменение текущего уровня относительно уровня срабатывания)
-                    bool needChanged = false;
+                // Если == 0, то срабатывает изменение уровня, иначе ничего
+                if (frequencyPSC_CNT == 0) {
 
-                    // Обработка пинов: 2 этапа
+                    // Идем по всем записям о ШИМ
+                    for (int i = 0; i < SIZE; ++i) {
 
-                    // 1 этап: Инкремент уровня пина + соблюдение диапазона уровня
-                    // Сначала обработаем прескейлер
-                    // Из-за декремента его инициализирующее значение не может быть меньше 1
-                    --buffer[i].frequencyPSC_CNT;
+                        // Если запись пустая - пропускаем ее
+                        if (buffer[i].pin == -1)
+                            continue;
 
-                    // Если == 0, то срабатывает изменение уровня, иначе ничего
-                    if (buffer[i].frequencyPSC_CNT == 0) {
-                        
-                        // ++pwmCounter;
-
-                        // reset psc
-                        buffer[i].frequencyPSC_CNT = buffer[i].frequencyPSC;
+                        // Дергать функцию будем только при надобности (изменение текущего уровня относительно уровня срабатывания)
+                        bool needChanged = false;
 
                         // up level
                         ++buffer[i].currentLevel;
@@ -175,15 +149,18 @@ namespace detail {
 
                             needChanged = true;
                         }
+
+                        if (needChanged) {
+                            
+                            // 2 этап: Активация или деактивация
+                            // Допустим уровень срабатывания (СКВАЖНОСТЬ) - 70, а максимальный - 100. Тогда 70 импульсов мы активны
+                            bool isActive = buffer[i].currentLevel < buffer[i].triggerLevel;
+                            detail::code::callbackAction(buffer[i].pin, isActive);
+                        }
                     }
 
-                    if (needChanged) {
-                        
-                        // 2 этап: Активация или деактивация
-                        // Допустим уровень срабатывания (СКВАЖНОСТЬ) - 70, а максимальный - 100. Тогда 70 импульсов мы активны
-                        bool isActive = buffer[i].currentLevel < buffer[i].triggerLevel;
-                        detail::code::callbackAction(buffer[i].pin, isActive);
-                    }
+                    // reset psc
+                    frequencyPSC_CNT = frequencyPSC;
                 }
             }
         }
