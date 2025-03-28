@@ -759,39 +759,40 @@
           "set": {
             "img": "common/set-value.svg",
             "description": "Установить значение элементу с заданным индексом",
-            "variables": {
-              "index": {
-                "img": "common/arrayIndex.svg",
+            "parameters": [
+              {
+                "name": "index",
                 "description": "Индекс элемента",
                 "type": "uint16_t"
               },
-              "value": {
-                "img": "common/value.svg",
+              {
+                "name": "value",
                 "description": "Новое значение для элемента",
                 "type": "int16_t"
               }
+              ]
+            },
+            "peek": {
+              "img": "common/arrayPeek.svg",
+              "description": "Переместиться на элемент с заданным индексом",
+              "parameters": [
+                {
+                  "name": "index",
+                  "img": "common/arrayIndex.svg",
+                  "description": "Индекс элемента",
+                  "type": "uint16_t"
+                }
+              ]
+            },
+            "next": {
+              "img": "common/arrayNext.svg",
+              "description": "Переместиться на элемент со следующим индексом"
+            },
+            "prev": {
+              "img": "common/arrayPrev.svg",
+              "description": "Переместиться на элемент с предыдущим индексом"
             }
           },
-          "peek": {
-            "img": "common/arrayPeek.svg",
-            "description": "Переместиться на элемент с заданным индексом",
-            "variables": {
-              "index": {
-                "img": "common/arrayIndex.svg",
-                "description": "Индекс элемента",
-                "type": "uint16_t"
-              }
-            }
-          },
-          "next": {
-            "img": "common/arrayNext.svg",
-            "description": "Переместиться на элемент со следующим индексом"
-          },
-          "prev": {
-            "img": "common/arrayPrev.svg",
-            "description": "Переместиться на элемент с предыдущим индексом"
-          }
-        },
         "buildFiles": ["Array.hpp"],
         "importFiles": ["Array.hpp"],
         "singletone": false,
