@@ -3,7 +3,6 @@ import inspect
 import re
 import string
 from collections import defaultdict
-from tkinter import INSERT
 from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
@@ -290,7 +289,7 @@ class CppFileWriter:
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n          default: {')
-        await self._insert_string('\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_global);')
+        await self._insert_string(f'\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{vertex.parent if vertex.parent is not None else "global"});')
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n         }\n')
