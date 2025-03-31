@@ -91,5 +91,12 @@ namespace stm32g431 {
             port -> PUPDR &= ~ ( 0b11 << ( GPIO_PUPDR_PUPD0_Pos + number * 2U ));
             port -> MODER |= ( 0b11 << ( GPIO_MODER_MODE0_Pos + number * 2U ));
         }
+
+        void initPin_AnalogPD (GPIO_TypeDef* port, uint8_t number ) {
+
+            port -> PUPDR &= ~ ( 0b11 << ( GPIO_PUPDR_PUPD0_Pos + number * 2U ));
+            port -> MODER |= ( 0b11 << ( GPIO_MODER_MODE0_Pos + number * 2U ));
+            port -> PUPDR |= ( 0b10 << ( GPIO_PUPDR_PUPD0_Pos + number * 2U ));
+        }
     }
 }

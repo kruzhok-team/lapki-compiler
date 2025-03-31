@@ -7,6 +7,8 @@
 #include "Pins.hpp"
 #include "RGBController.hpp"
 #include "SoundController.hpp"
+#include "commonADC.hpp"
+#include "commonEars.hpp"
 
 namespace mrx {
 
@@ -429,95 +431,36 @@ namespace mrx {
         }
 
         namespace microphone {
-        
-            namespace detail {
 
-                void enableADC(ADC_TypeDef* adc) {
+            namespace api {
 
-                    adc -> ISR |= ADC_ISR_EOC;
-                    adc -> ISR |= ADC_ISR_ADRDY; //Сброс флага готовности
-                    adc -> CR |= ADC_CR_ADEN; //Запуск АЦП
-                    while (( adc -> ISR & ADC_ISR_ADRDY ) == 0); //Ждём окончания инициализации АЦП
-                    adc -> ISR |= ADC_ISR_ADRDY; //Сброс флага готовности
-                }
-
-                void disableADC(ADC_TypeDef* adc) {
-
-                    adc -> CR |= ADC_CR_ADSTP; //Останавливаем идущие измерения
-                    while ((adc -> CR) & ADC_CR_ADSTP);
-                    adc -> CR |= ADC_CR_ADDIS; //Запускаем отключение АЦП
-                    while ((adc -> CR) & ADC_CR_ADEN); //Ждём, пока не отключится
-                }
-
-                void calibrateADC(ADC_TypeDef* adc) {
-
-                    disableADC(adc);
-                    adc -> CR |= ADC_CR_ADCAL; //Запускаем процедуру калибровки
-                    while((adc -> CR ) & ADC_CR_ADCAL); //Ждём окончания процедуры калибровки
-                }
+                using namespace stm32g431::ears;
                 
-                void confADCpins(void) {
+                void init() {
+                        
+                    auto gain = OP_GAIN_2;
 
-                    RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-                    stm32g431::periphery::initPin_Analog(GPIOA,0); //1+
-                    stm32g431::periphery::initPin_Analog(GPIOA,1); //1-
-                    stm32g431::periphery::initPin_Analog(GPIOA,6); //2+
-                    stm32g431::periphery::initPin_Analog(GPIOA,7); //2-
+                    initADC_Common();
+                    initOPAMP2();
+                    initOPAMP3();
+                    hw_setGain(OPAMP2,gain);
+                    hw_setGain(OPAMP3,gain);
+                    initADC2();
+                    initDMA();
                 }
 
-                void initADC_Common(void) {
+                uint16_t senseLeft() {
 
-                    RCC -> AHB2ENR |= RCC_AHB2ENR_ADC12EN; //Затактовать АЦП
-                    RCC -> CCIPR |= ( 0b11 << RCC_CCIPR_ADC12SEL_Pos);
-                    ADC12_COMMON -> CCR |= ( 0b1000 << ADC_CCR_PRESC_Pos );
-                    ADC12_COMMON -> CCR |= ( 0b01 << ADC_CCR_CKMODE_Pos );
-                    confADCpins();
+                    return stm32g431::ears::scanEarL();
                 }
 
-                void initADC1(void) {
+                uint16_t senseRight() {
 
-                    ADC1 -> CR |= ADC_CR_ADDIS;
-                    ADC1 -> CR &= ~ADC_CR_DEEPPWD;
-                    ADC1 -> CR |= ADC_CR_ADVREGEN;
-                    delay(3); //p277 s14.3.2 RM0454
-                    ADC1 -> CFGR |= ADC_CFGR_CONT; //Непрерывный режим. Не забыть ADSTART
-                    ADC1 -> SMPR1 = ( 0b101 << ADC_SMPR1_SMP3_Pos ); //Частота сэмплирования. Торопиться некуда. Около 17 микросекунд
-                    ADC1 -> CFGR &= ~ ADC_CFGR_RES_Msk; //Разрешение 12 бит.
-                    ADC1 -> CFGR &= ~ ADC_CFGR_ALIGN; //Выравнивание вправо, для 12 бит самое то.
-                    ADC1 -> CFGR |= ADC_CFGR_OVRMOD; //Перезаписывание непрочтённых данных
-                    ADC1 -> DIFSEL |= ADC_DIFSEL_DIFSEL_1;
-                    ADC1 -> SQR1 = ((1-1) << ADC_SQR1_L_Pos )
-                                | ( 15 << ADC_SQR1_SQ1_Pos ) //RM0440 p392 t69 (we use 15 channel)
-                                ;
-                    //Калибровка
-                    calibrateADC(ADC1);
-                    enableADC(ADC1);
-                    ADC1 -> CR |= ADC_CR_ADSTART;
-                }
-
-                void initADC2(void) {
-
-                    ADC2 -> CR |= ADC_CR_ADDIS;
-                    ADC2 -> CR &= ~ADC_CR_DEEPPWD;
-                    ADC2 -> CR |= ADC_CR_ADVREGEN;
-                    delay(3); //p277 s14.3.2 RM0454
-                    ADC2 -> CFGR |= ADC_CFGR_CONT; //Непрерывный режим. Не забыть ADSTART
-                    ADC2 -> SMPR1 = ( 0b101 << ADC_SMPR1_SMP3_Pos ); //Частота сэмплирования. Торопиться некуда. Около 17 микросекунд
-                    ADC2 -> CFGR &= ~ ADC_CFGR_RES_Msk; //Разрешение 12 бит.
-                    ADC2 -> CFGR &= ~ ADC_CFGR_ALIGN; //Выравнивание вправо, для 12 бит самое то.
-                    ADC2 -> CFGR |= ADC_CFGR_OVRMOD; //Перезаписывание непрочтённых данных
-                    ADC2 -> DIFSEL |= ADC_DIFSEL_DIFSEL_3;
-                    ADC2 -> SQR1 = ((1-1) << ADC_SQR1_L_Pos )
-                                | ( 3 << ADC_SQR1_SQ1_Pos ) //RM0440 p392 t69
-                                ;
-                    //Калибровка
-                    calibrateADC(ADC2);
-                    enableADC(ADC2);
-                    ADC2 -> CR |= ADC_CR_ADSTART;
+                    return stm32g431::ears::scanEarR();
                 }
             }
-
         }
+        
         namespace speaker {
 
             GPIO_TypeDef* port = GPIOA;
