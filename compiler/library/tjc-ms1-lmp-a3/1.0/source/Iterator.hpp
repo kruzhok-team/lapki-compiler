@@ -20,8 +20,12 @@ public:
         this->step = step;
 
         index = from;
-        isActive = true;
-        isFirst = true;
+        if (index >= to) {
+            isActive = false;
+        } else {
+            isActive = true;
+            isFirst = true;
+        }
     }
 
     void stop() {
@@ -32,7 +36,6 @@ public:
     bool onIteration() {
 
         if (isActive) {
-
             if (isFirst) {
                 isFirst = false;
                 return isActive;
