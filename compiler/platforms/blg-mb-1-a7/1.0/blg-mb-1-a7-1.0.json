@@ -451,7 +451,7 @@
               },              
               {
                 "name": "pattern",
-                "type": "Matrix5",
+                "type": "Matrix7",
                 "description": "Паттерн, который будет применен к столбцу на матрице."
               },
               {
@@ -467,7 +467,7 @@
             "parameters": [
               {
                 "name": "pattern",
-                "type": "Matrix5x5",
+                "type": "Matrix7x5",
                 "description": "Паттерн, который будет изображен на матрице."
               },
               {
@@ -482,6 +482,42 @@
         "constructorParameters": {},
         "buildFiles": ["Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp"],
         "importFiles": ["Matrix.hpp"],
+        "singletone": false
+      },
+
+      "Matrix Animation": {
+        "description": "Компонент для анимаций на матрице",
+        "img": "arduino/led.svg",
+        "signals": {
+          "AnimationFinished": {
+            "img": "arduino/isEqual.svg",
+            "description": "Сигнал по завершении анимации",
+            "checkMethod": "AnimationFinished",
+            "parameters": []
+          }
+        },
+        "constructorParameters": {},
+        "variables": {},
+        "methods": {
+          "setFrame": {
+            "img": "arduino/switch-on.svg",
+            "parameters": [
+              {
+                "name": "pattern",
+                "type": "Matrix7x5",
+                "description": "Паттерн, который будет изображен на матрице."
+              },
+              {
+                "name": "time",
+                "type": "uint32_t",
+                "description": "Продолжительность анимации (в миллисекундах)"
+              }
+            ],
+            "description": "Установить кадр для перехода"
+          }
+        },
+        "buildFiles": ["MatrixAnimation.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp"],
+        "importFiles": ["MatrixAnimation.hpp"],
         "singletone": false
       },
 
