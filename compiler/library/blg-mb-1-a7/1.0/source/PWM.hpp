@@ -67,6 +67,11 @@ class PWM {
             write(duty, pin);
         }
 
+        uint8_t getLevel(const uint8_t pin) {
+
+            return detail::code::getLevel(pin);
+        }
+
         // Generate a PWM signal with a specified frequency and duty cycle on a specified pin
         void PWMTone(const uint32_t frequency, const uint8_t duty, const int8_t pin, const uint64_t duration) const {
 

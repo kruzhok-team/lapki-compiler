@@ -34,6 +34,16 @@ void TIM2_IRQHandler(void) {
         // mrx::hal::speaker::currLevel = 0;
     // }
 
+    // matrix animation
+    if (mrx::hal::matrixAnimation::interruptFunc != nullptr) {
+        
+        if (++mrx::hal::matrixAnimation::currLevel >= mrx::hal::matrixAnimation::animLevel) {
+
+            mrx::hal::matrixAnimation::interruptFunc();
+            mrx::hal::matrixAnimation::currLevel = 0;
+        }
+    }
+
     // TIM2 -> CR1 |= TIM_CR1_CEN;  // Счет разрешен
 }
 

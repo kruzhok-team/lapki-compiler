@@ -40,7 +40,7 @@ public:
         value = 1;  // change state
 
         // Если на всю яркость - все просто
-        if (brightness == 100) {
+        if (brightness >= 100) {
             mrx::hal::led::onPin(pin);
             return;
         }
@@ -77,6 +77,11 @@ public:
             toggle();
             delay(time / 2);
         }
+    }
+
+    uint8_t getBrightness() {
+        
+        return PWM().getLevel(pin);
     }
 
     bool value;

@@ -9,6 +9,7 @@
 #include "SoundController.hpp"
 #include "commonADC.hpp"
 #include "commonEars.hpp"
+#include "Pattern.hpp"
 
 namespace mrx {
 
@@ -459,6 +460,19 @@ namespace mrx {
                     return stm32g431::ears::scanEarR();
                 }
             }
+        }
+
+        namespace matrixAnimation {
+
+            // Устанавливается непосредствеено в MatrixAnimation модуле
+            void (*interruptFunc)() = nullptr;
+            
+            const uint32_t matrixAnimPwm = 100; // 1000ms /100 вызовов = 10ms на вызов
+            auto timeLevel = 1000 / matrixAnimPwm; // Сколько ms на 1 отрезок (вызов) (число выше)
+
+            uint16_t currLevel{};
+            const uint16_t baseLevel = mrx::env::clkRate /mrx::hal::pwm::period /mrx::env::pwmTimPSC /matrixAnimPwm;    // Сколько раз нужно протикать, чтобы получить нужный промежуток
+            auto animLevel{baseLevel};  // Вычисляется для анимации в зависимости от ее длительности
         }
         
         namespace speaker {

@@ -30,7 +30,7 @@ namespace detail {
     namespace data {
 
         // Количество пинов, которые можем шимовать
-        const int8_t SIZE = mrx::hal::pwm::pinQuantity;
+        const int8_t SIZE = mrx::hal::pwm::pinQuantity +1;
 
         // Если ничего не работает - значит не хватает времени на обработку функции прерывания - необходимо увеличить период ниже
         const uint16_t PERIOD = mrx::hal::pwm::period;
@@ -95,6 +95,14 @@ namespace detail {
             frequencyPSC = frequencyPSC__;
             frequencyPSC_CNT = frequencyPSC;
         }
+
+        uint8_t getLevel(const uint8_t pin) {
+
+            if (buffer[pin].pin == -1)
+                return 0;
+
+            return buffer[pin].triggerLevel;
+        }
     }
 
     namespace hal {
@@ -105,6 +113,8 @@ namespace detail {
             for (int i = 0; i < detail::data::SIZE; ++i) {
                 detail::data::buffer[i].pin = -1;   // pwm-entity is free
             }
+            detail::bss::frequencyPSC = 1;
+            detail::bss::frequencyPSC_CNT = 1;
         }
 
         namespace api {

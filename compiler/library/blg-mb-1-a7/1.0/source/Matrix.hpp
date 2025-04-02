@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LED.hpp"
+#include "Pattern.hpp"
 
 /*
     Pattern service
@@ -37,6 +38,8 @@ enum Operand {
 namespace detail {
 
     namespace matrix {
+
+        bool isInit { false };
 
         namespace mask {
 
@@ -106,13 +109,18 @@ public:
 
     // ctor
     Matrix() {
+        
+        if (!detail::matrix::isInit) {
 
-        for (uint8_t i(0); i < mrx::hal::matrix::LEDS_COUNT; ++i) {
+            for (uint8_t i(0); i < mrx::hal::matrix::LEDS_COUNT; ++i) {
 
-            detail::matrix::leds[i] = LED(i + 1);
+                detail::matrix::leds[i] = LED(i + 1);
+            }
+
+            clear();
+
+            detail::matrix::isInit = true;
         }
-
-        clear();
     }
 
     // row in range [0 : mrx::hal::matrix::ROW_SZ]
