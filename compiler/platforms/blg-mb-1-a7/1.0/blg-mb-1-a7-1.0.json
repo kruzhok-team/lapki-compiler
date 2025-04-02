@@ -161,8 +161,8 @@
       "importFiles": ["PhotoDiode.hpp"],
       "loopActions": ["scan"]
     },
-      "RgbLed": {
-        "description": "Компонент для взаимодействия со светодиодом",
+      "EyePalette": {
+        "description": "Компонент для простого взаимодействия с rgb-светодиодом",
         "img": "arduino/led.svg",
         "signals": {},
         "constructorParameters": {
@@ -191,6 +191,34 @@
             ],
             "description": "Зажечь светодиод"
           },
+          "off": {
+            "img": "arduino/switch-off.svg",
+            "description": "Выключить светодиод"
+          }
+        },
+        "buildFiles": ["EyePalette.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
+        "importFiles": ["EyePalette.hpp"],
+        "singletone": false
+      },
+      
+      "EyeRGBK": {
+        "description": "Компонент для нетривиального взаимодействия с rgb-светодиодом",
+        "img": "arduino/led.svg",
+        "signals": {},
+        "constructorParameters": {
+          "pin": {
+            "type": ["1", "2"],
+            "description": "Пин, к которому подключен светодиод"
+          }
+        },
+        "variables": {
+          "value": {
+            "img": "common/value.svg",
+            "type": "int",
+            "description": "Текущее значение на пине"
+          }
+        },
+        "methods": {
           "on_rgb": {
             "img": "arduino/switch-on.svg",
             "parameters": [
@@ -227,8 +255,8 @@
             "description": "Выключить светодиод"
           }
         },
-        "buildFiles": ["RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
-        "importFiles": ["RgbLed.hpp"],
+        "buildFiles": ["EyeRGBK.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
+        "importFiles": ["EyeRGBK.hpp"],
         "singletone": false
       },
       "Microphone": {
