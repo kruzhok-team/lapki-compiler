@@ -10,11 +10,11 @@ namespace detail {
     }
 }
 
-class Speaker {
+class SpeakerSound {
 
 public:
 
-    Speaker() {
+    SpeakerSound() {
 
         if (!detail::speaker::isInit) {
 

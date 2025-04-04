@@ -107,7 +107,39 @@
       "methods": {},
       "singletone": false
     },
-    "Speaker": {
+
+    "SpeakerNote": {
+      "description": "Простой компонент для взаимодействия с динамиком.",
+      "img": "arduino/timeout.svg",
+      "signals": {
+        "isSoundEnd": {
+          "img": "arduino/isPressed.svg",
+          "description": "Создает сигнал, если нота сыграна.",
+          "checkMethod": "isSoundEnd"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {},
+      "buildFiles": ["Notes.hpp", "SpeakerNote.hpp", "CommonNote.hpp"],
+      "importFiles": ["SpeakerNote.hpp"],
+      "methods": {
+        "play": {
+            "img": "arduino/start.svg",
+            "parameters": [
+              {
+                "name": "note",
+                "type": ["&TestNote"],
+                "description": "Проигрываемая нота.",
+                "optional": false
+              }
+            ],
+            "description": "Проиграть ноту."
+          }
+      },
+      "singletone": false
+    },
+
+    "SpeakerSound": {
       "description": "Компонент для взаимодействия с динамиком.",
       "img": "arduino/timeout.svg",
       "signals": {
@@ -119,8 +151,8 @@
       },
       "constructorParameters": {},
       "variables": {},
-      "buildFiles": ["Sounds.hpp", "Speaker.hpp", "CommonSound.hpp"],
-      "importFiles": ["Speaker.hpp"],
+      "buildFiles": ["Sounds.hpp", "SpeakerSound.hpp", "CommonSound.hpp"],
+      "importFiles": ["SpeakerSound.hpp"],
       "methods": {
         "play": {
             "img": "arduino/start.svg",
@@ -138,7 +170,7 @@
                 "optional": false
               }
             ],
-            "description": "Включить звук."
+            "description": "Проиграть звук."
           }
       },
       "singletone": false
