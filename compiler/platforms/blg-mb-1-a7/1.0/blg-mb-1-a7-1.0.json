@@ -540,12 +540,12 @@
         },
         "variables": {},
         "constructorParameters": {},
-        "buildFiles": ["Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp"],
+        "buildFiles": ["Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp"],
         "importFiles": ["Matrix.hpp"],
         "singletone": false
       },
 
-      "Matrix Animation": {
+      "MatrixAnimation": {
         "description": "Компонент для анимаций на матрице",
         "img": "arduino/led.svg",
         "signals": {
@@ -576,8 +576,32 @@
             "description": "Установить кадр для перехода"
           }
         },
-        "buildFiles": ["MatrixAnimation.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp"],
+        "buildFiles": ["MatrixAnimation.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp"],
         "importFiles": ["MatrixAnimation.hpp"],
+        "singletone": false
+      },
+
+      "MatrixPicture": {
+        "description": "Компонент для отображения картинок на матрице",
+        "img": "arduino/led.svg",
+        "signals": {},
+        "constructorParameters": {},
+        "variables": {},
+        "methods": {
+          "setPicture": {
+            "img": "arduino/switch-on.svg",
+            "parameters": [
+              {
+                "name": "picture",
+                "type": "&heart, &smile, &sadnes, &cross, &note, &rhombus, &square",
+                "description": "Паттерн, который будет изображен на матрице."
+              }
+            ],
+            "description": "Вывести картинку на матрицу"
+          }
+        },
+        "buildFiles": ["MatrixPicture.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp", "Pictures.hpp", "Picture.hpp"],
+        "importFiles": ["MatrixPicture.hpp"],
         "singletone": false
       },
 
