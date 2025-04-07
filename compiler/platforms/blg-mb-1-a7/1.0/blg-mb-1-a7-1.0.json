@@ -420,48 +420,6 @@
               }
             ]
           },
-          "maskRow": {
-            "img": "tjc-ms/maskRow.svg",
-            "description": "Включить или выключить строку светодиодов, используя битовую маску.",
-            "parameters": [
-              {
-                "name": "idx",
-                "type": "uint8_t",
-                "description": "Номер строки, для которой нужно применить маску."
-              },              
-              {
-                "name": "pattern",
-                "type": "Matrix5",
-                "description": "Паттерн, который будет применен к строке на матрице."
-              },
-              {
-                "name": "op",
-                "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
-              }
-            ]
-          },
-          "maskCol": {
-            "img": "tjc-ms/maskCol.svg",
-            "description": "Включить или выключить столбец светодиодов, используя битовую маску.",
-            "parameters": [
-              {
-                "name": "idx",
-                "type": "uint8_t",
-                "description": "Номер столбца, для которого нужно применить маску."
-              },              
-              {
-                "name": "pattern",
-                "type": "Matrix7",
-                "description": "Паттерн, который будет применен к столбцу на матрице."
-              },
-              {
-                "name": "op",
-                "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
-              }
-            ]
-          },
           "maskPattern": {
             "img": "tjc-ms/maskGrid.svg",
             "description": "Изобразить паттерн на матрице, используя битовую маску.",
