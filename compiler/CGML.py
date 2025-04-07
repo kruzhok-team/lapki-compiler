@@ -376,7 +376,7 @@ def __generate_create_components_code(
             notes.append(create_note(Labels.H, declaration))
             notes.append(create_note(Labels.SETUP, initialization))
         else:
-            code_to_insert = (f'{type} {component_id}; = '
+            code_to_insert = (f'{type} {component_id} = '
                               f'{type}({args});\n')
             notes.append(create_note(Labels.H, code_to_insert))
     return notes
