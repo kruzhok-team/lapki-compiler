@@ -381,7 +381,7 @@
             "parameters": [
               {
                 "name": "pattern",
-                "type": "Matrix5x5",
+                "type": "Matrix7x5",
                 "description": "Паттерн, который будет изображен на матрице."
               }
             ]
