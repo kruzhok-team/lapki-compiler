@@ -2,23 +2,30 @@
 
 class Iterator {
 
-    uint16_t from{}, to{}, step{};
+    int32_t from{}, to{}, step{};
     bool isActive{};
+
+    bool isFirst{};
 
 public:
 
-    uint16_t index{};
+    int32_t index{};
 
     Iterator() {}
 
-    void start(uint16_t from, uint16_t to, uint16_t step) {
+    void start(int32_t from, int32_t to, int32_t step) {
 
         this->from = from;
         this->to = to;
         this->step = step;
 
         index = from;
-        isActive = true;
+        if (index >= to) {
+            isActive = false;
+        } else {
+            isActive = true;
+            isFirst = true;
+        }
     }
 
     void stop() {
@@ -29,6 +36,10 @@ public:
     bool onIteration() {
 
         if (isActive) {
+            if (isFirst) {
+                isFirst = false;
+                return isActive;
+            }
 
             index += step;
             if (index >= to) {
