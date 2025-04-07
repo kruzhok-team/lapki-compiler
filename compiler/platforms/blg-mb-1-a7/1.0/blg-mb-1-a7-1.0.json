@@ -112,7 +112,7 @@
       "description": "Простой компонент для взаимодействия с динамиком.",
       "img": "arduino/timeout.svg",
       "signals": {
-        "isSoundEnd": {
+        "isNoteEnd": {
           "img": "arduino/isPressed.svg",
           "description": "Создает сигнал, если нота сыграна.",
           "checkMethod": "isSoundEnd"
@@ -211,7 +211,7 @@
           }
         },
         "methods": {
-          "on_color": {
+          "setColorPalette": {
             "img": "arduino/switch-on.svg",
             "parameters": [
               {
@@ -251,7 +251,7 @@
           }
         },
         "methods": {
-          "on_rgb": {
+          "setColor": {
             "img": "arduino/switch-on.svg",
             "parameters": [
               {
@@ -588,7 +588,7 @@
         "constructorParameters": {},
         "variables": {},
         "methods": {
-          "setPicture": {
+          "draw": {
             "img": "arduino/switch-on.svg",
             "parameters": [
               {

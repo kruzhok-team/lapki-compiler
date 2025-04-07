@@ -33,7 +33,7 @@ public:
         off();
     }
 
-    void on_color(detail::Color* color) {
+    void setColorPalette(detail::Color* color) {
 
         value = true;
 

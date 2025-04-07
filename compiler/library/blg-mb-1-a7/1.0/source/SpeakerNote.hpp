@@ -36,7 +36,7 @@ public:
         mrx::hal::speaker::startSound(reinterpret_cast<Sound*>(&note), duration);
     }
 
-    bool isSoundEnd() {
+    bool isNoteEnd() {
 
         return mrx::hal::speaker::soundController.sound == nullptr;
     }

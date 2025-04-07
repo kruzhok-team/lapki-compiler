@@ -27,7 +27,7 @@ public:
         }
     }
 
-    void setPicture(const Picture& picture) {
+    void draw(const Picture& picture) {
 
         detail::matrixPicture::m.setPattern(picture.p);
     }

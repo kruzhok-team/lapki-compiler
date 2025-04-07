@@ -33,7 +33,7 @@ public:
         off();
     }
 
-    void on_rgb(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
+    void setColor(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
 
         if (!red && !green && !blue && !black)
             return;
