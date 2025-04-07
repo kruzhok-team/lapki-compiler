@@ -324,65 +324,6 @@
         "loopActions": ["scan"],
         "singletone": false
       },
-      "LED": {
-        "description": "Компонент для взаимодействия со светодиодом",
-        "img": "arduino/led.svg",
-        "signals": {},
-        "constructorParameters": {
-          "pin": {
-            "type": "int",
-            "description": "Пин, к которому подключен светодиод"
-          }
-        },
-        "variables": {
-          "value": {
-            "img": "common/value.svg",
-            "type": "int",
-            "description": "Текущее значение на пине"
-          }
-        },
-        "methods": {
-          "on": {
-            "img": "arduino/switch-on.svg",
-            "parameters": [
-              {
-                "name": "brightness",
-                "type": "uint8_t",
-                "description": "Яркость светодиода (по умолчанию: 100)",
-                "optional": true
-              }
-            ],
-            "description": "Зажечь светодиод"
-          },
-          "off": {
-            "img": "arduino/switch-off.svg",
-            "description": "Выключить светодиод"
-          },
-          "toggle": {
-            "img": "arduino/toggle.svg",
-            "description": "Меняет состояние светодиода на противоположное"
-          },
-          "blink": {
-            "img": "arduino/blink.svg",
-            "parameters": [
-            {
-              "name": "interval",
-              "type": "unsigned int",
-              "description": "Длительность каждого мигания (мс)"
-            },
-            {
-              "name": "times",
-              "type": "byte",
-              "description": "Количество миганий"
-            }
-            ],
-            "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
-          }
-        },
-        "buildFiles": ["LED.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
-        "importFiles": ["LED.hpp"],
-        "singletone": false
-      },
       
       "Matrix": {
         "description": "Компонент для взаимодействия со светодиодной матрицы.",
