@@ -13,6 +13,7 @@ class MethodParameter:
     name: str
     description: Optional[str] = None
     type: Optional[ParameterType] = None
+    valueAlias: Optional[List[str]] = None
 
 
 @dataclass
@@ -21,6 +22,7 @@ class Signal:
     description: str
     checkMethod: str = ''
     parameters: Optional[List[MethodParameter]] = None
+    alias: Optional[str] = None
 
 
 @dataclass
@@ -28,6 +30,8 @@ class Variable:
     description: str
     img: str = ''
     type: Optional[str] = None
+    alias: Optional[str] = None
+    valueAlias: Optional[List[str]] = None
 
 
 @dataclass
@@ -35,6 +39,7 @@ class ClassParameter:
     type: ParameterType
     description: str
     optional: bool = False
+    valueAlias: Optional[List[str]] = None
 
 
 @dataclass
@@ -43,6 +48,7 @@ class Method:
     description: str
     parameters: List[MethodParameter] = Field(default_factory=list)
     static: bool = False
+    alias: Optional[str] = None
 
 
 @dataclass
@@ -60,6 +66,7 @@ class Component:
     initializationParameters: Dict[str, ClassParameter] | None = None
     initializationFunction: str | None = None
     loopActions: List[str] = Field(default_factory=list)
+    name: Optional[str] = None
 
 
 @dataclass
