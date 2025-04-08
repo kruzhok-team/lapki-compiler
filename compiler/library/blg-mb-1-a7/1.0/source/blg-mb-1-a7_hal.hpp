@@ -617,6 +617,24 @@ namespace mrx {
             }
         }
 
+        namespace random {
+
+            //Не работает :(
+            __attribute__((optimize("O0"))) uint32_t mkSeed(void) {
+
+                RCC -> AHB2ENR |= RCC_AHB2ENR_RNGEN;
+                RCC -> CCIPR &= ~RCC_CCIPR_CLK48SEL_Msk;
+                RNG -> CR |= RNG_CR_RNGEN;
+                RNG -> CR |= RNG_CR_CED;
+                volatile uint32_t result;
+                while (!(((volatile uint32_t)(RNG->SR)) & RNG_SR_DRDY ));
+                result = RNG -> DR;
+                if ( result == 0 )
+                    return SysTick -> VAL;
+                else
+                    return result;
+            }
+        }
 
         namespace pwm {
 
