@@ -116,6 +116,29 @@
       "singletone": false
     },
 
+    "UserSignal": {
+      "description": "Пользовательский сигнал",
+      "img": "common/userSignal.svg",
+      "signals": {
+        "isCalled": {
+          "img": "common/signalIsCalled.svg",
+          "description": "Сработал сигнал",
+          "checkMethod": "isCalled"
+        }
+      },
+      "constructorParameters": {},
+      "methods": {
+        "call": {
+          "img": "common/signalCall.svg",
+          "description": "Вызов сигнала"
+        }
+      },
+      "buildFiles": ["UserSignal.hpp"],
+      "importFiles": ["UserSignal.hpp"],
+      "singletone": false,
+      "variables": {}
+    },
+
     "SpeakerNote": {
       "description": "Простой компонент для взаимодействия с динамиком.",
       "img": "arduino/timeout.svg",
