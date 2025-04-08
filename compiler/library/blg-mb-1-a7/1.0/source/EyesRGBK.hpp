@@ -4,16 +4,10 @@
 
 class EyesRGBK {
 
-    uint8_t pin;
-
 public:
 
-    bool value;
-
-    EyesRGBK() {}
-
     // ctor
-    EyesRGBK(const uint8_t ledPin) {
+    EyesRGBK() {
 
         if (!detail::rgbLed::isInit) {
 
@@ -22,40 +16,39 @@ public:
 
             detail::rgbLed::isInit = true;
         }
-        
-        pin = ledPin;
 
-        if (pin < mrx::hal::rgbLed::minPin || pin > mrx::hal::rgbLed::maxPin)
-            pin = mrx::hal::rgbLed::minPin;
+        mrx::hal::rgbLed::initPin(1);
+        mrx::hal::rgbLed::initPin(2);
 
-        mrx::hal::rgbLed::initPin(pin);
-
-        off();
+        offRight();
+        offLeft();
     }
 
-    void setColor(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
+    void setColorRight(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
 
         if (!red && !green && !blue && !black)
             return;
 
-        value = true;
-        
-        if (pin == 1) {
-
-            detail::ReservedColor1 = detail::Color{ red, green, blue, black };
-            mrx::hal::rgbLed::registerPin(pin, &detail::ReservedColor1);
-        }
-        else if (pin == 2) {
-
-            detail::ReservedColor2 = detail::Color{ red, green, blue, black };
-            mrx::hal::rgbLed::registerPin(pin, &detail::ReservedColor2);
-        }
+        detail::ReservedColor1 = detail::Color{ red, green, blue, black };
+        mrx::hal::rgbLed::registerPin(1, &detail::ReservedColor1);
     }
 
-    void off() {
+    void setColorLeft(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
 
-        value = false;
+        if (!red && !green && !blue && !black)
+            return;
 
-        mrx::hal::rgbLed::unregisterPin(pin);
+        detail::ReservedColor2 = detail::Color{ red, green, blue, black };
+        mrx::hal::rgbLed::registerPin(2, &detail::ReservedColor2);
+    }
+
+    void offRight() {
+
+        mrx::hal::rgbLed::unregisterPin(1);
+    }
+
+    void offLeft() {
+
+        mrx::hal::rgbLed::unregisterPin(2);
     }
 };

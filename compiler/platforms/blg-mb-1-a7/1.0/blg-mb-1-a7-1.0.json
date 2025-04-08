@@ -245,21 +245,10 @@
         "description": "Компонент для нетривиального взаимодействия с rgb-светодиодом",
         "img": "arduino/led.svg",
         "signals": {},
-        "constructorParameters": {
-          "pin": {
-            "type": ["1", "2"],
-            "description": "Пин, к которому подключен светодиод"
-          }
-        },
-        "variables": {
-          "value": {
-            "img": "common/value.svg",
-            "type": "int",
-            "description": "Текущее значение на пине"
-          }
-        },
+        "constructorParameters": {},
+        "variables": {},
         "methods": {
-          "setColor": {
+          "setColorRight": {
             "img": "arduino/switch-on.svg",
             "parameters": [
               {
@@ -287,18 +276,55 @@
                 "optional": false
               }
             ],
-            "description": "Зажечь светодиод"
+            "description": "Включить правый глаз"
           },
 
-          "off": {
+          "setColorLeft": {
+            "img": "arduino/switch-on.svg",
+            "parameters": [
+              {
+                "name": "red",
+                "type": "uint8_t",
+                "description": "Продолжительность цвета светодиода (R).",
+                "optional": false
+              },
+              {
+                "name": "green",
+                "type": "uint8_t",
+                "description": "Продолжительность цвета светодиода (G).",
+                "optional": false
+              },
+              {
+                "name": "blue",
+                "type": "uint8_t",
+                "description": "Продолжительность цвета светодиода (B).",
+                "optional": false
+              },
+              {
+                "name": "black",
+                "type": "uint8_t",
+                "description": "Продолжительность выключенных светодиодов.",
+                "optional": false
+              }
+            ],
+            "description": "Включить левый глаз"
+          },
+
+          "offRight": {
             "img": "arduino/switch-off.svg",
-            "description": "Выключить светодиод"
+            "description": "Выключить правый глаз"
+          },
+
+          "offLeft": {
+            "img": "arduino/switch-off.svg",
+            "description": "Выключить левый глаз"
           }
         },
         "buildFiles": ["EyeRGBK.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
         "importFiles": ["EyeRGBK.hpp"],
         "singletone": false
       },
+      
       "Microphone": {
         "description": "Компонент для взаимодействия с микрофонами. По умолчанию выключен.",
         "img": "arduino/led.svg",
@@ -513,7 +539,7 @@
       },
 
       "Random": {
-        "description": "Генерация псевдо-случайного числа",
+        "description": "Генерация случайного числа",
         "img": "common/random.svg",
         "constructorParameters": {},
         "signals": {},
