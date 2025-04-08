@@ -7,7 +7,7 @@
 #include "Pins.hpp"
 #include "RGBController.hpp"
 #include "SoundController.hpp"
-#include "commonADC.hpp"
+#include "ADC.hpp"
 #include "commonEars.hpp"
 #include "Pattern.hpp"
 
@@ -591,12 +591,18 @@ namespace mrx {
 
 
             namespace api {
-                
+                using namespace stm32g431::ears;
                 void init() {
                     
-                    mrx::hal::microphone::detail::initADC_Common();
-                    mrx::hal::microphone::detail::initADC1();
-                    mrx::hal::microphone::detail::initADC2();
+                    auto gain = OP_GAIN_2;
+
+                    initADC_Common();
+                    initOPAMP2();
+                    initOPAMP3();
+                    hw_setGain(OPAMP2,gain);
+                    hw_setGain(OPAMP3,gain);
+                    initADC2();
+                    initDMA();
                 }
 
                 uint16_t senseLeft() {
