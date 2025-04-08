@@ -78,6 +78,7 @@
   ],
   "components": {
     "Button": {
+      "name": "Кнопка",
       "description": "Компонент для взаимодействия с физической кнопкой",
       "img": "arduino/button.svg",
       "signals": {
@@ -121,6 +122,7 @@
     },
 
     "UserSignal": {
+      "name": "Пользовательский сигнал",
       "description": "Пользовательский сигнал",
       "img": "common/userSignal.svg",
       "signals": {
@@ -716,6 +718,7 @@
     },
 
     "Random": {
+      "name": "Рандомайзер",
       "description": "Генерация случайного числа",
       "img": "common/random.svg",
       "constructorParameters": {},
@@ -768,6 +771,7 @@
     },
 
     "Timer": {
+      "name": "Таймер",
       "description": "Программный таймер",
       "img": "arduino/timer.svg",
       "signals": {
@@ -815,6 +819,7 @@
       }
     },
     "Counter": {
+      "name": "Счетчик",
       "description": "Переменная-счетчик.",
       "img": "arduino/counter.svg",
       "signals": {
@@ -902,6 +907,7 @@
     },
 
     "CalcInt": {
+      "name": "Целочисленный калькулятор",
       "description": "Компонент для целочисленных вычислений. Хранит счётчик (32-разрядное знаковое число), над которым можно совершать арифметические и битовые операции.",
       "img": "math/calcInt.svg",
       "signals": {
@@ -1068,6 +1074,7 @@
     },
 
     "CalcFloat": {
+      "name": "Вещественный калькулятор",
       "description": "Компонент для вычислений c плавающей точкой. Хранит счётчик (вещественное число), над которым можно совершать арифметические операции.",
       "img": "math/calcFloat.svg",
       "signals": {
