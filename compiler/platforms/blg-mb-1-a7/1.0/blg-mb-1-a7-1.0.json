@@ -165,6 +165,7 @@
               {
                 "name": "note",
                 "type": ["&TestNote"],
+                "valueAlias": ["Тестовая нота"],
                 "description": "Проигрываемая нота.",
                 "optional": false
               }
@@ -199,6 +200,7 @@
               {
                 "name": "sound",
                 "type": ["&TestSound"],
+                "valueAlias": ["Тестовый звук"],
                 "description": "Проигрываемый звук.",
                 "optional": false
               },
@@ -272,6 +274,7 @@
             {
               "name": "color",
               "type": ["&ColorRed", "&ColorReddish", "&ColorOrange", "&ColorGreen", "&ColorLime", "&ColorBlue", "&ColorCyan", "&ColorPink", "&ColorPurple", "&ColorYellow", "&ColorWhite", "&ColorBlack", "&ColorPerfectWhite"],
+              "valueAlias": ["Красный", "Красноватый", "Оранжевый", "Зеленый", "Лаймовый", "Голубой", "Циановый", "Розовый", "Фиолетовый", "Желтый", "Белый", "Черный", "Белоснежный"],
               "description": "Цвет светодиода.",
               "optional": false
             }
@@ -594,8 +597,9 @@
           "img": "blg-mb/draw.svg",
           "parameters": [
             {
-              "name": "picture",
+              "name": "Рисунок",
               "type": ["&heart", "&smile", "&sadnes", "&cross", "&note", "&rhombus", "&square"],
+              "valueAlias": ["Сердце", "Улыбка", "Грусть", "Крест", "Нота", "Ромб", "Квадрат"],
               "description": "Паттерн, который будет изображен на матрице."
             }
           ],
