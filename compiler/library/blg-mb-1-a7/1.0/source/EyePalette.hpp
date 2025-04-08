@@ -2,12 +2,12 @@
 
 #include "RgbLed.hpp"
 
-class EyesPalette {
+class EyePalette {
 
 public:
 
     // ctor
-    EyesPalette() {
+    EyePalette() {
 
         if (!detail::rgbLed::isInit) {
 

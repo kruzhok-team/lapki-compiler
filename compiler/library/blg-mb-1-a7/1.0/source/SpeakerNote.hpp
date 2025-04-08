@@ -1,12 +1,12 @@
 #pragma once
 
+#include "SpeakerSound.hpp"
 #include "CommonSound.hpp"
 #include "Notes.hpp"
 
 namespace detail {
 
     namespace speaker {
-
         // defined in SpeakerSound
         // bool isInit = false;
     }

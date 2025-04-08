@@ -2,12 +2,12 @@
 
 #include "RgbLed.hpp"
 
-class EyesRGBK {
+class EyeRGBK {
 
 public:
 
     // ctor
-    EyesRGBK() {
+    EyeRGBK() {
 
         if (!detail::rgbLed::isInit) {
 

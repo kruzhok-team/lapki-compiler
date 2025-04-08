@@ -72,7 +72,8 @@
       "Color.hpp",
       "SoundController.hpp",
       "CommonSound.hpp",
-      "RgbLed.hpp"
+      "RgbLed.hpp",
+      "Pattern.hpp"
     ],
     "components": {
     "Button": {
@@ -155,7 +156,7 @@
       },
       "constructorParameters": {},
       "variables": {},
-      "buildFiles": ["Notes.hpp", "SpeakerNote.hpp", "CommonNote.hpp"],
+      "buildFiles": ["Notes.hpp", "SpeakerSound.hpp", "Sounds.hpp", "SpeakerNote.hpp", "CommonNote.hpp"],
       "importFiles": ["SpeakerNote.hpp"],
       "methods": {
         "play": {
@@ -1087,7 +1088,7 @@
         }
       },
       "constructorParameters": {},
-      "buildFiles": ["CalFloat.hpp", "OverflowHelpers.hpp"],
+      "buildFiles": ["CalcFloat.hpp", "OverflowHelpers.hpp"],
       "importFiles": ["CalcFloat.hpp"],
       "singletone": false
     }
