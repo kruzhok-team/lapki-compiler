@@ -187,9 +187,29 @@
     "PhotoDiode": {
       "description": "Компонент, вычисляющий уровень освещенности. Искусственный свет не считается.",
       "img": "arduino/led.svg",
-      "signals": {},
+      "signals": {
+        "isThresholdValue": {
+          "img": "arduino/isEqual.svg",
+          "description": "Сигнал порогового значения",
+          "checkMethod": "isThresholdValue",
+          "parameters": []
+        }
+      },
       "constructorParameters": {},
-      "methods": {},
+      "methods": {
+        "setupEvent": {
+          "img": "arduino/start.svg",
+          "parameters": [
+            {
+              "name": "threshold",
+              "type": "uint16_t",
+              "description": "Пороговое значение для события.",
+              "optional": false
+            }
+          ],
+          "description": "Настроить срабатывание события по пороговому значению."
+        }
+      },
       "variables": {
         "value": {
           "img": "common/value.svg",
