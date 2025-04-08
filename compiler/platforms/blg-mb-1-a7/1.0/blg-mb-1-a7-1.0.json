@@ -206,21 +206,10 @@
       "description": "Компонент для простого взаимодействия с rgb-светодиодом",
       "img": "arduino/led.svg",
       "signals": {},
-      "constructorParameters": {
-        "pin": {
-          "type": ["1", "2"],
-          "description": "Пин, к которому подключен светодиод"
-        }
-      },
-      "variables": {
-        "value": {
-          "img": "common/value.svg",
-          "type": "int",
-          "description": "Текущее значение на пине"
-        }
-      },
+      "constructorParameters": {},
+      "variables": {},
       "methods": {
-        "setColorPalette": {
+        "setColorPaletteRight": {
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
@@ -230,11 +219,19 @@
               "optional": false
             }
           ],
-          "description": "Зажечь светодиод"
+          "description": "Включить правый глаз"
         },
-        "off": {
-          "img": "arduino/switch-off.svg",
-          "description": "Выключить светодиод"
+        "setColorPaletteLeft": {
+          "img": "arduino/switch-on.svg",
+          "parameters": [
+            {
+              "name": "color",
+              "type": ["&ColorRed", "&ColorReddish", "&ColorOrange", "&ColorGreen", "&ColorLime", "&ColorBlue", "&ColorCyan", "&ColorPink", "&ColorPurple", "&ColorYellow", "&ColorWhite", "&ColorBlack", "&ColorPerfectWhite"],
+              "description": "Цвет светодиода.",
+              "optional": false
+            }
+          ],
+          "description": "Включить левый глаз"
         }
       },
       "buildFiles": ["EyePalette.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],

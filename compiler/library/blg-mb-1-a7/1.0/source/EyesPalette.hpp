@@ -4,16 +4,10 @@
 
 class EyesPalette {
 
-    uint8_t pin;
-
 public:
 
-    bool value;
-
-    EyesPalette() {}
-
     // ctor
-    EyesPalette(const uint8_t ledPin) {
+    EyesPalette() {
 
         if (!detail::rgbLed::isInit) {
 
@@ -22,28 +16,31 @@ public:
 
             detail::rgbLed::isInit = true;
         }
-        
-        pin = ledPin;
 
-        if (pin < mrx::hal::rgbLed::minPin || pin > mrx::hal::rgbLed::maxPin)
-            pin = mrx::hal::rgbLed::minPin;
+        mrx::hal::rgbLed::initPin(1);
+        mrx::hal::rgbLed::initPin(2);
 
-        mrx::hal::rgbLed::initPin(pin);
-
-        off();
+        setColorPaletteRight(&ColorBlack);
+        setColorPaletteLeft(&ColorBlack);
     }
 
-    void setColorPalette(detail::Color* color) {
+    void setColorPaletteRight(detail::Color* color) {
 
-        value = true;
+        if (color == &ColorBlack) {
 
-        mrx::hal::rgbLed::registerPin(pin, color);
+            mrx::hal::rgbLed::unregisterPin(1);
+        }
+
+        mrx::hal::rgbLed::registerPin(1, color);
     }
 
-    void off() {
+    void setColorPaletteLeft(detail::Color* color) {
 
-        value = false;
+        if (color == &ColorBlack) {
 
-        mrx::hal::rgbLed::unregisterPin(pin);
+            mrx::hal::rgbLed::unregisterPin(2);
+        }
+
+        mrx::hal::rgbLed::registerPin(2, color);
     }
 };
