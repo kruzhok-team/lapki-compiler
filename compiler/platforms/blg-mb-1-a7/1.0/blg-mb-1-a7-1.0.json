@@ -142,12 +142,12 @@
     },
 
     "SpeakerNote": {
-      "description": "Простой компонент для взаимодействия с динамиком.",
+      "description": "Этот компонент управляет динамиком, и с его помощью воспроизводит некоторые ноты.",
       "img": "arduino/timeout.svg",
       "signals": {
         "isNoteEnd": {
           "img": "arduino/isPressed.svg",
-          "description": "Создает сигнал, если нота сыграна.",
+          "description": "Проигрывание ноты только что завершилось.",
           "checkMethod": "isSoundEnd"
         }
       },
@@ -166,19 +166,19 @@
                 "optional": false
               }
             ],
-            "description": "Проиграть ноту."
+            "description": "Запустить таймер. После запуска раз в заданный интервал будет вызываться событие [таймаут]"
           }
       },
       "singletone": false
     },
 
     "SpeakerSound": {
-      "description": "Компонент для взаимодействия с динамиком.",
+      "description": "Этот компонент с помощью динамика воспроизводит встроенные звуки.",
       "img": "arduino/timeout.svg",
       "signals": {
         "isSoundEnd": {
           "img": "arduino/isPressed.svg",
-          "description": "Создает сигнал, если звук закончен.",
+          "description": "Проигрывание звука только что завершилось.",
           "checkMethod": "isSoundEnd"
         }
       },
@@ -203,19 +203,19 @@
                 "optional": false
               }
             ],
-            "description": "Проиграть звук."
+            "description": "Запускает воспроизведение выбраного звука."
           }
       },
       "singletone": false
     },
     
     "PhotoDiode": {
-      "description": "Компонент, вычисляющий уровень освещенности. Искусственный свет не считается.",
+      "description": "Нос мишки — это инфракрасный фотодиод. Он позволяет мишке реагировать на освещение, но только на инфракрасное, невидимое глазу, Его много в солнечном свете, но почти не бывает в искусственном. Мишка любит солнце!",
       "img": "arduino/led.svg",
       "signals": {
         "isThresholdValue": {
           "img": "arduino/isEqual.svg",
-          "description": "Сигнал порогового значения",
+          "description": "Настроить значение яркости, при превышении которого будет запущено событие",
           "checkMethod": "isThresholdValue",
           "parameters": []
         }
@@ -232,14 +232,14 @@
               "optional": false
             }
           ],
-          "description": "Настроить срабатывание события по пороговому значению."
+          "description": "Продвинутая настройка события. Позволяет подавлять многократный запуск событий при «дрожании» яркости вокруг порогового значения"
         }
       },
       "variables": {
         "value": {
           "img": "common/value.svg",
           "type": "uint16_t",
-          "description": "Уровень освещенности."
+          "description": "Воспринимаемая яркость, в виде числа от 0 до 4095"
         }
       },
       "buildFiles": ["PhotoDiode.hpp"],
@@ -248,7 +248,7 @@
     },
 
     "EyePalette": {
-      "description": "Компонент для простого взаимодействия с rgb-светодиодом",
+      "description": "Этот компонент устанавливает цвета глаз.",
       "img": "arduino/led.svg",
       "signals": {},
       "constructorParameters": {},
@@ -264,7 +264,7 @@
               "optional": false
             }
           ],
-          "description": "Включить правый глаз"
+          "description": "Установить выбраный цвет для правого глаза"
         },
         "setColorPaletteLeft": {
           "img": "arduino/switch-on.svg",
@@ -276,7 +276,7 @@
               "optional": false
             }
           ],
-          "description": "Включить левый глаз"
+          "description": "Установить выбраный цвет для левого глаза"
         }
       },
       "buildFiles": ["EyePalette.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
@@ -285,7 +285,7 @@
     },
       
     "EyeRGBK": {
-      "description": "Компонент для нетривиального взаимодействия с rgb-светодиодом",
+      "description": "Этот компонент управляет цветом глаз, управляя составляющими их светодиодами. Это красный (R, от английского «Red»), зелёный (G, от английского «Green»), синий (B, от английского «Blue»), и чёрный (K, от английского «blacK»).",
       "img": "arduino/led.svg",
       "signals": {},
       "constructorParameters": {},
@@ -319,7 +319,7 @@
               "optional": false
             }
           ],
-          "description": "Включить правый глаз"
+          "description": "Установить значения яркости светодиода в правом глазу"
         },
 
         "setColorLeft": {
@@ -350,17 +350,17 @@
               "optional": false
             }
           ],
-          "description": "Включить левый глаз"
+          "description": "Установить значения яркости светодиода в левом глазу"
         },
 
         "offRight": {
           "img": "arduino/switch-off.svg",
-          "description": "Выключить правый глаз"
+          "description": "Выключить светодиод в правом глазу"
         },
 
         "offLeft": {
           "img": "arduino/switch-off.svg",
-          "description": "Выключить левый глаз"
+          "description": "Выключить светодиод в левом глазу"
         }
       },
       "buildFiles": ["EyeRGBK.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
@@ -369,12 +369,12 @@
     },
 
     "Microphone": {
-      "description": "Компонент для взаимодействия с микрофонами. По умолчанию выключен.",
+      "description": "Компонент, который слушает окружающие звуки и реагирует, когда они становятся слишком громкими",
       "img": "arduino/led.svg",
       "signals": {
         "isLoudSound": {
           "img": "arduino/isEqual.svg",
-          "description": "Сигнал порогового значения",
+          "description": "Мишка услышал громкий звук",
           "checkMethod": "isLoudSound",
           "parameters": []
         }
@@ -392,7 +392,7 @@
               "optional": false
             }
           ],
-          "description": "Настроить срабатывание события по пороговому значению громкости."
+          "description": "Настравает громкость звука, на которую мишка реагирует"
         }
       },
       "buildFiles": ["Microphone.hpp"],
@@ -521,12 +521,12 @@
     },
 
     "MatrixAnimation": {
-      "description": "Компонент для анимаций на матрице",
+      "description": "Компонент, который делает анимированные переходы между изображениями на матрице",
       "img": "arduino/led.svg",
       "signals": {
         "AnimationFinished": {
           "img": "arduino/isEqual.svg",
-          "description": "Сигнал по завершении анимации",
+          "description": "Переход к финальной картинке завершён",
           "checkMethod": "AnimationFinished",
           "parameters": []
         }
@@ -548,7 +548,7 @@
               "description": "Продолжительность анимации (в миллисекундах)"
             }
           ],
-          "description": "Установить кадр для перехода"
+          "description": "Установить картинку, к которой нужно перейти"
         }
       },
       "buildFiles": ["MatrixAnimation.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp"],
@@ -557,7 +557,7 @@
     },
 
     "MatrixPicture": {
-      "description": "Компонент для отображения картинок на матрице",
+      "description": "Устанавливает на матрицу статическое изображение",
       "img": "arduino/led.svg",
       "signals": {},
       "constructorParameters": {},
@@ -572,7 +572,7 @@
               "description": "Паттерн, который будет изображен на матрице."
             }
           ],
-          "description": "Вывести картинку на матрицу"
+          "description": "Изобразить рисунок на матрице при помощи виджета"
         }
       },
       "buildFiles": ["MatrixPicture.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp", "Pictures.hpp", "Picture.hpp"],
