@@ -51,6 +51,8 @@
     "delimeter": ";",
     "defaultIncludeFiles": ["stm32g431xx.h", "Pins.hpp", "blg-mb-1-a7_hal.hpp"],
     "defaultBuildFiles": [
+      "commonEars.hpp",
+      "ADC.hpp",
       "blg-mb-1-a7_hal.hpp",
       "Connector.hpp",
       "system.hpp",
