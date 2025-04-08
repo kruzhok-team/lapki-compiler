@@ -142,13 +142,15 @@
     },
 
     "SpeakerNote": {
+      "name": "Пищалка-ноты",
       "description": "Этот компонент управляет динамиком, и с его помощью воспроизводит некоторые ноты.",
       "img": "blg-mb/beeperNote.svg",
       "signals": {
         "isNoteEnd": {
           "img": "arduino/timer-start.svg",
           "description": "Проигрывание ноты только что завершилось.",
-          "checkMethod": "isSoundEnd"
+          "checkMethod": "isSoundEnd",
+          "alias": "Нота сыграна"
         }
       },
       "constructorParameters": {},
@@ -166,6 +168,7 @@
                 "optional": false
               }
             ],
+            "alias": "Запустить ноту",
             "description": "Запустить таймер. После запуска раз в заданный интервал будет вызываться событие [таймаут]"
           }
       },
@@ -173,13 +176,15 @@
     },
 
     "SpeakerSound": {
+      "name": "Пищалка-звуки",
       "description": "Этот компонент с помощью динамика воспроизводит встроенные звуки.",
       "img": "blg-mb/beeperSound.svg",
       "signals": {
         "isSoundEnd": {
           "img": "arduino/timer-start.svg",
           "description": "Проигрывание звука только что завершилось.",
-          "checkMethod": "isSoundEnd"
+          "checkMethod": "isSoundEnd",
+          "alias": "Звук сыгран"
         }
       },
       "constructorParameters": {},
@@ -203,13 +208,15 @@
                 "optional": false
               }
             ],
-            "description": "Запускает воспроизведение выбраного звука."
+            "description": "Запускает воспроизведение выбраного звука.",
+            "alias": "Запустить звук"
           }
       },
       "singletone": false
     },
     
     "PhotoDiode": {
+      "name": "Нос",
       "description": "Нос мишки — это инфракрасный фотодиод. Он позволяет мишке реагировать на освещение, но только на инфракрасное, невидимое глазу, Его много в солнечном свете, но почти не бывает в искусственном. Мишка любит солнце!",
       "img": "blg-mb/nose.svg",
       "signals": {
@@ -217,7 +224,8 @@
           "img": "blg-mb/threshold.svg",
           "description": "Настроить значение яркости, при превышении которого будет запущено событие",
           "checkMethod": "isThresholdValue",
-          "parameters": []
+          "parameters": [],
+          "alias": "Пороговое значение"
         }
       },
       "constructorParameters": {},
@@ -232,6 +240,7 @@
               "optional": false
             }
           ],
+          "alias": "Настроить событие",
           "description": "Продвинутая настройка события. Позволяет подавлять многократный запуск событий при «дрожании» яркости вокруг порогового значения"
         }
       },
@@ -239,7 +248,8 @@
         "value": {
           "img": "common/value.svg",
           "type": "uint16_t",
-          "description": "Воспринимаемая яркость, в виде числа от 0 до 4095"
+          "description": "Воспринимаемая яркость, в виде числа от 0 до 4095",
+          "alias": "Текущее значение"
         }
       },
       "buildFiles": ["PhotoDiode.hpp"],
@@ -248,6 +258,7 @@
     },
 
     "EyePalette": {
+      "name": "Глаза-палитра",
       "description": "Этот компонент устанавливает цвета глаз.",
       "img": "blg-mb/eyesPalette.svg",
       "signals": {},
@@ -264,7 +275,8 @@
               "optional": false
             }
           ],
-          "description": "Установить выбраный цвет для правого глаза"
+          "description": "Установить выбраный цвет для правого глаза",
+          "alias": "Установить цвет правого глаза"
         },
         "setColorPaletteLeft": {
           "img": "blg-mb/setColorPalette.svg",
@@ -276,7 +288,8 @@
               "optional": false
             }
           ],
-          "description": "Установить выбраный цвет для левого глаза"
+          "description": "Установить выбраный цвет для левого глаза",
+          "alias": "Установить цвет левого глаза"
         }
       },
       "buildFiles": ["EyePalette.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
@@ -285,6 +298,7 @@
     },
       
     "EyeRGBK": {
+      "name": "Глаза-RGBK",
       "description": "Этот компонент управляет цветом глаз, управляя составляющими их светодиодами. Это красный (R, от английского «Red»), зелёный (G, от английского «Green»), синий (B, от английского «Blue»), и чёрный (K, от английского «blacK»).",
       "img": "blg-mb/eyesColor.svg",
       "signals": {},
@@ -319,7 +333,8 @@
               "optional": false
             }
           ],
-          "description": "Установить значения яркости светодиода в правом глазу"
+          "description": "Установить значения яркости светодиода в правом глазу",
+          "alias": "Установить цвет правого глаза"
         },
 
         "setColorLeft": {
@@ -350,17 +365,20 @@
               "optional": false
             }
           ],
-          "description": "Установить значения яркости светодиода в левом глазу"
+          "description": "Установить значения яркости светодиода в левом глазу",
+          "alias": "Установить цвет левого глаза"
         },
 
         "offRight": {
           "img": "arduino/switch-off.svg",
-          "description": "Выключить светодиод в правом глазу"
+          "description": "Выключить светодиод в правом глазу",
+          "alias": "Выключить цвет правого глаза"
         },
 
         "offLeft": {
           "img": "arduino/switch-off.svg",
-          "description": "Выключить светодиод в левом глазу"
+          "description": "Выключить светодиод в левом глазу",
+          "alias": "Выключить цвет левого глаза"
         }
       },
       "buildFiles": ["EyeRGBK.hpp", "RgbLed.hpp", "Connector.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "PWM.hpp"],
@@ -369,6 +387,7 @@
     },
 
     "Microphone": {
+      "name": "Уши-громкость",
       "description": "Компонент, который слушает окружающие звуки и реагирует, когда они становятся слишком громкими",
       "img": "blg-mb/earsVolume.svg",
       "signals": {
@@ -376,7 +395,8 @@
           "img": "blg-mb/heardPeak.svg",
           "description": "Мишка услышал громкий звук",
           "checkMethod": "isLoudSound",
-          "parameters": []
+          "parameters": [],
+          "alias": "Услышан громкий звук"
         }
       },
       "constructorParameters": {},
@@ -392,7 +412,8 @@
               "optional": false
             }
           ],
-          "description": "Настравает громкость звука, на которую мишка реагирует"
+          "description": "Настравает громкость звука, на которую мишка реагирует",
+          "alias": "Настроить порог громкости"
         }
       },
       "buildFiles": ["Microphone.hpp"],
@@ -402,6 +423,7 @@
     },
       
     "Matrix": {
+      "name": "Матрица",
       "description": "Компонент для взаимодействия со светодиодной матрицы.",
       "img": "arduino/led.svg",
       "signals": {},
@@ -521,6 +543,7 @@
     },
 
     "MatrixAnimation": {
+      "name": "Матрица-анимация",
       "description": "Компонент, который делает анимированные переходы между изображениями на матрице",
       "img": "blg-mb/matrixAnimation.svg",
       "signals": {
@@ -528,7 +551,8 @@
           "img": "arduino/timer-start.svg",
           "description": "Переход к финальной картинке завершён",
           "checkMethod": "AnimationFinished",
-          "parameters": []
+          "parameters": [],
+          "alias": "Анимация завершена"
         }
       },
       "constructorParameters": {},
@@ -548,7 +572,8 @@
               "description": "Продолжительность анимации (в миллисекундах)"
             }
           ],
-          "description": "Установить картинку, к которой нужно перейти"
+          "description": "Установить картинку, к которой нужно перейти",
+          "alias": "Установить матрицу"
         }
       },
       "buildFiles": ["MatrixAnimation.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp"],
@@ -557,6 +582,7 @@
     },
 
     "MatrixPicture": {
+      "name": "Матрица-картинка",
       "description": "Устанавливает на матрицу статическое изображение",
       "img": "blg-mb/matrixHalftone.svg",
       "signals": {},
@@ -572,7 +598,8 @@
               "description": "Паттерн, который будет изображен на матрице."
             }
           ],
-          "description": "Изобразить рисунок на матрице при помощи виджета"
+          "description": "Изобразить рисунок на матрице при помощи виджета",
+          "alias": "Установить матрицу"
         }
       },
       "buildFiles": ["MatrixPicture.hpp", "Matrix.hpp", "LED.hpp", "PWM.hpp", "PWMHelpers.hpp", "PWMInit.hpp", "Pattern.hpp", "Pictures.hpp", "Picture.hpp"],
