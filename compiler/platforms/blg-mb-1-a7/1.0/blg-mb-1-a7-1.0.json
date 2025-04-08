@@ -566,7 +566,7 @@
           "parameters": [
             {
               "name": "picture",
-              "type": "&heart, &smile, &sadnes, &cross, &note, &rhombus, &square",
+              "type": ["&heart", "&smile", "&sadnes", "&cross", "&note", "&rhombus", "&square"],
               "description": "Паттерн, который будет изображен на матрице."
             }
           ],
