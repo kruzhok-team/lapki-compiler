@@ -101,7 +101,7 @@
             "Правый бок",
             "Левый бок"
           ],
-          "description": "Номер кнопки"
+          "description": "Расположение кнопки"
         }
       },
       "variables": {
@@ -143,10 +143,10 @@
 
     "SpeakerNote": {
       "description": "Этот компонент управляет динамиком, и с его помощью воспроизводит некоторые ноты.",
-      "img": "arduino/timeout.svg",
+      "img": "blg-mb/beeperNote.svg",
       "signals": {
         "isNoteEnd": {
-          "img": "arduino/isPressed.svg",
+          "img": "arduino/timer-start.svg",
           "description": "Проигрывание ноты только что завершилось.",
           "checkMethod": "isSoundEnd"
         }
@@ -174,10 +174,10 @@
 
     "SpeakerSound": {
       "description": "Этот компонент с помощью динамика воспроизводит встроенные звуки.",
-      "img": "arduino/timeout.svg",
+      "img": "blg-mb/beeperSound.svg",
       "signals": {
         "isSoundEnd": {
-          "img": "arduino/isPressed.svg",
+          "img": "arduino/timer-start.svg",
           "description": "Проигрывание звука только что завершилось.",
           "checkMethod": "isSoundEnd"
         }
@@ -211,10 +211,10 @@
     
     "PhotoDiode": {
       "description": "Нос мишки — это инфракрасный фотодиод. Он позволяет мишке реагировать на освещение, но только на инфракрасное, невидимое глазу, Его много в солнечном свете, но почти не бывает в искусственном. Мишка любит солнце!",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/nose.svg",
       "signals": {
         "isThresholdValue": {
-          "img": "arduino/isEqual.svg",
+          "img": "blg-mb/threshold.svg",
           "description": "Настроить значение яркости, при превышении которого будет запущено событие",
           "checkMethod": "isThresholdValue",
           "parameters": []
@@ -223,7 +223,7 @@
       "constructorParameters": {},
       "methods": {
         "setupEvent": {
-          "img": "arduino/start.svg",
+          "img": "blg-mb/setupEvent.svg",
           "parameters": [
             {
               "name": "threshold",
@@ -249,13 +249,13 @@
 
     "EyePalette": {
       "description": "Этот компонент устанавливает цвета глаз.",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/eyesPalette.svg",
       "signals": {},
       "constructorParameters": {},
       "variables": {},
       "methods": {
         "setColorPaletteRight": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/setColorPalette.svg",
           "parameters": [
             {
               "name": "color",
@@ -267,7 +267,7 @@
           "description": "Установить выбраный цвет для правого глаза"
         },
         "setColorPaletteLeft": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/setColorPalette.svg",
           "parameters": [
             {
               "name": "color",
@@ -286,13 +286,13 @@
       
     "EyeRGBK": {
       "description": "Этот компонент управляет цветом глаз, управляя составляющими их светодиодами. Это красный (R, от английского «Red»), зелёный (G, от английского «Green»), синий (B, от английского «Blue»), и чёрный (K, от английского «blacK»).",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/eyesColor.svg",
       "signals": {},
       "constructorParameters": {},
       "variables": {},
       "methods": {
         "setColorRight": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/setColor.svg",
           "parameters": [
             {
               "name": "red",
@@ -323,7 +323,7 @@
         },
 
         "setColorLeft": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/setColor.svg",
           "parameters": [
             {
               "name": "red",
@@ -370,10 +370,10 @@
 
     "Microphone": {
       "description": "Компонент, который слушает окружающие звуки и реагирует, когда они становятся слишком громкими",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/earsVolume.svg",
       "signals": {
         "isLoudSound": {
-          "img": "arduino/isEqual.svg",
+          "img": "blg-mb/heardPeak.svg",
           "description": "Мишка услышал громкий звук",
           "checkMethod": "isLoudSound",
           "parameters": []
@@ -383,7 +383,7 @@
       "variables": {},
       "methods": {
         "setupEvent": {
-          "img": "arduino/start.svg",
+          "img": "blg-mb/volumeThreshold.svg",
           "parameters": [
             {
               "name": "volume",
@@ -522,10 +522,10 @@
 
     "MatrixAnimation": {
       "description": "Компонент, который делает анимированные переходы между изображениями на матрице",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/matrixAnimation.svg",
       "signals": {
         "AnimationFinished": {
-          "img": "arduino/isEqual.svg",
+          "img": "arduino/timer-start.svg",
           "description": "Переход к финальной картинке завершён",
           "checkMethod": "AnimationFinished",
           "parameters": []
@@ -535,7 +535,7 @@
       "variables": {},
       "methods": {
         "setFrame": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/draw.svg",
           "parameters": [
             {
               "name": "pattern",
@@ -558,13 +558,13 @@
 
     "MatrixPicture": {
       "description": "Устанавливает на матрицу статическое изображение",
-      "img": "arduino/led.svg",
+      "img": "blg-mb/matrixHalftone.svg",
       "signals": {},
       "constructorParameters": {},
       "variables": {},
       "methods": {
         "draw": {
-          "img": "arduino/switch-on.svg",
+          "img": "blg-mb/draw.svg",
           "parameters": [
             {
               "name": "picture",
