@@ -29,15 +29,20 @@ void TIM2_IRQHandler(void) {
     // Speaker
     // Speaker has a unique frequency
     // if ((++mrx::hal::speaker::currLevel) >= mrx::hal::speaker::level) {
-
-    mrx::hal::speaker::interruptFunc();
-        // mrx::hal::speaker::currLevel = 0;
-    // }
+    
+    // every 2 steps (40'000 / 24'000)
+    if ((++mrx::hal::speaker::currLevel) >= 2) {
+        mrx::hal::speaker::interruptFunc();
+        mrx::hal::speaker::currLevel = 0;
+    }
 
     // matrix animation
     if (mrx::hal::matrixAnimation::interruptFunc != nullptr) {
         
-        if (++mrx::hal::matrixAnimation::currLevel >= mrx::hal::matrixAnimation::animLevel) {
+        // 100 times in 1 sec
+        // 40'000 / 100 = 400
+        // if (pwmCounter >= 400) {
+        if (++mrx::hal::matrixAnimation::currLevel >= 400) {
 
             mrx::hal::matrixAnimation::interruptFunc();
             mrx::hal::matrixAnimation::currLevel = 0;

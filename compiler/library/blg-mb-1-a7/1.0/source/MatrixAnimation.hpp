@@ -18,7 +18,7 @@ namespace detail {
 
         Pattern35 finishedPattern{};
         int16_t steps{};
-        bool isActive{};
+        volatile bool isActive{};
 
         // Предрассчитаем шаги анимации заранее
         void initAnim() {

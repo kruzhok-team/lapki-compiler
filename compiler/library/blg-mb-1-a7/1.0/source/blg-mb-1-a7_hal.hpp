@@ -389,7 +389,7 @@ namespace mrx {
             void (*interruptFunc)() = nullptr;
 
             const uint8_t pinQuantity = 35;
-            const uint16_t period = 1200;
+            const uint16_t period = 1000;
 
             bool isInitTIM2 = false;
 
@@ -516,11 +516,11 @@ namespace mrx {
             const uint8_t num = 4;
 
             // 24 кГц
-            const uint32_t speakerPwm = 24000;
+            const uint32_t speakerPwm = 20000;
             uint16_t currLevel{};
             const uint16_t level = mrx::env::clkRate /mrx::hal::pwm::period /mrx::env::pwmTimPSC /speakerPwm;
 
-            ::detail::hal::SoundController soundController{};
+            volatile ::detail::hal::SoundController soundController{};
 
             namespace detail {
 
