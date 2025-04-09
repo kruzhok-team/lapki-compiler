@@ -209,6 +209,11 @@ class Button
   		return detail::helpers::bitRead(state, CURRENT);
     }
 
+	bool isReleased() {
+
+		return detail::helpers::bitRead(state, CHANGED) && !detail::helpers::bitRead(state, CURRENT);
+	}
+
     bool stateChanged() const {
 
   		return detail::helpers::bitRead(state, CHANGED);
