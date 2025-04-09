@@ -80,15 +80,20 @@ public:
 
         // Количество шагов фиксированное
         detail::matrixAnim::steps = 20;
+        detail::matrixAnim::steps = 20;
+        // 1ms == 40'000 / 1000ms = 40 (ticks in ms)
+        const auto ticks = time_ms *40;
+        // Делим на кол-во шагов
+        mrx::hal::matrixAnimation::animLevel = ticks /detail::matrixAnim::steps;
         
         // Рассчитаем кол-во тиков для анимации (отмеряем кусками времени)
         //
         // Продолжительность одного шага
-        auto stepMs = time_ms /detail::matrixAnim::steps;
-        if (stepMs < 1) stepMs = 1;
+        // auto stepMs = time_ms /detail::matrixAnim::steps;
+        // if (stepMs < 1) stepMs = 1;
         //
         // Переводим в тики счетчика
-        mrx::hal::matrixAnimation::animLevel = (stepMs *mrx::hal::matrixAnimation::baseLevel);
+        // mrx::hal::matrixAnimation::animLevel = (stepMs *mrx::hal::matrixAnimation::baseLevel);
 
         // Заполняем нужные данные
         detail::matrixAnim::finishedPattern = pattern;

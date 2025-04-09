@@ -506,8 +506,7 @@ namespace mrx {
             auto timeLevel = 1000 / matrixAnimPwm; // Сколько ms на 1 отрезок (вызов) (число выше)
 
             uint16_t currLevel{};
-            const uint16_t baseLevel = mrx::env::clkRate /mrx::hal::pwm::period /mrx::env::pwmTimPSC /matrixAnimPwm;    // Сколько раз нужно протикать, чтобы получить нужный промежуток
-            auto animLevel{baseLevel};  // Вычисляется для анимации в зависимости от ее длительности
+            uint16_t animLevel{1};
         }
         
         namespace speaker {

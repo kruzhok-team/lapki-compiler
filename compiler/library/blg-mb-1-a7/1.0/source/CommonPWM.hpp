@@ -42,7 +42,7 @@ void TIM2_IRQHandler(void) {
         // 100 times in 1 sec
         // 40'000 / 100 = 400
         // if (pwmCounter >= 400) {
-        if (++mrx::hal::matrixAnimation::currLevel >= 400) {
+        if (++mrx::hal::matrixAnimation::currLevel >= mrx::hal::matrixAnimation::animLevel) {
 
             mrx::hal::matrixAnimation::interruptFunc();
             mrx::hal::matrixAnimation::currLevel = 0;
