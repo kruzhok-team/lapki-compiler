@@ -507,7 +507,6 @@
       },
       "buildFiles": ["Microphone.hpp"],
       "importFiles": ["Microphone.hpp"],
-      "loopActions": ["scan"],
       "singletone": false
     },
 

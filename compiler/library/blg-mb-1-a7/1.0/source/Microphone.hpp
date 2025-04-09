@@ -26,6 +26,8 @@ public:
 
             mrx::hal::microphone::api::init();
 
+            mrx::hal::microphone::detail::initDetector();
+
             detail::microphone::isInit = true;
         }
     }
@@ -34,20 +36,21 @@ public:
 
         senseLeft();
         senseRight();
-
-        if (isEventSetting) {
-
-            if (lValue > threshold || rValue > threshold) {
-
-                isEvent = true;
-            }
-        }
     }
 
     bool isLoudSound() {
 
+        if (mrx::hal::microphone::detectedLevel > threshold) {
+
+            isEvent = true;
+        }
+
         auto copy = isEvent;
         isEvent = false;
+
+        if (copy) {
+            mrx::hal::microphone::detail::resetDetector();
+        }
 
         return copy;
     }
@@ -55,8 +58,11 @@ public:
     void setupEvent(const uint16_t value) {
 
         threshold = value;
-        isEventSetting = true;
         isEvent = false;
+
+        mrx::hal::microphone::detail::resetDetector();
+        mrx::hal::microphone::detail::enableDetector(true);
+        // isEventSetting = true;
     }
 
     // not user functions

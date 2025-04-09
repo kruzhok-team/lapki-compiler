@@ -433,6 +433,41 @@ namespace mrx {
 
         namespace microphone {
 
+            uint32_t detectedLevel{};
+            bool isActive{};
+
+            namespace detail {
+
+                void initDetector() {
+                    
+                    RCC -> APB2ENR |= RCC_APB2ENR_TIM15EN;
+                    TIM15 -> CR1 &= ~TIM_CR1_CEN;
+                    TIM15 -> CNT = 0 ;
+                    TIM15 -> ARR = 5;
+                    TIM15 -> PSC = 299;
+                    TIM15 -> DIER |= TIM_DIER_UIE;
+                    TIM15 -> CR1 |= TIM_CR1_CEN;
+
+                    NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
+                    //NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,15); //Посчитать аккуратнее
+                }
+                
+                void enableDetector(bool que) {
+
+                    if ( que ) {
+                        TIM15 -> CR1 |= TIM_CR1_CEN;
+                        detectedLevel = 0;
+                    }
+                    else {
+                        TIM15 -> CR1 &= ~TIM_CR1_CEN;
+                    }
+                }
+
+                void resetDetector() {
+                    detectedLevel = 0;
+                }
+            }
+
             namespace api {
 
                 using namespace stm32g431::ears;

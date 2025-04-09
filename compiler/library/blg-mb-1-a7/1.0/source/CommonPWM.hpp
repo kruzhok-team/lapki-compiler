@@ -47,6 +47,26 @@ void TIM2_IRQHandler(void) {
     // TIM2 -> CR1 |= TIM_CR1_CEN;  // Счет разрешен
 }
 
+// timer for microphone
+// interrupt function for TIM15
+void TIM1_BRK_TIM15_IRQHandler(void) {
+
+    TIM15 -> SR &= ~TIM_SR_UIF;
+
+    const auto left = mrx::hal::microphone::api::scanEarL();
+    const auto right = mrx::hal::microphone::api::scanEarR();
+
+    if (left > mrx::hal::microphone::detectedLevel) {
+
+        mrx::hal::microphone::detectedLevel = left;
+    }
+
+    if (right > mrx::hal::microphone::detectedLevel) {
+
+        mrx::hal::microphone::detectedLevel = right;
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
