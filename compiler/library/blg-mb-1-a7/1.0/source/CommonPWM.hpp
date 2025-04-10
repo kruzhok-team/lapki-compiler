@@ -30,8 +30,8 @@ void TIM2_IRQHandler(void) {
     // Speaker has a unique frequency
     // if ((++mrx::hal::speaker::currLevel) >= mrx::hal::speaker::level) {
     
-    // every 2 steps (40'000 / 24'000)
-    if ((++mrx::hal::speaker::currLevel) >= 2) {
+    // every 2 steps (speakerLevel вычисляется, как 40'000 /X = нужная частота спикера. Например, для рыка нужно 10'000, значит speakerLevel равен 4)
+    if ((++mrx::hal::speaker::currLevel) >= mrx::hal::speaker::speakerLevel) {
         mrx::hal::speaker::interruptFunc();
         mrx::hal::speaker::currLevel = 0;
     }

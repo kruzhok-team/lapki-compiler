@@ -32,6 +32,11 @@ public:
         mrx::hal::speaker::startSound(sound, duration);
     }
 
+    void stop() {
+
+        mrx::hal::speaker::stopSound();
+    }
+
     bool isSoundEnd() {
 
         return mrx::hal::speaker::soundController.sound == nullptr;

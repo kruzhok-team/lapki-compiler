@@ -14,4 +14,4 @@ static uint16_t rawTestNote[szTestNote] = { 2048, 2578, 3072, 3496, 3821, 4026,
                                    2048, 1517, 1023, 599, 274, 69, 0,
                                    69, 274, 599, 1023, 1517 };
 
-Note TestNote{ rawTestNote, szTestNote };
+Note TestNote{ rawTestNote, szTestNote, 1 };

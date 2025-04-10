@@ -515,9 +515,9 @@ namespace mrx {
             const uint8_t num = 4;
 
             // 24 кГц
-            const uint32_t speakerPwm = 20000;
+            const uint32_t speakerPwm = 40000;
             uint16_t currLevel{};
-            const uint16_t level = mrx::env::clkRate /mrx::hal::pwm::period /mrx::env::pwmTimPSC /speakerPwm;
+            uint16_t speakerLevel{1};
 
             volatile ::detail::hal::SoundController soundController{};
 
@@ -585,9 +585,14 @@ namespace mrx {
                 
                 detail::resetSound();
 
-                const auto&& cycles = detail::dur2Cycles(duration);
+                uint32_t changedDuration = duration;
+                if (sound->prescaler > 0)
+                    changedDuration = duration /sound->prescaler;
+
+                const auto&& cycles = detail::dur2Cycles(changedDuration);
 
                 soundController.total = cycles;
+                speakerLevel = sound->prescaler;
                 // Устанавливаем указатель после того, как остальные поля заполнены
                 soundController.sound = sound;
             };
@@ -608,7 +613,7 @@ namespace mrx {
                     // inc progress
                     ++soundController.curr;
                     // is end?
-                    if (soundController.curr == soundController.total) {
+                    if (soundController.curr >= soundController.total) {
                         stopSound();
                         return;
                     }

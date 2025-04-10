@@ -36,6 +36,11 @@ public:
         mrx::hal::speaker::startSound(reinterpret_cast<Sound*>(&note), duration);
     }
 
+    void stop() {
+
+        mrx::hal::speaker::stopSound();
+    }
+
     bool isNoteEnd() {
 
         return mrx::hal::speaker::soundController.sound == nullptr;
