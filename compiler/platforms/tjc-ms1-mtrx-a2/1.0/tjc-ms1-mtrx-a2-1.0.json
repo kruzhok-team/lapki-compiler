@@ -812,75 +812,78 @@
         "singletone": false
       },
 
-      "Array": {
-        "description": "Статический массив",
-        "img": "arduino/timer.svg",
-        "signals": {},
-        "constructorParameters": {
-          "size": {
-            "type": "uint16_t",
-            "description": "Размер массива (должен быть не более, чем 65535 элементов)",
-            "optional" : false
-          }
-        },
-        "methods": {
-          "set": {
-            "img": "common/set-value.svg",
-            "description": "Установить значение элементу с заданным индексом",
-            "variables": {
-              "index": {
-                "img": "common/arrayIndex.svg",
-                "description": "Индекс элемента",
-                "type": "uint16_t"
-              },
-              "value": {
-                "img": "common/value.svg",
-                "description": "Новое значение для элемента",
-                "type": "int16_t"
-              }
-            }
-          },
-          "peek": {
-            "img": "common/arrayPeek.svg",
-            "description": "Переместиться на элемент с заданным индексом",
-            "variables": {
-              "index": {
-                "img": "common/arrayIndex.svg",
-                "description": "Индекс элемента",
-                "type": "uint16_t"
-              }
-            }
-          },
-          "next": {
-            "img": "common/arrayNext.svg",
-            "description": "Переместиться на элемент со следующим индексом"
-          },
-          "prev": {
-            "img": "common/arrayPrev.svg",
-            "description": "Переместиться на элемент с предыдущим индексом"
-          }
-        },
-        "buildFiles": ["Array.hpp"],
-        "importFiles": ["Array.hpp"],
-        "singletone": false,
-        "variables": {
-          "value": {
-            "img": "common/value.svg",
-            "type": "int16_t",
-            "description": "Значение элемента с текущим индексом."
-          },
-          "index": {
-            "img": "common/arrayIndex.svg",
-            "type": "uint16_t",
-            "description": "Текущий индекс."
-          },
-          "size": {
-            "img": "common/arraySize.svg",
-            "type": "uint16_t",
-            "description": "Размер массива."
-          }
+    "Array": {
+      "description": "Статический массив",
+      "img": "common/array.svg",
+      "signals": {},
+      "constructorParameters": {
+        "size": {
+          "type": "uint16_t",
+          "description": "Размер массива (должен быть не более, чем 65535 элементов)",
+          "optional": false
         }
       },
+      "methods": {
+        "set": {
+          "img": "common/set-value.svg",
+          "description": "Установить значение элементу с заданным индексом",
+          "parameters": [
+            {
+              "name": "index",
+              "img": "common/arrayIndex.svg",
+              "description": "Индекс элемента",
+              "type": "uint16_t"
+            },
+            {
+              "name": "value",
+              "img": "common/value.svg",
+              "description": "Новое значение для элемента",
+              "type": "int16_t"
+            }
+          ]
+        },
+        "peek": {
+          "img": "common/arrayPeek.svg",
+          "description": "Переместиться на элемент с заданным индексом",
+          "parameters": [
+            {
+              "name": "index",
+              "img": "common/arrayIndex.svg",
+              "description": "Индекс элемента",
+              "type": "uint16_t"
+            }
+          ]
+        },
+        "next": {
+          "img": "common/arrayNext.svg",
+          "description": "Переместиться на элемент со следующим индексом"
+        },
+        "prev": {
+          "img": "common/arrayPrev.svg",
+          "description": "Переместиться на элемент с предыдущим индексом"
+        }
+      },
+      "buildFiles": ["Array.hpp"],
+      "importFiles": ["Array.hpp"],
+      "singletone": false,
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "type": "int16_t",
+          "description": "Значение элемента с текущим индексом."
+        },
+        "index": {
+          "img": "common/arrayIndex.svg",
+          "type": "uint16_t",
+          "description": "Текущий индекс."
+        },
+        "size": {
+          "img": "common/arraySize.svg",
+          "type": "uint16_t",
+          "description": "Размер массива."
+        }
+      }
+    },
 
       "Alarm": {
         "description": "Компонент для взаимодействия с общей сигнальной линией (писатель)",
@@ -919,6 +922,84 @@
         "importFiles": ["AlarmListener.hpp"],
         "singletone": false,
         "variables": {}
+      },
+      
+      "UserSignal": {
+        "description": "Пользовательский сигнал",
+        "img": "arduino/timer.svg",
+        "signals": {
+          "isCalled": {
+            "img": "arduino/timeout.svg",
+            "description": "Сработал сигнал",
+            "checkMethod": "isCalled"
+          }
+        },
+        "constructorParameters": {},
+        "methods": {
+          "call": {
+            "img": "arduino/reset.svg",
+            "description": "Вызов сигнала"
+          }
+        },
+        "buildFiles": ["UserSignal.hpp"],
+        "importFiles": ["UserSignal.hpp"],
+        "singletone": false,
+        "variables": {}
+      },
+  
+      "Iterator": {
+        "description": "Итератор",
+        "img": "arduino/timer.svg",
+        "signals": {
+          "onEnd": {
+            "img": "arduino/timeout.svg",
+            "description": "Итерации завершены",
+            "checkMethod": "onEnd"
+          },
+          "onIteration": {
+            "img": "arduino/timeout.svg",
+            "description": "Очередная итерация",
+            "checkMethod": "onIteration"
+          }
+        },
+        "constructorParameters": {},
+        "methods": {
+          "stop": {
+            "img": "arduino/timer-start.svg",
+            "description": "Остановить итератор."
+          },
+          "start": {
+            "img": "arduino/start.svg",
+            "parameters": [
+              {
+                "name": "from",
+                "type": "unsigned long",
+                "description": "Начальное значение."
+              },
+              {
+                "name": "to",
+                "type": "unsigned long",
+                "description": "Конечное значение."
+              },
+              {
+                "name": "step",
+                "type": "unsigned long",
+                "description": "Шаг для изменения значения."
+              }
+            ],
+            "description": "Запустить итератор. Будет сигнал раз в итерацию."
+          }
+        },
+        "buildFiles": ["Iterator.hpp"],
+        "importFiles": ["Iterator.hpp"],
+        "singletone": false,
+        "variables": {
+          "index": {
+            "img": "arduino/difference.svg",
+            "type": "unsigned long",
+            "description": "Текущий индекс итерации"
+          }
+        }
       }
     }
   }
