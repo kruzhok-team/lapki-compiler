@@ -188,11 +188,16 @@ class CppFileWriter:
                                   id: str,
                                   type: str,
                                   triggers: Sequence[Condition],
+                                  parent: str | None,
                                   offset='\t\t') -> str:
         """Generate if else code using IF_EXPRESSIONS,\
             ELSE_IF_EXPRESSION, ELSE_EXPRESSION templates."""
+        if parent is not None:
+            propagate_expression = f'status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{parent});'
+        else:
+            propagate_expression = 'status_ = Q_UNHANDLED();'
         if len(triggers) == 0:
-            return offset + 'status_ = UN_HANDLED();'
+            return offset + propagate_expression
 
         else_count = sum([trigger.guard == 'else' for trigger in triggers])
         if (else_count > 1):
@@ -230,6 +235,11 @@ class CppFileWriter:
                 'actions': else_condition.action,
                 'offset': offset
             }) + '\n'
+        else:
+            actions += ELSE_EXPRESSION.safe_substitute({
+                'actions': propagate_expression,
+                'offset': offset
+            }) + '\n'
         return actions
 
     async def _write_choice_vertex_definition(self):
@@ -243,7 +253,8 @@ class CppFileWriter:
                 await self._generate_condition(
                     choice.id,
                     'Псевдосостояние выбора',
-                    choice.transitions
+                    choice.transitions,
+                    choice.parent
                 ),
                 choice,
                 'Choice'
@@ -325,7 +336,7 @@ class CppFileWriter:
         insert_strings.extend(insert_shallows)
         insert_strings.append('};')
 
-        await self._insert_string('\n'.join(insert_strings))
+        await self._insert_string('\n'.join(insert_strings) + '\n')
 
     async def _write_local_history_definition(self):
         """
@@ -592,14 +603,10 @@ class CppFileWriter:
                     state.id if state.name is None else state.name,
                     'Состояние',
                     triggers,
+                    state.parent.id if state.parent is not None else None,
                     '\t\t\t'
                 )
             )
-            if not any(trigger.guard == 'else' for trigger in triggers):
-                await self._insert_string('            else {\n')
-                await self._insert_string('                '
-                                          'status_ = Q_UNHANDLED();\n')
-                await self._insert_string('            }\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
         await self._insert_string('        default: {\n')

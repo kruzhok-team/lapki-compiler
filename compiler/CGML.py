@@ -370,9 +370,15 @@ def __generate_create_components_code(
             component.parameters,
             construct_parameters
         )
-        code_to_insert = (f'{type} {component_id} = '
-                          f'{type}({args});\n')
-        notes.append(create_note(Labels.H, code_to_insert))
+        if platform.component_declaration:
+            declaration = f'{type} {component_id};\n'
+            initialization = f'{component_id} = {type}({args});\n'
+            notes.append(create_note(Labels.H, declaration))
+            notes.append(create_note(Labels.SETUP, initialization))
+        else:
+            code_to_insert = (f'{type} {component_id} = '
+                              f'{type}({args});\n')
+            notes.append(create_note(Labels.H, code_to_insert))
     return notes
 
 
@@ -443,7 +449,7 @@ def __generate_signal_checker(
     if signal is None:
         raise _InnerCGMLException(
             f'Для компонента {component_id} типа {component_type} '
-            f'отсутствует сигнал {component_type}.')
+            f'отсутствует сигнал {signal}.')
     call_method = signal.checkMethod
     condition = __generate_function_call(
         platform, component_type, component_id, call_method, '')

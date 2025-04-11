@@ -24,6 +24,7 @@ def create_note(label: 'Labels', content: str) -> 'ParserNote':
     Между label и контентом добавляется \\n, так как по этому символу\
         сплитится строка в функции write_to_file.
     """
+    # TODO: убрать это недаразумение
     return ParserNote(
         umlNote=_ParserNoteNodeLabel(
             nodeLabel=_ParserNoteNodeContent(

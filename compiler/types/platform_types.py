@@ -92,6 +92,8 @@ class Platform(BaseModel):
     standard_version: str = Field(alias='standardVersion')
     version: str
     static_components: bool = Field(alias='staticComponents')
+    component_declaration: bool = Field(
+        alias='componentDeclaration', default=False)
     language: str = ''
     delimeter: str
     visual: bool
