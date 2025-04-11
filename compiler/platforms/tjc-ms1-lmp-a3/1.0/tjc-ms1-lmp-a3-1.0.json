@@ -758,27 +758,6 @@
               "img": "common/arrayPrev.svg",
               "description": "Переместиться на элемент с предыдущим индексом"
             }
-          },
-        "buildFiles": ["Array.hpp"],
-        "importFiles": ["Array.hpp"],
-        "singletone": false,
-        "variables": {
-          "value": {
-            "img": "common/value.svg",
-            "type": "int16_t",
-            "description": "Значение элемента с текущим индексом."
-          },
-          "index": {
-            "img": "common/arrayIndex.svg",
-            "type": "uint16_t",
-            "description": "Текущий индекс."
-          },
-          "size": {
-            "img": "common/arraySize.svg",
-            "type": "uint16_t",
-            "description": "Размер массива."
-          }
-        }
       },
       "buildFiles": ["Array.hpp"],
       "importFiles": ["Array.hpp"],
