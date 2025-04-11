@@ -192,11 +192,12 @@ class CppFileWriter:
                                   offset='\t\t') -> str:
         """Generate if else code using IF_EXPRESSIONS,\
             ELSE_IF_EXPRESSION, ELSE_EXPRESSION templates."""
-        propagate_expression = f'status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{parent});'
+        if parent is not None:
+            propagate_expression = f'status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{parent});'
+        else:
+            propagate_expression = 'status_ = Q_UNHANDLED();'
         if len(triggers) == 0:
-            if parent is not None:
-                return offset + propagate_expression
-            return offset + 'status_ = Q_UNHANDLED();'
+            return offset + propagate_expression
 
         else_count = sum([trigger.guard == 'else' for trigger in triggers])
         if (else_count > 1):
