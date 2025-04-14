@@ -80,7 +80,6 @@ public:
 
         // Количество шагов фиксированное
         detail::matrixAnim::steps = 20;
-        detail::matrixAnim::steps = 20;
         // 1ms == 40'000 / 1000ms = 40 (ticks in ms)
         const auto ticks = time_ms *40;
         // Делим на кол-во шагов
