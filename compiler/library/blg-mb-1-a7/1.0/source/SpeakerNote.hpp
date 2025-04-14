@@ -33,7 +33,7 @@ public:
     void play(Note *note, const uint16_t duration) {
 
         // TODO: Если не работает, то вернуть тип на тип Sound* и не парить мозги
-        mrx::hal::speaker::startSound(reinterpret_cast<Sound*>(&note), duration);
+        mrx::hal::speaker::startSound(reinterpret_cast<Sound*>(note), duration);
     }
 
     void stop() {
