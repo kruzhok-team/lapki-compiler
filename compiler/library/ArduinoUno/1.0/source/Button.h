@@ -45,6 +45,7 @@ class Button
     void pulldown();
     bool scan();
     bool isPressed() const;
+    bool isReleased() const;
     bool stateChanged() const;
     bool uniquePress() const;
     unsigned int clicked();
@@ -86,6 +87,7 @@ class Button
 
   private:
     uint8_t pin;
+    uint32_t clickTimer;
     uint8_t mode;
     uint8_t state;
     unsigned long pressedStartTime;
@@ -96,6 +98,7 @@ class Button
     unsigned long holdEventPreviousTime;
     unsigned long lastReleaseTime;
     unsigned long multiClickThresholdTime;
+    unsigned long clickThresholdTime;
     buttonEventHandler cb_onPress;
     buttonEventHandler cb_onRelease;
     buttonEventHandler cb_onClick;
