@@ -249,6 +249,11 @@ class Button
 		//return !digitalRead(&btns[pin]);
     }
 
+	bool isReleased() const {
+
+		return bitRead(state, CHANGED) && !bitRead(state, CURRENT);
+	}
+
     bool stateChanged() const {
 
   		return bitRead(state, CHANGED);
