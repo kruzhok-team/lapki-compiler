@@ -45,6 +45,7 @@ class Button
     void pulldown();
     bool scan();
     bool isPressed() const;
+    bool isReleased() const;
     bool stateChanged() const;
     bool uniquePress() const;
     unsigned int clicked();

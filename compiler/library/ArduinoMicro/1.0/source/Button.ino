@@ -214,6 +214,11 @@ bool Button::isPressed(void) const
   return bitRead(state, CURRENT);
 }
 
+bool Button::isReleased(void) const {
+
+  return bitRead(state, CHANGED) && !bitRead(state, CURRENT);
+}
+
 /*
 || @description
 || | Return true if state has been changed
