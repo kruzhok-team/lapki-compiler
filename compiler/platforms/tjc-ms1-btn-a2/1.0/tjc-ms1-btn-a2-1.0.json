@@ -180,7 +180,7 @@
             "checkMethod": "clicked"
           },
           "isReleased": {
-            "img": "arduino/clicked.svg",
+            "img": "common/isReleased.svg",
             "description": "Создает сигнал, если кнопка была отпущена",
             "checkMethod": "isReleased"
           }
