@@ -43,7 +43,7 @@ namespace detail {
                 if (steps == 0) {
                     isActive = false;
                     // Установить конечный паттерн при завершении анимации
-                    m.setPattern(finishedPattern);
+                    m.setPatternByStep(finishedPattern);
                     return;
                 }
                 
@@ -53,7 +53,7 @@ namespace detail {
                     patternIt[i] += diffs[i];
                 }
 
-                m.setPattern(progressPattern);
+                m.setPatternByStep(progressPattern);
             }
         }
     }
