@@ -27,7 +27,11 @@ namespace detail {
             for (uint8_t i(0); i < mrx::hal::matrix::LEDS_COUNT; ++i) {
 
                 const auto from = detail::matrix::leds[i].getBrightness();
-                const auto to = reinterpret_cast<const uint8_t* const>(&finishedPattern)[i];
+                /*const*/ auto to = reinterpret_cast</*const*/ uint8_t* const>(&finishedPattern)[i];
+
+                // TODO: ЗАГЛУШКА, так как клиент щас шлет 0 или 1
+                to = (to == 0) ? 0 : 100;
+                reinterpret_cast<uint8_t* const>(&finishedPattern)[i] = to;
 
                 diffs[i] = ((int8_t)to - from) /steps;
 
