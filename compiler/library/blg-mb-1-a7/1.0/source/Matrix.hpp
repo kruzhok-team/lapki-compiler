@@ -149,6 +149,16 @@ public:
         }
     }
 
+    void setPatternByStep(const Pattern35& pattern) {
+
+        const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
+
+        for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
+            
+            setPixel(i, ptrPattern[i]);
+        }
+    }
+
     void fill(const uint8_t value) {
 
         for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {

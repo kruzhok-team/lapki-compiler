@@ -80,8 +80,15 @@ public:
     }
 
     uint8_t getBrightness() {
+
+        const auto&& brightness = PWM().getLevel(pin);
         
-        return PWM().getLevel(pin);
+        // case: when brightness led == 100, PWM off!
+        if (!brightness && value) {
+            return 100;
+        }
+
+        return brightness;
     }
 
     bool value;

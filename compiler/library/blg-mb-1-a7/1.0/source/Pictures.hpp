@@ -3,7 +3,7 @@
 #include "Picture.hpp"
 
 // Список картинок
-Picture heart = { Pattern35{
+const Picture heart = { Pattern35{
     0, 0, 0, 0, 0,
     0, 100, 0, 100, 0,
     100, 100, 100, 100, 100,
@@ -13,7 +13,7 @@ Picture heart = { Pattern35{
     0, 0, 0, 0, 0,
 } };
 
-Picture note = { Pattern35{
+const Picture note = { Pattern35{
     0, 0, 0, 0, 0,
     0, 0, 100, 0, 0,
     0, 0, 100, 100, 0,
@@ -23,7 +23,7 @@ Picture note = { Pattern35{
     0, 0, 0, 0, 0,
 } };
 
-Picture smile = { Pattern35{
+const Picture smile = { Pattern35{
     0, 0, 0, 0, 0,
     0, 0, 0, 0, 0,
     0, 100, 0, 100, 0,
@@ -33,7 +33,7 @@ Picture smile = { Pattern35{
     0, 0, 0, 0, 0,
 } };
 
-Picture sadness = { Pattern35{
+const Picture sadness = { Pattern35{
     0, 0, 0, 0, 0,
     0, 0, 0, 0, 0,
     0, 100, 0, 100, 0,
@@ -43,7 +43,7 @@ Picture sadness = { Pattern35{
     0, 0, 0, 0, 0,
 } };
 
-Picture cross = { Pattern35{
+const Picture cross = { Pattern35{
     0, 0, 0, 0, 0,
     100, 0, 0, 0, 100,
     0, 100, 0, 100, 0,
@@ -53,7 +53,7 @@ Picture cross = { Pattern35{
     0, 0, 0, 0, 0,
 } };
 
-Picture square = { Pattern35{
+const Picture square = { Pattern35{
     100, 100, 100, 100, 100,
     100, 0, 0, 0, 100,
     100, 0, 0, 0, 100,
@@ -63,7 +63,7 @@ Picture square = { Pattern35{
     100, 100, 100, 100, 100,
 } };
 
-Picture rhombus = { Pattern35{
+const Picture rhombus = { Pattern35{
     0, 0, 0, 0, 0,
     0, 0, 100, 0, 0,
     0, 100, 0, 100, 0,

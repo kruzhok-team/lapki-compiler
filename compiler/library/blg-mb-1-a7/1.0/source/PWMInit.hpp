@@ -113,7 +113,7 @@ namespace detail {
             for (int i = 0; i < detail::data::SIZE; ++i) {
                 detail::data::buffer[i].pin = -1;   // pwm-entity is free
             }
-            detail::bss::frequencyPSC = 1;
+            detail::bss::frequencyPSC = 2;
             detail::bss::frequencyPSC_CNT = 1;
         }
 
