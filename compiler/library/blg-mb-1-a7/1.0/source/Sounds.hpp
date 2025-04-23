@@ -9,10 +9,10 @@
 // 1
 // test sound
 // Используется для Пищалка-тембр
-const uint32_t szTestSound = 200;
+const uint32_t szTestSound = 19;
 static uint16_t rawTestSound[szTestSound] = { 0 };
 
-Sound TestSound{ rawTestSound, szTestSound, 1 };
+Sound TestSound{ rawTestSound, szTestSound, 5 };
 
 // 2
 // sine sound
