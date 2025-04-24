@@ -45,7 +45,7 @@ namespace detail {
     }
 }
 
-enum class NoteName {
+enum NoteName {
 
     h = 494,
     b = 466,
@@ -93,7 +93,7 @@ public:
 
     void play() {
         
-        // setupNote(NoteName::a, 2000, 1000);
+        setupNote(NoteName::a, 2000, 1000);
 
         // mrx::hal::speaker::startSound(&LaughterSound, 1000);
         mrx::hal::speaker::startSound(&TestSound, this->Duration);
