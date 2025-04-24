@@ -30,6 +30,8 @@ public:
     void play(Sound *sound, const uint32_t duration) {
 
         mrx::hal::speaker::startSound(sound, duration);
+
+        // mrx::hal::speaker::startSound(&LaughterSound, duration);
     }
 
     void stop() {
