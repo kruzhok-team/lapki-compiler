@@ -505,8 +505,8 @@ namespace mrx {
             const uint32_t matrixAnimPwm = 100; // 1000ms /100 вызовов = 10ms на вызов
             auto timeLevel = 1000 / matrixAnimPwm; // Сколько ms на 1 отрезок (вызов) (число выше)
 
-            uint16_t currLevel{};
-            uint16_t animLevel{1};
+            volatile uint16_t currLevel{};
+            volatile uint16_t animLevel{1};
         }
         
         namespace speaker {
@@ -514,7 +514,6 @@ namespace mrx {
             GPIO_TypeDef* port = GPIOA;
             const uint8_t num = 4;
 
-            // 24 кГц
             const uint32_t speakerPwm = 40000;
             uint16_t currLevel{};
             uint16_t speakerLevel{1};

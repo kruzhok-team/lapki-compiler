@@ -14,7 +14,7 @@ volatile uint32_t pwmCounter = 0;
 void TIM2_IRQHandler(void) {
 
     TIM2 -> SR &= ~TIM_SR_UIF;  // Снимаем флаг прерывания
-
+    
     ++pwmCounter;
     
     // TIM2 -> CR1 &= ~TIM_CR1_CEN;    // Счет запрещён
@@ -34,6 +34,13 @@ void TIM2_IRQHandler(void) {
     if ((++mrx::hal::speaker::currLevel) >= mrx::hal::speaker::speakerLevel) {
         mrx::hal::speaker::interruptFunc();
         mrx::hal::speaker::currLevel = 0;
+
+        ++pwmCounter;
+        if (pwmCounter > 8000) {
+            pwmCounter = 0;
+            
+            // GPIOE->ODR ^= ( GPIO_ODR_OD0 << 1);
+        }
     }
 
     // matrix animation

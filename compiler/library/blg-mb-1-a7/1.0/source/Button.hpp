@@ -75,6 +75,7 @@ class Button
         debounceStartTime = 0;
         lastReleaseTime = 0;
         multiClickThresholdTime = 0;
+		clickThresholdTime = 500;
 
         holdEventThresholdTime = 0;
         holdEventRepeatTime = 0;
@@ -145,6 +146,7 @@ class Button
 				//the state changed to PRESSED
 				if (detail::helpers::bitRead(state, CURRENT) == true)
 				{
+					clickTimer = millis();	// start click time
 					holdEventPreviousTime = 0; // reset hold event
 					holdEventRepeatCount = 0;
 					numberOfPresses++;
@@ -163,6 +165,7 @@ class Button
 				}
 				else //the state changed to RELEASED
 				{
+					clickTimer = millis() - clickTimer;	// eval click time
 					if (cb_onRelease)
 						cb_onRelease(*this);                                          // Fire the onRelease event
 
@@ -229,7 +232,8 @@ class Button
 		if (detail::helpers::bitRead(state, CLICKSENT) == false &&
 			detail::helpers::bitRead(state, CURRENT) == false &&
 			((multiClickThresholdTime == 0) ||                                // We don't want multiClicks OR
-			((millis() - lastReleaseTime) > multiClickThresholdTime)))       // we are outside of our multiClick threshold time.
+			((millis() - lastReleaseTime) > multiClickThresholdTime)) &&	// we are outside of our multiClick threshold time.
+			clickTimer < clickThresholdTime)       
 		{
 			detail::helpers::bitWrite(state, CLICKSENT, true);
 			return clickCount;
@@ -348,6 +352,7 @@ class Button
 
   private:
     uint8_t pin;
+	uint32_t clickTimer;
     uint8_t mode;
     uint8_t state;
     unsigned long pressedStartTime;
@@ -358,6 +363,7 @@ class Button
     unsigned long holdEventPreviousTime;
     unsigned long lastReleaseTime;
     unsigned long multiClickThresholdTime;
+    unsigned long clickThresholdTime;
     buttonEventHandler cb_onPress;
     buttonEventHandler cb_onRelease;
     buttonEventHandler cb_onClick;
