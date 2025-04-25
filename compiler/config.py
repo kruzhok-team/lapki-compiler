@@ -18,7 +18,7 @@ _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
 _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
-_MAX_MSG_SIZE = 1024 * 50  # Максимальный размер сообщения от клиента.
+_MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 T = TypeVar('T', str, int)
 
