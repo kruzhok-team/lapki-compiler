@@ -47,18 +47,18 @@ namespace detail {
 
 enum NoteName {
 
-    h = 494,
-    b = 466,
-    a = 440,
-    gH = 415,
-    g = 392,
-    fH = 370,
-    f = 349,
-    e = 329,
-    dH = 311,
-    d = 294,
-    cH = 277,
-    c = 262
+    Note_h = 494,
+    Note_b = 466,
+    Note_a = 440,
+    Note_gH = 415,
+    Note_g = 392,
+    Note_fH = 370,
+    Note_f = 349,
+    Note_e = 329,
+    Note_dH = 311,
+    Note_d = 294,
+    Note_cH = 277,
+    Note_c = 262
 };
 
 class SpeakerNote {
