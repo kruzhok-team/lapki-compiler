@@ -80,8 +80,10 @@ public:
         doRandom();
 
         // Для знакового
-        if (value < begin || value >= end)
+        if (value < begin || value >= end) {
+            // От начала нашего диапазона добавляем допустимые пределы разброса
             value = begin + (abs(value) % (end - begin));
+        }
 
         // Для беззнакового
         if (uValue < begin || uValue >= end) {
