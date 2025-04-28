@@ -7,14 +7,18 @@ struct stateRandom {
     uint32_t a, b, c, d;
 };
 
-int64_t mapRandom(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
 // Компонент для генерации псевдо-случайного числа. Seed задается при помощи отсчета времени
 class Random {
 
     stateRandom state{1, 2, 3, 4};
+
+    uint32_t abs(int32_t x) {
+
+        if (x < 0)
+            return -x;
+
+        return x;
+    }
 
 public:
 
@@ -62,8 +66,10 @@ public:
         doRandom();
 
         // Для знакового
-        if (value < begin || value >= end)
-            value = mapRandom(value, -2147483648, 2147483647, begin, end);
+        if (value < begin || value >= end) {
+            // От начала нашего диапазона добавляем допустимые пределы разброса
+            value = begin + (abs(value) % (end - begin));
+        }
 
         // Для беззнакового
         if (uValue < begin || uValue >= end) {
@@ -76,7 +82,9 @@ public:
             if (_end < _begin)
                 _end = _begin + 1;
 
-            uValue = mapRandom(uValue, 0, 4294967295, _begin, _end);
+            // x - допустимые пределы разброса для случайного значения
+            const auto x = _end - _begin;
+            uValue = begin + (uValue % x);
         }
 
         return;

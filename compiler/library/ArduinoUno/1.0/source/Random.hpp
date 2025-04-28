@@ -62,8 +62,10 @@ public:
         doRandom();
 
         // Для знакового
-        if (value < begin || value >= end)
-            value = mapRandom(value, -2147483648, 2147483647, begin, end);
+        if (value < begin || value >= end) {
+            // От начала нашего диапазона добавляем допустимые пределы разброса
+            value = begin + (abs(value) % (end - begin));
+        }
 
         // Для беззнакового
         if (uValue < begin || uValue >= end) {
@@ -76,7 +78,9 @@ public:
             if (_end < _begin)
                 _end = _begin + 1;
 
-            uValue = mapRandom(uValue, 0, 4294967295, _begin, _end);
+            // x - допустимые пределы разброса для случайного значения
+            const auto x = _end - _begin;
+            uValue = begin + (uValue % x);
         }
 
         return;
