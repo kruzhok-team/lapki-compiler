@@ -5,14 +5,12 @@
 using AccTypeFloating = float;
 using ArgTypeFloating = float;
 
-class CalcFloat {
+struct CalcFloat {
 
-    bool overflowF {false};
-    bool zeroDivideF {false};
+    bool overflowF;
+    bool zeroDivideF;
 
-public:
-
-    AccTypeFloating value{};
+    AccTypeFloating value;
 
     void set(const ArgTypeFloating value) {
 
@@ -21,7 +19,7 @@ public:
 
     void add(const ArgTypeFloating value) {
 
-        const auto&& eval = detail::helpers::floating::addWithCheckOverflow(this->value, value);
+        const auto&& eval = addWithCheckOverflow(this->value, value);
 
         overflowF = eval.isError;
 
@@ -30,7 +28,7 @@ public:
 
     void sub(const ArgTypeFloating value) {
 
-        const auto&& eval = detail::helpers::floating::subWithCheckOverflow(this->value, value);
+        const auto&& eval = subWithCheckOverflow(this->value, value);
 
         overflowF = eval.isError;
 
@@ -39,7 +37,7 @@ public:
 
     void mul(const ArgTypeFloating value) {
 
-        const auto&& eval = detail::helpers::floating::mulWithCheckOverflow(this->value, value);
+        const auto&& eval = mulWithCheckOverflow(this->value, value);
 
         overflowF = eval.isError;
 
@@ -48,20 +46,20 @@ public:
 
     void div(const ArgTypeFloating value) {
 
-        const auto&& eval = detail::helpers::floating::divWithCheckOverflow(this->value, value);
+        const auto&& eval = divWithCheckOverflow(this->value, value);
 
         overflowF = eval.isError;
-        zeroDivideF = detail::helpers::floating::equalFloating(value, .0);
+        zeroDivideF = equalFloating(value, .0);
 
         this->value = eval.eval;
     }
 
     void mod(const ArgTypeFloating value) {
 
-        const auto&& eval = detail::helpers::floating::modWithCheckOverflow(this->value, value);
+        const auto&& eval = modWithCheckOverflow(this->value, value);
 
         overflowF = eval.isError;
-        zeroDivideF = detail::helpers::floating::equalFloating(value, .0);
+        zeroDivideF = equalFloating(value, .0);
 
         this->value = eval.eval;
     }
@@ -71,7 +69,8 @@ public:
         this->value = -this->value;
     }
 
-    void abs() {
+    // C has macros abs (name conflict)
+    void ABS() {
 
         if (this->value < 0)
             neg();
@@ -79,7 +78,7 @@ public:
 
     void pow(const ArgTypeFloating power) {
 
-        const auto&& eval = detail::helpers::floating::powWithCheckOverflow(this->value, power);
+        const auto&& eval = powWithCheckOverflow(this->value, power);
 
         overflowF = eval.isError;
 
@@ -88,7 +87,7 @@ public:
 
     void sqrt() {
 
-        const auto&& eval = detail::helpers::floating::sqrtWithCheckOverflow(this->value);
+        const auto&& eval = sqrtWithCheckOverflow(this->value);
 
         overflowF = eval.isError;
 
@@ -97,7 +96,7 @@ public:
 
     void log(const ArgTypeFloating base) {
 
-        const auto&& eval = detail::helpers::floating::logWithCheckOverflow(this->value, base);
+        const auto&& eval = logWithCheckOverflow(this->value, base);
 
         overflowF = eval.isError;
 
