@@ -12,10 +12,6 @@ namespace detail {
 
         uint32_t seed{};
 
-        int64_t mapRandom(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
-            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-        }
-
         uint32_t random() {
 
             if (!isSeeded) {
