@@ -1,7 +1,8 @@
 {
   "name": "Arduino Micro",
   "id": "ArduinoMicro",
-  "description": "Платформа для программирования микроконтроллера Arduino Uno. Включает в себя компоненты для взаимодействия с кнопками, светодиодами, Serial и другими элементами, которые могут понадобиться в процессе.\n Соберите схему, запрограммируйте Arduino Micro и насладитесь результатом вашей работы!", 
+  "nameTag": "ArduinoMicro",
+  "description": "Платформа для программирования микроконтроллера Arduino Micro. Включает в себя компоненты для взаимодействия с кнопками, светодиодами, Serial и другими элементами, которые могут понадобиться в процессе.\n Соберите схему, запрограммируйте Arduino Micro и насладитесь результатом вашей работы!",
   "icon": "путь/до/иконки",
   "staticComponents": false,
   "version": "1.0",
@@ -13,6 +14,7 @@
   "compile": true,
   "mainFunction": false,
   "mainFileExtension": "ino",
+  "staticActionDelimeter": "::",
   "headerFileExtension": "h",
   "compilingSettings": [
     {
@@ -35,17 +37,24 @@
           "img": "arduino/clicked.svg",
           "description": "Создает сигнал, если кнопка была кликнута",
           "checkMethod": "clicked"
+        },
+        "isReleased": {
+          "img": "common/isReleased.svg",
+          "description": "Создает сигнал, если кнопка была отпущена",
+          "checkMethod": "isReleased"
         }
       },
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин, к которому подключена кнопка"
         },
         "buttonMode": {
-          "type": [0, 1],
+          "type": ["BUTTON_PULLUP", "BUTTON_PULLDOWN"],
           "description": "buttonMode indicates BUTTON_PULLUP or BUTTON_PULLDOWN resistor",
-          "optional": true            
+          "optional": true
         }
       },
       "variables": {
@@ -62,13 +71,79 @@
       "singletone": false
     },
 
+    "ServoWrapper": {
+      "description": "Компонент для взаимодействия с сервоприводом",
+      "img": "arduino/button.svg",
+      "signals": {},
+      "constructorParameters": {
+        "pin": {
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
+          "description": "Пин, к которому подключен сервопривод"
+        },
+        "min": {
+          "type": "uint16_t",
+          "description": "Ширина импульса в микросекундах, соответствующая минимальному углу (0 градусов) на сервоприводе (по умолчанию 544).",
+          "optional": true
+        },
+        "max": {
+          "type": "uint16_t",
+          "description": "Ширина импульса в микросекундах, соответствующая максимальному углу (180 градусов) на сервоприводе (по умолчанию 2400).",
+          "optional": true
+        }
+      },
+      "variables": {
+        "angle": {
+          "img": "common/value.svg",
+          "type": "int",
+          "description": "Текущий угол поворота сервопривода в градусах."
+        },
+        "angleMicroseconds": {
+          "img": "common/value.svg",
+          "type": "int",
+          "description": "Текущий угол поворота сервопривода в микросекундах."
+        }
+      },
+      "loopActions": [],
+      "buildFiles": ["Servo.hpp", "Servo.cpp", "Servo.h", "ServoTimers.h"],
+      "importFiles": ["Servo.hpp"],
+      "methods": {
+        "write": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "angle",
+              "type": "unsigned int",
+              "description": "Угол поворота сервопривода (градусы)"
+            }
+          ],
+          "description": "Задать угол поворота сервопривода в градусах"
+        },
+        "writeMicroseconds": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "us",
+              "type": "unsigned int",
+              "description": "Задать угол поворота сервопривода"
+            }
+          ],
+          "description": "Задать угол поворота сервопривода в микросекундах"
+        }
+      },
+      "singletone": false
+    },
+
     "LED": {
       "description": "Компонент для взаимодействия со светодиодом",
       "img": "arduino/led.svg",
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин, к которому подключен светодиод"
         }
       },
@@ -144,7 +219,7 @@
             {
               "name": "interval",
               "type": "unsigned long",
-              "description": "Интервал срабатывания."
+              "description": "Интервал срабатывания (в миллисекундах)."
             }
           ],
           "description": "Запустить таймер. Будет сигнал раз в интервал."
@@ -164,41 +239,7 @@
     "Counter": {
       "description": "Переменная-счетчик.",
       "img": "arduino/counter.svg",
-      "signals": {
-        "isEqual": {
-          "img": "arduino/isEqual.svg",
-          "description": "Издать сигнал, если значение счетчика равно value",
-          "checkMethod": "isEqual",
-          "parameters": [
-            {
-              "name": "value",
-              "type": "int"
-            }
-          ]
-        },
-        "isLess": {
-          "img": "arduino/isLess.svg",
-          "description": "Издать сигнал, если значение счетчика меньше value",
-          "checkMethod": "isLess",
-          "parameters": [
-            {
-              "name": "value",
-              "type": "int"
-            }
-          ]
-        },
-        "isGreater": {
-          "img": "arduino/isGreater.svg",
-          "description": "Издать сигнал, если значение счетчика больше value",
-          "checkMethod": "isGreater",
-          "parameters": [
-            {
-              "name": "value",
-              "type": "int"
-            }
-          ]
-        }
-      },
+      "signals": {},
       "constructorParameters": {},
       "methods": {
         "add": {
@@ -222,7 +263,7 @@
           ]
         },
         "set": {
-          "img": "arduino/sub.svg",
+          "img": "common/set.svg",
           "description": "Установить value к значению счетчика",
           "parameters": [
             {
@@ -343,7 +384,9 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин, на который будет подаваться сигнал."
         }
       },
@@ -391,7 +434,9 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин, с которого будут считываться данные."
         }
       },
@@ -483,11 +528,15 @@
       },
       "constructorParameters": {
         "dataPin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин вход/выхода, на который выводятся биты"
         },
         "clockPin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+          ],
           "description": "Пин по которому производится синхронизация "
         },
         "bitOrder": {
@@ -553,13 +602,14 @@
         }
       }
     },
-      
+
     "UserSignal": {
+      "name": "Пользовательский сигнал",
       "description": "Пользовательский сигнал",
-      "img": "arduino/timer.svg",
+      "img": "common/userSignal.svg",
       "signals": {
         "isCalled": {
-          "img": "arduino/timeout.svg",
+          "img": "common/signalIsCalled.svg",
           "description": "Сработал сигнал",
           "checkMethod": "isCalled"
         }
@@ -567,7 +617,7 @@
       "constructorParameters": {},
       "methods": {
         "call": {
-          "img": "arduino/reset.svg",
+          "img": "common/signalCall.svg",
           "description": "Вызов сигнала"
         }
       },
@@ -579,15 +629,15 @@
 
     "Iterator": {
       "description": "Итератор",
-      "img": "arduino/timer.svg",
+      "img": "common/iterator.svg",
       "signals": {
         "onEnd": {
-          "img": "arduino/timeout.svg",
+          "img": "common/onIterationEnd.svg",
           "description": "Итерации завершены",
           "checkMethod": "onEnd"
         },
         "onIteration": {
-          "img": "arduino/timeout.svg",
+          "img": "common/onIteration.svg",
           "description": "Очередная итерация",
           "checkMethod": "onIteration"
         }
@@ -595,7 +645,7 @@
       "constructorParameters": {},
       "methods": {
         "stop": {
-          "img": "arduino/timer-start.svg",
+          "img": "common/break.svg",
           "description": "Остановить итератор."
         },
         "start": {
@@ -609,7 +659,7 @@
             {
               "name": "to",
               "type": "unsigned long",
-              "description": "Конченое значение."
+              "description": "Конечное значение."
             },
             {
               "name": "step",
@@ -625,9 +675,383 @@
       "singletone": false,
       "variables": {
         "index": {
-          "img": "arduino/difference.svg",
+          "img": "common/iteratorIndex.svg",
           "type": "unsigned long",
           "description": "Текущий индекс итерации"
+        }
+      }
+    },
+
+    "CalcInt": {
+      "name": "Целочисленный калькулятор",
+      "description": "Компонент для целочисленных вычислений. Хранит счётчик (32-разрядное знаковое число), над которым можно совершать арифметические и битовые операции.",
+      "img": "math/calcInt.svg",
+      "signals": {
+        "isOverflow": {
+          "img": "math/overflow.svg",
+          "description": "Переполнение счетчика.",
+          "checkMethod": "isOverflow"
+        },
+        "isZeroDivision": {
+          "img": "math/divZero.svg",
+          "description": "Деление на ноль.",
+          "checkMethod": "isZeroDivision"
+        }
+      },
+      "methods": {
+        "set": {
+          "img": "common/set-value.svg",
+          "description": "Установить значение счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Новое значение для счетчика."
+            }
+          ]
+        },
+        "add": {
+          "img": "math/add.svg",
+          "description": "Прибавить значение к счетчику.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Слагаемое для операции."
+            }
+          ]
+        },
+        "sub": {
+          "img": "math/sub.svg",
+          "description": "Вычесть значение из счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Вычитаемое для операции."
+            }
+          ]
+        },
+        "mul": {
+          "img": "math/mul.svg",
+          "description": "Умножить значение счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Множитель для операции."
+            }
+          ]
+        },
+        "div": {
+          "img": "math/div.svg",
+          "description": "Целочисленное деление значения счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Делитель для операции."
+            }
+          ]
+        },
+        "mod": {
+          "img": "math/mod.svg",
+          "description": "Остаток от деления счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Делитель для операции."
+            }
+          ]
+        },
+        "neg": {
+          "img": "math/neg.svg",
+          "description": "Поменять знак у счетчика.",
+          "parameters": []
+        },
+        "ABS": {
+          "img": "math/abs.svg",
+          "description": "Установить абсолютное значение для счетчика.",
+          "parameters": [],
+          "alias": "abs"
+        },
+        "bitAnd": {
+          "img": "math/bitAnd.svg",
+          "description": "Побитовое И для значения счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Значение для операции."
+            }
+          ]
+        },
+        "bitOr": {
+          "img": "math/bitOr.svg",
+          "description": "Побитовое ИЛИ для значения счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Значение для операции."
+            }
+          ]
+        },
+        "bitXor": {
+          "img": "math/bitXor.svg",
+          "description": "Побитовая операция XOR для значения счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Значение для операции."
+            }
+          ]
+        },
+        "bitNot": {
+          "img": "math/bitNot.svg",
+          "description": "Побитовое отрицание для значения счетчика.",
+          "parameters": []
+        },
+        "shiftLeft": {
+          "img": "math/shiftLeft.svg",
+          "description": "Побитовый сдвиг влево для значения счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Количество бит для сдвига."
+            }
+          ]
+        },
+        "shiftRight": {
+          "img": "math/shiftRight.svg",
+          "description": "Побитовый сдвиг вправо для значения счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "int32_t",
+              "description": "Количество бит для сдвига."
+            }
+          ]
+        }
+      },
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "type": "int32_t",
+          "description": "Значение счетчика."
+        }
+      },
+      "constructorParameters": {},
+      "buildFiles": ["CalcInt.hpp", "OverflowHelpers.hpp"],
+      "importFiles": ["CalcInt.hpp"],
+      "singletone": false
+    },
+
+    "CalcFloat": {
+      "name": "Вещественный калькулятор",
+      "description": "Компонент для вычислений c плавающей точкой. Хранит счётчик (вещественное число), над которым можно совершать арифметические операции.",
+      "img": "math/calcFloat.svg",
+      "signals": {
+        "isOverflow": {
+          "img": "math/overflow.svg",
+          "description": "Переполнение счетчика.",
+          "checkMethod": "isOverflow"
+        },
+        "isZeroDivision": {
+          "img": "math/divZero.svg",
+          "description": "Деление на ноль.",
+          "checkMethod": "isZeroDivision"
+        }
+      },
+      "methods": {
+        "set": {
+          "img": "common/set-value.svg",
+          "description": "Установить значение счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Новое значение для счетчика."
+            }
+          ]
+        },
+        "add": {
+          "img": "math/add.svg",
+          "description": "Прибавить значение к счетчику.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Слагаемое для операции."
+            }
+          ]
+        },
+        "sub": {
+          "img": "math/sub.svg",
+          "description": "Вычесть значение из счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Вычитаемое для операции."
+            }
+          ]
+        },
+        "mul": {
+          "img": "math/mul.svg",
+          "description": "Умножить значение счетчика.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Множитель для операции."
+            }
+          ]
+        },
+        "div": {
+          "img": "math/div.svg",
+          "description": "Деление значения счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Делитель для операции."
+            }
+          ]
+        },
+        "mod": {
+          "img": "math/mod.svg",
+          "description": "Остаток от деления счетчика. При делении на ноль значение не изменяется и возникает сигнал.",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "float",
+              "description": "Делитель для операции."
+            }
+          ]
+        },
+        "neg": {
+          "img": "math/neg.svg",
+          "description": "Поменять знак у счетчика.",
+          "parameters": []
+        },
+        "ABS": {
+          "img": "math/abs.svg",
+          "description": "Установить абсолютное значение для счетчика.",
+          "parameters": [],
+          "alias": "abs"
+        },
+        "pow": {
+          "img": "math/pow.svg",
+          "description": "Возвести значение счетчика в степень.",
+          "parameters": [
+            {
+              "name": "power",
+              "type": "float",
+              "description": "Значение для операции (возводимая степень)."
+            }
+          ]
+        },
+        "sqrt": {
+          "img": "math/sqrt.svg",
+          "description": "Взять квадратный корень от значения счетчика.",
+          "parameters": []
+        },
+        "log": {
+          "img": "math/log.svg",
+          "description": "Логарифм от счетчика с задаваемым основанием.",
+          "parameters": [
+            {
+              "name": "base",
+              "type": "float",
+              "description": "Значение для операции (основание логарифма)."
+            }
+          ]
+        }
+      },
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "type": "float",
+          "description": "Значение счетчика."
+        }
+      },
+      "constructorParameters": {},
+      "buildFiles": ["CalcFloat.hpp", "OverflowHelpers.hpp"],
+      "importFiles": ["CalcFloat.hpp"],
+      "singletone": false
+    },
+
+    "Array": {
+      "description": "Статический массив",
+      "img": "arduino/timer.svg",
+      "signals": {},
+      "constructorParameters": {
+        "size": {
+          "type": "uint16_t",
+          "description": "Размер массива (должен быть не более, чем 65535 элементов)",
+          "optional": false
+        }
+      },
+      "methods": {
+        "set": {
+          "img": "common/set-value.svg",
+          "description": "Установить значение элементу с заданным индексом",
+          "parameters": [
+            {
+              "name": "index",
+              "description": "Индекс элемента",
+              "type": "uint16_t"
+            },
+            {
+              "name": "value",
+              "description": "Новое значение для элемента",
+              "type": "int16_t"
+            }
+          ]
+        },
+        "peek": {
+          "img": "common/arrayPeek.svg",
+          "description": "Переместиться на элемент с заданным индексом",
+          "parameters": [
+            {
+              "name": "index",
+              "img": "common/arrayIndex.svg",
+              "description": "Индекс элемента",
+              "type": "uint16_t"
+            }
+          ]
+        },
+        "next": {
+          "img": "common/arrayNext.svg",
+          "description": "Переместиться на элемент со следующим индексом"
+        },
+        "prev": {
+          "img": "common/arrayPrev.svg",
+          "description": "Переместиться на элемент с предыдущим индексом"
+        }
+      },
+      "buildFiles": ["Array.hpp"],
+      "importFiles": ["Array.hpp"],
+      "singletone": false,
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "type": "int16_t",
+          "description": "Значение элемента с текущим индексом."
+        },
+        "index": {
+          "img": "common/arrayIndex.svg",
+          "type": "uint16_t",
+          "description": "Текущий индекс."
+        },
+        "size": {
+          "img": "common/arraySize.svg",
+          "type": "uint16_t",
+          "description": "Размер массива."
         }
       }
     }
