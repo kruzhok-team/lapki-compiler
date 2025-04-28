@@ -1,20 +1,18 @@
 #pragma once
 
-#include <cstdint>
+// #include <cstdint>
 
 #include "OverflowHelpers.hpp"
 
-using AccType = int32_t;
-using ArgType = int32_t;
+typedef int32_t AccType;
+typedef int32_t ArgType;
 
-class CalcInt {
+struct CalcInt {
 
-    bool overflowF {false};
-    bool zeroDivideF {false};
+    bool overflowF;
+    bool zeroDivideF;
 
-public:
-
-    AccType value{};
+    AccType value;
 
     void set(const ArgType value) {
 
@@ -23,21 +21,21 @@ public:
 
     void add(const ArgType value) {
 
-        overflowF = detail::helpers::integer::isAddOverflow(this->value, value);
+        overflowF = isAddOverflow(this->value, value);
 
         this->value += value;
     }
 
     void sub(const ArgType value) {
 
-        overflowF = detail::helpers::integer::isSubOverflow(this->value, value);
+        overflowF = isSubOverflow(this->value, value);
 
         this->value -= value;
     }
 
     void mul(const ArgType value) {
 
-        overflowF = detail::helpers::integer::isMulOverflow(this->value, value);
+        overflowF = isMulOverflow(this->value, value);
 
         this->value *= value;
     }
@@ -45,7 +43,7 @@ public:
     void div(const ArgType value) {
 
         zeroDivideF = (value == 0);
-        overflowF = detail::helpers::integer::isDivOverflow(this->value, value);
+        overflowF = isDivOverflow(this->value, value);
 
         if (!zeroDivideF)
             this->value /= value;
@@ -64,7 +62,8 @@ public:
         this->value = -this->value;
     }
 
-    void abs() {
+    // C has macros abs (name conflict)
+    void ABS() {
 
         if (this->value < 0)
             neg();
