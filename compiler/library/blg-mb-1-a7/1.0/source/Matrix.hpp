@@ -141,11 +141,7 @@ public:
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
 
         for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
-            if (ptrPattern[i] > 0) {
-                setPixel(i, 100);
-            } else {
-                setPixel(i, 0);
-            }
+            setPixel(i, ptrPattern[i]);
         }
     }
 
