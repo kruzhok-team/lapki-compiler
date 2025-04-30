@@ -214,9 +214,18 @@ def __process_state(state_id: str,
 
 def __process_transition(
         transition_id: str,
-        cgml_transition: CGMLTransition) -> ParserTrigger:
-    """Parse CGMLTransition and convert to ParserTrigger\
-        - class for fullgraphmlparser."""
+        cgml_transition: CGMLTransition,
+        states: Dict[str, CGMLState]) -> ParserTrigger:
+    """
+    Parse CGMLTransition and convert to ParserTrigger\
+        - class for fullgraphmlparser.
+
+    States is needed for comment generation.
+
+    ```cpp
+    Q_TRAN(transition_id) // target: target state name;
+    ```
+    """
     if '/' not in cgml_transition.actions:
         return ParserTrigger(
             name=cgml_transition.id,
@@ -241,10 +250,16 @@ def __process_transition(
         inner_trigger.condition
         if inner_trigger.condition is not None
         else 'true')
+
+    target_state = states.get(cgml_transition.target)
+    target_name = cgml_transition.target  # id as default name
+    if target_state and target_state.name is not None:
+        target_name = target_state.name
     return ParserTrigger(
         name=inner_trigger.trigger,
         source=cgml_transition.source,
         target=cgml_transition.target,
+        target_name=target_name,
         action=inner_event.actions,
         id=transition_id,
         type='external',
@@ -827,8 +842,10 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                                    CGMLTransition] = state_machine.transitions
             for transition_id in cgml_transitions:
                 cgml_transition = cgml_transitions[transition_id]
-                transitions.append(__process_transition(
-                    transition_id, cgml_transition))
+                transitions.append(
+                    __process_transition(
+                        transition_id, cgml_transition, state_machine.states)
+                )
             # Parsing state's actions, internal triggers, entry/exit
             states: Dict[_StateId, ParserState] = {}
             cgml_states: Dict[_StateId, CGMLState] = state_machine.states
