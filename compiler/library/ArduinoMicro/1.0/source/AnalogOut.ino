@@ -4,6 +4,7 @@ AnalogOut::AnalogOut(uint8_t pin) {
     _pin = pin;
 }
 
-void AnalogOut::write(int value) {
-    analogWrite(_pin, value);
+void AnalogOut::write(int _value) {
+    value = _value;
+    analogWrite(_pin, _value);
 }

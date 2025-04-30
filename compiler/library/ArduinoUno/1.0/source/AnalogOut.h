@@ -3,9 +3,10 @@
 
 class AnalogOut {
     public:
+        int value;
         int _pin;
         AnalogOut(uint8_t pin);
-        void write(int value);
+        void write(int _value);
 };
 
 #endif
