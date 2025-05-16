@@ -15,20 +15,10 @@ _BASE_DIRECTORY = _MODULE_PATH  # "server/"
 # НАЧАЛО ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 _SERVER_PORT = 8081
 _SERVER_HOST = 'localhost'
-_ACCESS_TOKENS_FILE = os.path.join(
-    _MODULE_PATH, 'ACCESS_TOKENS.txt' 
-    if not getattr(sys, 'frozen', False) 
-    else os.path.join(os.path.dirname(sys.executable), 
-                      'ACCESS_TOKENS.txt'))
+_ACCESS_TOKENS_FILE = os.path.join(_MODULE_PATH, 'ACCESS_TOKENS.txt')
 _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
-_LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library'
-                             if not getattr(sys, 'frozen', False)
-                               else os.path.join(os.path.dirname(sys.executable),
-                                                  'library'))
-_PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms'
-                                    if not getattr(sys, 'frozen', False)
-                                      else os.path.join(os.path.dirname(sys.executable),
-                                       'platforms'))
+_LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
+_PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК

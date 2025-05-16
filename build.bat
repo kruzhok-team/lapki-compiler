@@ -1,39 +1,37 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 echo [1/3] Run PyInstaller...
-pyinstaller .\lapki-compiler.spec --noconfirm
-
+pyinstaller --clean --name lapki-compiler compiler\__main__.py --onefile --noconfirm
 if errorlevel 1 (
-  echo Build error PyInstaller.
-  goto :EOF
-)
-
-set "DIST_DIR=dist\lapki-compiler"
-set "TARGET_DIR=%DIST_DIR%\"
-
-set "INT_DIR1=%DIST_DIR%\_internal\compiler"
-set "INT_DIR2=%DIST_DIR%\_internal\compiler"
-
-if exist "%INT_DIR1%" (
-    set "INTERNAL_COMPILER=%INT_DIR1%"
-) else if exist "%INT_DIR2%" (
-    set "INTERNAL_COMPILER=%INT_DIR2%"
-) else (
-    echo Cant find compiler at _internal.
+    echo ERROR: PyInstaller build failed.
     goto :EOF
 )
 
-echo [2/3] Moving compiler from %%INTERNAL_COMPILER%% at %TARGET_DIR%...
-xcopy "%INTERNAL_COMPILER%" "%TARGET_DIR%" /E /I /Y >nul
+set "TARGET_DIR=dist"
+set "SOURCE_DIR=compiler"
 
-echo [3/3] Remove internal copy...
-rmdir /S /Q "%INTERNAL_COMPILER%"
+echo [2/3] Copying selected items to %TARGET_DIR%...
 
-for /F %%F in ('dir /B "%~dp0%DIST_DIR%\_internals" 2^>nul') do set HAS=1
-if not defined HAS (
-    rmdir /S /Q "%DIST_DIR%\_internals" 2>nul
+@echo off
+setlocal
+
+if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
+
+set "ITEMS=compiler\platforms compiler\library compiler\ACCESS_TOKENS.txt"
+
+for %%X in (%ITEMS%) do (
+    if exist "%%~X\" (
+        echo Copying directory %%~X → %TARGET_DIR%\%%~nxX ...
+        xcopy "%%~X" "%TARGET_DIR%\%%~nxX" /E /I /Y >nul
+    ) else if exist "%%~X" (
+        echo Copying file      %%~X → %TARGET_DIR%\%%~nxX ...
+        copy /Y "%%~X" "%TARGET_DIR%\%%~nxX" >nul
+    ) else (
+        echo WARNING: %%~X not found!
+    )
 )
 
-echo Build completed!
+echo All specified items have been copied to %TARGET_DIR%\
+endlocal
 endlocal
