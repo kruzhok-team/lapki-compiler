@@ -32,6 +32,7 @@ for %%X in (%ITEMS%) do (
     )
 )
 
+del .\lapki-compiler.spec
 echo All specified items have been copied to %TARGET_DIR%\
 endlocal
 endlocal
