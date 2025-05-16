@@ -7,9 +7,11 @@ import sys
 
 from compiler.types.config_types import ArgumentParser, Config
 
-_MODULE_PATH = (os.path.dirname(os.path.abspath(inspect.stack()[0][1])) 
-                if not getattr(sys, 'frozen', False) 
-                else os.path.join(os.path.dirname(sys.executable)))
+_MODULE_PATH = (
+    os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+    if not getattr(sys, 'frozen', False)
+    else os.path.join(os.path.dirname(sys.executable))
+)
 _BASE_DIRECTORY = _MODULE_PATH  # "server/"
 
 # НАЧАЛО ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
