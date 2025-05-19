@@ -19,7 +19,7 @@ from compiler.fullgraphmlparser.stateclasses import (
 )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
-MODULE_PATH = get_config().module_directory
+MODULE_PATH = os.path.join(get_config().module_directory, 'fullgraphmlparser')
 IF_EXPRESSION = string.Template("""$offset if ($condition) {
 $actions
 $offset}""")
