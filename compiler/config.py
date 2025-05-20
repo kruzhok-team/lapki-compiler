@@ -23,7 +23,7 @@ _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
-_KILLABLE = True
+_KILLABLE = False
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 T = TypeVar('T', str, int)
 

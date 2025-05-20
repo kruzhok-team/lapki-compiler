@@ -4,6 +4,7 @@ import base64
 import os
 import time
 import os.path
+import sys
 from typing import Dict, List, Optional, Set
 from datetime import datetime
 from itertools import chain
@@ -221,17 +222,12 @@ class Handler:
         pass
 
     @staticmethod
-    async def handle_kill(request: web.Request) -> web.Response:
+    async def handle_kill(_: web.Request):
         """Handle kill request to shut down the application."""
         config = get_config()
         if not config.KILLABLE:
             return web.Response(status=403, text="Kill functionality is disabled")
-        
-        # Schedule application shutdown
-        # await request.app.cleanup()
-        import sys
         sys.exit(0)
-        return web.Response(text="Application shutdown initiated")
 
     @staticmethod
     async def readSourceFile(
