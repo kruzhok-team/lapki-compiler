@@ -35,7 +35,7 @@ async def main() -> NoReturn:
     await site.start()
     print('Модуль компилятора запущен...')
     while True:
-        await asyncio.sleep(3600)
+        await asyncio.sleep(5)
 
 
 def sync_main():
