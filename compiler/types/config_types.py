@@ -19,6 +19,7 @@ class Config:
     build_directory: str
     module_directory: str
     base_path: str
+    KILLABLE: bool = False
 
 
 class ArgumentParser(Tap):

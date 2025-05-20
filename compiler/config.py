@@ -23,6 +23,7 @@ _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
+_KILLABLE = True
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 T = TypeVar('T', str, int)
 
@@ -38,7 +39,8 @@ def get_default_config() -> Config:
                   _ACCESS_TOKENS_FILE,
                   _BUILD_DIRECTORY,
                   _MODULE_PATH,
-                  _BASE_DIRECTORY)
+                  _BASE_DIRECTORY,
+                  _KILLABLE)
 
 
 _config = get_default_config()
@@ -108,5 +110,6 @@ def configure(parser: ArgumentParser):
         access_token_file,
         build_directory,
         _MODULE_PATH,
-        _BASE_DIRECTORY)
+        _BASE_DIRECTORY,
+        _KILLABLE)
     )
