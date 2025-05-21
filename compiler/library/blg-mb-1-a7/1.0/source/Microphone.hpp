@@ -57,8 +57,8 @@ public:
         return copy;
     }
 
-    void setCooldown(unsigned long cooldown) {
-
+    void setCooldown(unsigned long _cooldown) {
+        cooldown = _cooldown;
     }
 
     void setupEvent(const uint16_t value) {
