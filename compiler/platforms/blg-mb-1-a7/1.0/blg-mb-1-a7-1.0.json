@@ -525,16 +525,37 @@
           "alias": "Услышан громкий звук"
         }
       },
-      "constructorParameters": {},
+      "constructorParameters": {
+        "cooldown": {
+          "img": "arduino/add.svg",
+          "name": "Интервал срабатывания",
+          "description": "Определяет, как часто микрофон сможет реагировать на новый громкий звук после предыдущего. Чем больше значение, тем дольше он «отдыхает»",
+          "optional": true,
+          "type": "unsigned long"
+        }
+      },
       "variables": {},
       "methods": {
+        "setCooldown": {
+          "img": "blg-mb/volumeThreshold.svg",
+          "parameters": [
+            {
+              "name": "Интервал срабатывания",
+              "type": "uint16_t",
+              "description": "Интервал срабатывания (в миллисекундах)",
+              "optional": false
+            }
+          ],
+          "description": "Настравает интервал срабатывания между звуками, на которые мишка реагирует",
+          "alias": "Установить интервал срабатывания"
+        },
         "setupEvent": {
           "img": "blg-mb/volumeThreshold.svg",
           "parameters": [
             {
               "name": "Громкость",
               "type": "uint16_t",
-              "description": "Уровень громкости для события. От 0 до 65535.",
+              "description": "Уровень громкости для события. От 0 до 4095.",
               "optional": false
             }
           ],
