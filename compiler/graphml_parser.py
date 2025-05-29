@@ -1,4 +1,5 @@
 """Module implements parsing yed-Graphml."""
+from dataclasses import dataclass
 import random
 from typing import Any, Dict, List, TypeAlias, Literal
 from collections import defaultdict
@@ -11,6 +12,13 @@ from compiler.platform_manager import PlatformManager
 Point: TypeAlias = dict[Literal['x', 'y'], int]
 TRANSTIONS_DISTANCE = 75
 DIFF_THRESHHOLD = 150
+
+
+@dataclass
+class FlattenStates:
+    states_list: list[dict[str, str | dict]]
+    states_dict: dict[str, dict[str, str]]
+    platform: str | None
 
 
 class GraphmlParser:
@@ -117,14 +125,50 @@ class GraphmlParser:
             pass
 
     @staticmethod
+    def _parseMetaNode(
+        node: dict,
+    ) -> None | str:
+        data_nodes: List[dict[str, Any]] | dict[str,
+                                                str] | None = node.get('data')
+        if data_nodes is None:
+            return None
+
+        properties = []
+        if isinstance(data_nodes, list):
+            for data_node in data_nodes:
+                if data_node.get('@key') != 'dData':
+                    continue
+
+                text: str = data_node['#text']
+                properties = text.split('\n\n')
+                break
+        else:
+            if data_nodes.get('@key') != 'dData':
+                return None
+
+            text: str = data_nodes['#text']
+            properties = text.split('\n\n')
+
+        for property in properties:
+            name, value = property.split('/')
+            if name == 'target':
+                return value.strip()
+
+        return None
+
+    @staticmethod
     def _getFlattenStates(
         xml: list[dict],
         states: list,
         states_dict: dict[str, dict[str, str]],
         nparent: str | None = None
-    ) -> tuple[list[dict[str, str | dict]], dict[str, dict[str, str]]]:
+    ) -> FlattenStates:
         """Из иерархической структуры графа создаем плоскую."""
+        platform: str | None = None
         for node in xml:
+            if node['@id'] == 'coreMeta':
+                platform = GraphmlParser._parseMetaNode(node)
+                continue
             if 'graph' in node.keys():
                 parent = GraphmlParser._getParentNode(node)
                 states.append(parent)
@@ -144,7 +188,8 @@ class GraphmlParser:
                 GraphmlParser._addStateToDict(
                     node, states_dict, parent=nparent)
                 states.append(node)
-        return states, states_dict
+        return FlattenStates(states_list=states,
+                             states_dict=states_dict, platform=platform)
 
     @staticmethod
     async def _getEvents(state: Dict[str, Any],
@@ -374,7 +419,7 @@ class GraphmlParser:
                 transition['do'] = actions
                 transition['color'] = GraphmlParser._randColor()
                 transitions.append(transition)
-            except (AttributeError, KeyError):
+            except (AttributeError, KeyError, ValueError):
                 initial_state = trigger['@target']
         return transitions, initial_state
 
@@ -461,13 +506,19 @@ class GraphmlParser:
             graph = xml['graphml']['graph']
             nodes = graph['node']
             triggers = graph['edge']
-            components = await GraphmlParser._getComponents(platform)
-            flattenStates, states_dict = GraphmlParser._getFlattenStates(
+            flatten_states = GraphmlParser._getFlattenStates(
                 nodes, states=[], states_dict={})
+            processed_platform = (
+                platform if flatten_states.platform is None
+                else f'BearlogaDefend-{flatten_states.platform}')
+            components = await GraphmlParser._getComponents(processed_platform)
             states = await GraphmlParser._createStates(
-                flattenStates, states_dict, platform)
+                flatten_states.states_list,
+                flatten_states.states_dict,
+                processed_platform
+            )
             transitions, initial_state = await GraphmlParser._getTransitions(
-                triggers, states_dict, platform)
+                triggers, flatten_states.states_dict, processed_platform)
             obj_initial_state = states[initial_state]
             init_x = obj_initial_state['bounds']['x'] - 100
             init_y = obj_initial_state['bounds']['y'] - 100
@@ -481,7 +532,7 @@ class GraphmlParser:
                     },
                     'transitions': transitions,
                     'components': components,
-                    'platform': platform,
+                    'platform': processed_platform,
                     'parameters': {}}
         except Exception:
             await Logger.logException()
