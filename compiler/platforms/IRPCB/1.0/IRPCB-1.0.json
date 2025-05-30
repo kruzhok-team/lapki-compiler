@@ -1,0 +1,503 @@
+{
+  "name": "ИК-Путеводная",
+  "id": "IRPCB",
+  "description": "Платформа для программирования Ик-Путеводной",
+  "icon": "",
+  "staticComponents": false,
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "language": "C++",
+  "author": "Gleb",
+  "visual": true,
+  "compile": true,
+  "mainFileExtension": "cpp",
+  "staticActionDelimeter": "::",
+  "headerFileExtension": "hpp",
+  "defaultSetupFunctions": [
+    {
+      "functionName": "initAll",
+      "args": []
+    }
+  ],
+  "compilingSettings": [
+    {
+      "command": "make",
+      "flags": [
+        "-C",
+        "{library_dir}\\customBoard\\1.0\\source",
+        "build_Fromboot",
+        "EXTRA_DIR=./",
+        "BUILD_DIR=./build"
+      ]
+    }
+  ],
+  "mainFunction": true,
+  "delimeter": ";",
+  "defaultIncludeFiles": [
+    "InitFunctions.hpp",
+    "board.h"
+  ],
+  "defaultBuildFiles": [],
+  "components": {
+    "Led": {
+      "description": "Компонент для взаимодействия со светодиодом",
+      "img": "arduino/led.svg",
+      "signals": {
+        "isReady": {
+          "img": "arduino/timeout.svg",
+          "description": "Закончил ли светодиод плавные колебания",
+          "checkMethod": "isReady"
+        }
+      },
+      "constructorParameters": {
+        "pin": {
+          "type": [
+            "LED_PWM1",
+            "LED_PWM2",
+            "LED_PWM3",
+            "LED_PWM4",
+            "LED_FRONT1",
+            "LED_FRONT2"
+          ],
+          "description": "Пин, к которому подключен светодиод"
+        }
+      },
+      "variables": {},
+      "methods": {
+        "set": {
+          "img": "arduino/switch-on.svg",
+          "parameters": [
+            {
+              "name": "яркость",
+              "type": "целое",
+              "description": "0 <= яркость <= 255",
+              "optional": false
+            }
+          ],
+          "description": "Задать яркость светодиода"
+        },
+        "on": {
+          "img": "arduino/switch-on.svg",
+          "description": "Включить светодиод"
+        },
+        "off": {
+          "img": "arduino/switch-off.svg",
+          "description": "Выключить светодиод"
+        },
+        "toggle": {
+          "img": "arduino/toggle.svg",
+          "description": "Меняет состояние светодиода на противоположное"
+        },
+        "fadeTo": {
+          "img": "arduino/switch-on.svg",
+          "parameters": [
+            {
+              "name": "время",
+              "type": "целое, мс",
+              "description": "",
+              "optional": false
+            },
+            {
+              "name": "яркость",
+              "type": "целое",
+              "description": "0 <= яркость <= 255",
+              "optional": false
+            }
+          ],
+          "description": "Плавно меняет яркость светодиода до заданной в течение установленного времени"
+        },
+        "fadeIn": {
+          "img": "arduino/switch-on.svg",
+          "parameters": [
+            {
+              "name": "время",
+              "type": "целое, мс",
+              "description": "",
+              "optional": false
+            }
+          ],
+          "description": "Плавно меняет яркость светодиода до наибольшей в течение установленного времени"
+        },
+        "fadeOut": {
+          "img": "arduino/switch-on.svg",
+          "parameters": [
+            {
+              "name": "время",
+              "type": "целое, мс",
+              "description": "",
+              "optional": false
+            }
+          ],
+          "description": "Плавно меняет яркость светодиода до наименьшей в течение установленного времени"
+        },
+        "blink": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "interval",
+              "type": "целое, мс",
+              "description": "длительность включения"
+            },
+            {
+              "name": "Period",
+              "type": "целое, мс",
+              "description": "Период между циклами включений/выключений"
+            }
+          ],
+          "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
+        },
+        "stop": {
+          "img": "arduino/switch-off.svg",
+          "description": "Прекращает действия светодиода"
+        }
+      },
+      "buildFiles": [
+        "LapkiLed.h"
+      ],
+      "importFiles": [
+        "LapkiLed.h"
+      ],
+      "singletone": false
+    },
+    "SystemLed": {
+      "description": "Компонент для взаимодействия с системным светодиодом",
+      "img": "arduino/led.svg",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {},
+      "methods": {
+        "on": {
+          "img": "arduino/switch-on.svg",
+          "description": "Включить светодиод"
+        },
+        "off": {
+          "img": "arduino/switch-off.svg",
+          "description": "Выключить светодиод"
+        },
+        "toggle": {
+          "img": "arduino/toggle.svg",
+          "description": "Меняет состояние светодиода на противоположное"
+        },
+        "blink": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "interval",
+              "type": "целое, мс",
+              "description": "Количество миганий"
+            },
+            {
+              "name": "Period",
+              "type": "целое, мс",
+              "description": "Длительность мигания"
+            }
+          ],
+          "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
+        },
+        "stop": {
+          "img": "arduino/switch-off.svg",
+          "description": "Прекращает действия светодиода"
+        }
+      },
+      "buildFiles": [
+        "LapkiLed.h"
+      ],
+      "importFiles": [
+        "LapkiLed.h"
+      ],
+      "singletone": false
+    },
+    "Timer": {
+      "description": "Программный таймер",
+      "img": "arduino/timer.svg",
+      "signals": {
+        "timeout": {
+          "img": "arduino/timeout.svg",
+          "description": "Время вышло!",
+          "checkMethod": "timeout"
+        },
+        "tick": {
+          "img": "arduino/timeout.svg",
+          "description": "прошёл 1 тик",
+          "checkMethod": "tick"
+        }
+      },
+      "constructorParameters": {},
+      "methods": {
+        "start": {
+          "img": "arduino/start.svg",
+          "parameters": [
+            {
+              "name": "interval",
+              "type": "целое, мс",
+              "description": "Интервал срабатывания."
+            }
+          ],
+          "description": "Завести и включить таймер. Будет сигнал раз в интервал."
+        },
+        "proceed": {
+          "img": "",
+          "parameters": [],
+          "description": "Включить таймер (отпустить стрелку)"
+        },
+        "pause":{
+          "img": "",
+          "parameters": [],
+          "description": "Остановить таймер (зафиксировать стрелку)"
+        }
+      },
+      "buildFiles": [
+        "Timer.h"
+      ],
+      "importFiles": [
+        "Timer.h"
+      ],
+      "loopActions": [
+        "updateDifference"
+      ],
+      "variables": {
+        "difference": {
+          "img": "arduino/difference.svg",
+          "type": "целое, мс",
+          "description": "Оставшееся время до окончания таймера."
+        }
+      },
+      "singletone": false
+    },
+    "Counter": {
+      "description": "Переменная-счетчик.",
+      "img": "arduino/counter.svg",
+      "signals": {},
+      "constructorParameters": {},
+      "methods": {
+        "add": {
+          "img": "arduino/add.svg",
+          "description": "Добавить value к значению счетчика",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "целое"
+            }
+          ]
+        },
+        "sub": {
+          "img": "arduino/sub.svg",
+          "description": "Вычесть value из значения счетчика",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "целое"
+            }
+          ]
+        },
+        "div": {
+          "img": "",
+          "description": "разделить  значения счетчика нацело на value",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "целое"
+            }
+          ]
+        },
+        "mul": {
+          "img": "",
+          "description": "умножить значение счетчика на value",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "рациональное"
+            }
+          ]
+        },
+        "set": {
+          "img": "",
+          "description": "приравнять счётчик к value",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "целое"
+            }
+          ]
+        },
+        "reset": {
+          "img": "arduino/reset.svg",
+          "description": "Обнулить значение счетчика."
+        }
+      },
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "description": "Текущее значение счетчика",
+          "type": "целое"
+        }
+      },
+      "buildFiles": [
+        "Counter.h"
+      ],
+      "importFiles": [
+        "Counter.h"
+      ],
+      "singletone": false
+    },
+    "Serial": {
+      "img": "Dos/printer.svg",
+      "description": "выводит сообщения в usb-uart",
+      "signals": {
+        "isUpdated": {
+          "img": "",
+          "description": "Что-то пришло в буфер",
+          "checkMethod": "isUpdated"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "message": {
+          "img": "tjs-ms/lastData.svg",
+          "description": "Последнее полученное сообщение",
+          "type": "представимо в виде строки, например \"строка\" или число"
+        }
+      },
+      "methods": {
+        "printVal": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "текст",
+              "type": "\"текст в двойных кавычках\"",
+              "description": "будет выведено перед значением"
+            },
+            {
+              "name": "Значение",
+              "type": "представимо в виде строки, например \"строка\" или число",
+              "description": "выведется после текста"
+            }
+          ],
+          "description": "Выводит в консоль текст, отступ, значение, перенос строки"
+        },
+        "print": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Сообщение",
+              "type": "представимо в виде строки, например \"строка\" или число",
+              "description": ""
+            }
+          ],
+          "description": "Выводит в сообщение в консоль"
+        }
+      },
+      "buildFiles": [
+        "Serial.h"
+      ],
+      "importFiles": [
+        "Serial.h"
+      ],
+      "singletone": true
+    },
+    "Button": {
+      "description": "Компонент для взаимодействия с кнопкой",
+      "img": "arduino/button.svg",
+      "signals": {
+        "isPressed": {
+          "img": "arduino/isPressed.svg",
+          "description": "Нажата ли кнопка сейчас?",
+          "checkMethod": "isPressed"
+        },
+        "isUnpressed": {
+          "img": "",
+          "description": "Не нажата ли кнопка сейчас?",
+          "checkMethod": "isUnpressed"
+        }
+      },
+      "constructorParameters": {
+        "pin": {
+          "type": [
+            "Gpio1",
+            "Gpio2",
+            "Gpio3",
+            "Gpio4"
+          ],
+          "description": "Контакт, к которому стянута кнопка"
+        }
+      },
+      "variables": {},
+      "buildFiles": [
+        "Button.h"
+      ],
+      "importFiles": [
+        "Button.h"
+      ],
+      "methods": {},
+      "loopActions": [],
+      "singletone": false
+    },
+    "IRpkg": {
+      "description": "Контейнер для данных с ик-датчика",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {
+        "self": {
+          "img": "",
+          "description": "Ссылка на себя, при выводе автоматически преобразуется в сообщение в 16ричном виде",
+          "type": "представимо в виде строки, например \"строка\" или число"
+        },
+        "word16": {
+          "img": "",
+          "description": "16 битное сообщение",
+          "type": "число"
+        },
+        "bits_count": {
+          "img": "",
+          "description": "количество ненулевых бит в сообщении",
+          "type": "число"
+        }
+      },
+      "buildFiles": [
+        "IRpkg.h"
+      ],
+      "importFiles": [
+        "IRpkg.h"
+      ],
+      "methods": {
+        "setWord": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Word16",
+              "type": "16 битное число",
+              "description": ""
+            }
+          ],
+          "description": "Устанавливает сообщение равное Word16"
+        },
+        "setPower": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Мощность",
+              "type": "число, от 0 до 255",
+              "description": ""
+            }
+          ],
+          "description": "Устанавливает мощность, с которым будет отправлено сообщение"
+        },
+        "setPkg": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "ИК-Контейнер",
+              "type": "IK-pkg",
+              "description": "То, откуда копировать данные"
+            }
+          ],
+          "description": "Копирует ИК-Контейнер в себя"
+        }
+      },
+      "loopActions": [],
+      "singletone": false
+    }
+  }
+}

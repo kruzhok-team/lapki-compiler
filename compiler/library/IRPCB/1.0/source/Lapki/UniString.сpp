@@ -1,0 +1,11 @@
+#include "UniString.h"
+
+// TODO: проверять на размеры чисел, чтобы избежать переполнения
+// проверять результат std::to_chars
+
+UniString::operator std::string() const { return value; }
+
+
+
+
+
