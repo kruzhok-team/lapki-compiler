@@ -370,15 +370,9 @@ def __generate_create_components_code(
             component.parameters,
             construct_parameters
         )
-        if platform.component_declaration:
-            declaration = f'{type} {component_id};\n'
-            initialization = f'{component_id} = {type}({args});\n'
-            notes.append(create_note(Labels.H, declaration))
-            notes.append(create_note(Labels.SETUP, initialization))
-        else:
-            code_to_insert = (f'{type} {component_id} = '
-                              f'{type}({args});\n')
-            notes.append(create_note(Labels.H, code_to_insert))
+        code_to_insert = (f'{type} {component_id} = '
+                          f'{type}({args});\n')
+        notes.append(create_note(Labels.H, code_to_insert))
     return notes
 
 
@@ -449,7 +443,7 @@ def __generate_signal_checker(
     if signal is None:
         raise _InnerCGMLException(
             f'Для компонента {component_id} типа {component_type} '
-            f'отсутствует сигнал {signal}.')
+            f'отсутствует сигнал {component_type}.')
     call_method = signal.checkMethod
     condition = __generate_function_call(
         platform, component_type, component_id, call_method, '')
@@ -669,6 +663,9 @@ def __generate_main_function() -> ParserNote:
 \n\tsetup();\
 \n\twhile(1) {\
 \n\t\tloop();
+#ifdef InitFunctions_HPP
+\t\twatcher();
+#endif
 \n\t}
 \n\treturn 0;
 }

@@ -131,10 +131,20 @@ class Compiler:
         command_results: List[CommandResult] = []
         # FIXME: грязный хак, чтобы устранить проблему с пропадающим файлом
         await asyncio.sleep(0.1)
+        # TODO вынести в отдельную функцию
+        base_dir = base_dir.replace('\\', '/')
+        library_dir = os.path.dirname(os.path.realpath(__file__)) + '/library'
+        library_dir = library_dir.replace('\\', '/')
+        for command in commands:
+            flags = command.flags.copy()
+            for i in range(len(command.flags)):
+                flags[i] = flags[i].replace('{library_dir}', library_dir)
+                flags[i] = flags[i].replace('./', base_dir + '/')
+            print('flags: ', *flags)
         for command in commands:
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
-                *command.flags,
+                *flags,
                 cwd=base_dir,
                 text=False,
                 stdout=asyncio.subprocess.PIPE,
