@@ -31,6 +31,10 @@ pytest_plugins = ('pytest_asyncio',)
                  'compiler/platforms/BearlogaDefend-Stapler/'
                  '1.0/BearlogaDefend-Stapler-1.0.json',
                  'BearlogaDefend-Stapler', id='Stapler'),
+    pytest.param('examples/авто.graphml',
+                 'compiler/platforms/BearlogaDefend-Stapler/'
+                 '1.0/BearlogaDefend-Stapler-1.0.json',
+                 'BearlogaDefend-Stapler', id='New scheme')
 ])
 async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     """Test parsing yed-Graphml."""
