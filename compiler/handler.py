@@ -226,7 +226,8 @@ class Handler:
         """Handle kill request to shut down the application."""
         config = get_config()
         if not config.KILLABLE:
-            return web.Response(status=403, text="Kill functionality is disabled")
+            return web.Response(status=403,
+                                text='Kill functionality is disabled')
         sys.exit(0)
 
     @staticmethod
