@@ -40,6 +40,7 @@ public:
 
     bool isSoundEnd() {
         const bool isEnd = detail::speaker::isPlayed && mrx::hal::speaker::soundController.sound == nullptr;
+        detail::speaker::isPlayed = false;
         return isEnd;
     }
 };
