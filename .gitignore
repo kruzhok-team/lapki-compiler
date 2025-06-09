@@ -8,3 +8,5 @@ logs.log
 *config.py
 ACCESS_TOKENS.txt
 .coverage
+build
+dist

@@ -41,13 +41,11 @@ class Logger:
                  'and exception object is None!')
 
         if exception_traceback is not None:
-            print(exception_traceback.tb_next)
             file: str = exception_traceback.tb_frame.f_code.co_filename
             line_number: int = exception_traceback.tb_lineno
             error = (f'Exception type: {exception_type},'
                      f'File name: {file} , Line number: {line_number}')
         if exception_object is not None:
-            # Logger.logger.exception('asdasdasdasds')
             error += f'Exception args: {exception_object.args}'
 
         await Logger.logger.exception(error, exc_info=True)
