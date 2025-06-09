@@ -15,3 +15,10 @@ async def posix_copy(
         target_directory,
         cwd=cwd
     )
+
+
+def posix_decode(
+    data: bytes
+) -> str:
+    """Decode bytes as utf-8."""
+    return data.decode('utf-8')
