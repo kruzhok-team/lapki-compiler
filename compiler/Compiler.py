@@ -147,8 +147,8 @@ class Compiler:
             command_results.append(CommandResult(
                 command=command.command + ' ' + ' '.join(command.flags),
                 return_code=process.returncode,
-                stdout=str(stdout.decode('utf-8')),
-                stderr=str(stderr.decode('utf-8'))))
+                stdout=os_commands.decode(stdout),
+                stderr=os_commands.decode(stderr)))
         return command_results
 
     @staticmethod
