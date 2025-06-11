@@ -46,22 +46,22 @@ _Min_Stack_Size = 0x400 ; /* required amount of stack */
 MEMORY
 {
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 32K
-  BOOTLOADER    (rx)    : ORIGIN = 0x0800a000,   LENGTH = 88K
+  USERCODE    (rx)    : ORIGIN = 0x0800a000,   LENGTH = 88K
   USBRAM  (rw)    : ORIGIN = 0x40006000, LENGTH = 1K
 }
 
 /* Sections */
 SECTIONS
 {
-  /* The startup code into "BOOTLOADER" Rom type memory */
+  /* The startup code into "USERCODE" Rom type memory */
   .isr_vector :
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
-  /* The program code and other data into "BOOTLOADER" Rom type memory */
+  /* The program code and other data into "USERCODE" Rom type memory */
   .text :
   {
     . = ALIGN(4);
@@ -76,22 +76,22 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >BOOTLOADER
+  } >USERCODE
 
-  /* Constant data into "BOOTLOADER" Rom type memory */
+  /* Constant data into "USERCODE" Rom type memory */
   .rodata :
   {
     . = ALIGN(4);
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   .ARM.extab   : {
     . = ALIGN(4);
     *(.ARM.extab* .gnu.linkonce.armextab.*)
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   .ARM : {
     . = ALIGN(4);
@@ -99,7 +99,7 @@ SECTIONS
     *(.ARM.exidx*)
     __exidx_end = .;
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   .preinit_array     :
   {
@@ -108,7 +108,7 @@ SECTIONS
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   .init_array :
   {
@@ -118,7 +118,7 @@ SECTIONS
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   .fini_array :
   {
@@ -128,7 +128,7 @@ SECTIONS
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
     . = ALIGN(4);
-  } >BOOTLOADER
+  } >USERCODE
 
   /* Used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -146,7 +146,7 @@ SECTIONS
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
 
-  } >RAM AT> BOOTLOADER
+  } >RAM AT> USERCODE
 
   /* Uninitialized data section into "RAM" Ram type memory */
   . = ALIGN(4);
