@@ -5,7 +5,7 @@
 namespace detail {
 
     namespace speaker {
-
+        bool isPlayed = false;
         bool isInit = false;
     }
 }
@@ -13,7 +13,6 @@ namespace detail {
 class SpeakerSound {
 
 public:
-
     SpeakerSound() {
 
         if (!detail::speaker::isInit) {
@@ -28,7 +27,7 @@ public:
 
     // duration in ms
     void play(Sound *sound, const uint32_t duration) {
-
+        detail::speaker::isPlayed = true;
         mrx::hal::speaker::startSound(sound, duration);
 
         // mrx::hal::speaker::startSound(&LaughterSound, duration);
@@ -40,7 +39,10 @@ public:
     }
 
     bool isSoundEnd() {
-
-        return mrx::hal::speaker::soundController.sound == nullptr;
+        const bool isEnd = detail::speaker::isPlayed && mrx::hal::speaker::soundController.sound == nullptr;
+        if (isEnd) {
+            detail::speaker::isPlayed = false;
+        }
+        return isEnd;
     }
 };
