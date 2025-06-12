@@ -23,7 +23,7 @@ _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
-_KILLABLE = False
+_KILLABLE = True
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 T = TypeVar('T', str, int)
 
@@ -51,14 +51,16 @@ def _choice(flag_arg: str | bool | None,
             default_value: T) -> T:
     if flag_arg is not None:
         if isinstance(default_value, bool):
-            return default_value.__class__(str(flag_arg).lower() in ("1", "true", "yes", "on"))
+            return default_value.__class__(str(flag_arg).lower()
+                                           in ('1', 'true', 'yes', 'on'))
         return default_value.__class__(flag_arg)
 
     env_arg = os.environ.get(env_arg_name, None)
 
     if env_arg is not None:
         if isinstance(default_value, bool):
-            return default_value.__class__(str(env_arg).lower() in ("1", "true", "yes", "on"))
+            return default_value.__class__(str(env_arg).lower()
+                                           in ('1', 'true', 'yes', 'on'))
         return default_value.__class__(env_arg)
 
     return default_value
