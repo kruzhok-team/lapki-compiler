@@ -50,11 +50,15 @@ def _choice(flag_arg: str | None,
             env_arg_name: str,
             default_value: T) -> T:
     if flag_arg is not None:
+        if isinstance(default_value, bool):
+            return default_value.__class__(str(flag_arg).lower() in ("1", "true", "yes", "on"))
         return default_value.__class__(flag_arg)
 
     env_arg = os.environ.get(env_arg_name, None)
 
     if env_arg is not None:
+        if isinstance(default_value, bool):
+            return default_value.__class__(str(env_arg).lower() in ("1", "true", "yes", "on"))
         return default_value.__class__(env_arg)
 
     return default_value
@@ -100,6 +104,9 @@ def configure(parser: ArgumentParser):
         args.max_msg_size, 'LAPKI_COMPILER_MAX_MSG_SIZE', _MAX_MSG_SIZE)
     build_directory = _choice(
         args.build_path, 'LAPKI_COMPILER_BUILD_PATH', _BUILD_DIRECTORY)
+    killable = _choice(
+        args.killable, 'LAPKI_COMPILER_KILLABLE', _KILLABLE
+    )
     set_config(Config(
         library_path,
         server_host,
@@ -111,5 +118,5 @@ def configure(parser: ArgumentParser):
         build_directory,
         _MODULE_PATH,
         _BASE_DIRECTORY,
-        _KILLABLE)
+        bool(killable))
     )
