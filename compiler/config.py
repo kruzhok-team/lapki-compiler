@@ -46,7 +46,7 @@ def get_default_config() -> Config:
 _config = get_default_config()
 
 
-def _choice(flag_arg: str | None,
+def _choice(flag_arg: str | bool | None,
             env_arg_name: str,
             default_value: T) -> T:
     if flag_arg is not None:
