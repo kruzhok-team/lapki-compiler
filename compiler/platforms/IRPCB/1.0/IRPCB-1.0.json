@@ -27,8 +27,8 @@
         "-C",
         "{library_dir}\\customBoard\\1.0\\source",
         "build_Fromboot",
-        "EXTRA_DIR=./",
-        "BUILD_DIR=./build"
+        "EXTRA_DIR={base_dir}/",
+        "BUILD_DIR={base_dir}/build"
       ]
     }
   ],
