@@ -307,7 +307,7 @@ void IrqEpilogue();
 void DbgAssert(bool IsOk, const char *MsgIfNotOk);
 void DbgCheckClassI();
 
-//Sys::Lock
+//Sys::Lock, had to be inserted in main cycle
 static inline systime_t GetSysTime() {
     Sys::Lock();
     uint16_t currentCNT = SYS_TIM->CNT;

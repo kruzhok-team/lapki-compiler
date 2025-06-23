@@ -53,7 +53,7 @@ class Serial {
         else
             temp = UniString(msg);
         Printf("%s\n\r", temp.value.c_str());
-    };
+    }
 };
 
 #endif  // SERIAL_HPP
