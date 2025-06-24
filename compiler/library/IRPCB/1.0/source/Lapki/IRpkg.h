@@ -3,17 +3,14 @@
 // #include <stdint-gcc.h>
 #include <string>
 
-#include "Settings.h"
-
 class IRpkg {
+    uint8_t bits_count_ = 0;
     uint16_t word16_ = 0;
-    uint32_t bits_count_ = 0;
-    int32_t power = *settings.ir_tx_pwr;
 
    public:
     IRpkg& self;
+    const uint8_t& bits_count = bits_count_;
     const uint16_t& word16 = word16_;
-    const uint32_t& bits_count = bits_count_;
 
     IRpkg() : self(*this) {};
 
@@ -21,7 +18,6 @@ class IRpkg {
         if (this != &other) {
             word16_ = other.word16_;
             bits_count_ = other.bits_count_;
-            power = other.power;
         }
         return *this;
     }
@@ -30,15 +26,21 @@ class IRpkg {
 
     void setWord(uint16_t w16);
 
-    
-    void setPower(int pwr);
-
     inline void setPkg(IRpkg other) { *this = other; }
 
-    inline void set(uint16_t w16, int pwr) {
-        setWord(w16);
-        setPower(pwr);
+    ///////////
+    inline void set(uint8_t bts_cnt, uint16_t w16) {
+        word16_ = w16;
+        bits_count_ = bts_cnt;
     }
+
+    bool operator==(const IRpkg& other) {
+        return this->bits_count == other.bits_count &&
+               this->word16 == other.word16;
+    }
+
+    bool operator!=(const IRpkg& other) { return !(*this == other); }
+
     operator std::string() const;
 };
 
