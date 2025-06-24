@@ -4,6 +4,7 @@
 extern "C++" {
 #include <string>
 
+#include "IRReciever.h"
 #include "MsgQ.h"
 #include "Sequences.h"
 #include "Serial.h"
@@ -113,6 +114,14 @@ static inline void InitClk() {
     Clk::UpdateFreqValues();
 }
 
+<<<<<<< HEAD
+=======
+// works with evt_q_main instead of evt_q_app
+void IrRxCallbackIMain(uint8_t bit_cnt, uint16_t rcvd) {
+    evt_q_main.SendNowOrExitI(EvtMsg(EvtId::IrRx, bit_cnt, rcvd));
+}
+
+>>>>>>> ce2aec0 (fix time)
 void watcher() {
     msg = evt_q_main.Fetch(TIME_INFINITE);
     switch (msg.id) {
@@ -179,7 +188,15 @@ void watcher() {
             Printf("Usb ready\r");
             CTC->Enable();  // Start autotrimming of IRC48M
             break;
+<<<<<<< HEAD
 
+=======
+        case EvtId::IrRx:
+            // TODO EvtMsg::value — 32битный тип, возможно следует переделать на
+            // другую очередь событий или другое сообщение
+            //  или вовсе создать свой поток, как это сделано в appThread
+            IRReciever::update(msg.value & 0xFFFF, msg.value_id);
+>>>>>>> ce2aec0 (fix time)
         default:
             break;
     }  // switch
@@ -198,6 +215,7 @@ void initAll() {
     // ==== UART, RTOS & Event queue ====
     dbg_uart.Init();
     Sys::Init();
+
     evt_q_main.Init();
     Printf("\r%S %S\r\n", APP_NAME, kBuildTime);
     Clk::PrintFreqs();
@@ -238,9 +256,14 @@ void initAll() {
     IRRcvr::callbackI = IrRxCallbackI;
 
     // ==== App ====
-    // settings.Load();
-    // Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
-    // AppInit();
+    // TODO прерывания TIM0 конфликтуют с прерываниями TIM10,
+    // не использовать прерывания, пока прерывания TIM0 не
+    // будут обрабатываться в SYS_TIM_IRQ_HANDLER; сейчас
+    // все флаги в любом случае сбрасываются в прерывани, без input_pwm.Init();
+    // не работает, там происходит инициализация TIM0
+    settings.Load();
+    Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
+    AppInit();
 
     // ==== Main evt cycle ====
     tmr_uart_check.StartOrRestart();

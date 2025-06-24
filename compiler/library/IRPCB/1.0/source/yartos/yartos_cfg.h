@@ -9,7 +9,7 @@
 #define YARTOS_YARTOS_CFG_H_
 
 // System timer resolution: 16 or 32 bits
-#define SYS_TIM_RESOLUTION      32
+#define SYS_TIM_RESOLUTION      16
 
 // Frequency of the system timer that drives the system ticks. This setting also defines the system tick time unit.
 #define SYS_TIM_FREQUENCY       1000

@@ -278,8 +278,6 @@ extern volatile uint32_t Time_;
 extern volatile uint32_t lastCNT_;
 // Time and sleep
 
-
-
 static inline systime_t GetSysTimeX() {
     return SYS_TIM->CNT;  // Time_;
 }
@@ -307,17 +305,19 @@ void IrqEpilogue();
 void DbgAssert(bool IsOk, const char *MsgIfNotOk);
 void DbgCheckClassI();
 
-//Sys::Lock, had to be inserted in main cycle
+// Sys::Lock, had to be inserted in main cycle
 static inline systime_t GetSysTime() {
+    // return SYS_TIM->CNT;
     Sys::Lock();
-    uint16_t currentCNT = SYS_TIM->CNT;
-    if (lastCNT_ <= currentCNT) {
-        Time_ += currentCNT - lastCNT_;
-    } else {
-        Time_ += 0x10000 - lastCNT_ + currentCNT;
-    }
-    lastCNT_ = currentCNT;
-    systime_t time = Time_;
+    uint32_t time = Time_ + SYS_TIM->CNT;
+    // uint16_t currentCNT = SYS_TIM->CNT;
+    // if (lastCNT_ <= currentCNT) {
+    //     Time_ += currentCNT - lastCNT_;
+    // } else {
+    //     Time_ += 0x10000 - lastCNT_ + currentCNT;
+    // }
+    // lastCNT_ = currentCNT;
+    // systime_t time = Time_;
     Sys::Unlock();
     return time;
 }
