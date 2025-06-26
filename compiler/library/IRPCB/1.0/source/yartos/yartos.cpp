@@ -752,25 +752,10 @@ void RescheduleS() {
     if (SchIsReschRequiredI()) SchDoRescheduleAhead();
 }
 
-<<<<<<< HEAD
-// systime_t GetSysTimeX() {
-//         if (lastCNT_ < SYS_TIM->CNT) {
-//             Time_ += SYS_TIM->CNT - lastCNT_;
-//         } else {
-//             Time_ += SYS_TIM->CNT + (0x10000 - lastCNT_);
-//         }
-//         lastCNT_ = SYS_TIM->CNT;
-//         return Time_;
-// }
-
-#if 1 // ==== Time ====
-retv SleepS(systime_t Delay_st) { return SchGoSleepTimeoutS(ThdState::Sleeping, Delay_st); }
-=======
 #if 1  // ==== Time ====
 retv SleepS(systime_t Delay_st) {
     return SchGoSleepTimeoutS(ThdState::Sleeping, Delay_st);
 }
->>>>>>> ce2aec0 (fix time)
 
 retv Sleep(systime_t Delay_st) {
     Lock();

@@ -114,14 +114,11 @@ static inline void InitClk() {
     Clk::UpdateFreqValues();
 }
 
-<<<<<<< HEAD
-=======
 // works with evt_q_main instead of evt_q_app
 void IrRxCallbackIMain(uint8_t bit_cnt, uint16_t rcvd) {
     evt_q_main.SendNowOrExitI(EvtMsg(EvtId::IrRx, bit_cnt, rcvd));
 }
 
->>>>>>> ce2aec0 (fix time)
 void watcher() {
     msg = evt_q_main.Fetch(TIME_INFINITE);
     switch (msg.id) {
@@ -188,15 +185,11 @@ void watcher() {
             Printf("Usb ready\r");
             CTC->Enable();  // Start autotrimming of IRC48M
             break;
-<<<<<<< HEAD
-
-=======
         case EvtId::IrRx:
             // TODO EvtMsg::value — 32битный тип, возможно следует переделать на
             // другую очередь событий или другое сообщение
             //  или вовсе создать свой поток, как это сделано в appThread
             IRReciever::update(msg.value & 0xFFFF, msg.value_id);
->>>>>>> ce2aec0 (fix time)
         default:
             break;
     }  // switch
