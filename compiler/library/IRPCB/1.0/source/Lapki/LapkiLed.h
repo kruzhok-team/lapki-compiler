@@ -31,8 +31,8 @@ class LedMultiSmooth : public LedSmooth {
 class Led {
     LedSmoothChunk pattern[2] = {{Chunk::Setup, 0, 0}, {Chunk::End}};
     volatile bool isActive = 0;
-    systime_t intervalMs = 0;
-    systime_t lastStartMs = 0;
+    uint32_t intervalMs = 0;
+    uint32_t lastStartMs = 0;
     int state = 0;
     LedMultiSmooth* ls_ = nullptr;
 

@@ -189,7 +189,7 @@ void watcher() {
             // TODO EvtMsg::value — 32битный тип, возможно следует переделать на
             // другую очередь событий или другое сообщение
             //  или вовсе создать свой поток, как это сделано в appThread
-            IRReciever::update(msg.value & 0xFFFF, msg.value_id);
+            IRReciever::update(msg.value_id, msg.value & 0xFFFF);
         default:
             break;
     }  // switch
@@ -246,17 +246,12 @@ void initAll() {
     // within AppInit
     IRLed::Init();
     IRRcvr::Init();
-    IRRcvr::callbackI = IrRxCallbackI;
+    IRRcvr::callbackI = IrRxCallbackIMain;
 
     // ==== App ====
-    // TODO прерывания TIM0 конфликтуют с прерываниями TIM10,
-    // не использовать прерывания, пока прерывания TIM0 не
-    // будут обрабатываться в SYS_TIM_IRQ_HANDLER; сейчас
-    // все флаги в любом случае сбрасываются в прерывани, без input_pwm.Init();
-    // не работает, там происходит инициализация TIM0
-    settings.Load();
-    Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
-    AppInit();
+    // settings.Load();
+    // Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
+    // AppInit();
 
     // ==== Main evt cycle ====
     tmr_uart_check.StartOrRestart();

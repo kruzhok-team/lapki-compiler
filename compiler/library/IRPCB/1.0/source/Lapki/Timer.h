@@ -2,20 +2,23 @@
 #define TIMER_H
 extern "C++" {
 #include "yartos.h"
-constexpr systime_t tickDuration = 200;
+
+typedef uint32_t timer_t;
+
+constexpr timer_t tickDuration = 200;
 
 // everything in ms;
 
 class Timer {
-    systime_t start_;
-    systime_t previous_;
-    systime_t prevTick_;
-    systime_t interval_;
+    timer_t start_;
+    timer_t previous_;
+    timer_t prevTick_;
+    timer_t interval_;
     bool active_;
 
    public:
     // обновляется в суперцикле через updateDifference
-    systime_t difference;
+    timer_t difference = 0;
 
     Timer();
 

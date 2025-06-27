@@ -698,9 +698,7 @@ static Thread mainthread;
 namespace Sys {  // =========================== Sys
                  // =============================
 
-volatile uint32_t Time_ = SYS_TIM->GetTopValue();
-volatile uint32_t lastCNT_ = SYS_TIM->CNT;
-volatile uint32_t sys_tim_overflows = 0;
+volatile uint32_t Time_ = 0;
 
 void Init() {
     // Init Scheduler
@@ -966,7 +964,6 @@ extern "C" void PendSV_Handler() {
 
 #if 1  // ========================== Sys Timer
        // ==================================
-#include "Serial.h"
 namespace SysTimer {
 
 inline void Init() {
@@ -1012,6 +1009,7 @@ static bool isFirstIRQ = 1;
 // This interrupt is used for system tick
 extern "C" void SYS_TIM_IRQ_HANDLER() {
     Sys::IrqPrologue();
+    TIM0->INTF = 0UL;
     if (SYS_TIM->INTF) {
         uint32_t systim_flags = SYS_TIM->INTF;
         SYS_TIM->INTF = 0UL;
@@ -1020,7 +1018,6 @@ extern "C" void SYS_TIM_IRQ_HANDLER() {
             VtDoTickI();
             Sys::UnlockFromIRQ();
         }
-
         if (systim_flags & TIM_INTF_UPIF) {
             // При инициализации таймера происходит вызов первого прерывания
             if (!isFirstIRQ) {
@@ -1029,15 +1026,6 @@ extern "C" void SYS_TIM_IRQ_HANDLER() {
             isFirstIRQ = 0;
         }
     }
-    if (TIM0->INTF) {
-        TIM0->INTF = 0;  // Сброс всех флагов
-    }
-    // if(SYS_TIM->INTF & TIM_INTF_CH0IF) {
-    //     SYS_TIM->INTF = 0UL;
-    //     Sys::LockFromIRQ();
-    //     VtDoTickI();
-    //     Sys::UnlockFromIRQ();
-    // }
     Sys::IrqEpilogue();
 }
 #endif

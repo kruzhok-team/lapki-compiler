@@ -9,8 +9,9 @@
 
 void IRpkg::setWord(uint16_t w16) {
     word16_ = w16;
-    bits_count_ = 0;
-    for (; w16; w16 /= 2) bits_count_++;
+    bits_count_ = 16;
+    // bits_count_ = 0;
+    // for (; w16; w16 /= 2) bits_count_++;
 }
 
 // TODO magical numbers: redo with settings v_min v_max

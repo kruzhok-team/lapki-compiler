@@ -19,7 +19,7 @@
 #if SYS_TIM_RESOLUTION == 32
 using systime_t = uint32_t;
 #elif SYS_TIM_RESOLUTION == 16
-using systime_t = uint32_t;
+using systime_t = uint16_t;
 #else
 #error "Bad SysTimer Resolution"
 #endif
@@ -307,17 +307,8 @@ void DbgCheckClassI();
 
 // Sys::Lock
 static inline systime_t GetSysTime() {
-    // return SYS_TIM->CNT;
     Sys::Lock();
     uint32_t time = Time_ + SYS_TIM->CNT;
-    // uint16_t currentCNT = SYS_TIM->CNT;
-    // if (lastCNT_ <= currentCNT) {
-    //     Time_ += currentCNT - lastCNT_;
-    // } else {
-    //     Time_ += 0x10000 - lastCNT_ + currentCNT;
-    // }
-    // lastCNT_ = currentCNT;
-    // systime_t time = Time_;
     Sys::Unlock();
     return time;
 }

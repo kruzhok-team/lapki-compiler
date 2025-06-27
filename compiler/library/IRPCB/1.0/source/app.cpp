@@ -489,15 +489,13 @@ static void AppThread() {
 }
 
 void AppInit() {
-    /*
     evt_q_app.Init();
     // Control pins init
-//    output_hits_ended.SetupOut(Gpio::OutMode::PushPull);
-    output_hits_present.Init(); // Mode and Active will be set inside Reset()
-//    OutPulseOnHit.Init(); // Removed to implement PWM input
+    //    output_hits_ended.SetupOut(Gpio::OutMode::PushPull);
+    output_hits_present.Init();  // Mode and Active will be set inside Reset()
+    //    OutPulseOnHit.Init(); // Removed to implement PWM input
     input_burst_fire.Init();
     input_single_fire.Init();
-    */
     input_pwm.Init();
     return;
     Reset();
