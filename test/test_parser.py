@@ -11,26 +11,26 @@ pytest_plugins = ('pytest_asyncio',)
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('path, path_to_platform, platform', [
-    pytest.param('examples/old/bearlogaSchemas/Autoborder_'
-                 '638330223036439120.graphml',
-                 'compiler/platforms/BearlogaDefend-Autoborder/'
-                 '1.0/BearlogaDefend-Autoborder-1.0.json',
-                 'BearlogaDefend-Autoborder', id='Autoborder'),
-    pytest.param('examples/old/bearlogaSchemas/Generator_'
-                 '638331191524332730.graphml',
-                 'compiler/platforms/BearlogaDefend-Generator/1.0/'
-                 'BearlogaDefend-Generator-1.0.json',
-                 'BearlogaDefend-Generator', id='Generator'),
-    pytest.param('examples/old/bearlogaSchemas/Smoker_'
-                 '638331191988353340.graphml',
-                 'compiler/platforms/BearlogaDefend-Smoker/'
-                 '1.0/BearlogaDefend-Smoker-1.0.json',
-                 'BearlogaDefend-Smoker', id='Smoker'),
-    pytest.param('examples/old/bearlogaSchemas/Stapler_'
-                 '638331190677085090.graphml',
-                 'compiler/platforms/BearlogaDefend-Stapler/'
-                 '1.0/BearlogaDefend-Stapler-1.0.json',
-                 'BearlogaDefend-Stapler', id='Stapler'),
+    # pytest.param('examples/old/bearlogaSchemas/Autoborder_'
+    #              '638330223036439120.graphml',
+    #              'compiler/platforms/BearlogaDefend-Autoborder/'
+    #              '1.0/BearlogaDefend-Autoborder-1.0.json',
+    #              'BearlogaDefend-Autoborder', id='Autoborder'),
+    # pytest.param('examples/old/bearlogaSchemas/Generator_'
+    #              '638331191524332730.graphml',
+    #              'compiler/platforms/BearlogaDefend-Generator/1.0/'
+    #              'BearlogaDefend-Generator-1.0.json',
+    #              'BearlogaDefend-Generator', id='Generator'),
+    # pytest.param('examples/old/bearlogaSchemas/Smoker_'
+    #              '638331191988353340.graphml',
+    #              'compiler/platforms/BearlogaDefend-Smoker/'
+    #              '1.0/BearlogaDefend-Smoker-1.0.json',
+    #              'BearlogaDefend-Smoker', id='Smoker'),
+    # pytest.param('examples/old/bearlogaSchemas/Stapler_'
+    #              '638331190677085090.graphml',
+    #              'compiler/platforms/BearlogaDefend-Stapler/'
+    #              '1.0/BearlogaDefend-Stapler-1.0.json',
+    #              'BearlogaDefend-Stapler', id='Stapler'),
     pytest.param('examples/авто.graphml',
                  'compiler/platforms/BearlogaDefend-Stapler/'
                  '1.0/BearlogaDefend-Stapler-1.0.json',

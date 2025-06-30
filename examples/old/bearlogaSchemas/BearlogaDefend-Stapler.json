@@ -20,9 +20,9 @@
          ],
          "bounds": {
             "x": -175,
-            "y": 81,
-            "width": 689,
-            "height": 933
+            "y": 89,
+            "width": 868,
+            "height": 931
          }
       },
       "n0::n1": {
@@ -35,8 +35,8 @@
                },
                "do": [
                   {
-                     "component": "МодульДвижения",
-                     "method": "ДвигатьсяКЦели",
+                     "component": "Navigation",
+                     "method": "MoveToTarget",
                      "args": {}
                   }
                ]
@@ -51,9 +51,9 @@
          ],
          "bounds": {
             "x": 89,
-            "y": 75,
-            "width": 411,
-            "height": 194
+            "y": 67,
+            "width": 413,
+            "height": 208
          },
          "parent": "n0"
       },
@@ -67,13 +67,18 @@
                },
                "do": [
                   {
-                     "component": "ОружиеЦелевое",
-                     "method": "АтаковатьЦель",
+                     "component": "Overdrive",
+                     "method": "Start",
                      "args": {}
                   },
                   {
-                     "component": "МодульДвижения",
-                     "method": "Стоп",
+                     "component": "Weapon",
+                     "method": "Activate",
+                     "args": {}
+                  },
+                  {
+                     "component": "Navigation",
+                     "method": "Stop",
                      "args": {}
                   }
                ]
@@ -88,9 +93,9 @@
          ],
          "bounds": {
             "x": 0,
-            "y": 570,
-            "width": 588,
-            "height": 194
+            "y": 562,
+            "width": 768,
+            "height": 208
          },
          "parent": "n0"
       },
@@ -104,10 +109,10 @@
                },
                "do": [
                   {
-                     "component": "Сенсор",
-                     "method": "ПоискВрагаПоДистанции",
+                     "component": "Scaner",
+                     "method": "FindRivalByDistance",
                      "args": {
-                        "Направление поиска": "мин"
+                        "Направление поиска": "min"
                      }
                   }
                ]
@@ -119,8 +124,8 @@
                },
                "do": [
                   {
-                     "component": "Сенсор",
-                     "method": "ОстановкаПоиска",
+                     "component": "Scaner",
+                     "method": "Stop",
                      "args": {}
                   }
                ]
@@ -129,8 +134,8 @@
          "bounds": {
             "x": -1012,
             "y": -250,
-            "width": 411,
-            "height": 304
+            "width": 413,
+            "height": 288
          }
       }
    },
@@ -146,38 +151,38 @@
          "source": "n0",
          "target": "n3",
          "trigger": {
-            "component": "АнализаторЦели",
-            "method": "ЦельПотеряна"
+            "component": "TargetAnalyser",
+            "method": "Lost"
          },
          "condition": null,
          "position": {
             "x": -516.0,
-            "y": 15
+            "y": 19
          },
          "do": [],
-         "color": "#4514F8"
+         "color": "#7B4AC8"
       },
       {
          "source": "n0",
          "target": "n3",
          "trigger": {
-            "component": "АнализаторЦели",
-            "method": "ЦельУничтожена"
+            "component": "TargetAnalyser",
+            "method": "Destroyed"
          },
          "condition": null,
          "position": {
             "x": -516.0,
-            "y": 44
+            "y": 49
          },
          "do": [],
-         "color": "#917AF2"
+         "color": "#33CABF"
       },
       {
          "source": "n3",
          "target": "n0::n2",
          "trigger": {
-            "component": "Сенсор",
-            "method": "ЦельПолучена"
+            "component": "Scaner",
+            "method": "TargetAcquired"
          },
          "condition": {
             "type": "equals",
@@ -185,8 +190,8 @@
                {
                   "type": "component",
                   "value": {
-                     "component": "ОружиеЦелевое",
-                     "method": "ЦельВЗонеАтаки",
+                     "component": "Weapon",
+                     "method": "TargetInRange",
                      "args": {}
                   }
                },
@@ -198,92 +203,96 @@
          },
          "position": {
             "x": -433.0,
-            "y": 360
+            "y": 356
          },
          "do": [],
-         "color": "#70AA43"
+         "color": "#D66DF4"
       },
       {
          "source": "n3",
          "target": "n0::n1",
          "trigger": {
-            "component": "Сенсор",
-            "method": "ЦельПолучена"
+            "component": "Scaner",
+            "method": "TargetAcquired"
          },
          "condition": null,
          "position": {
             "x": -488.0,
-            "y": 42
+            "y": 36
          },
          "do": [],
-         "color": "#C204BC"
+         "color": "#D20B19"
       },
       {
          "source": "n0::n1",
          "target": "n0::n2",
          "trigger": {
-            "component": "ОружиеЦелевое",
-            "method": "ЦельВошлаВЗонуАтаки"
+            "component": "Weapon",
+            "method": "TargetEnteredRange"
          },
          "condition": null,
          "position": {
             "x": 155.0,
-            "y": 573
+            "y": 563
          },
          "do": [],
-         "color": "#9CB451"
+         "color": "#93931D"
       },
       {
          "source": "n0::n2",
          "target": "n0::n1",
          "trigger": {
-            "component": "ОружиеЦелевое",
-            "method": "ЦельВышлаИзЗоныАтаки"
+            "component": "Weapon",
+            "method": "TargetLeftRange"
          },
          "condition": null,
          "position": {
             "x": 144.0,
-            "y": 636
+            "y": 625
          },
          "do": [],
-         "color": "#C3F0F6"
+         "color": "#D94FC9"
       }
    ],
    "components": {
-      "Сенсор": {
-         "type": "Сенсор",
+      "LED": {
+         "type": "LED",
          "parameters": {}
       },
-      "АнализаторЦели": {
-         "type": "АнализаторЦели",
+      "Scaner": {
+         "type": "Scaner",
          "parameters": {}
       },
-      "МодульДвижения": {
-         "type": "МодульДвижения",
+      "TargetAnalyser": {
+         "type": "TargetAnalyser",
          "parameters": {}
       },
-      "Самодиагностика": {
-         "type": "Самодиагностика",
+      "Navigation": {
+         "type": "Navigation",
          "parameters": {}
       },
-      "СвязьСБазой": {
-         "type": "СвязьСБазой",
+      "SelfDiagnostics": {
+         "type": "SelfDiagnostics",
          "parameters": {}
       },
-      "Таймер": {
-         "type": "Таймер",
+      "BaseCom": {
+         "type": "BaseCom",
          "parameters": {}
       },
-      "Счётчик": {
-         "type": "Счётчик",
+      "Timer": {
+         "type": "Timer",
          "parameters": {}
       },
-      "ОружиеЦелевое": {
-         "type": "ОружиеЦелевое",
+      "Counter": {
+         "type": "Counter",
          "parameters": {}
       },
-      "СпособностьНаМаксимум": {
-         "type": "СпособностьНаМаксимум",
+      "Weapon": {
+         "type": "Weapon",
+         "parameters": {}
+      },
+      "Overdrive": {
+         "type": "Overdrive",
          "parameters": {}
       }
    },
