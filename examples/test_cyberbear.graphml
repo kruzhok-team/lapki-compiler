@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="Machine1">
+    <data key="dStateMachine"></data>
+    <data key="dGeometry">
+      <rect x="0" y="0" width="450" height="100"></rect>
+    </data>
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+lapkiVisual/ true
+
+platform/ blg-mb-1-a7
+
+</data>
+    </node>
+    <node id="tjxomtwwajiiwisdxkln">
+      <data key="dName">Состояние</data>
+      <data key="dData"></data>
+      <data key="dGeometry">
+        <rect x="333.9036865234375" y="518.9167785644531" width="450" height="100"></rect>
+      </data>
+    </node>
+    <node id="exccfhjtngpmkkesgswz">
+      <data key="dName">Состояние</data>
+      <data key="dData">entry/
+LED1.on();
+
+</data>
+      <data key="dGeometry">
+        <rect x="193.45184326171875" y="288.45838928222656" width="450" height="100"></rect>
+      </data>
+    </node>
+    <node id="zouwbyxpisevohiafewg">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="93.45184326171875" y="268.45838928222656"></point>
+      </data>
+    </node>
+    <node id="cMatrix1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Matrix1
+
+type/ Matrix
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <node id="cLED1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ LED1
+
+type/ LED
+
+pin/ 2
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <edge id="weokycmnipfpawummwpx" source="zouwbyxpisevohiafewg" target="exccfhjtngpmkkesgswz"></edge>
+  </graph>
+</graphml>
