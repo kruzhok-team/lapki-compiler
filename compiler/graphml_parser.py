@@ -16,6 +16,8 @@ DIFF_THRESHHOLD = 150
 
 @dataclass
 class FlattenStates:
+    """Structure for convenient storage of states."""
+
     states_list: list[dict[str, str | dict]]
     states_dict: dict[str, dict[str, str]]
     platform: str | None
