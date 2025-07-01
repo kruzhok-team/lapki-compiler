@@ -25,7 +25,7 @@
         "-DSTM32G431xx",
         "-D_FIR_GIT_REV=\"GIT_NIY\"",
         "-T",
-        "./STM32G431KBT6-blg-usb-usercode.ld",
+        "./cyberbear_G431xB_UC.ld",
         "./startup_stm32g431xx.s",
         "-o",
         "./build/sketch.elf",
@@ -59,7 +59,7 @@
     "system.hpp",
     "CommonPWM.hpp",
     "PWMPins.hpp",
-    "STM32G431KBT6-blg-usb-usercode.ld",
+    "cyberbear_G431xB_UC.ld",
     "startup_stm32g431xx.s",
     "stm32g431xx.h",
     "core_cm4.h",
@@ -649,8 +649,7 @@
             },
             {
               "name": "Операция",
-              "type": ["mask_and", "mask_or", "mask_xor"],
-              "valueAlias": ["AND", "OR", "XOR"],
+              "type": ["AND", "OR", "XOR"],
               "description": "Битовая функция, используемая для установки значения."
             }
           ]
@@ -667,8 +666,7 @@
             },
             {
               "name": "Операция",
-              "type": ["mask_and", "mask_or", "mask_xor"],
-              "valueAlias": ["AND", "OR", "XOR"],
+              "type": ["AND", "OR", "XOR"],
               "description": "Битовая маска для установки значения пикселя."
             }
           ]

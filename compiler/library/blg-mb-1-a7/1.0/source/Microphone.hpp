@@ -20,7 +20,7 @@ class Microphone {
 public:
 
     // ctor
-    Microphone(uint16_t _cooldown = 0) {
+    Microphone(uint16_t _cooldown = 200) {
         cooldown = _cooldown;
         if (!detail::microphone::isInit) {
 

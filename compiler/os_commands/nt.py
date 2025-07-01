@@ -14,3 +14,10 @@ async def nt_copy(
                                               f'"{target_directory}"',
                                               cwd=cwd,
                                               stdout=asyncio.subprocess.PIPE)
+
+
+def nt_decode(
+    data: bytes,
+) -> str:
+    """Decode bytes as cp1251."""
+    return data.decode('cp1251')

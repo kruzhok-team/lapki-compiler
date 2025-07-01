@@ -3,7 +3,7 @@
 #define PCLK 72e6
 #define PCLK2 72e6
 
-#define FLASH_BASE_ADDR 0x08008000U  //устанавливаем адрес приложения
+#define FLASH_BASE_ADDR 0x0800A000U  //устанавливаем адрес приложения
 
 void initClock (void) {
   RCC -> CR |= RCC_CR_HSEON; //Set HSI on (will use it as temporary source)

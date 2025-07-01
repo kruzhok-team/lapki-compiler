@@ -18,8 +18,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     GeneratorShallowHistory
 )
 from compiler.fullgraphmlparser.graphml import *
-
-MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+from compiler.config import get_config
+MODULE_PATH = os.path.join(get_config().module_directory, 'fullgraphmlparser')
 IF_EXPRESSION = string.Template("""$offset if ($condition) {
 $actions
 $offset}""")

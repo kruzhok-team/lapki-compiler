@@ -19,6 +19,7 @@ class Config:
     build_directory: str
     module_directory: str
     base_path: str
+    KILLABLE: bool = False
 
 
 class ArgumentParser(Tap):
@@ -32,6 +33,7 @@ class ArgumentParser(Tap):
     log_path: str | None = None
     access_token_path: str | None = None
     build_path: str | None = None
+    killable: bool = False
 
     def configure(self):
         """Add CLI args to parser."""
@@ -58,4 +60,7 @@ class ArgumentParser(Tap):
                           )
         self.add_argument('--max-msg-size',
                           help='Max websocket message size.', required=False)
+        self.add_argument('--killable',
+                          help='Enable /kill endpoint.',
+                          action='store_true', default=False)
         argcomplete.autocomplete(self)
