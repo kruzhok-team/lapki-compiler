@@ -4,7 +4,7 @@
 #include "kl_fs_utils.h"
 
 Settings settings;
-
+#ifdef APP
 void Settings::Load() {
     for(ValueBase* const pval : values_arr) {
         int32_t v;
@@ -37,3 +37,4 @@ retv Settings::Save() {
     CloseFile(&common_file);
     return retv::Ok;
 }
+#endif

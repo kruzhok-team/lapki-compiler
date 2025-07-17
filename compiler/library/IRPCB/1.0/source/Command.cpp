@@ -70,8 +70,9 @@ static void DoTest(Shell *pshell) {
     tmr_testing.StartOrRestart();
 }
 #endif
-
+#ifdef APP
 static void GetSta(Shell *pshell) { pshell->Print("Hits: %d; Rnds: %d; mgzs: %d\r", hit_cnt, rounds_cnt, magazines_cnt); }
+
 static void Restore(Shell *pshell) {
     Reset();
     pshell->Ok();
@@ -155,7 +156,7 @@ static void CmdStop(Shell *pshell) {
     StopFire();
     pshell->Ok();
 }
-
+#endif
 //static void CtrlSet(Shell *pshell) {
 //    Cmd *pcmd = &pshell->cmd;
 //    int32_t sta; // Fill word starting from MSB
@@ -210,6 +211,7 @@ static const ShellCmd cmds[] = {
         {"Test",    DoTest,    "Start hardware testing"},
         {"Reboot",  DoReboot,  "Reboot MCU"},
         // ==== App ====
+#ifdef APP
         {"GetSta",  GetSta,    "Get current status of device (hit count etc.)"},
         {"Restore", Restore,   "Restore hits, rounds, magazines - everything"},
         {"GetSettings", GetSettings, "Get current values from Settings"},
@@ -221,6 +223,7 @@ static const ShellCmd cmds[] = {
         {"Stop", CmdStop, "Stop Fire"},
         // ==== Research ====
         {"IrTx", IrTx,"'IrTx Pwr, bits': transmit bits (up to 16) via IR LED at specified power. Divide bits into pieces for convenience. Ex: 'IRTx 90, 1100 0101 11 1001"},
+#endif
         // ==== Debug ====
 //        {"SetLed", SetLed, "set led PWM"},
 //        {"Get", Get, "get"},

@@ -1,3 +1,6 @@
+// #define APP
+
+#ifdef APP
 /*
  * app.h
  *
@@ -23,3 +26,4 @@ void StopFire();
 void IrRxCallbackI(uint8_t bit_cnt, uint16_t rcvd);
 
 #endif /* APP_H_ */
+#endif

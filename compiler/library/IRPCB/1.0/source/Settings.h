@@ -13,9 +13,9 @@
 #include <vector>
 #include "app_classes.h"
 #include "ff.h"
-
+#ifdef APP
 extern CustomOutPin output_hits_present;
-
+#endif
 class ValueBase {
 protected:
     const char* const section;
@@ -249,11 +249,14 @@ public:
     ValueDamage    tx_damage   {                        kGrpIrTx, "TXDamage" };
     ValueMinMaxDef tx_amount   {      1,     1,    100, kGrpIrTx, "Amount", "Number of things to be added by special packets: AddHealth, AddRounds, etc." };
     // ==== Gpio control ====
+#ifdef APP
     ValueGpioMode pin_mode_gpio3 { PinMode::PushPullActiveHi, kGrpGpio, "Gpio3Mode", "Gpio3 (hits_present)",  &output_hits_present };
+#endif
     // ====  Behavior, Modes of operation ====
     ValueEnable fire_always {0, kGrpBehavior, "FireAlways", "Burst fire always: 1 is enabled, 0 is disabled" };
     ValueEnable transmit_what_rcvd {0, kGrpBehavior, "TransmitWhatRcvd", "Transmit last received pkt when firing; 1 is enabled, 0 is disabled" };
 
+#ifdef APP
     // Array of value pointers
     std::vector<ValueBase*> values_arr = {
             &player_id, &team_id, &super_damage_id,  // IDs
@@ -264,10 +267,11 @@ public:
             &pin_mode_gpio3, // Gpio
             &fire_always, &transmit_what_rcvd // Behavior
     };
-
     void Load();
     retv Save();
     void SetAllToDefault() { for(ValueBase* const pval : values_arr) pval->SetToDefault(); }
+#endif
+
 };
 
 extern Settings settings;

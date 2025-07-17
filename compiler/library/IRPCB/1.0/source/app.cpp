@@ -1,3 +1,5 @@
+// #define APP
+#ifdef APP
 /*
  * app.cpp
  *
@@ -519,3 +521,4 @@ void FireBurst() {
 }
 
 void StopFire() { burst_from_cmd = false; }
+#endif
