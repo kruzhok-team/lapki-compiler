@@ -19,14 +19,17 @@ OUT_DIR = $(GOAL_NAME)
 # Run Action (build_Release: build  clean_Debug: clean  flash_Fromboot: flash)
 $(MAKECMDGOALS): $(ACTION)
 ##################
+EXTRA_FLAGS ?= 
 EXTRA_DIR ?= 
 COPY_DIR ?=
+BUILD_DIR ?=
 ifneq ($(EXTRA_DIR),)
 	EXTRA_INCLUDE = -I$(EXTRA_DIR)
 	vpath %.c $(EXTRA_DIR)
 	vpath %.h $(EXTRA_DIR)
 	vpath %.cpp $(EXTRA_DIR)
 endif
+COMMON_FLAGS += EXTRA_FLAGS
 
 ######################### Common Cfg Settings #########################
 MCU = cortex-m4
@@ -138,6 +141,7 @@ $(OUT_DIR)/out_subdirs:
 
 # Construct .elf
 $(OUT_DIR)/$(PRJ_NAME).elf: $(OBJS)
+	@echo 'EXTRA FLAGS: $(EXTRA_FLAGS)'
 	@echo 'Linking $@'
 	@$(CPP_CMP) $(COMMON_FLAGS) -T $(LD_SCRIPT) $(LINKER_FLAGS) $(OBJS)
 
@@ -184,11 +188,6 @@ $(BIN_PATH): $(OUT_DIR)/$(PRJ_NAME).elf
 	@echo 'Constructing $@'
 	@$(OBJCPY) -O binary "$(OUT_DIR)/$(PRJ_NAME).elf" $(BIN_PATH)
 #	@echo 'copydir : $(COPY_DIR)'
-	@echo 'EXTRA_DIR: $(EXTRA_DIR)'
-
-$(BUILD_BIN): $(OUT_DIR)/$(PRJ_NAME).elf
-	@echo 'Constructing $@'
-	@$(OBJCPY) -O binary "$(OUT_DIR)/$(PRJ_NAME).elf" $(BUILD_BIN)
 	@echo 'EXTRA_DIR: $(EXTRA_DIR)'
 
 
