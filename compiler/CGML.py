@@ -664,7 +664,7 @@ def __generate_main_function() -> ParserNote:
 \n\twhile(1) {\
 \n\t\tloop();
 #ifdef InitFunctions_HPP
-\t\twatcher();
+\t\tloopAction();
 #endif
 \n\t}
 \n\treturn 0;

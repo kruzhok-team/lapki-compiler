@@ -1,5 +1,6 @@
 #ifndef InitFunctions_HPP
 #define InitFunctions_HPP
+// #define LEDS
 
 extern "C++" {
 #include <string>
@@ -35,10 +36,11 @@ CmdUart dbg_uart{kCmdUartParams};
 extern void OnCmd(Shell *pshell);  // See Command.cpp
 
 LedBlinker sys_LED{LUMOS_PIN};
+#ifdef LEDS
 LedSmooth side_LEDs[SIDE_LEDS_CNT] = {
     {LED_PWM1}, {LED_PWM2}, {LED_PWM3}, {LED_PWM4}};
 LedSmooth front_LEDs[FRONT_LEDS_CNT] = {{LED_FRONT1}, {LED_FRONT2}};
-
+#endif
 static const NpxParams kNpxParams{NPX_PARAMS, NPX_DMA, 17,
                                   NpxParams::ClrType::RGB};
 Neopixels npx_leds{&kNpxParams};
@@ -159,10 +161,12 @@ void watcher() {
                 npx_leds.SetCurrentColors();
                 // Send IR pkt
                 IRLed::TransmitWord(0xCA11, 16, 180, nullptr);
+#ifdef LEDS
                 // Side Leds
                 side_LEDs[tst_indx].StartOrRestart(lsqFadeInOut);
                 // Front LEDs
                 front_LEDs[tst_indx & 0x01].StartOrRestart(lsqFadeInOut);
+#endif
                 // Gpios
                 Gpio::Set(Gpio1, tst_indx == 0);
                 Gpio::Set(Gpio2, tst_indx == 1);
@@ -195,10 +199,17 @@ void watcher() {
     }  // switch
 }
 
+static THD_WORKSPACE(wa_watcher_thread, 256);
+static void watcherTread() {
+    while (1) {
+        watcher();
+    }
+}
+
 void initAll() {
-#ifndef BUILD_CFG_DEBUG  // Defined in makefile
-    Watchdog::InitAndStart(999);
-#endif
+// #ifndef BUILD_CFG_DEBUG  // Defined in makefile
+//     Watchdog::InitAndStart(999);
+// #endif
     InitClk();
     // ==== Disable JTAG ====
     RCU->EnAFIO();
@@ -216,8 +227,10 @@ void initAll() {
     // ==== LEDs ====
     sys_LED.Init();
     sys_LED.StartOrRestart(lbsqStart);
+#ifdef LEDS
     for (auto &led : side_LEDs) led.Init();
     for (auto &led : front_LEDs) led.Init();
+#endif
     npx_leds.Init();
     npx_leds.SetAll(clBlack);
     npx_leds.SetCurrentColors();
@@ -255,7 +268,14 @@ void initAll() {
 
     // ==== Main evt cycle ====
     tmr_uart_check.StartOrRestart();
+    Sys::CreateThd(wa_watcher_thread, sizeof(wa_watcher_thread), NORMALPRIO,
+                   watcherTread);
 }
+
+void loopAction(){
+    Sys::SleepMilliseconds(1);
+}
+
 }
 
 #endif  // InitFunctions_HPP
