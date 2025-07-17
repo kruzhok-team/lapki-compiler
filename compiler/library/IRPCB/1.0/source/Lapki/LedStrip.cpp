@@ -5,7 +5,7 @@
 
 int checkNumeration(unsigned int number) {
     if (number > 0 && number <= npx_leds.clr_buf.size()) return number;
-    Serial::Printf("wrong numeration, ledstrip number are 1...%d",
+    Serial::Printf("wrong numeration, ledstrip number are 1...%d\r\n",
                    npx_leds.clr_buf.size());
     if (number <= 0) return 1;
     if (number > npx_leds.clr_buf.size()) return npx_leds.clr_buf.size();
@@ -39,7 +39,7 @@ void LedStrip::setColorHSV(int number, uint16_t H, uint8_t S, uint8_t V) {
     npx_leds.SetCurrentColors();
 }
 
-void LedStrip::setOff(){
+void LedStrip::turnOff(){
     npx_leds.SetAll(clBlack);
     npx_leds.SetCurrentColors();
 }
