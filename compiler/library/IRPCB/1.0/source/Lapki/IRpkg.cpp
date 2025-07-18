@@ -18,6 +18,7 @@ void IRpkg::setWord(uint16_t w16) {
 IRpkg::operator std::string() const {
     std::string val;
     auto temp = word16_;
+    if(temp == 0) val = "0";
     while (temp) {
         val.push_back(
             (temp % 16 >= 10 ? temp % 16 - 10 + 'A' : '0' + temp % 16));

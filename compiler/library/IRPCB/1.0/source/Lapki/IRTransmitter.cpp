@@ -4,6 +4,7 @@
 #include "ir.h"
 
 void IRTransmitter::transmit(IRpkg pkg) {
+    lastIrSend = Sys::GetSysTime();
     IRLed::TransmitWord(pkg.word16, pkg.bits_count, power, nullptr);
 }
 

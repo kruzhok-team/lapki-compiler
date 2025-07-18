@@ -5,9 +5,9 @@
 namespace IRReciever {
 
 constexpr inline const char* fileName = "irpkgs.txt";
+constexpr uint32_t unstablePeriod = 100; //ms
 
 extern bool isUpdated_;
-extern uint32_t lastUpdate;
 
 extern IRpkg pkg;
 
