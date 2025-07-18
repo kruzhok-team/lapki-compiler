@@ -306,7 +306,7 @@ void DbgAssert(bool IsOk, const char *MsgIfNotOk);
 void DbgCheckClassI();
 
 // Sys::Lock
-static inline systime_t GetSysTime() {
+static inline uint32_t GetSysTime() {
     Sys::Lock();
     uint32_t time = Time_ + SYS_TIM->CNT;
     Sys::Unlock();

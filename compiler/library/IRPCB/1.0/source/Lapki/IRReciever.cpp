@@ -4,21 +4,30 @@
 // #include "ir.h"
 #include "File.h"
 #include "kl_fs_utils.h"
+#include "usb_msdcdc.h"
 #include "yartos.h"
 
 IRpkg IRReciever::pkg;
 bool IRReciever::isUpdated_ = 0;
+extern UsbMsdCdc usb_msd_cdc;
 
 void IRReciever::savePkg() {
-    File::printVal(fileName, "\n\rTimestamp: ", Sys::GetSysTime());
-    File::print(fileName, pkg);
+    if (usb_msd_cdc.IsActive()) {
+        Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(), pkg);
+    } else {
+        // XXX 
+        // File::Printf(fileName, "Timestamp: %u, Pkg: %s\r\n",
+        // Sys::GetSysTime(), pkg);
+    }
 }
 
-void IRReciever::printPkg() { Serial::printVal("PKG: ", pkg); }
+void IRReciever::printPkg() {
+    Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(), pkg);
+}
 
-// TODO будем ли создавать отдельный поток?
+
 void IRReciever::update(uint8_t bits_count, uint16_t word) {
-    IRReciever::pkg .set(bits_count, word);
+    IRReciever::pkg.set(bits_count, word);
     IRReciever::isUpdated_ = 1;
 }
 

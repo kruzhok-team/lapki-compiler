@@ -207,9 +207,9 @@ static void watcherTread() {
 }
 
 void initAll() {
-// #ifndef BUILD_CFG_DEBUG  // Defined in makefile
-//     Watchdog::InitAndStart(999);
-// #endif
+#ifndef BUILD_CFG_DEBUG  // Defined in makefile
+    Watchdog::InitAndStart(999);
+#endif
     InitClk();
     // ==== Disable JTAG ====
     RCU->EnAFIO();

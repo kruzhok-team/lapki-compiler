@@ -76,7 +76,7 @@ class PwmInput {
    public:
     volatile int32_t& pwm_duty = pin.pwm_duty;
     volatile int32_t& pwm_frequency = pin.pwm_frequency_hz;
-    // TODO в список аргументов в лапках сделать  Gpio::PullUpDownА
+
     PwmInput(GPIO_TypeDef* pgpio, uint16_t apin, Gpio::PullUpDown mode);
 };
 #endif
