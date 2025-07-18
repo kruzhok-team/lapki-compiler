@@ -260,22 +260,20 @@ void initAll() {
     IRLed::Init();
     IRRcvr::Init();
     IRRcvr::callbackI = IrRxCallbackIMain;
-
-    // ==== App ====
-    // settings.Load();
-    // Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
-    // AppInit();
-
+    IRLed::SetCarrierFreq(*settings.ir_tx_freq);
+// ==== App ====
+#ifdef APP
+    settings.Load();
+    Printf("Pkt type: 0x%04X\r", settings.tx_pkt_type.v);
+    AppInit();
+#endif
     // ==== Main evt cycle ====
     tmr_uart_check.StartOrRestart();
     Sys::CreateThd(wa_watcher_thread, sizeof(wa_watcher_thread), NORMALPRIO,
                    watcherTread);
 }
 
-void loopAction(){
-    Sys::SleepMilliseconds(1);
-}
-
+void loopAction() { Sys::SleepMilliseconds(1); }
 }
 
 #endif  // InitFunctions_HPP

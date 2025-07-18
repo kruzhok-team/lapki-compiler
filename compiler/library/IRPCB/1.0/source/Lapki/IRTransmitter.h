@@ -4,7 +4,7 @@
 #include "Settings.h"
 
 class IRTransmitter {
-    inline static int32_t power = *settings.ir_tx_pwr;
+    inline static int32_t power = 90;
 
    public:
     static void transmit(IRpkg pkg);

@@ -6,9 +6,10 @@ namespace IRReciever {
 
 constexpr inline const char* fileName = "irpkgs.txt";
 
-extern IRpkg pkg;
-
 extern bool isUpdated_;
+extern uint32_t lastUpdate;
+
+extern IRpkg pkg;
 
 bool isUpdated();
 

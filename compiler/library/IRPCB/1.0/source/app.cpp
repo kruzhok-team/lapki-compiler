@@ -499,7 +499,7 @@ void AppInit() {
     input_burst_fire.Init();
     input_single_fire.Init();
     input_pwm.Init();
-    return;
+    // return;
     Reset();
     // Create and start thread
     Sys::CreateThd(wa_app_thread, sizeof(wa_app_thread), NORMALPRIO, AppThread);

@@ -9,7 +9,7 @@ void IRTransmitter::transmit(IRpkg pkg) {
 
 // TODO magical numbers: redo with settings v_min v_max
 void IRTransmitter::setPower(int pwr) {
-    if(pwr < 0) pwr = 0;
+    if(pwr < 1) pwr = 1;
     if(pwr > 255) pwr = 255;
     power = pwr;
 }

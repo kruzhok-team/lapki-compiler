@@ -5,7 +5,7 @@ INCLUDE_DIRS = ./ Audio FileSys lib usb yartos Lapki
 # What to define in form MYDEF1 MYDEF2=18 MYDEF3... $(MAKECMDGOALS) is name of requested action
 DEFINS = 
 DEFINS += BUILD_CFG_$(GOAL_NAME)=1 # add BUILD_CFG_GOALNAME=1 define, uppercasing GOAL_NAME
-
+# DEFINS += APP LEDS
 
 ######################### Figure out what to do #########################
 # Target must be in the following form: build_Release, clean_Debug, flash_Fromboot

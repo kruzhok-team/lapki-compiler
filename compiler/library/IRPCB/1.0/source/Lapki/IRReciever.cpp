@@ -9,13 +9,15 @@
 
 IRpkg IRReciever::pkg;
 bool IRReciever::isUpdated_ = 0;
+uint32_t IRReciever::lastUpdate = Sys::GetSysTime();
+
 extern UsbMsdCdc usb_msd_cdc;
 
 void IRReciever::savePkg() {
     if (usb_msd_cdc.IsActive()) {
         Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(), pkg);
     } else {
-        // XXX 
+        // XXX
         // File::Printf(fileName, "Timestamp: %u, Pkg: %s\r\n",
         // Sys::GetSysTime(), pkg);
     }
@@ -24,7 +26,6 @@ void IRReciever::savePkg() {
 void IRReciever::printPkg() {
     Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(), pkg);
 }
-
 
 void IRReciever::update(uint8_t bits_count, uint16_t word) {
     IRReciever::pkg.set(bits_count, word);

@@ -214,6 +214,9 @@ public:
     void PrintOnNew(Shell *pshell) { pshell->Print("%S = %d\r\n", name, v); }
 };
 
+// #ifndef APP
+// CustomOutPin output_hits_present{Output_HitsPresent};
+// #endif
 class Settings {
 private:
     static constexpr const char* kSettingsFilename = "Settings.ini";
@@ -249,14 +252,10 @@ public:
     ValueDamage    tx_damage   {                        kGrpIrTx, "TXDamage" };
     ValueMinMaxDef tx_amount   {      1,     1,    100, kGrpIrTx, "Amount", "Number of things to be added by special packets: AddHealth, AddRounds, etc." };
     // ==== Gpio control ====
-#ifdef APP
-    ValueGpioMode pin_mode_gpio3 { PinMode::PushPullActiveHi, kGrpGpio, "Gpio3Mode", "Gpio3 (hits_present)",  &output_hits_present };
-#endif
+    // ValueGpioMode pin_mode_gpio3 { PinMode::PushPullActiveHi, kGrpGpio, "Gpio3Mode", "Gpio3 (hits_present)",  &output_hits_present };
     // ====  Behavior, Modes of operation ====
     ValueEnable fire_always {0, kGrpBehavior, "FireAlways", "Burst fire always: 1 is enabled, 0 is disabled" };
     ValueEnable transmit_what_rcvd {0, kGrpBehavior, "TransmitWhatRcvd", "Transmit last received pkt when firing; 1 is enabled, 0 is disabled" };
-
-#ifdef APP
     // Array of value pointers
     std::vector<ValueBase*> values_arr = {
             &player_id, &team_id, &super_damage_id,  // IDs
@@ -264,13 +263,12 @@ public:
             &shots_period_ms, &magaz_reload_delay_s, &min_delay_btw_hits_s, // Delays
             &ir_rx_deviation, &rx_pkt_super_damage, // IR RX
             &ir_tx_pwr, &ir_tx_freq, &tx_pkt_type, &tx_damage, &tx_amount, // IR TX
-            &pin_mode_gpio3, // Gpio
+            // &pin_mode_gpio3, // Gpio
             &fire_always, &transmit_what_rcvd // Behavior
     };
     void Load();
     retv Save();
     void SetAllToDefault() { for(ValueBase* const pval : values_arr) pval->SetToDefault(); }
-#endif
 
 };
 
