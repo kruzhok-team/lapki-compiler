@@ -3,7 +3,7 @@
 #include "Serial.h"
 #include "ws2812bTim.h"
 
-int checkNumeration(unsigned int number) {
+int LedStrip::checkNumeration(unsigned int number) {
     if (number > 0 && number <= npx_leds.clr_buf.size()) return number;
     Serial::Printf("wrong numeration, ledstrip number are 1...%d\r\n",
                    npx_leds.clr_buf.size());

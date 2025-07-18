@@ -40,11 +40,11 @@ LedBlinker sys_LED{LUMOS_PIN};
 LedSmooth side_LEDs[SIDE_LEDS_CNT] = {
     {LED_PWM1}, {LED_PWM2}, {LED_PWM3}, {LED_PWM4}};
 LedSmooth front_LEDs[FRONT_LEDS_CNT] = {{LED_FRONT1}, {LED_FRONT2}};
-#endif
+
 static const NpxParams kNpxParams{NPX_PARAMS, NPX_DMA, 17,
                                   NpxParams::ClrType::RGB};
 Neopixels npx_leds{&kNpxParams};
-
+#endif
 Beeper beeper{BEEPER_PIN};
 
 SpiFlash spi_flash(SPI0);
@@ -140,6 +140,7 @@ void watcher() {
         case EvtId::TestingTime:
             if (is_testing) {
                 // Npx
+                #ifdef LEDS
                 switch (tst_indx) {
                     case 0:
                         npx_leds.SetAll({TESTING_NPX_BRT, 0, 0});
@@ -159,6 +160,7 @@ void watcher() {
                         break;
                 }
                 npx_leds.SetCurrentColors();
+                #endif
                 // Send IR pkt
                 IRLed::TransmitWord(0xCA11, 16, 180, nullptr);
 #ifdef LEDS
@@ -230,10 +232,10 @@ void initAll() {
 #ifdef LEDS
     for (auto &led : side_LEDs) led.Init();
     for (auto &led : front_LEDs) led.Init();
-#endif
     npx_leds.Init();
     npx_leds.SetAll(clBlack);
     npx_leds.SetCurrentColors();
+#endif
 
     // ==== Audio ====
     Codec::Init();
