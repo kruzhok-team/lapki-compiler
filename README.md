@@ -13,6 +13,12 @@
 Установите [`gcc-arm-none-eabi`](https://developer.arm.com/downloads/-/gnu-rm) *(может потребоваться VPN)* и добавьте его в PATH.
 #### Linux
 `sudo apt install gcc-arm-none-eabi`
+### Ик-Путеводная
+1. Установить make и GNU Arm Embedded Toolchain
+1. Для Windows:
+
+    Установить cp, echo, mkdir, rm, добавить в PATH (идут вместе с [`gcc в msys2(MinGW)`](https://code.visualstudio.com/docs/cpp/config-mingw#_prerequisites))
+1. Добавить make и GNU Arm Embedded Toolchain в PATH
 ## Установка и запуск
 ### Windows
 - `py -m pip install -e .` или `poetry install` *(если установлен менеджер зависимостей poetry)*.
