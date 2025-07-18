@@ -1,3 +1,4 @@
+# TODO решение с ifdef BUILD_DIR явно не лучшее
 ######################### Project Settings #########################
 PRJ_NAME = IR_PCB
 # What to include, in form dir1 dir2 dir3...
@@ -22,7 +23,6 @@ $(MAKECMDGOALS): $(ACTION)
 EXTRA_FLAGS ?= 
 EXTRA_DIR ?= 
 COPY_DIR ?=
-BUILD_DIR ?=
 ifneq ($(EXTRA_DIR),)
 	EXTRA_INCLUDE = -I$(EXTRA_DIR)
 	vpath %.c $(EXTRA_DIR)
@@ -41,8 +41,11 @@ CPP_FLAGS = -std=gnu++17 -fabi-version=0 -fno-exceptions -fno-rtti -fno-use-cxa-
 C_FLAGS = -std=gnu17
 # Add this to build commands. Nothing to change here.
 OBJ_FLAGS = -MMD -MP -MF"$(subst /,\,$(@:%.o=%.d))" -MT"$@" -c -o "$@" "$<"
+ifdef BUILD_DIR
+LINKER_FLAGS = -Xlinker --gc-sections --specs=nano.specs --specs=nosys.specs -nostartfiles -Wl,-Map,"$(BUILD_DIR)/$(PRJ_NAME).map" -o "$(BUILD_DIR)/$(PRJ_NAME).elf"
+else
 LINKER_FLAGS = -Xlinker --gc-sections --specs=nano.specs --specs=nosys.specs -nostartfiles -Wl,-Map,"$(OUT_DIR)/$(PRJ_NAME).map" -o "$(OUT_DIR)/$(PRJ_NAME).elf"
-
+endif
 ######################### Individual Cfg Settings #########################
 ####### Release Cfg Settings #######
 ifeq "$(GOAL_NAME)" "Release"
@@ -71,7 +74,11 @@ COMMON_FLAGS += -Os -flto
 LINKER_FLAGS += 
 LD_SCRIPT = GD32E103xB_Boot.ld
 # Comment / uncomment the following lines to produce .hex and/or .bin output
+ifdef BUILD_DIR
+BUILD_HEX = $(BUILD_DIR)/$(PRJ_NAME).hex
+else
 BUILD_HEX = $(OUT_DIR)/$(PRJ_NAME).hex
+endif
 #BUILD_BIN was superseded by BIN_PATH
 #BUILD_BIN = $(OUT_DIR)/$(PRJ_NAME).bin
 BIN_PATH = $(if $(BUILD_DIR),$(BUILD_DIR)/fw_$(PRJ_NAME).bin, $(OUT_DIR)/fw_$(PRJ_NAME).bin)
@@ -128,7 +135,11 @@ endif
 -include $(filter-out $(OUT_DIR)/main.d, $(OBJS:.o=.d))
 
 # Build: Require dir tree, .elf file, .hex, .bin, .siz
+ifdef BUILD_DIR
+build: $(OUT_DIR)/out_subdirs $(BUILD_DIR)/$(PRJ_NAME).elf $(BUILD_HEX) $(BIN_PATH) print_size 
+else
 build: $(OUT_DIR)/out_subdirs $(OUT_DIR)/$(PRJ_NAME).elf $(BUILD_HEX) $(BIN_PATH) print_size 
+endif
 # $(info SRCS: $(SRCS))
 # $(info OBJS: $(OBJS))
 # Construct dir tree: out_dir/dir1, out_dir/dir2, ...
@@ -140,11 +151,17 @@ $(OUT_DIR)/out_subdirs:
 	fi
 
 # Construct .elf
+ifdef BUILD_DIR
+$(BUILD_DIR)/$(PRJ_NAME).elf: $(OBJS)
+	@echo 'EXTRA FLAGS: $(EXTRA_FLAGS)'
+	@echo 'Linking $@'
+	@$(CPP_CMP) $(COMMON_FLAGS) -T $(LD_SCRIPT) $(LINKER_FLAGS) $(OBJS)
+else
 $(OUT_DIR)/$(PRJ_NAME).elf: $(OBJS)
 	@echo 'EXTRA FLAGS: $(EXTRA_FLAGS)'
 	@echo 'Linking $@'
 	@$(CPP_CMP) $(COMMON_FLAGS) -T $(LD_SCRIPT) $(LINKER_FLAGS) $(OBJS)
-
+endif
 ### Compile objs ###
 # Special rule for version.cpp: always rebuild
 VERSION_DEFINS = -D"BUILD_TIME=$(TIMESTAMP)" -D"BUILD_CFG=$(call ToUppercase,$(GOAL_NAME))"
@@ -179,23 +196,38 @@ $(OUT_DIR)/%.o: %.S
 	@$(C_CMP) -x assembler-with-cpp $(COMMON_FLAGS) $(INCLUDE_STR) $(OBJ_FLAGS) 
 
 # Output .hex
+ifdef BUILD_DIR
+$(BUILD_DIR)/$(PRJ_NAME).hex: $(BUILD_DIR)/$(PRJ_NAME).elf
+	@echo 'Constructing $@'
+	@$(OBJCPY) -O ihex "$(BUILD_DIR)/$(PRJ_NAME).elf" "$(BUILD_DIR)/$(PRJ_NAME).hex"
+else
 $(OUT_DIR)/$(PRJ_NAME).hex: $(OUT_DIR)/$(PRJ_NAME).elf
 	@echo 'Constructing $@'
 	@$(OBJCPY) -O ihex "$(OUT_DIR)/$(PRJ_NAME).elf" "$(OUT_DIR)/$(PRJ_NAME).hex"
-
+endif
 # Output .bin
+ifdef BUILD_DIR
+$(BIN_PATH): $(BUILD_DIR)/$(PRJ_NAME).elf
+	@echo 'Constructing $@'
+	@$(OBJCPY) -O binary "$(BUILD_DIR)/$(PRJ_NAME).elf" $(BIN_PATH)
+#	@echo 'copydir : $(COPY_DIR)'
+	@echo 'EXTRA_DIR: $(EXTRA_DIR)'
+else
 $(BIN_PATH): $(OUT_DIR)/$(PRJ_NAME).elf
 	@echo 'Constructing $@'
 	@$(OBJCPY) -O binary "$(OUT_DIR)/$(PRJ_NAME).elf" $(BIN_PATH)
 #	@echo 'copydir : $(COPY_DIR)'
 	@echo 'EXTRA_DIR: $(EXTRA_DIR)'
-
+endif
 
 # Print size
 print_size: 
 	@echo 'Size:'
+ifdef BUILD_DIR
+	@$(SZ) --format=berkeley "$(BUILD_DIR)/$(PRJ_NAME).elf"
+else
 	@$(SZ) --format=berkeley "$(OUT_DIR)/$(PRJ_NAME).elf"
-
+endif
 
 ######################### Clean #########################
 clean:
