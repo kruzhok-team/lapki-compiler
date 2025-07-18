@@ -9,7 +9,7 @@
 constexpr uint32_t top_value = 255;
 using timChannel = std::pair<TIM_TypeDef*, uint8_t>;
 
-// XXX PwmInput не работает, 
+// XXX PwmInput не работает,
 /*
 INTF при каналах 0 и 1 всегда 25
 код:
@@ -64,7 +64,7 @@ usageMode getTimerMode(TIM_TypeDef* tim) {
 
 // system reset if pins are not PA6 PA7 PB8 PB9 PB0 PB10 or used or timer is
 // different mode
-PwmSetup getPwmSetup(GPIO_TypeDef* pgpio, uint16_t apin) {
+PwmSetup getPwmSetup(GPIO_TypeDef* pgpio, uint16_t apin, Gpio::OutMode mode) {
     // getTimChannel resets system if pins are not supported
     timChannel timch = getTimChannel(pgpio, apin);
     if (getTimerMode(timch.first) == usageMode::input) NVIC_SystemReset();
@@ -73,11 +73,11 @@ PwmSetup getPwmSetup(GPIO_TypeDef* pgpio, uint16_t apin) {
     //     NVIC_SystemReset();
     // }
     return PwmSetup(pgpio, apin, timch.first, timch.second, invNotInverted,
-                    Gpio::PushPull, top_value);
+                    mode, top_value);
 }
 
-PwmOutput::PwmOutput(GPIO_TypeDef* pgpio, uint16_t apin)
-    : pin(getPwmSetup(pgpio, apin)) {
+PwmOutput::PwmOutput(GPIO_TypeDef* pgpio, uint16_t apin, Gpio::OutMode mode)
+    : pin(getPwmSetup(pgpio, apin, mode)) {
     pin.Init();
     setDuty(0);
 }

@@ -26,7 +26,7 @@ class PwmOutput {
     // default top_value — 255
     // you need manually initialise frequency, otherwise it is ub, or the
     // frequency of last pin with same Timer
-    PwmOutput(GPIO_TypeDef* pgpio, uint16_t apin);
+    PwmOutput(GPIO_TypeDef* pgpio, uint16_t apin, Gpio::OutMode mode);
 
     // TODO надо бы это переименовать/сделать статическим методом, так как
     // меняется частота не пина, а таймера
