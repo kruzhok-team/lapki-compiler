@@ -25,7 +25,7 @@
       "command": "make",
       "flags": [
         "-C",
-        "{library_dir}\\customBoard\\1.0\\source",
+        "{library_dir}\\IRPCB\\1.0\\source",
         "build_Fromboot",
         "EXTRA_DIR={base_dir}/",
         "BUILD_DIR={base_dir}/build"
@@ -95,13 +95,13 @@
             {
               "name": "время",
               "type": "целое, мс",
-              "description": "",
+              "description": "целое, мс",
               "optional": false
             },
             {
               "name": "яркость",
               "type": "целое",
-              "description": "0 <= яркость <= 255",
+              "description": "целое, 0 <= яркость <= 255",
               "optional": false
             }
           ],
@@ -113,7 +113,7 @@
             {
               "name": "время",
               "type": "целое, мс",
-              "description": "",
+              "description": "целое, мс",
               "optional": false
             }
           ],
@@ -125,7 +125,7 @@
             {
               "name": "время",
               "type": "целое, мс",
-              "description": "",
+              "description": "целое, мс",
               "optional": false
             }
           ],
@@ -137,12 +137,12 @@
             {
               "name": "interval",
               "type": "целое, мс",
-              "description": "длительность включения"
+              "description": "целое, мс; длительность включения"
             },
             {
               "name": "Period",
               "type": "целое, мс",
-              "description": "Период между циклами включений/выключений"
+              "description": "целое, мс; Период между циклами включений/выключений"
             }
           ],
           "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
@@ -185,12 +185,12 @@
             {
               "name": "interval",
               "type": "целое, мс",
-              "description": "Количество миганий"
+              "description": "целое, мс; длительность мигания"
             },
             {
               "name": "Period",
               "type": "целое, мс",
-              "description": "Длительность мигания"
+              "description": "целое, мс; длительность цикла"
             }
           ],
           "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
@@ -231,7 +231,7 @@
             {
               "name": "interval",
               "type": "целое, мс",
-              "description": "Интервал срабатывания."
+              "description": "целое, мс; Интервал срабатывания."
             }
           ],
           "description": "Завести и включить таймер. Будет сигнал раз в интервал."
@@ -241,7 +241,7 @@
           "parameters": [],
           "description": "Включить таймер (отпустить стрелку)"
         },
-        "pause":{
+        "pause": {
           "img": "",
           "parameters": [],
           "description": "Остановить таймер (зафиксировать стрелку)"
@@ -260,13 +260,13 @@
         "difference": {
           "img": "arduino/difference.svg",
           "type": "целое, мс",
-          "description": "Оставшееся время до окончания таймера."
+          "description": "целое, мс; Оставшееся время до окончания таймера."
         }
       },
       "singletone": false
     },
     "Counter": {
-      "description": "Переменная-счетчик.",
+      "description": "Целочисленная Переменная-счетчик.",
       "img": "arduino/counter.svg",
       "signals": {},
       "constructorParameters": {},
@@ -307,7 +307,8 @@
           "parameters": [
             {
               "name": "value",
-              "type": "рациональное"
+              "type": "рациональное",
+              "description": "рациональное"
             }
           ]
         },
@@ -355,7 +356,7 @@
       "variables": {
         "message": {
           "img": "tjs-ms/lastData.svg",
-          "description": "Последнее полученное сообщение",
+          "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
           "type": "представимо в виде строки, например \"строка\" или число"
         }
       },
@@ -366,12 +367,12 @@
             {
               "name": "текст",
               "type": "\"текст в двойных кавычках\"",
-              "description": "будет выведено перед значением"
+              "description": "\"текст в двойных кавычках\"; будет выведено перед значением"
             },
             {
               "name": "Значение",
               "type": "представимо в виде строки, например \"строка\" или число",
-              "description": "выведется после текста"
+              "description": "строкоПодобное(\"строка\" или число); выведется после текста"
             }
           ],
           "description": "Выводит в консоль текст, отступ, значение, перенос строки"
@@ -382,7 +383,7 @@
             {
               "name": "Сообщение",
               "type": "представимо в виде строки, например \"строка\" или число",
-              "description": ""
+              "description": "строкоПодобное(\"строка\" или число)"
             }
           ],
           "description": "Выводит в сообщение в консоль"
@@ -400,15 +401,15 @@
       "description": "Компонент для взаимодействия с кнопкой",
       "img": "arduino/button.svg",
       "signals": {
-        "isPressed": {
+        "pressed": {
           "img": "arduino/isPressed.svg",
-          "description": "Нажата ли кнопка сейчас?",
-          "checkMethod": "isPressed"
+          "description": "на кнопку нажали?",
+          "checkMethod": "pressed"
         },
-        "isUnpressed": {
+        "released": {
           "img": "",
-          "description": "Не нажата ли кнопка сейчас?",
-          "checkMethod": "isUnpressed"
+          "description": "кнопку отпустили?",
+          "checkMethod": "released"
         }
       },
       "constructorParameters": {
@@ -419,7 +420,7 @@
             "Gpio3",
             "Gpio4"
           ],
-          "description": "Контакт, к которому стянута кнопка"
+          "description": "Контакт, на котором кнопка"
         }
       },
       "variables": {},
@@ -430,7 +431,9 @@
         "Button.h"
       ],
       "methods": {},
-      "loopActions": [],
+      "loopActions": [
+        "update"
+      ],
       "singletone": false
     },
     "IRpkg": {
@@ -441,7 +444,7 @@
       "variables": {
         "self": {
           "img": "",
-          "description": "Ссылка на себя, при выводе автоматически преобразуется в сообщение в 16ричном виде",
+          "description": "строкоПодобное(\"строка\" или число); Ссылка на себя, при выводе автоматически преобразуется в сообщение в 16ричном виде",
           "type": "представимо в виде строки, например \"строка\" или число"
         },
         "word16": {
@@ -473,17 +476,6 @@
           ],
           "description": "Устанавливает сообщение равное Word16"
         },
-        "setPower": {
-          "img": "",
-          "parameters": [
-            {
-              "name": "Мощность",
-              "type": "число, от 0 до 255",
-              "description": ""
-            }
-          ],
-          "description": "Устанавливает мощность, с которым будет отправлено сообщение"
-        },
         "setPkg": {
           "img": "",
           "parameters": [
@@ -497,6 +489,237 @@
         }
       },
       "loopActions": [],
+      "singletone": false
+    },
+    "IRReciever": {
+      "description": "Компонент для взаимодействия с ик-датчиком",
+      "img": "",
+      "signals": {
+        "isUpdated": {
+          "img": "",
+          "description": "пришёл сигнал?",
+          "checkMethod": "isUpdated"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "pkg": {
+          "img": "",
+          "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
+          "type": "представимо в виде строки, например \"строка\" или число"
+        }
+      },
+      "methods": {
+        "printPkg": {
+          "img": "",
+          "parameters": [],
+          "description": "выводит сообщение в usb-терминал"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "IRReciever.h"
+      ],
+      "importFiles": [
+        "IRReciever.h"
+      ],
+      "singletone": true
+    },
+    "IRTransmitter": {
+      "description": "Компонент для взаимодействия с ик-датчиком",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {},
+      "methods": {
+        "transmit": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "ИК-Контейнер",
+              "type": "IRpkg",
+              "description": "IRpkg; Пакет данных для передачи"
+            }
+          ],
+          "description": "Передаёт пакет данных"
+        },
+        "setPower": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Мощность",
+              "type": "целое число, от 0 до 255",
+              "description": "целое число, от 0 до 255; мощность, с которой будут отправлять ик-пакеты"
+            }
+          ],
+          "description": "Устанавливает мощность ик-передатчика"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "IRTransmitter.h"
+      ],
+      "importFiles": [
+        "IRTransmitter.h"
+      ],
+      "singletone": true
+    },
+    "LedStrip": {
+      "description": "Компонент для взаимодействия с ик-датчиком",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {
+        "Количетсво светодиодов": {
+          "type": "число",
+          "description": "число >= 1, Количетсво светодиодов в ленте"
+        }
+      },
+      "variables": {
+        "led_number": {
+          "img": "",
+          "type": "число",
+          "description": "Количество светодиодов в ленте"
+        }
+      },
+      "methods": {
+        "setColorRGB": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Номер светодиода",
+              "type": "целое число от 1 до количества светодиодов",
+              "description": "целое число от 1 до количества светодиодов; Номер светодиода"
+            },
+            {
+              "name": "r",
+              "type": "целое число, от 0 до 255",
+              "description": "целое число, от 0 до 255; красный"
+            },
+            {
+              "name": "g",
+              "type": "целое число, от 0 до 255",
+              "description": "целое число, от 0 до 255; зелёный"
+            },
+            {
+              "name": "b",
+              "type": "целое число, от 0 до 255",
+              "description": "целое число, от 0 до 255; синий"
+            }
+          ],
+          "description": "изменение цвета светодиода в схеме RGB"
+        },
+        "setColorHSV": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Номер светодиода",
+              "type": "целое число от 1 до количества светодиодов",
+              "description": "целое число от 1 до количества светодиодов; Номер светодиода"
+            },
+            {
+              "name": "h",
+              "type": "целое, от 0 до 360",
+              "description": "целое, от 0 до 360; оттенок"
+            },
+            {
+              "name": "s",
+              "type": "целое, от 0 до 100",
+              "description": "целое, от 0 до 100; насыщенность"
+            },
+            {
+              "name": "V",
+              "type": "целое, от 0 до 100",
+              "description": "целое, от 0 до 100; яркость"
+            }
+          ],
+          "description": "изменение цвета светодиода в схеме HSV"
+        },
+        "turnOff": {
+          "img": "",
+          "parameters": [],
+          "description": "выключает все светодиоды"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "LedStrip.h"
+      ],
+      "importFiles": [
+        "LedStrip.h"
+      ],
+      "singletone": false
+    },
+    "PwmOutput": {
+      "description": "Компонент для настройки контактов для генерации шим сигнала",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {
+        "pin": {
+          "type": [
+            "PIN_LED1",
+            "PIN_LED2",
+            "PIN_LED3",
+            "PIN_LED4",
+            "PIN_FRONT_LED1",
+            "PIN_FRONT_LED2"
+          ],
+          "description": "Пин, настраиваемый для генерации шим"
+        },
+         "Mode": {
+          "type": [
+            "Gpio::PushPull",
+            "Gpio::OpenDrain"
+          ],
+          "valueAlias": [
+            "Активный выход",
+            "Пассивный выход"
+          ],
+          "description": "Режим управления шимом"
+        }
+      },
+      "variables": {},
+      "methods": {
+        "setFrequency": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Частота: ",
+              "type": "целое число, Гц",
+              "description": "целое число, Гц"
+            }
+          ],
+          "description": "настраивает частоту шим"
+        },
+        "setDuty": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Скважность",
+              "type": "целое число, от 0 до 255",
+              "description": "целое число, от 0 до 255"
+            }
+          ],
+          "description": "Настраивает скважность шим"
+        },
+        "setDutyPortion": {
+          "img": "",
+          "parameters": [
+            {
+              "name": "Скважность",
+              "type": "число, от 0 до 1",
+              "description": "число, от 0 до 1"
+            }
+          ],
+          "description": "Настраивает скважность шим"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "Pwm_Control.h"
+      ],
+      "importFiles": [
+        "Pwm_Control.h"
+      ],
       "singletone": false
     }
   }
