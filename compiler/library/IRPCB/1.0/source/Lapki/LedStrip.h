@@ -11,8 +11,9 @@ class LedStrip {
     Neopixels npx_leds;
     int checkNumeration(unsigned int number);
    public:
+    const uint16_t led_number;
     LedStrip(uint32_t number)
-        : params({NPX_PARAMS, NPX_DMA, number, NpxParams::ClrType::RGB}), npx_leds(&params) {
+        : params({NPX_PARAMS, NPX_DMA, number, NpxParams::ClrType::RGB}), npx_leds(&params), led_number(number) {
         npx_leds.Init();
         npx_leds.SetAll(clBlack);
         npx_leds.SetCurrentColors();
