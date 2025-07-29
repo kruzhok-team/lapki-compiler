@@ -8,7 +8,7 @@
   "standardVersion": "1.0",
   "formatVersion": "1.0",
   "language": "C++",
-  "author": "Gleb",
+  "author": "Gleb Chekmarev/glChek",
   "visual": true,
   "compile": true,
   "mainFileExtension": "cpp",
@@ -47,7 +47,8 @@
         "isReady": {
           "img": "arduino/timeout.svg",
           "description": "Закончил ли светодиод плавные колебания",
-          "checkMethod": "isReady"
+          "checkMethod": "isReady",
+          "alias": "Готов"
         }
       },
       "constructorParameters": {
@@ -60,7 +61,15 @@
             "LED_FRONT1",
             "LED_FRONT2"
           ],
-          "description": "Пин, к которому подключен светодиод"
+          "description": "Пин, к которому подключен светодиод",
+          "valueAlias": [
+            "PIN_LED1",
+            "PIN_LED2",
+            "PIN_LED3",
+            "PIN_LED4",
+            "PIN_FRONT_LED1",
+            "PIN_FRONT_LED2"
+          ]
         }
       },
       "variables": {},
@@ -69,9 +78,9 @@
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
-              "name": "яркость",
+              "name": "Яркость",
               "type": "целое",
-              "description": "0 <= яркость <= 255",
+              "description": "целое, 0 <= яркость <= 255",
               "optional": false
             }
           ],
@@ -93,7 +102,7 @@
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
-              "name": "время",
+              "name": "Продолжительность",
               "type": "целое, мс",
               "description": "целое, мс",
               "optional": false
@@ -111,7 +120,7 @@
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
-              "name": "время",
+              "name": "Продолжительность",
               "type": "целое, мс",
               "description": "целое, мс",
               "optional": false
@@ -123,7 +132,7 @@
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
-              "name": "время",
+              "name": "Продолжительность",
               "type": "целое, мс",
               "description": "целое, мс",
               "optional": false
@@ -135,17 +144,17 @@
           "img": "arduino/blink.svg",
           "parameters": [
             {
-              "name": "interval",
+              "name": "Длительность импульса",
               "type": "целое, мс",
-              "description": "целое, мс; длительность включения"
+              "description": "целое, мс"
             },
             {
-              "name": "Period",
+              "name": "Период",
               "type": "целое, мс",
-              "description": "целое, мс; Период между циклами включений/выключений"
+              "description": "целое, мс; Длительность полного цикла"
             }
           ],
-          "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
+          "description": "Начинает мигать светодиодом раз в Период"
         },
         "stop": {
           "img": "arduino/switch-off.svg",
@@ -183,17 +192,17 @@
           "img": "arduino/blink.svg",
           "parameters": [
             {
-              "name": "interval",
+              "name": "Длительность импульса",
               "type": "целое, мс",
-              "description": "целое, мс; длительность мигания"
+              "description": "целое, мс"
             },
             {
-              "name": "Period",
+              "name": "Период",
               "type": "целое, мс",
-              "description": "целое, мс; длительность цикла"
+              "description": "целое, мс; Длительность полного цикла"
             }
           ],
-          "description": "Начинает мигать светодиодом раз в Period на протяжении interval"
+          "description": "Начинает мигать светодиодом раз в Период"
         },
         "stop": {
           "img": "arduino/switch-off.svg",
@@ -215,12 +224,14 @@
         "timeout": {
           "img": "arduino/timeout.svg",
           "description": "Время вышло!",
-          "checkMethod": "timeout"
+          "checkMethod": "timeout",
+          "alias": "Выполнен"
         },
         "tick": {
           "img": "arduino/timeout.svg",
           "description": "прошёл 1 тик",
-          "checkMethod": "tick"
+          "checkMethod": "tick",
+          "alias": "Тик"
         }
       },
       "constructorParameters": {},
@@ -229,7 +240,7 @@
           "img": "arduino/start.svg",
           "parameters": [
             {
-              "name": "interval",
+              "name": "Интервал",
               "type": "целое, мс",
               "description": "целое, мс; Интервал срабатывания."
             }
@@ -273,52 +284,56 @@
       "methods": {
         "add": {
           "img": "arduino/add.svg",
-          "description": "Добавить value к значению счетчика",
+          "description": "Добавить Значение к значению счетчика",
           "parameters": [
             {
-              "name": "value",
-              "type": "целое"
+              "name": "Значение",
+              "type": "целое",
+              "description": "целое"
             }
           ]
         },
         "sub": {
           "img": "arduino/sub.svg",
-          "description": "Вычесть value из значения счетчика",
+          "description": "Вычесть Значение из значения счетчика",
           "parameters": [
             {
-              "name": "value",
-              "type": "целое"
+              "name": "Значение",
+              "type": "целое",
+              "description": "целое"
             }
           ]
         },
         "div": {
           "img": "",
-          "description": "разделить  значения счетчика нацело на value",
+          "description": "разделить значение счетчика нацело на указанное Значение",
           "parameters": [
             {
-              "name": "value",
-              "type": "целое"
+              "name": "Значение",
+              "type": "целое",
+              "description": "целое"
             }
           ]
         },
         "mul": {
           "img": "",
-          "description": "умножить значение счетчика на value",
+          "description": "умножить значение счетчика на Значение",
           "parameters": [
             {
-              "name": "value",
-              "type": "рациональное",
-              "description": "рациональное"
+              "name": "Значение",
+              "type": "целое",
+              "description": "целое"
             }
           ]
         },
         "set": {
           "img": "",
-          "description": "приравнять счётчик к value",
+          "description": "приравнять счётчик к Значению",
           "parameters": [
             {
-              "name": "value",
-              "type": "целое"
+              "name": "Значение",
+              "type": "целое",
+              "description": "целое"
             }
           ]
         },
@@ -349,7 +364,8 @@
         "isUpdated": {
           "img": "",
           "description": "Что-то пришло в буфер",
-          "checkMethod": "isUpdated"
+          "checkMethod": "isUpdated",
+          "alias": "Получено сообщение"
         }
       },
       "constructorParameters": {},
@@ -365,7 +381,7 @@
           "img": "",
           "parameters": [
             {
-              "name": "текст",
+              "name": "Текст",
               "type": "\"текст в двойных кавычках\"",
               "description": "\"текст в двойных кавычках\"; будет выведено перед значением"
             },
@@ -403,13 +419,15 @@
       "signals": {
         "pressed": {
           "img": "arduino/isPressed.svg",
-          "description": "на кнопку нажали?",
-          "checkMethod": "pressed"
+          "description": "кнопку нажали",
+          "checkMethod": "pressed",
+          "alias": "Нажата"
         },
         "released": {
           "img": "",
-          "description": "кнопку отпустили?",
-          "checkMethod": "released"
+          "description": "кнопку отпустили",
+          "checkMethod": "released",
+          "alias": "Отпущена"
         }
       },
       "constructorParameters": {
@@ -469,12 +487,12 @@
           "img": "",
           "parameters": [
             {
-              "name": "Word16",
+              "name": "Сообщение",
               "type": "16 битное число",
-              "description": ""
+              "description": "16 битное число"
             }
           ],
-          "description": "Устанавливает сообщение равное Word16"
+          "description": "Устанавливает новое сообщение"
         },
         "setPkg": {
           "img": "",
@@ -485,7 +503,7 @@
               "description": "То, откуда копировать данные"
             }
           ],
-          "description": "Копирует ИК-Контейнер в себя"
+          "description": "Копирует данные из ИК-Контейнера"
         }
       },
       "loopActions": [],
@@ -497,8 +515,9 @@
       "signals": {
         "isUpdated": {
           "img": "",
-          "description": "пришёл сигнал?",
-          "checkMethod": "isUpdated"
+          "description": "пришёл ик-сигнал?",
+          "checkMethod": "isUpdated",
+          "alias": "Получен ик-сигнал"
         }
       },
       "constructorParameters": {},
@@ -591,17 +610,17 @@
               "description": "целое число от 1 до количества светодиодов; Номер светодиода"
             },
             {
-              "name": "r",
+              "name": "R",
               "type": "целое число, от 0 до 255",
               "description": "целое число, от 0 до 255; красный"
             },
             {
-              "name": "g",
+              "name": "G",
               "type": "целое число, от 0 до 255",
               "description": "целое число, от 0 до 255; зелёный"
             },
             {
-              "name": "b",
+              "name": "B",
               "type": "целое число, от 0 до 255",
               "description": "целое число, от 0 до 255; синий"
             }
@@ -617,12 +636,12 @@
               "description": "целое число от 1 до количества светодиодов; Номер светодиода"
             },
             {
-              "name": "h",
+              "name": "H",
               "type": "целое, от 0 до 360",
               "description": "целое, от 0 до 360; оттенок"
             },
             {
-              "name": "s",
+              "name": "S",
               "type": "целое, от 0 до 100",
               "description": "целое, от 0 до 100; насыщенность"
             },
@@ -665,7 +684,7 @@
           ],
           "description": "Пин, настраиваемый для генерации шим"
         },
-         "Mode": {
+        "Mode": {
           "type": [
             "Gpio::PushPull",
             "Gpio::OpenDrain"
