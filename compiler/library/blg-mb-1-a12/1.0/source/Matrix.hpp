@@ -27,6 +27,10 @@ namespace detail {
     }
 }
 
+#define OFF_LEDS 1
+#define ON_LEDS 2
+#define ALL_LEDS 3
+
 // Класс Матрица предоставляет интерфейс для компонента 'Matrix' в Lapki Ide, и позволяет пользователю
 // удобно манипулировать светодиодами на матрице
 class Matrix {
@@ -72,11 +76,28 @@ public:
         }
     }
 
-    void changePatternBright(const uint8_t value) {
-        for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
-            if (detail::matrix::leds[i].value > 0) {
-                setPixel(i, value);
+    void changePatternBright(const uint8_t mode, uint8_t value) {
+        switch (mode)
+        {
+        case OFF_LEDS:
+            for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
+                if (detail::matrix::leds[i].value == 0) {
+                    setPixel(i, value);
+                }
             }
+            break;
+        case ON_LEDS:
+            for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
+                if (detail::matrix::leds[i].value > 0) {
+                    setPixel(i, value);
+                }
+            }
+            break;
+        case ALL_LEDS:
+            fill(value);
+            break;
+        default:
+            break;
         }
     }
 

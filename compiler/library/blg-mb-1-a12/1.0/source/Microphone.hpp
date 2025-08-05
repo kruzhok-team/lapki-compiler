@@ -44,7 +44,7 @@ public:
     }
 
     bool isLoudSound() {
-        if (mode == MICROPHONE_ON
+        if (mode == MICROPHONE_ON &&
             mrx::hal::microphone::detectedLevel > threshold && 
             millis() - _previous > cooldown
         ) {

@@ -28,7 +28,7 @@ public:
         setColorPaletteLeft(&ColorBlack);
     }
 
-    void setColorPallete(detail::Color* colorLeft, detail::Color* colorRight) {
+    void setColorPalette(detail::Color* colorLeft, detail::Color* colorRight) {
         setColorPaletteLeft(colorLeft);
         setColorPaletteRight(colorRight);
     }

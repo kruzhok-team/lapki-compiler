@@ -11,30 +11,29 @@ namespace detail {
 }
 
 class SpeakerSound {
-
 public:
+    Sound* currentSound = nullptr;
+    uint32_t currentDuration = 0.;
+
     SpeakerSound() {
-
         if (!detail::speaker::isInit) {
-
             mrx::hal::speaker::init();
-
             mrx::hal::pwm::enablePWMTIM2();
-
             detail::speaker::isInit = true;
         }
     }
-
     // duration in ms
-    void play(Sound *sound, const uint32_t duration) {
-        detail::speaker::isPlayed = true;
-        mrx::hal::speaker::startSound(sound, duration);
+    void setupSound(Sound *sound, const uint32_t duration) {
+        currentSound = sound;
+        currentDuration = duration;
+    }
 
-        // mrx::hal::speaker::startSound(&LaughterSound, duration);
+    void play() {
+        detail::speaker::isPlayed = true;
+        mrx::hal::speaker::startSound(currentSound, currentDuration);
     }
 
     void stop() {
-
         mrx::hal::speaker::stopSound();
     }
 
