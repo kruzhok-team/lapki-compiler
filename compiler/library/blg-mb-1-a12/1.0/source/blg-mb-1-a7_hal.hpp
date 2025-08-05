@@ -39,12 +39,12 @@ namespace mrx {
 
             ButtonPort buttons[maxPin -minPin + 1] = {
 
-                {GPIOC, 2},
-                {GPIOB, 13},
-                {GPIOA, 0},
-                {GPIOD, 9},
-                {GPIOF, 2},
-                {GPIOD, 10},
+                {GPIOC, 2}, // правая лапа
+                {GPIOD, 8}, // левая лапа
+                {GPIOA, 2}, // правый палец
+                {GPIOD, 9}, // левый палец
+                {GPIOF, 2}, // правый бок
+                {GPIOD, 10}, // левый бок
             };
 
             // Это действие сркыто от компонента (LED, PWM, Button)
