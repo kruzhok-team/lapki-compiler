@@ -3,7 +3,6 @@ import inspect
 import re
 import string
 from collections import defaultdict
-from tkinter import INSERT
 from typing import List, Sequence, Tuple, Dict
 
 from aiofile import async_open
@@ -19,8 +18,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     GeneratorShallowHistory
 )
 from compiler.fullgraphmlparser.graphml import *
-
-MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+from compiler.config import get_config
+MODULE_PATH = os.path.join(get_config().module_directory, 'fullgraphmlparser')
 IF_EXPRESSION = string.Template("""$offset if ($condition) {
 $actions
 $offset}""")
@@ -189,11 +188,16 @@ class CppFileWriter:
                                   id: str,
                                   type: str,
                                   triggers: Sequence[Condition],
+                                  parent: str | None,
                                   offset='\t\t') -> str:
         """Generate if else code using IF_EXPRESSIONS,\
             ELSE_IF_EXPRESSION, ELSE_EXPRESSION templates."""
+        if parent is not None:
+            propagate_expression = f'status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{parent});'
+        else:
+            propagate_expression = 'status_ = Q_UNHANDLED();'
         if len(triggers) == 0:
-            return offset + 'status_ = UN_HANDLED();'
+            return offset + propagate_expression
 
         else_count = sum([trigger.guard == 'else' for trigger in triggers])
         if (else_count > 1):
@@ -206,7 +210,6 @@ class CppFileWriter:
                 start_trigger_index = i
                 start_trigger = triggers[i]
                 break
-        # start_trigger.action += "break;"
         actions = IF_EXPRESSION.safe_substitute({
             'condition': start_trigger.guard,
             'actions': start_trigger.action,
@@ -222,8 +225,7 @@ class CppFileWriter:
             if transition.guard == 'else':
                 else_condition = transition
                 continue
-            transition.action += "break;"
-            actions += IF_EXPRESSION.safe_substitute({
+            actions += ELSE_IF_EXPRESSION.safe_substitute({
                 'condition': transition.guard,
                 'actions': transition.action,
                 'offset': offset
@@ -231,6 +233,11 @@ class CppFileWriter:
         if else_condition is not None:
             actions += ELSE_EXPRESSION.safe_substitute({
                 'actions': else_condition.action,
+                'offset': offset
+            }) + '\n'
+        else:
+            actions += ELSE_EXPRESSION.safe_substitute({
+                'actions': propagate_expression,
                 'offset': offset
             }) + '\n'
         return actions
@@ -246,7 +253,8 @@ class CppFileWriter:
                 await self._generate_condition(
                     choice.id,
                     'Псевдосостояние выбора',
-                    choice.transitions
+                    choice.transitions,
+                    choice.parent
                 ),
                 choice,
                 'Choice'
@@ -328,7 +336,7 @@ class CppFileWriter:
         insert_strings.extend(insert_shallows)
         insert_strings.append('};')
 
-        await self._insert_string('\n'.join(insert_strings))
+        await self._insert_string('\n'.join(insert_strings) + '\n')
 
     async def _write_local_history_definition(self):
         """
@@ -402,6 +410,7 @@ class CppFileWriter:
             if self.notes_dict['raw_cpp_code']:
                 await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
             self.f = None
+
         async with async_open(os.path.join(folder, f'{self.filename}.{self.header_file_extension}'), 'w') as f:
             self.f = f
 
@@ -424,7 +433,6 @@ class CppFileWriter:
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
             await self._write_states_declarations_recursively(self.states[0])
-            
             await self._write_vertexes_declaration([
                 *self.initial_states,
                 *self.choices,
@@ -595,14 +603,10 @@ class CppFileWriter:
                     state.id if state.name is None else state.name,
                     'Состояние',
                     triggers,
+                    state.parent.id if state.parent is not None else None,
                     '\t\t\t'
                 )
             )
-            if not any(trigger.guard == 'else' for trigger in triggers):
-                await self._insert_string('            else {\n')
-                await self._insert_string('                '
-                                          'status_ = Q_UNHANDLED();\n')
-                await self._insert_string('            }\n')
             await self._insert_string('            break;\n')
             await self._insert_string('        }\n')
         await self._insert_string('        default: {\n')
