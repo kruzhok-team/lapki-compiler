@@ -35,11 +35,11 @@ namespace detail {
         const uint16_t y0 = 2047;
         const float pi = 3.1415926;
 
-        void setUpNote(const uint16_t Frequency, const uint16_t Amplitude) {
+        void setUpNote(const uint16_t frequency, const uint16_t amplitude) {
             
             for (int i = 0; i < szTestSound; ++i) {
 
-                rawTestSound[i] = math::fast_sin_bhaskara(360.0*float(Frequency)*float(i)/8000.0) * Amplitude + y0;
+                rawTestSound[i] = math::fast_sin_bhaskara(360.0*float(frequency)*float(i)/8000.0) * amplitude + y0;
             }
         }
     }
@@ -61,15 +61,15 @@ enum NoteName {
     Note_c = 262
 };
 
-class SpeakerNote {
+class Speaker {
 
 public:
 
-    uint16_t Frequency;
-    uint16_t Amplitude;
-    uint16_t Duration;
+    uint16_t frequency;
+    uint16_t amplitude;
+    uint16_t duration;
 
-    SpeakerNote() {
+    Speaker() {
 
         if (!detail::speaker::isInit) {
 
@@ -81,22 +81,34 @@ public:
         }
     }
 
-    void setupNote(NoteName note, const uint16_t Amplitude, const uint16_t Duration) {
+    void setupNote(NoteName note, const uint16_t amplitude, const uint16_t duration) {
 
-        this->Frequency = static_cast<uint16_t>(note);
-        this->Amplitude = Amplitude;
+        this->frequency = static_cast<uint16_t>(note);
+        this->amplitude = amplitude;
         
-        this->Duration = Duration;
+        this->duration = duration;
 
-        detail::note::setUpNote(Frequency, Amplitude);
+        detail::note::setUpNote(frequency, amplitude);
     }
+
+    void setupFrequency(
+        const uint16_t frequency,
+        const uint16_t amplitude,
+        const uint16_t duration) {
+            this->frequency = frequency;
+            this->amplitude = amplitude;
+        
+            this->duration = duration;
+
+            detail::note::setUpNote(frequency, amplitude);
+        }
 
     void play() {
         
         // setupNote(NoteName::a, 2000, 1000);
 
         // mrx::hal::speaker::startSound(&LaughterSound, 1000);
-        mrx::hal::speaker::startSound(&TestSound, this->Duration);
+        mrx::hal::speaker::startSound(&TestSound, this->duration);
     }
 
     void stop() {
