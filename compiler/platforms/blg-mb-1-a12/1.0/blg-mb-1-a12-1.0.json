@@ -627,7 +627,7 @@
         "setPixel": {
           "alias": "Яркость светодиода",
           "img": "blg-mb/cellSet.svg",
-          "description": "Включить или выключить светодиод.",
+          "description": "Настроить яркость светодиода.",
           "parameters": [
             {
               "name": "Строка",
@@ -661,7 +661,7 @@
         "changePatternBright": {
           "alias": "Яркость матрицы",
           "img": "tjc-ms/fill.svg",
-          "description": "Изменить яркость светодиодов на матрице.",
+          "description": "Изменить яркость группы светодиодов на матрице.",
           "parameters": [
             {
               "name": "Режим",
@@ -767,7 +767,7 @@
       "img": "blg-mb/matrixAnimation.svg",
       "signals": {
         "AnimationFinished": {
-          "img": "arduino/timer-start.svg",
+          "img": "blg-mb/isSoundEnd.svg",
           "description": "Переход к финальной картинке завершён",
           "checkMethod": "AnimationFinished",
           "parameters": [],
@@ -792,7 +792,7 @@
             }
           ],
           "description": "Установить рисунок, к которой нужно перейти.",
-          "alias": "Установить"
+          "alias": "Установить рисунок"
         }
       },
       "buildFiles": [
@@ -827,7 +827,7 @@
             }
           ],
           "description": "Изобразить рисунок на матрице.",
-          "alias": "Установить"
+          "alias": "Установить рисунок"
         }
       },
       "buildFiles": [
