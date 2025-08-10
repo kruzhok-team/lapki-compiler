@@ -3,23 +3,28 @@ import os.path
 import os
 import inspect
 from typing import TypeVar
+import sys
 
 from compiler.types.config_types import ArgumentParser, Config
 
-_MODULE_PATH = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+_MODULE_PATH = (
+    os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+    if not getattr(sys, 'frozen', False)
+    else os.path.join(os.path.dirname(sys.executable))
+)
 _BASE_DIRECTORY = _MODULE_PATH  # "server/"
 
 # НАЧАЛО ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 _SERVER_PORT = 8081
 _SERVER_HOST = 'localhost'
-_ACCESS_TOKENS_FILE = os.path.join(
-    _MODULE_PATH, 'ACCESS_TOKENS.txt')
+_ACCESS_TOKENS_FILE = os.path.join(_MODULE_PATH, 'ACCESS_TOKENS.txt')
 _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
 _ARTIFACTS_DIRECTORY = os.path.join(_BUILD_DIRECTORY, 'artifacts')
 _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку
 _MAX_MSG_SIZE = 1024 * 256  # Максимальный размер сообщения от клиента.
+_KILLABLE = False
 # КОНЕЦ ПОЛЬЗОВАТЕЛЬСКИХ НАСТРОЕК
 T = TypeVar('T', str, int)
 
@@ -35,21 +40,28 @@ def get_default_config() -> Config:
                   _ACCESS_TOKENS_FILE,
                   _BUILD_DIRECTORY,
                   _MODULE_PATH,
-                  _BASE_DIRECTORY)
+                  _BASE_DIRECTORY,
+                  _KILLABLE)
 
 
 _config = get_default_config()
 
 
-def _choice(flag_arg: str | None,
+def _choice(flag_arg: str | bool | None,
             env_arg_name: str,
             default_value: T) -> T:
     if flag_arg is not None:
+        if isinstance(default_value, bool):
+            return default_value.__class__(str(flag_arg).lower()
+                                           in ('1', 'true', 'yes', 'on'))
         return default_value.__class__(flag_arg)
 
     env_arg = os.environ.get(env_arg_name, None)
 
     if env_arg is not None:
+        if isinstance(default_value, bool):
+            return default_value.__class__(str(env_arg).lower()
+                                           in ('1', 'true', 'yes', 'on'))
         return default_value.__class__(env_arg)
 
     return default_value
@@ -95,6 +107,9 @@ def configure(parser: ArgumentParser):
         args.max_msg_size, 'LAPKI_COMPILER_MAX_MSG_SIZE', _MAX_MSG_SIZE)
     build_directory = _choice(
         args.build_path, 'LAPKI_COMPILER_BUILD_PATH', _BUILD_DIRECTORY)
+    killable = _choice(
+        args.killable, 'LAPKI_COMPILER_KILLABLE', _KILLABLE
+    )
     set_config(Config(
         library_path,
         server_host,
@@ -105,5 +120,6 @@ def configure(parser: ArgumentParser):
         access_token_file,
         build_directory,
         _MODULE_PATH,
-        _BASE_DIRECTORY)
+        _BASE_DIRECTORY,
+        bool(killable))
     )

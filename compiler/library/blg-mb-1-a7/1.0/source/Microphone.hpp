@@ -9,19 +9,19 @@ namespace detail {
 }
 
 class Microphone {
-
     uint16_t lValue{}, rValue{};
-
+    
     bool isEvent { false };
-
+    
     bool isEventSetting { false };
     uint16_t threshold{};
-
+    unsigned long _previous{};
+    unsigned long cooldown{};
 public:
 
     // ctor
-    Microphone() {
-
+    Microphone(uint16_t _cooldown = 200) {
+        cooldown = _cooldown;
         if (!detail::microphone::isInit) {
 
             mrx::hal::microphone::api::init();
@@ -39,20 +39,26 @@ public:
     }
 
     bool isLoudSound() {
-
-        if (mrx::hal::microphone::detectedLevel > threshold) {
-
+        if (
+            mrx::hal::microphone::detectedLevel > threshold && 
+            millis() - _previous > cooldown
+        ) {
+            _previous = millis();
             isEvent = true;
         }
 
         auto copy = isEvent;
         isEvent = false;
 
-        if (copy) {
+        
             mrx::hal::microphone::detail::resetDetector();
-        }
+        
 
         return copy;
+    }
+
+    void setCooldown(unsigned long _cooldown) {
+        cooldown = _cooldown;
     }
 
     void setupEvent(const uint16_t value) {
