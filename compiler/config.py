@@ -15,6 +15,7 @@ _SERVER_HOST = 'localhost'
 _ACCESS_TOKENS_FILE = os.path.join(
     _MODULE_PATH, 'ACCESS_TOKENS.txt')
 _BUILD_DIRECTORY = '/tmp/lapki-compiler/'
+_ARTIFACTS_DIRECTORY = os.path.join(_BUILD_DIRECTORY, 'artifacts')
 _LIBRARY_PATH = os.path.join(_MODULE_PATH, 'library')
 _PLATFORM_DIRECTORY = os.path.join(_MODULE_PATH, 'platforms')
 _LOG_PATH = 'logs.log'  # Замените на нужную папку

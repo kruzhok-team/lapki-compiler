@@ -15,8 +15,9 @@ DEFINS += BUILD_CFG_$(GOAL_NAME)=1 # add BUILD_CFG_GOALNAME=1 define, uppercasin
 INPUT_WORDS = $(subst _, ,$(MAKECMDGOALS)) # Replace '_' with ' '
 ACTION = $(word 1,$(INPUT_WORDS))
 GOAL_NAME = $(word 2,$(INPUT_WORDS))
-OUT_DIR = $(GOAL_NAME)
-
+ifeq ($(OUT_DIR),)
+	OUT_DIR = $(GOAL_NAME)
+endif
 # Run Action (build_Release: build  clean_Debug: clean  flash_Fromboot: flash)
 $(MAKECMDGOALS): $(ACTION)
 ##################
@@ -247,3 +248,6 @@ test:
 	@echo $(OUT_DIR)
 	@echo "VPATH: $(VPATH)"
 	@echo "EXTRA_DIR: $(EXTRA_DIR)"
+	@echo "SHELL: $(SHELL)"
+	@echo "OS: $(OS)"
+	@if [ -n "$$" ]; then echo "Успех! Используется sh-совместимая оболочка."; else echo "Ошибка! Используется cmd.exe."; fi

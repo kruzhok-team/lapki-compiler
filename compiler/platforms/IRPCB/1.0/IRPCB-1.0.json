@@ -28,7 +28,8 @@
         "{library_dir}\\IRPCB\\1.0\\source",
         "build_Fromboot",
         "EXTRA_DIR={base_dir}/",
-        "BUILD_DIR={base_dir}/build"
+        "BUILD_DIR={base_dir}/build",
+        "OUT_DIR={artifacts_dir}/IRPCB"
       ]
     }
   ],
