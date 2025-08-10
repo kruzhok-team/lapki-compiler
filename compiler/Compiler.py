@@ -142,7 +142,6 @@ class Compiler:
                 flags[i] = flags[i].replace('{library_dir}', library_dir)
                 flags[i] = flags[i].replace('{base_dir}', base_dir)
                 flags[i] = flags[i].replace('{artifacts_dir}', artifacts_dir)
-            print('flags: ', *flags)
         for command in commands:
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
