@@ -129,7 +129,7 @@
           "description": "Плавно меняет яркость светодиода до наибольшей в течение установленного времени"
         },
         "fadeOut": {
-          "img": "arduino/switch-on.svg",
+          "img": "arduino/switch-off.svg",
           "parameters": [
             {
               "name": "Продолжительность",
@@ -248,12 +248,12 @@
           "description": "Завести и включить таймер. Будет сигнал раз в интервал."
         },
         "proceed": {
-          "img": "",
+          "img": "arduino/timer-start.svg",
           "parameters": [],
           "description": "Включить таймер (отпустить стрелку)"
         },
         "pause": {
-          "img": "",
+          "img": "arduino/timer-stop.svg",
           "parameters": [],
           "description": "Остановить таймер (зафиксировать стрелку)"
         }
@@ -305,7 +305,7 @@
           ]
         },
         "div": {
-          "img": "",
+          "img": "math/div.svg",
           "description": "разделить значение счетчика нацело на указанное Значение",
           "parameters": [
             {
@@ -316,7 +316,7 @@
           ]
         },
         "mul": {
-          "img": "",
+          "img": "math/mul.svg",
           "description": "умножить значение счетчика на Значение",
           "parameters": [
             {
@@ -327,7 +327,7 @@
           ]
         },
         "set": {
-          "img": "",
+          "img": "common/set.svg",
           "description": "приравнять счётчик к Значению",
           "parameters": [
             {
@@ -358,11 +358,11 @@
       "singletone": false
     },
     "Serial": {
-      "img": "Dos/printer.svg",
+      "img": "arduino/serial.svg",
       "description": "выводит сообщения в usb-uart",
       "signals": {
         "isUpdated": {
-          "img": "",
+          "img": "common/userSignal.svg",
           "description": "Что-то пришло в буфер",
           "checkMethod": "isUpdated",
           "alias": "Получено сообщение"
@@ -394,7 +394,7 @@
           "description": "Выводит в консоль текст, отступ, значение, перенос строки"
         },
         "print": {
-          "img": "",
+          "img": "arduino/print.svg",
           "parameters": [
             {
               "name": "Сообщение",
@@ -424,7 +424,7 @@
           "alias": "Нажата"
         },
         "released": {
-          "img": "",
+          "img": "common/isReleased.svg",
           "description": "кнопку отпустили",
           "checkMethod": "released",
           "alias": "Отпущена"
@@ -545,7 +545,7 @@
       "singletone": true
     },
     "IRTransmitter": {
-      "description": "Компонент для взаимодействия с ик-датчиком",
+      "description": "Компонент для взаимодействия с ик-передатчиком",
       "img": "",
       "signals": {},
       "constructorParameters": {},
@@ -584,7 +584,7 @@
       "singletone": true
     },
     "LedStrip": {
-      "description": "Компонент для взаимодействия с ик-датчиком",
+      "description": "Компонент для взаимодействия с Led лентой",
       "img": "",
       "signals": {},
       "constructorParameters": {
@@ -654,7 +654,7 @@
           "description": "изменение цвета светодиода в схеме HSV"
         },
         "turnOff": {
-          "img": "",
+          "img": "arduino/switch-off.svg",
           "parameters": [],
           "description": "выключает все светодиоды"
         }
