@@ -16,6 +16,7 @@ def setup_routes(app: web.Application) -> None:
             web.get('/ws/berloga/import', Handler.handle_berloga_import),
             web.get('/ws/berloga/export', Handler.handle_berloga_export),
             web.get('/cgml', Handler.handle_cgml_compile),
+            web.get('/kill', Handler.handle_kill),
             web.get('/platform/add', PlatformHandler.handle_add_platform),
             web.get('/platform/delete',
                     PlatformHandler.handle_remove_platform),
