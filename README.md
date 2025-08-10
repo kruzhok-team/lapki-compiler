@@ -14,11 +14,16 @@
 #### Linux
 `sudo apt install gcc-arm-none-eabi`
 ### Ик-Путеводная
-1. Установить make и GNU Arm Embedded Toolchain
-1. Для Windows:
-
-    Установить cp, echo, mkdir, rm, добавить в PATH (идут вместе с [`gcc в msys2(MinGW)`](https://code.visualstudio.com/docs/cpp/config-mingw#_prerequisites))
-1. Добавить make и GNU Arm Embedded Toolchain в PATH
+- Установить GNU Arm Embedded Toolchain, добавить в PATH
+- Для Windows
+    - Установить набор unix утилит(sh.exe, rm.exe, mkdir.exe, echo.exe, cp.exe), например, с помощью [`busybox`](https://frippery.org/busybox/), либо с помощью [`msys2`](https://www.msys2.org). Добавить в PATH
+    - Установить GNU make 4.4.1
+        - Можно скачать [`здесь`](https://github.com/mbuilov/gnumake-windows)
+        - Либо установить с помощью msys2
+    - Переименовать скачанный make в make.exe, добавить в PATH
+- Для Linux:
+    - Установить make, добавить в PATH
+  
 ## Установка и запуск
 ### Windows
 - `py -m pip install -e .` или `poetry install` *(если установлен менеджер зависимостей poetry)*.
