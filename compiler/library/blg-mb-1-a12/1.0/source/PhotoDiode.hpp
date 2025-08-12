@@ -15,9 +15,9 @@ class PhotoDiode {
     bool isEvent { false };
 
     bool isEventSetting { false };
+    
+    public:
     uint16_t threshold{};
-
-public:
     uint8_t mode = DIODE_OFF;
     uint16_t value;
 

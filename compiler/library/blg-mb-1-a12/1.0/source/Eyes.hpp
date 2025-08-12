@@ -9,9 +9,10 @@ class Eyes {
 #define OFF_BOTH 3
 
 public:
-
+    uint8_t _pin = 0;
     // ctor
-    Eyes() {
+    Eyes() {}
+    Eyes(uint8_t pin) {
 
         if (!detail::rgbLed::isInit) {
 
@@ -20,53 +21,20 @@ public:
 
             detail::rgbLed::isInit = true;
         }
-
-        mrx::hal::rgbLed::initPin(1);
-        mrx::hal::rgbLed::initPin(2);
-
-        setColorPaletteRight(&ColorBlack);
-        setColorPaletteLeft(&ColorBlack);
+        _pin = pin;
+        mrx::hal::rgbLed::initPin(_pin);
     }
 
-    void setColorPalette(detail::Color* colorLeft, detail::Color* colorRight) {
-        setColorPaletteLeft(colorLeft);
-        setColorPaletteRight(colorRight);
-    }
-
-    void setColorPaletteRight(detail::Color* color) {
-
+    void setColorPalette(detail::Color* color) {
         if (color == &ColorBlack) {
-
-            mrx::hal::rgbLed::unregisterPin(1);
+            mrx::hal::rgbLed::unregisterPin(_pin);
         }
 
-        mrx::hal::rgbLed::registerPin(1, color);
+        mrx::hal::rgbLed::registerPin(_pin, color);
     }
 
-    void setColorPaletteLeft(detail::Color* color) {
-        if (color == &ColorBlack) {
 
-            mrx::hal::rgbLed::unregisterPin(2);
-        }
-
-        mrx::hal::rgbLed::registerPin(2, color);
-    }
-    
-    void off(uint8_t mode) {
-        switch (mode)
-        {
-        case OFF_LEFT:
-            mrx::hal::rgbLed::unregisterPin(2);
-            break;
-        case OFF_RIGHT:
-            mrx::hal::rgbLed::unregisterPin(1);
-            break;
-        case OFF_BOTH:
-            mrx::hal::rgbLed::unregisterPin(1);
-            mrx::hal::rgbLed::unregisterPin(2);
-            break;
-        default:
-            break;
-        }
+    void off() {
+        mrx::hal::rgbLed::unregisterPin(_pin);
     }
 };

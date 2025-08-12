@@ -67,7 +67,7 @@ namespace detail {
 
 namespace detail {
 
-    namespace matrix {
+    namespace maskMatrix {
 
         LED leds[mrx::hal::matrix::LEDS_COUNT] {
             LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
@@ -86,7 +86,7 @@ class MatrixMask {
 public:
 
     // ctor
-    Matrix() {
+    MatrixMask() {
         
         if (!detail::matrix::isInit) {
 
@@ -94,8 +94,6 @@ public:
 
                 detail::matrix::leds[i] = LED(i + 1);
             }
-
-            clear();
 
             detail::matrix::isInit = true;
         }
