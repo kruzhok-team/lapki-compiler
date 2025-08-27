@@ -1,0 +1,28 @@
+{
+  "name": "Пустая платформа",
+  "id": "empty2",
+  "nameTag": "empty",
+  "description": "Пустая платформа без компонентов.",
+  "icon": "путь/до/иконки",
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "author": "Maxim Klypin",
+  "visual": false,
+  "compile": false,
+  "staticComponents": true,
+  "mainFileExtension": "graphml",
+  "staticActionDelimeter": ".",
+  "delimeter": "",
+  "components": {},
+  "inherits": [
+    {
+      "id": "empty4",
+      "version": "1.0"
+    },
+    {
+      "id": "empty5",
+      "version": "1.0"
+    }
+  ]
+}

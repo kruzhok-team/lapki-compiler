@@ -13,7 +13,8 @@ from typing import (
     List,
     Any,
     Optional,
-    Set
+    Set,
+    TypeVar
 )
 from pprint import pprint
 
@@ -25,6 +26,8 @@ from compiler.types.platform_types import PlatformMeta, Platform
 
 PlatformId = str
 PlatformVersion = str
+
+T = TypeVar('T')
 
 
 async def _write_source(path: str, source_files: List[File]) -> None:
@@ -55,7 +58,7 @@ async def _delete_platform(platform_id: str) -> None:
         await asyncio.create_subprocess_exec('rm', '-r', path_to_platform)
 
 
-def _get_img_path(id: str, version: str) -> str:
+def get_img_path(id: str, version: str) -> str:
     """
     Get path to images dir.
 
@@ -196,7 +199,8 @@ class PlatformManager:
         new_versions_info[platform.id] = PlatformMeta(
             versions=set((platform.version,)),
             name=platform.name,
-            author=platform.author)
+            author=platform.author,
+        )
 
         return new_versions_info
 
@@ -218,7 +222,7 @@ class PlatformManager:
         platform_library_path = _gen_platform_path(
             config.library_path, platform.id, platform.version)
         source_path = get_source_path(platform.id, platform.version)
-        img_path = _get_img_path(platform.id, platform.version)
+        img_path = get_img_path(platform.id, platform.version)
         json_platform = platform.model_dump_json(indent=4, by_alias=True)
         await AsyncPath(platform_path).mkdir(parents=True, exist_ok=False)
         await AsyncPath(platform_library_path).mkdir(parents=True,
@@ -257,7 +261,8 @@ class PlatformManager:
                     self.__versions_info[platform.id] = PlatformMeta(
                         set([platform.version]),
                         platform.name,
-                        platform.author)
+                        platform.author
+                    )
                 else:
                     self.__versions_info[platform.id].versions.add(
                         platform.version)
@@ -303,11 +308,6 @@ class PlatformManager:
 
         if platform is not None:
             return platform
-
-        if (version not in
-                self.__versions_info[platform_id].versions):
-            raise PlatformException(
-                f'Unsupported platform {platform_id}, version {version}')
 
         return await self.load_platform(
             get_path_to_platform(platform_id, version))
@@ -406,7 +406,7 @@ class PlatformManager:
             platform_id: str,
             version: str) -> AsyncGenerator[File, Any]:
         """Get platform images by id and version."""
-        source_dir = _get_img_path(platform_id, version)
+        source_dir = get_img_path(platform_id, version)
         return _read_platform_files(source_dir, 'rb')
 
     async def delete_platform_by_versions(
