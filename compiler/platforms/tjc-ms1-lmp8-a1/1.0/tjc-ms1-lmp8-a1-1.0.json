@@ -17,6 +17,10 @@
       {
         "functionName": "detail::hal::initUartWrapper",
         "args": []
+      },
+      {
+        "functionName": "initPWM",
+        "args": []
       }
     ],
     "compilingSettings": [
@@ -52,11 +56,14 @@
     "mainFunction": true,
     "delimeter": ";",
     "staticActionDelimeter": "::",
-    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
+    "defaultIncludeFiles": ["stm32g030xx.h", "PWM.hpp", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
     "defaultBuildFiles": [
+      "const.h",
       "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
+      "LEDController.hpp",
       "startup_stm32g030xx.s",
+      "PWM.hpp",
       "stm32g030xx.h",
       "core_cm0plus.h",
       "core_cmInstr.h",
@@ -221,7 +228,7 @@
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
         },
-        "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
+        "buildFiles": ["LED.h"],
         "importFiles": ["LED.h"],
         "singletone": false
       },
