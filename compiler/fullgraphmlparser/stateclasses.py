@@ -112,6 +112,7 @@ class ParserTrigger:
     target: str
     action: str
     id: str
+    target_name: str = ''
     type: TriggerType = 'internal'
     guard: str = 'true'
     check_function: str | None = None
