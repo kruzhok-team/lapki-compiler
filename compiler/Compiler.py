@@ -47,7 +47,7 @@ async def create_project(project_path: AsyncPath,
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
     for source_file in source_files:
-        await AsyncPath(source_file.filename).mkdir(parents=True)
+        await AsyncPath(source_file.filename).parent.mkdir(parents=True, exist_ok=True)
         if source_file.extension != '':
             file = f'{source_file.filename}.{source_file.extension}'
         else:
@@ -208,7 +208,7 @@ class Compiler:
         path = get_source_path(platform_id, platform_version)
         path_to_libs = set([(str(AsyncPath(path).joinpath(library)))
                            for library in libraries])
-        parents: DefaultDict[str, list[str]] = defaultdict(lambda: [])
+        parents: DefaultDict[str, list[str]] = defaultdict(list)
         for library in libraries:
             relative_parent_folder = AsyncPath(library).parent
             parent_folder = AsyncPath(target_directory).joinpath(
@@ -218,15 +218,7 @@ class Compiler:
                 continue
             await parent_folder.mkdir(parents=True)
         for parent, libs in parents.items():
-            path_to_libs = set(
-                [
-                    (
-                        str(
-                            AsyncPath(path).joinpath(library)
-                        )
-                    ) for library in libs
-                ]
-            )
+            path_to_libs = {str(AsyncPath(path).joinpath(library)) for library in libs}
             await os_commands.copy(
                 path_to_libs,
                 parent,
