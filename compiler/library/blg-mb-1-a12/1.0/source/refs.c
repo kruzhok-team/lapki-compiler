@@ -11,7 +11,7 @@ struct {
   { .hardware = 0x5ec3d2c3bff54216
   , .firmware = 0xae2d22d5cacfda77
   , .memory   = 0xd0c862e80d6b672d
-  , .protocol = 0xa51280fcda0c499d
+  , .protocol = 0x625244e1ecabcfdf
   , .me = 3 //UC
   };
 
