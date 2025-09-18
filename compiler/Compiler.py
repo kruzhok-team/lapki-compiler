@@ -5,6 +5,7 @@ import asyncio
 from asyncio.subprocess import Process
 from typing import Dict, List, Set, TypedDict, AsyncGenerator, DefaultDict
 from collections import defaultdict
+
 from aiopath import AsyncPath
 from aiofile import async_open
 from compiler.platform_manager import get_source_path
@@ -217,10 +218,20 @@ class Compiler:
                 continue
             await parent_folder.mkdir(parents=True)
         for parent, libs in parents.items():
-            path_to_libs = set([(str(AsyncPath(path).joinpath(library)))
-                        for library in libs])
-            await os_commands.copy(path_to_libs, parent,
-                                get_config().build_directory)
+            path_to_libs = set(
+                [
+                    (
+                        str(
+                            AsyncPath(path).joinpath(library)
+                        )
+                    ) for library in libs
+                ]
+            )
+            await os_commands.copy(
+                path_to_libs,
+                parent,
+                get_config().build_directory
+            )
 
     @staticmethod
     async def include_library_files(
