@@ -8,9 +8,9 @@ struct {
   _REF(protocol)
   uint8_t me;
 } refs =
-  { .hardware = 0x5ec3d2c3bff54216
-  , .firmware = 0xae2d22d5cacfda77
-  , .memory   = 0xd0c862e80d6b672d
+  { .hardware = 0x08c1d6bb4bf0433f
+  , .firmware = 0xb0839d8249cf105e
+  , .memory   = 0x9468ee190e322f67
   , .protocol = 0x625244e1ecabcfdf
   , .me = 3 //UC
   };
