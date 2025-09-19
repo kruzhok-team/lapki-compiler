@@ -3,7 +3,8 @@ import asyncio.subprocess
 import os
 import asyncio
 from asyncio.subprocess import Process
-from typing import Dict, List, Set, TypedDict, AsyncGenerator
+from typing import Dict, List, Set, TypedDict, AsyncGenerator, DefaultDict
+from collections import defaultdict
 
 from aiopath import AsyncPath
 from aiofile import async_open
@@ -46,6 +47,9 @@ async def create_project(project_path: AsyncPath,
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
     for source_file in source_files:
+        await AsyncPath(source_file.filename).parent.mkdir(
+            parents=True, exist_ok=True
+        )
         if source_file.extension != '':
             file = f'{source_file.filename}.{source_file.extension}'
         else:
@@ -204,11 +208,26 @@ class Compiler:
         """Include source files from platform's \
             library directory to target directory."""
         path = get_source_path(platform_id, platform_version)
-        path_to_libs = set([os.path.join(path, library)
+        path_to_libs = set([(str(AsyncPath(path).joinpath(library)))
                            for library in libraries])
-
-        await os_commands.copy(path_to_libs, target_directory,
-                               get_config().build_directory)
+        parents: DefaultDict[str, list[str]] = defaultdict(list)
+        for library in libraries:
+            relative_parent_folder = AsyncPath(library).parent
+            parent_folder = AsyncPath(target_directory).joinpath(
+                relative_parent_folder)
+            parents[str(parent_folder)].append(library)
+            if await parent_folder.exists():
+                continue
+            await parent_folder.mkdir(parents=True)
+        for parent, libs in parents.items():
+            path_to_libs = {
+                str(AsyncPath(path).joinpath(library)) for library in libs
+            }
+            await os_commands.copy(
+                path_to_libs,
+                parent,
+                get_config().build_directory
+            )
 
     @staticmethod
     async def include_library_files(

@@ -16,7 +16,24 @@
   "headerFileExtension": "hpp",
   "staticActionDelimeter": "::",
   "componentDeclaration": true,
-  "defaultSetupFunctions": [],
+  "defaultSetupFunctions": [
+      {
+        "functionName": "initLoad",
+        "args": ["10", "15"]
+      },
+      {
+        "functionName": "usbClear",
+        "args": []
+      },
+      {
+        "functionName": "USB_ClearSRAM",
+        "args": []
+      },
+      {
+        "functionName": "USB_Init",
+        "args": []
+      }
+  ],
   "compilingSettings": [
     {
       "command": "arm-none-eabi-g++",
@@ -40,7 +57,8 @@
         "-fdata-sections",
         "-Xlinker",
         "--gc-sections",
-        "-Wall"
+        "-fpermissive",
+        "-w"
       ]
     },
     {
@@ -50,8 +68,27 @@
   ],
   "mainFunction": true,
   "delimeter": ";",
-  "defaultIncludeFiles": ["stm32g431xx.h", "Pins.hpp", "blg-mb-1-a7_hal.hpp"],
+  "defaultIncludeFiles": ["blg-mb-1-a7_hal.hpp", "lib/pins.c", "i2c.c",  "usb/core.c", "lib/helpers.c", "Pins.hpp", "load.c"],
   "defaultBuildFiles": [
+    "load.c",
+    "leds.c",
+    "lib/helpers.c",
+    "i2c.c",
+    "lib/pins.c",
+    "lib/bases.c",
+    "erfs.c",
+    "refs.c",
+    "reset.c",
+    "usb/abstractions.c",
+    "usb/buffers.c",
+    "usb/core.c",
+    "usb/core.h",
+    "usb/handlers.c",
+    "usb/protocol.c",
+    "usb/readers.c",
+    "usb/status.c",
+    "usb/user.c",
+    "usb/writers.c",
     "commonEars.hpp",
     "ADC.hpp",
     "blg-mb-1-a7_hal.hpp",
