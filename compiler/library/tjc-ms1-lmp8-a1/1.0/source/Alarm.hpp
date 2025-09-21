@@ -1,15 +1,16 @@
 #pragma once
 
 // Компонент для взаимодействия с общей сигнальной линией
-class Alarm {
+class Alarm
+{
 
 public:
+    Alarm()
+    {
 
-    Alarm() {
+        RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
 
-        RCC -> IOPENR |= RCC_IOPENR_GPIOAEN;
-
-        GPIO_TypeDef* const port = GPIOA;
+        GPIO_TypeDef *const port = GPIOA;
         const uint8_t num = 4;
 
         port->MODER &= ~(0b11 << (GPIO_MODER_MODE0_Pos + num * 2U)); // reset pin mode
@@ -21,13 +22,15 @@ public:
         release();
     }
 
-    void call() {
+    void call()
+    {
 
         // OpenDrain 0 (LOW) call
         GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BR0_Pos + 4));
     }
 
-    void release() {
+    void release()
+    {
 
         // OpenDrain 1 (HIGH) release
         GPIOA->BSRR |= (0b01 << (GPIO_BSRR_BS0_Pos + 4));
