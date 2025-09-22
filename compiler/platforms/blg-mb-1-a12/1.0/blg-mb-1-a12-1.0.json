@@ -32,6 +32,10 @@
       {
         "functionName": "USB_Init",
         "args": []
+      },
+      {
+        "functionName": "i2cInit",
+        "args": []
       }
   ],
   "compilingSettings": [
@@ -70,6 +74,7 @@
   "delimeter": ";",
   "defaultIncludeFiles": ["blg-mb-1-a7_hal.hpp", "lib/pins.c", "i2c.c",  "usb/core.c", "lib/helpers.c", "Pins.hpp", "load.c"],
   "defaultBuildFiles": [
+    "accel.c",
     "load.c",
     "leds.c",
     "lib/helpers.c",
@@ -147,7 +152,7 @@
           "description": "Мишка вверху."
         },
         "ACCEL_DIR_LEFT": {
-          "alias": "На левом боку",
+          "alias": "На левом боку", 
           "img": "blg-mb/bearIsOnLeftSide.svg",
           "type": "uint8_t",
           "description": "Мишка на левом боку."
@@ -172,8 +177,9 @@
         }
       },
       "importFiles": ["Accel.hpp"],
+      "initializationFunction": "initAccel",
       "buildFiles": ["Accel.hpp", "accel.c"],
-      "loopActions": [],
+      "loopActions": ["readAccel"],
       "methods": {},
       "singletone": false
     },

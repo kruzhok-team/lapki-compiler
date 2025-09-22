@@ -2,18 +2,17 @@
 
 #include "i2c.c"
 
-#define ACCEL_DIR_DN 0
-#define ACCEL_DIR_UP 1
-#define ACCEL_DIR_LEFT 2
-#define ACCEL_DIR_RIGHT 3
-#define ACCEL_DIR_FACE 4
-#define ACCEL_DIR_BACK 5
-#define ACCEL_DIR_NONE 6
+extern "C" {
 
-uint8_t currentDir = ACCEL_DIR_NONE;
+typedef struct {
+    float dn;
+    float lt;
+    float bk;
+} AccelData;
+
 
 void
-initAccel
+__initAccel
 ( void )
 {
   uint8_t accelRate = 0b0101; //100 Гц, LIS2DH12 p35 t31
@@ -29,75 +28,23 @@ initAccel
   delay(10); //Без этого не начинает работать сразу
 }
 
-struct {
-  float dn;
-  float lt;
-  float bk;
-} accel =
-  { .dn = 0 //x
-  , .lt = 0 //y
-  , .bk = 0 //z
-  };
-
 void
-readAccel
-( void )
+__readAccel
+( AccelData* accel )
 {
   accelReadN(0x28,6);
   int16_t rawX = (uint16_t)i2cReadData[0] | ( (uint16_t)i2cReadData[1] << 8 );
   int16_t rawY = (uint16_t)i2cReadData[2] | ( (uint16_t)i2cReadData[3] << 8 );
   int16_t rawZ = (uint16_t)i2cReadData[4] | ( (uint16_t)i2cReadData[5] << 8 );
-  accel.dn =  ((float)rawX / 64.0f ) *  4.0f;
-  accel.lt =  ((float)rawY / 64.0f ) *  4.0f;
-  accel.bk =  ((float)rawZ / 64.0f ) *  4.0f;
-}
-
-#define THR 800.0f
-
-uint8_t
-closestDir
-( void )
-{
-  uint8_t dir = ACCEL_DIR_NONE;
-  uint8_t tmp = 0;
-  if ( accel.dn > tmp ) { tmp = accel.dn; dir = ACCEL_DIR_DN; }
-  if ( accel.dn < -tmp ) { tmp = -accel.dn; dir = ACCEL_DIR_UP; }
-  if ( accel.lt > tmp ) { tmp = accel.lt; dir = ACCEL_DIR_LEFT; }
-  if ( accel.lt < -tmp ) { tmp = -accel.lt; dir = ACCEL_DIR_RIGHT; }
-  if ( accel.bk > tmp ) { tmp = accel.bk; dir = ACCEL_DIR_BACK; }
-  if ( accel.bk < -tmp ) { tmp = -accel.bk; dir = ACCEL_DIR_FACE; }
-  return dir;
-}
-
-uint8_t
-simpleDir
-( void )
-{
-  if ( accel.dn > THR ) return ACCEL_DIR_DN;
-  if ( accel.dn < -THR ) return ACCEL_DIR_UP;
-  if ( accel.lt > THR ) return ACCEL_DIR_LEFT;
-  if ( accel.lt < -THR ) return ACCEL_DIR_RIGHT;
-  if ( accel.bk > THR ) return ACCEL_DIR_BACK;
-  if ( accel.bk < -THR ) return ACCEL_DIR_FACE;
-  return ACCEL_DIR_NONE;
-}
-
-uint8_t
-useAccel
-( void )
-{
-  if ( currentDir == ACCEL_DIR_NONE ) {
-    currentDir = closestDir();
-    return currentDir;
-  }
-  uint8_t tmp = simpleDir();
-  if ( tmp != ACCEL_DIR_NONE ) currentDir = tmp;
-  return currentDir;
+  accel->dn =  ((float)rawX / 64.0f ) *  4.0f;
+  accel->lt =  ((float)rawY / 64.0f ) *  4.0f;
+  accel->bk =  ((float)rawZ / 64.0f ) *  4.0f;
 }
 
 bool
 accelConnected
 ( void )
 {
-  return accelRead1(0x0f) == 0b00110011;
+    return accelRead1(0x0f) == 0b00110011;
+}
 }
