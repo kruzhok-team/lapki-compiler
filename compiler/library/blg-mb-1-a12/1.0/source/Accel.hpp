@@ -27,7 +27,6 @@ public:
     initAccel
     ( void )
     {
-        i2cInit();
         __initAccel();
     }
 
