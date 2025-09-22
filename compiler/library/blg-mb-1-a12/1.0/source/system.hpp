@@ -63,7 +63,6 @@ extern "C" {
   void reset ( void );
   
   void SysTick_Handler ( void ) {
-    // stm32g431::periphery::setPin_OD ( GPIOD, 4, 1 );
     switch ( rebootAfter ) {
       case 0: break;
       case 1: reset(); break;
