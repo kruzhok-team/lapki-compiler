@@ -125,16 +125,16 @@
       "img": "blg-mb/accelOrientation.svg",
       "signals": {
         "isOrientationChanged": {
-          "alias": "Ориентация изменилась",
+          "alias": "Положение изменилось",
           "img": "blg-mb/orientationChanged.svg",
-          "description": "Это событие вызывается, когда ориентация мишки меняется.",
+          "description": "Это событие вызывается, когда положение мишки меняется.",
           "checkMethod": "isOrientationChanged"
         }
       },
       "constructorParameters": {},
       "variables": {
         "orientation": {
-          "alias": "Ориентация",
+          "alias": "Положение",
           "img": "blg-mb/askAccel.svg",
           "type": "uint8_t",
           "description": "Текущее положение мишки."
@@ -143,13 +143,13 @@
           "alias": "Внизу",
           "img": "blg-mb/bearIsUpsideDown.svg",
           "type": "uint8_t",
-          "description": "Мишка внизу."
+          "description": "Мишка перевёрнут."
         },
         "ACCEL_DIR_UP": {
           "alias": "Вверху",
           "img": "blg-mb/bearIsStanding.svg",
           "type": "uint8_t",
-          "description": "Мишка вверху."
+          "description": "Мишка в обычном положении."
         },
         "ACCEL_DIR_LEFT": {
           "alias": "На левом боку", 
