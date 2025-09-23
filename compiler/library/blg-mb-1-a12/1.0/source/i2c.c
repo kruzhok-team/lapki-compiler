@@ -12,6 +12,9 @@
 
 #define I2C_DATA_SIZE 16
 
+extern "C" {
+
+  
 volatile bool i2cWriteComplete = true;
 volatile bool i2cReadComplete = true;
 
@@ -69,6 +72,7 @@ setDmaWrite
   DMAMUX1_Channel1 -> CCR |= ( 17 << DMAMUX_CxCR_DMAREQ_ID_Pos );
   DMA1_Channel2 -> CCR |= DMA_CCR_EN;
 }
+
 
 void
 setDmaRead
@@ -318,4 +322,5 @@ accelReadN
   i2cRead(ADDR_ACCEL,len);
   while ( !i2cReadComplete );
   if ( !isAlive()) flag_failAccel();
+}
 }
