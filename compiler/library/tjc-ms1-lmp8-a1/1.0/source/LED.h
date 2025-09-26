@@ -87,17 +87,17 @@ public : LED(uint8_t ledPin)
         value ? off() : on();
     }
 
-    void blink(unsigned int time, byte times = 1)
-    {
+    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
 
         for (byte i = 0; i < times; i++)
         {
             toggle();
-            delay(time / 2);
+            delay(lightInterval);
             toggle();
-            delay(time / 2);
+            delay(offInterval);
         }
     }
+
 
     void setValue(byte val)
     {
