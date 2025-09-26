@@ -24,13 +24,14 @@ public:
     }
 
     void enable() {
-
+        _previous = millis() - (_interval - difference);
         _active = true;
     }
 
     bool timeout() {
-
-        difference -= millis() - _previous;
+        if (_active) {
+            difference -= millis() - _previous;
+        }
         if (_active && (millis() - _previous >= _interval))
         {
             _previous = millis();
@@ -48,8 +49,8 @@ public:
 
         setInterval(interval);
         reset();
-        enable();
         difference = interval;
+        enable();
     }
 
 private:
