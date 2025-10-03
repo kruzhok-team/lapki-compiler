@@ -33,6 +33,14 @@ public:
         mrx::hal::rgbLed::registerPin(_pin, color);
     }
 
+    void setColor(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t black) {
+        if (!red && !green && !blue && !black)
+            return;
+
+        detail::ReservedColor1 = detail::Color{ red, green, blue, black };
+        mrx::hal::rgbLed::registerPin(1, &detail::ReservedColor1);
+    }
+
 
     void off() {
         mrx::hal::rgbLed::unregisterPin(_pin);
