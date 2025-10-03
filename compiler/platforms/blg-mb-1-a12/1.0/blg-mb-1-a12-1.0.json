@@ -36,6 +36,14 @@
       {
         "functionName": "i2cInit",
         "args": []
+      },
+      {
+        "functionName": "mrx::hal::rgbLed::initPin",
+        "args": ["1"]
+      },
+        {
+        "functionName": "mrx::hal::rgbLed::initPin",
+        "args": ["2"]
       }
   ],
   "compilingSettings": [
