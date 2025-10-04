@@ -2,6 +2,7 @@
 
 #include "LED.hpp"
 #include "Pattern.hpp"
+#include "Matrix.hpp"
 
 /*
     Mask service
@@ -18,8 +19,6 @@ enum Operand {
 namespace detail {
 
     namespace matrixMask {
-
-        bool isInit { false };
 
             using OpFunc = bool (*)(bool a, bool b);
 
@@ -62,22 +61,6 @@ namespace detail {
     }
 }
 
-namespace detail {
-
-    namespace matrixMask {
-
-        LED leds[mrx::hal::matrix::LEDS_COUNT] {
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-        };
-    }
-}
-
 class MatrixMask {
 
 public:
@@ -85,14 +68,14 @@ public:
     // ctor
     MatrixMask() {
         
-        if (!detail::matrixMask::isInit) {
+        if (!detail::matrix::isInit) {
 
             for (uint8_t i(0); i < mrx::hal::matrix::LEDS_COUNT; ++i) {
 
-                detail::matrixMask::leds[i] = LED(i + 1);
+                detail::matrix::leds[i] = LED(i + 1);
             }
 
-            detail::matrixMask::isInit = true;
+            detail::matrix::isInit = true;
         }
     }
 
@@ -145,11 +128,11 @@ private:
 
         // logic toggle led for optimize calling from setPattern etc
 
-        const auto&& state = detail::matrixMask::leds[idx].getState();
+        const auto&& state = detail::matrix::leds[idx].getState();
 
         if (func(state, value))
-            detail::matrixMask::leds[idx].on();
+            detail::matrix::leds[idx].on();
         else
-            detail::matrixMask::leds[idx].off();
+            detail::matrix::leds[idx].off();
     }
 };

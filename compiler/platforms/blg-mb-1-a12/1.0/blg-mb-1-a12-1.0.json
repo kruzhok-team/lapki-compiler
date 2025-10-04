@@ -806,6 +806,7 @@
       "constructorParameters": {},
       "buildFiles": [
         "MatrixMask.hpp",
+        "Matrix.hpp",
         "LED.hpp",
         "PWM.hpp",
         "PWMHelpers.hpp",
