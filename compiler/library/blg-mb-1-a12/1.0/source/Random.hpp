@@ -1,35 +1,21 @@
 #pragma once
+#include <random>
+
 
 namespace detail {
 
     namespace random {
-                
-        const uint32_t RAND_A { 1103515245 };
-        const uint32_t RAND_C { 12345 };
-        const uint32_t RAND_M { 2147483648 };
 
         bool isSeeded { false };
 
-        uint32_t seed{};
-
-        uint32_t random() {
-
-            if (!isSeeded) {
-
-                seed = mrx::hal::random::mkSeed();
-                isSeeded = true;
-            }
-
-            seed = ( RAND_A * seed + RAND_C ) % RAND_M;
-
-            return seed;
-        }
+        uint32_t seed = millis();
     }
 }
 
+
 // Компонент для генерации псевдо-случайного числа. Seed задается при помощи отсчета времени
 class Random {
-
+    // есть эдж кейсы, когда он ломает
     uint32_t abs(int32_t x) {
 
         if (x < 0)
@@ -41,31 +27,22 @@ class Random {
 public:
 
     /* Снимаемые значения: знаковое и беззнаковое */
-    uint32_t uValue;
-    int32_t value;
+    uint64_t uValue;
+    int value;
 
-    Random() {}
+    Random() {
+        srand(detail::random::seed);
+    }
 
     void setSeed(const uint32_t seed) {
-        
-        detail::random::seed = seed;
-        detail::random::isSeeded = true;
+        srand(seed);
     }
 
     // Устанавливает новое случайное значение в value и uValue
     void doRandom() {
-
-        const auto oldRandomValue = detail::random::seed;
-        const auto randomValue = detail::random::random();
-
-        // put to value fields
-        value = randomValue;
-        uValue = randomValue;
-
-        // random sign for value
-        if ((oldRandomValue &1) == 0) {
-            value = - value;
-        }
+        int newVal = rand();
+        value = newVal;
+        uValue = abs(newVal);
 
         return;
     }
@@ -93,7 +70,7 @@ public:
                 _end = _begin + 1;
 
             // x - допустимые пределы разброса для случайного значения
-            const auto x = _end - _begin;
+            const int x = _end - _begin;
             uValue = begin + (uValue % x);
         }
 
