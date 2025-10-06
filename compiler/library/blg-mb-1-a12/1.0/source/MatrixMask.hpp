@@ -2,6 +2,7 @@
 
 #include "LED.hpp"
 #include "Pattern.hpp"
+#include "Matrix.hpp"
 
 /*
     Mask service
@@ -17,11 +18,7 @@ enum Operand {
 
 namespace detail {
 
-    namespace matrix {
-
-        bool isInit { false };
-
-        namespace mask {
+    namespace matrixMask {
 
             using OpFunc = bool (*)(bool a, bool b);
 
@@ -61,23 +58,6 @@ namespace detail {
 
                 return func::AND;
             }
-        }
-    }
-}
-
-namespace detail {
-
-    namespace maskMatrix {
-
-        LED leds[mrx::hal::matrix::LEDS_COUNT] {
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-            LED(-1), LED(-1), LED(-1), LED(-1), LED(-1),
-        };
     }
 }
 
@@ -108,7 +88,7 @@ public:
     // Аналогична setPixel с дополнительным аргументом, задающим бинарную маску для установки пикселя
     void maskPixel(const uint8_t idx, const uint8_t value, const Operand op) {
 
-        maskPixel(idx, value, detail::matrix::mask::getOpFunc(op));
+        maskPixel(idx, value, detail::matrixMask::getOpFunc(op));
     }
 
     void maskRow(const uint8_t idx, const Pattern5& pattern, const Operand op) {
@@ -133,7 +113,7 @@ public:
 
     void maskPattern(const Pattern35& pattern, const Operand op) {
 
-        const auto&& func = detail::matrix::mask::getOpFunc(op);
+        const auto&& func = detail::matrixMask::getOpFunc(op);
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
 
         for (int i = 0; i < mrx::hal::matrix::LEDS_COUNT; ++i) {
@@ -144,7 +124,7 @@ public:
 
 private:
 
-    void maskPixel(const uint8_t idx, const uint8_t value, const detail::matrix::mask::OpFunc func) {
+    void maskPixel(const uint8_t idx, const uint8_t value, const detail::matrixMask::OpFunc func) {
 
         // logic toggle led for optimize calling from setPattern etc
 

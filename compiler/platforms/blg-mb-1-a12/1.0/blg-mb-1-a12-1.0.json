@@ -36,6 +36,14 @@
       {
         "functionName": "i2cInit",
         "args": []
+      },
+      {
+        "functionName": "mrx::hal::rgbLed::initPin",
+        "args": ["1"]
+      },
+        {
+        "functionName": "mrx::hal::rgbLed::initPin",
+        "args": ["2"]
       }
   ],
   "compilingSettings": [
@@ -119,6 +127,30 @@
     "Pattern.hpp"
   ],
   "components": {
+   "IR": {
+    "name": "ИК-светодиод",
+    "description": "ИК-светодиод позволяет КиберМишке посылать инфракрасные сигналы, которые не видны человеческим глазом.",
+    "img": "blg-mb/ir.svg",
+    "signals": {},
+    "constructorParameters": {},
+    "variables": {},
+    "methods": {
+      "on": {
+        "alias": "Включить",
+        "img": "arduino/switch-on.svg",
+        "description": "Включить ИК-светодиод, чтобы он начал посылать сигналы."
+      },
+      "off": {
+        "alias": "Выключить",
+        "img": "arduino/switch-off.svg",
+        "description": "Выключить ИК-светодиод."
+      }
+    },
+    "importFiles": ["ir.hpp"],
+    "buildFiles": ["ir.hpp", "ir.c"],
+    "loopActions": [],
+    "singletone": false
+   },
    "Accel": {
       "name": "Акселерометр",
       "description": "Компонент для работы с акселерометром.",
@@ -798,6 +830,7 @@
       "constructorParameters": {},
       "buildFiles": [
         "MatrixMask.hpp",
+        "Matrix.hpp",
         "LED.hpp",
         "PWM.hpp",
         "PWMHelpers.hpp",
