@@ -8,7 +8,7 @@ namespace detail {
 
         bool isSeeded { false };
 
-        uint32_t seed = millis();
+        uint32_t seed = mrx::hal::random::mkSeed();
     }
 }
 
