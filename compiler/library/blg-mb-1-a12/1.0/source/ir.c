@@ -1,3 +1,5 @@
+#pragma once
+
 extern "C" {
     GPIO_TypeDef* ir_port = GPIOE;
     uint8_t ir_pin = 12;
