@@ -12,7 +12,7 @@ namespace detail {
 
 // Компонент для генерации псевдо-случайного числа. Seed задается при помощи отсчета времени
 class Random {
-    // есть эдж кейсы, когда он ломает
+    // FIXME: вызывает переполнение на INT_MIN, но это редкий кейс
     uint32_t abs(int32_t x) {
 
         if (x < 0)
@@ -67,7 +67,7 @@ public:
                 _end = _begin + 1;
 
             // x - допустимые пределы разброса для случайного значения
-            const int64_t x = _end - _begin;
+            const auto x = _end - _begin;
             uValue = begin + (uValue % x);
         }
 
