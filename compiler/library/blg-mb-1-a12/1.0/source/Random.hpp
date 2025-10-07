@@ -24,8 +24,8 @@ class Random {
 public:
 
     /* Снимаемые значения: знаковое и беззнаковое */
-    uint64_t uValue;
-    int value;
+    uint32_t uValue;
+    int32_t value;
 
     Random() {
         srand(detail::random::seed);
@@ -37,7 +37,7 @@ public:
 
     // Устанавливает новое случайное значение в value и uValue
     void doRandom() {
-        int newVal = rand();
+        int32_t newVal = rand();
         value = newVal;
         uValue = abs(newVal);
 
@@ -67,7 +67,7 @@ public:
                 _end = _begin + 1;
 
             // x - допустимые пределы разброса для случайного значения
-            const int x = _end - _begin;
+            const int64_t x = _end - _begin;
             uValue = begin + (uValue % x);
         }
 
