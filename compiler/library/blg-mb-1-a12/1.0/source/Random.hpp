@@ -5,9 +5,6 @@
 namespace detail {
 
     namespace random {
-
-        bool isSeeded { false };
-
         uint32_t seed = mrx::hal::random::mkSeed();
     }
 }
