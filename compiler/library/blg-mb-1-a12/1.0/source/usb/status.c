@@ -1,7 +1,7 @@
 #pragma once
 
 //#define SERIAL_LOCATION 0x080037f8U
-#define SERIAL_LOCATION 0x080037f8
+#define SERIAL_LOCATION 0x080047f8
 
 
 uint64_t

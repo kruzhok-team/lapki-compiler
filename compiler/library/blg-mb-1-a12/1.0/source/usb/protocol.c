@@ -68,6 +68,17 @@ processQ
     return;
   }
 
+  if (packet(erfs.Q.refsB0)) {
+    writerRefsB0();
+    return;
+  }
+
+  if (packet(erfs.Q.refsB1)) {
+    writerRefsB1();
+    return;
+  }
+
+
   flag_errProtocol();
   writeStatus();
 }

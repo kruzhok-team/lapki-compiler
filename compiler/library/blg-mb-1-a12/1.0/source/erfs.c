@@ -19,11 +19,15 @@ struct {
     _CODE(readFrame)
     _CODE(setSerial)
     _CODE(setVisual)
+    _CODE(refsB0)
+    _CODE(refsB1)
   } Q;
   struct {
     _CODE(status)
     _CODE(frame)
     _CODE(e1)
+    _CODE(refsB0)
+    _CODE(refsB1)
   } A;
   struct {
     _ADDR(loadB1)
@@ -43,11 +47,15 @@ struct {
     , .readFrame     = 11 //OK
     , .setSerial     = 12 //OK
     , .setVisual     = 13 //OK
+    , .refsB0        = 14 //OK
+    , .refsB1        = 15 //OK
     }
   , .A =
     { .status = 1
     , .frame = 2
     , .e1 = 3
+    , .refsB0 = 4
+    , .refsB1 = 5
     }
   , .eeprom =
     { .loadB1 =
