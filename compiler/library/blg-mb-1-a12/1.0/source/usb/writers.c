@@ -61,3 +61,26 @@ writerFrame
     insertSystem_Char(value);
   }
 }
+
+void
+writerRefsB0
+( void )
+{
+  insertSystem_Char ( erfs.A.refsB0 );
+  insertSystem_Ref ( ref_B0_hw());
+  insertSystem_Ref ( ref_B0_fw());
+  insertSystem_Ref ( ref_B0_ch());
+  insertSystem_Ref ( ref_B0_pr());
+}
+
+void
+writerRefsB1
+( void )
+{
+  insertSystem_Char ( erfs.A.refsB1 );
+  insertSystem_Ref ( ref_B1_hw());
+  insertSystem_Ref ( ref_B1_fw());
+  insertSystem_Ref ( ref_B1_ch());
+  insertSystem_Ref ( ref_B1_pr());
+}
+
