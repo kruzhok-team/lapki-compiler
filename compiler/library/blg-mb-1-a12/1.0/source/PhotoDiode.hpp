@@ -31,6 +31,7 @@ class PhotoDiode {
 
             detail::PtohotoDiode::isInit = true;
         }
+        on();
     }
 
     // call this function in loop()
