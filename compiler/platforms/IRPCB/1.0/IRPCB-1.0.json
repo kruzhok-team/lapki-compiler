@@ -76,6 +76,7 @@
       "variables": {},
       "methods": {
         "set": {
+          "alias": "Установить яркость",
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
@@ -88,18 +89,22 @@
           "description": "Задать яркость светодиода"
         },
         "on": {
+          "alias": "Включить",
           "img": "arduino/switch-on.svg",
           "description": "Включить светодиод"
         },
         "off": {
+          "alias": "Выключить",
           "img": "arduino/switch-off.svg",
           "description": "Выключить светодиод"
         },
         "toggle": {
+          "alias": "Переключить",
           "img": "arduino/toggle.svg",
           "description": "Меняет состояние светодиода на противоположное"
         },
         "fadeTo": {
+          "alias": "Плавное изменить яркость",
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
@@ -118,6 +123,7 @@
           "description": "Плавно меняет яркость светодиода до заданной в течение установленного времени"
         },
         "fadeIn": {
+          "alias": "Плавно включить",
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
@@ -130,6 +136,7 @@
           "description": "Плавно меняет яркость светодиода до наибольшей в течение установленного времени"
         },
         "fadeOut": {
+          "alias": "Плавное выключить",
           "img": "arduino/switch-off.svg",
           "parameters": [
             {
@@ -142,6 +149,7 @@
           "description": "Плавно меняет яркость светодиода до наименьшей в течение установленного времени"
         },
         "blink": {
+          "alias": "Начать моргание",
           "img": "arduino/blink.svg",
           "parameters": [
             {
@@ -158,6 +166,7 @@
           "description": "Начинает мигать светодиодом раз в Период"
         },
         "stop": {
+          "alias": "Стоп",
           "img": "arduino/switch-off.svg",
           "description": "Прекращает действия светодиода"
         }
@@ -178,18 +187,22 @@
       "variables": {},
       "methods": {
         "on": {
+          "alias": "Включить",
           "img": "arduino/switch-on.svg",
           "description": "Включить светодиод"
         },
         "off": {
+          "alias": "Выключить",
           "img": "arduino/switch-off.svg",
           "description": "Выключить светодиод"
         },
         "toggle": {
+          "alias": "Переключить",
           "img": "arduino/toggle.svg",
           "description": "Меняет состояние светодиода на противоположное"
         },
         "blink": {
+          "alias": "Начать моргание",
           "img": "arduino/blink.svg",
           "parameters": [
             {
@@ -206,6 +219,7 @@
           "description": "Начинает мигать светодиодом раз в Период"
         },
         "stop": {
+          "alias": "Стоп",
           "img": "arduino/switch-off.svg",
           "description": "Прекращает действия светодиода"
         }
@@ -238,6 +252,7 @@
       "constructorParameters": {},
       "methods": {
         "start": {
+          "alias": "Начать отсчёт",
           "img": "arduino/start.svg",
           "parameters": [
             {
@@ -249,11 +264,13 @@
           "description": "Завести и включить таймер. Будет сигнал раз в интервал."
         },
         "proceed": {
+          "alias": "Продолжить отсчёт",
           "img": "arduino/timer-start.svg",
           "parameters": [],
           "description": "Включить таймер (отпустить стрелку)"
         },
         "pause": {
+          "alias": "Приостановить отсчёт",
           "img": "arduino/timer-stop.svg",
           "parameters": [],
           "description": "Остановить таймер (зафиксировать стрелку)"
@@ -270,6 +287,7 @@
       ],
       "variables": {
         "difference": {
+          "alias": "Оставшееся время",
           "img": "arduino/difference.svg",
           "type": "целое, мс",
           "description": "целое, мс; Оставшееся время до окончания таймера."
@@ -284,6 +302,7 @@
       "constructorParameters": {},
       "methods": {
         "add": {
+          "alias": "Добавить",
           "img": "arduino/add.svg",
           "description": "Добавить Значение к значению счетчика",
           "parameters": [
@@ -295,6 +314,7 @@
           ]
         },
         "sub": {
+          "alias": "Вычесть",
           "img": "arduino/sub.svg",
           "description": "Вычесть Значение из значения счетчика",
           "parameters": [
@@ -306,6 +326,7 @@
           ]
         },
         "div": {
+          "alias": "Разделить нацело",
           "img": "math/div.svg",
           "description": "разделить значение счетчика нацело на указанное Значение",
           "parameters": [
@@ -317,6 +338,7 @@
           ]
         },
         "mul": {
+          "alias": "Умножить",
           "img": "math/mul.svg",
           "description": "умножить значение счетчика на Значение",
           "parameters": [
@@ -328,6 +350,7 @@
           ]
         },
         "set": {
+          "alias": "Установить",
           "img": "common/set.svg",
           "description": "приравнять счётчик к Значению",
           "parameters": [
@@ -339,12 +362,14 @@
           ]
         },
         "reset": {
+          "alias": "Обнулить",
           "img": "arduino/reset.svg",
           "description": "Обнулить значение счетчика."
         }
       },
       "variables": {
         "value": {
+          "alias": "значение",
           "img": "common/value.svg",
           "description": "Текущее значение счетчика",
           "type": "целое"
@@ -372,6 +397,7 @@
       "constructorParameters": {},
       "variables": {
         "message": {
+          "alias": "Последнее сообщение",
           "img": "tjs-ms/lastData.svg",
           "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
           "type": "представимо в виде строки, например \"строка\" или число"
@@ -379,6 +405,7 @@
       },
       "methods": {
         "printVal": {
+          "alias": "Вывести текст и значение в терминал",
           "img": "",
           "parameters": [
             {
@@ -392,18 +419,19 @@
               "description": "строкоПодобное(\"строка\" или число); выведется после текста"
             }
           ],
-          "description": "Выводит в консоль текст, отступ, значение, перенос строки"
+          "description": "Выводит в usb-com порт текст, отступ, значение, перенос строки"
         },
         "print": {
+          "alias": "Вывести значение в терминал",
           "img": "arduino/print.svg",
           "parameters": [
             {
-              "name": "Сообщение",
+              "name": "Значение",
               "type": "представимо в виде строки, например \"строка\" или число",
               "description": "строкоПодобное(\"строка\" или число)"
             }
           ],
-          "description": "Выводит в сообщение в консоль"
+          "description": "Выводит значение в usb-com порт и переносит строку"
         }
       },
       "buildFiles": [
@@ -462,6 +490,7 @@
       "constructorParameters": {},
       "variables": {
         "self": {
+          "alias": "этот компонент",
           "img": "",
           "description": "строкоПодобное(\"строка\" или число); Ссылка на себя, при выводе автоматически преобразуется в сообщение в 16ричном виде",
           "type": "представимо в виде строки, например \"строка\" или число"
@@ -485,6 +514,7 @@
       ],
       "methods": {
         "setWord": {
+          "alias": "Установить сообщение",
           "img": "",
           "parameters": [
             {
@@ -496,6 +526,7 @@
           "description": "Устанавливает новое сообщение"
         },
         "setPkg": {
+          "alias": "Скопировать контейнер",
           "img": "",
           "parameters": [
             {
@@ -524,6 +555,7 @@
       "constructorParameters": {},
       "variables": {
         "pkg": {
+          "alias": "последнее сообщение",
           "img": "",
           "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
           "type": "представимо в виде строки, например \"строка\" или число"
@@ -531,6 +563,7 @@
       },
       "methods": {
         "printPkg": {
+          "alias": "Вывести последнее сообщение",
           "img": "",
           "parameters": [],
           "description": "выводит сообщение в usb-терминал"
@@ -553,6 +586,7 @@
       "variables": {},
       "methods": {
         "transmit": {
+          "alias": "Передать сообщение",
           "img": "",
           "parameters": [
             {
@@ -564,6 +598,7 @@
           "description": "Передаёт пакет данных"
         },
         "setPower": {
+          "alias": "Установить мощность",
           "img": "",
           "parameters": [
             {
@@ -596,6 +631,7 @@
       },
       "variables": {
         "led_number": {
+          "alias": "Число светодиодов",
           "img": "",
           "type": "число",
           "description": "Количество светодиодов в ленте"
@@ -603,6 +639,7 @@
       },
       "methods": {
         "setColorRGB": {
+          "alias": "Установить цвет RGB",
           "img": "",
           "parameters": [
             {
@@ -629,6 +666,7 @@
           "description": "изменение цвета светодиода в схеме RGB"
         },
         "setColorHSV": {
+          "alias": "Установить цвет HSV",
           "img": "",
           "parameters": [
             {
@@ -655,6 +693,7 @@
           "description": "изменение цвета светодиода в схеме HSV"
         },
         "turnOff": {
+          "alias": "Выключить светодиоды",
           "img": "arduino/switch-off.svg",
           "parameters": [],
           "description": "выключает все светодиоды"
@@ -700,6 +739,7 @@
       "variables": {},
       "methods": {
         "setFrequency": {
+          "alias": "Установить частоту",
           "img": "",
           "parameters": [
             {
@@ -711,26 +751,28 @@
           "description": "настраивает частоту шим"
         },
         "setDuty": {
+          "alias": "Установить заполняемость",
           "img": "",
           "parameters": [
             {
-              "name": "Скважность",
+              "name": "Заполняемость",
               "type": "целое число, от 0 до 255",
               "description": "целое число, от 0 до 255"
             }
           ],
-          "description": "Настраивает скважность шим"
+          "description": "Настраивает коэффициент заполняемости шим"
         },
         "setDutyPortion": {
+          "alias": "Установить долю заполняемости",
           "img": "",
           "parameters": [
             {
-              "name": "Скважность",
+              "name": "Заполняемость",
               "type": "число, от 0 до 1",
               "description": "число, от 0 до 1"
             }
           ],
-          "description": "Настраивает скважность шим"
+          "description": "Настраивает коэффициент заполняемости шим"
         }
       },
       "loopActions": [],
