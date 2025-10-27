@@ -14,6 +14,12 @@ class IRpkg {
 
     IRpkg() : self(*this) {};
 
+    IRpkg(const uint16_t w16) : IRpkg() {
+        setWord(w16);
+    }
+
+    IRpkg(const IRpkg& other) : self(*this) { *this = other; }
+
     IRpkg& operator=(const IRpkg& other) {
         if (this != &other) {
             word16_ = other.word16_;
@@ -22,26 +28,25 @@ class IRpkg {
         return *this;
     }
 
-    IRpkg(const IRpkg& other) : self(*this) { *this = other; }
+    //api
+    void setWord(const uint16_t w16);
 
-    void setWord(uint16_t w16);
+    //api
+    inline void setPkg(const IRpkg& other) { *this = other; }
 
-    inline void setPkg(IRpkg other) { *this = other; }
-
-    ///////////
-    inline void set(uint8_t bts_cnt, uint16_t w16) {
+    inline void set(const uint8_t bts_cnt, const uint16_t w16) {
         word16_ = w16;
         bits_count_ = bts_cnt;
-    }
-
-    bool operator==(const IRpkg& other) {
-        return this->bits_count == other.bits_count &&
-               this->word16 == other.word16;
-    }
-
-    bool operator!=(const IRpkg& other) { return !(*this == other); }
+    }    
 
     operator std::string() const;
 };
 
+
+inline bool operator==(const IRpkg& a, const IRpkg& b) {
+        return a.bits_count == b.bits_count &&
+               a.word16 == b.word16;
+    }
+
+inline bool operator!=(const IRpkg& a, const IRpkg& b) { return !(a == b); }
 #endif  // IRPKG_HPP
