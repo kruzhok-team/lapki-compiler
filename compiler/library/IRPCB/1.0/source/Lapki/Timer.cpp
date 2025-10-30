@@ -24,7 +24,13 @@ void Timer::proceed() {
     active_ = true;
 }
 
-bool Timer::timeout() { return difference == 0; }
+bool Timer::timeout() {
+    if (active_ && difference == 0) {
+        active_ = false;
+        return 1;
+    }
+    return 0;
+}
 
 void Timer::setInterval(unsigned long interval) { interval_ = interval; }
 
@@ -50,4 +56,3 @@ void Timer::updateDifference() {
                           ? interval_ - (Sys::GetSysTime() - previous_)
                           : 0);
 }
-
