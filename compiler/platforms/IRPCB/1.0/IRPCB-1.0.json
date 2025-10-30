@@ -589,7 +589,7 @@
     "IRTransmitter": {
       "name": "ИК-передатчик",
       "description": "Компонент для взаимодействия с ик-передатчиком",
-      "img": "",
+      "img": "blg-mb/ir.svg",
       "signals": {},
       "constructorParameters": {},
       "variables": {},
