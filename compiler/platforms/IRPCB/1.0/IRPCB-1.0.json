@@ -42,6 +42,7 @@
   "defaultBuildFiles": [],
   "components": {
     "Led": {
+      "name": "Светодиод",
       "description": "Компонент для взаимодействия со светодиодом",
       "img": "arduino/led.svg",
       "signals": {
@@ -53,7 +54,7 @@
         }
       },
       "constructorParameters": {
-        "pin": {
+        "Контакт": {
           "type": [
             "LED_PWM1",
             "LED_PWM2",
@@ -62,7 +63,7 @@
             "LED_FRONT1",
             "LED_FRONT2"
           ],
-          "description": "Пин, к которому подключен светодиод",
+          "description": "Контакт, к которому подключен светодиод",
           "valueAlias": [
             "PIN_LED1",
             "PIN_LED2",
@@ -91,12 +92,12 @@
         "on": {
           "alias": "Включить",
           "img": "arduino/switch-on.svg",
-          "description": "Включить светодиод"
+          "description": "Устанавливает наибольшую яркость"
         },
         "off": {
           "alias": "Выключить",
           "img": "arduino/switch-off.svg",
-          "description": "Выключить светодиод"
+          "description": "Устанавливат наименьшую яркость"
         },
         "toggle": {
           "alias": "Переключить",
@@ -104,7 +105,7 @@
           "description": "Меняет состояние светодиода на противоположное"
         },
         "fadeTo": {
-          "alias": "Плавное изменить яркость",
+          "alias": "Плавно изменить яркость",
           "img": "arduino/switch-on.svg",
           "parameters": [
             {
@@ -136,7 +137,7 @@
           "description": "Плавно меняет яркость светодиода до наибольшей в течение установленного времени"
         },
         "fadeOut": {
-          "alias": "Плавное выключить",
+          "alias": "Плавно выключить",
           "img": "arduino/switch-off.svg",
           "parameters": [
             {
@@ -180,6 +181,7 @@
       "singletone": false
     },
     "SystemLed": {
+      "name": "Системный светодиод",
       "description": "Компонент для взаимодействия с системным светодиодом",
       "img": "arduino/led.svg",
       "signals": {},
@@ -189,12 +191,12 @@
         "on": {
           "alias": "Включить",
           "img": "arduino/switch-on.svg",
-          "description": "Включить светодиод"
+          "description": "Устанавливает наибольшую яркость"
         },
         "off": {
           "alias": "Выключить",
           "img": "arduino/switch-off.svg",
-          "description": "Выключить светодиод"
+          "description": "Устанавливат наименьшую яркость"
         },
         "toggle": {
           "alias": "Переключить",
@@ -233,6 +235,7 @@
       "singletone": false
     },
     "Timer": {
+      "name": "Таймер",
       "description": "Программный таймер",
       "img": "arduino/timer.svg",
       "signals": {
@@ -258,10 +261,10 @@
             {
               "name": "Интервал",
               "type": "целое, мс",
-              "description": "целое, мс; Интервал срабатывания."
+              "description": "целое, мс; время, через которое \"зазвенит\" таймер"
             }
           ],
-          "description": "Завести и включить таймер. Будет сигнал раз в интервал."
+          "description": "Завести и включить таймер"
         },
         "proceed": {
           "alias": "Продолжить отсчёт",
@@ -290,13 +293,14 @@
           "alias": "Оставшееся время",
           "img": "arduino/difference.svg",
           "type": "целое, мс",
-          "description": "целое, мс; Оставшееся время до окончания таймера."
+          "description": "целое, мс; Оставшееся время до срабатывания таймера"
         }
       },
       "singletone": false
     },
     "Counter": {
-      "description": "Целочисленная Переменная-счетчик.",
+      "name": "Счётчик",
+      "description": "Целочисленная Переменная-счетчик",
       "img": "arduino/counter.svg",
       "signals": {},
       "constructorParameters": {},
@@ -328,7 +332,7 @@
         "div": {
           "alias": "Разделить нацело",
           "img": "math/div.svg",
-          "description": "разделить значение счетчика нацело на указанное Значение",
+          "description": "Разделить значение счетчика нацело на указанное Значение",
           "parameters": [
             {
               "name": "Значение",
@@ -340,7 +344,7 @@
         "mul": {
           "alias": "Умножить",
           "img": "math/mul.svg",
-          "description": "умножить значение счетчика на Значение",
+          "description": "Умножить значение счетчика на Значение",
           "parameters": [
             {
               "name": "Значение",
@@ -352,7 +356,7 @@
         "set": {
           "alias": "Установить",
           "img": "common/set.svg",
-          "description": "приравнять счётчик к Значению",
+          "description": "Приравнять счётчик к Значению",
           "parameters": [
             {
               "name": "Значение",
@@ -364,7 +368,7 @@
         "reset": {
           "alias": "Обнулить",
           "img": "arduino/reset.svg",
-          "description": "Обнулить значение счетчика."
+          "description": "Обнулить значение счетчика"
         }
       },
       "variables": {
@@ -384,8 +388,9 @@
       "singletone": false
     },
     "Serial": {
+      "name": "Консоль",
       "img": "arduino/serial.svg",
-      "description": "выводит сообщения в usb-uart",
+      "description": "Вывод и чтение сообщений через usb-uart",
       "signals": {
         "isUpdated": {
           "img": "common/userSignal.svg",
@@ -400,7 +405,7 @@
           "alias": "Последнее сообщение",
           "img": "tjs-ms/lastData.svg",
           "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
-          "type": "представимо в виде строки, например \"строка\" или число"
+          "type": "представимо в виде строки, например, \"строка\" или число"
         }
       },
       "methods": {
@@ -415,7 +420,7 @@
             },
             {
               "name": "Значение",
-              "type": "представимо в виде строки, например \"строка\" или число",
+              "type": "представимо в виде строки, например, \"строка\" или число",
               "description": "строкоПодобное(\"строка\" или число); выведется после текста"
             }
           ],
@@ -427,7 +432,7 @@
           "parameters": [
             {
               "name": "Значение",
-              "type": "представимо в виде строки, например \"строка\" или число",
+              "type": "представимо в виде строки, например, \"строка\" или число",
               "description": "строкоПодобное(\"строка\" или число)"
             }
           ],
@@ -443,24 +448,25 @@
       "singletone": true
     },
     "Button": {
-      "description": "Компонент для взаимодействия с кнопкой",
+      "name": "Кнопка",
+      "description": "Компонент для взаимодействия с кнопкой, стянутой с питанием и активным низким уровнем",
       "img": "arduino/button.svg",
       "signals": {
         "pressed": {
           "img": "arduino/isPressed.svg",
-          "description": "кнопку нажали",
+          "description": "Кнопку нажали",
           "checkMethod": "pressed",
           "alias": "Нажата"
         },
         "released": {
           "img": "common/isReleased.svg",
-          "description": "кнопку отпустили",
+          "description": "Кнопку отпустили",
           "checkMethod": "released",
           "alias": "Отпущена"
         }
       },
       "constructorParameters": {
-        "pin": {
+        "Контакт": {
           "type": [
             "Gpio1",
             "Gpio2",
@@ -484,16 +490,17 @@
       "singletone": false
     },
     "IRpkg": {
+      "name": "ИК-пакет",
       "description": "Контейнер для данных с ик-датчика",
       "img": "",
       "signals": {},
       "constructorParameters": {},
       "variables": {
         "self": {
-          "alias": "этот компонент",
+          "alias": "Этот компонент",
           "img": "",
           "description": "строкоПодобное(\"строка\" или число); Ссылка на себя, при выводе автоматически преобразуется в сообщение в 16ричном виде",
-          "type": "представимо в виде строки, например \"строка\" или число"
+          "type": "представимо в виде строки, например, \"строка\" или число"
         },
         "word16": {
           "img": "",
@@ -502,7 +509,7 @@
         },
         "bits_count": {
           "img": "",
-          "description": "количество ненулевых бит в сообщении",
+          "description": "Количество ненулевых бит в сообщении",
           "type": "число"
         }
       },
@@ -542,6 +549,7 @@
       "singletone": false
     },
     "IRReciever": {
+      "name": "ИК-приёмник",
       "description": "Компонент для взаимодействия с ик-датчиком",
       "img": "",
       "signals": {
@@ -555,10 +563,10 @@
       "constructorParameters": {},
       "variables": {
         "pkg": {
-          "alias": "последнее сообщение",
+          "alias": "Последнее сообщение",
           "img": "",
           "description": "строкоПодобное(\"строка\" или число); Последнее полученное сообщение",
-          "type": "представимо в виде строки, например \"строка\" или число"
+          "type": "представимо в виде строки, например, \"строка\" или число"
         }
       },
       "methods": {
@@ -579,6 +587,7 @@
       "singletone": true
     },
     "IRTransmitter": {
+      "name": "ИК-передатчик",
       "description": "Компонент для взаимодействия с ик-передатчиком",
       "img": "",
       "signals": {},
@@ -590,9 +599,9 @@
           "img": "",
           "parameters": [
             {
-              "name": "ИК-Контейнер",
+              "name": "Данные",
               "type": "IRpkg",
-              "description": "IRpkg; Пакет данных для передачи"
+              "description": "ИК-пакет или 16-битное число; Данные для передачи"
             }
           ],
           "description": "Передаёт пакет данных"
@@ -620,7 +629,8 @@
       "singletone": true
     },
     "LedStrip": {
-      "description": "Компонент для взаимодействия с Led лентой",
+      "name": "Светодиодная лента",
+      "description": "Компонент для взаимодействия со светодиодной лентой",
       "img": "",
       "signals": {},
       "constructorParameters": {
@@ -696,7 +706,7 @@
           "alias": "Выключить светодиоды",
           "img": "arduino/switch-off.svg",
           "parameters": [],
-          "description": "выключает все светодиоды"
+          "description": "Выключает все светодиоды"
         }
       },
       "loopActions": [],
@@ -709,11 +719,12 @@
       "singletone": false
     },
     "PwmOutput": {
-      "description": "Компонент для настройки контактов для генерации шим сигнала",
+      "name": "ШИМ-вывод",
+      "description": "Компонент для настройки контактов для генерации шим-сигнала",
       "img": "",
       "signals": {},
       "constructorParameters": {
-        "pin": {
+        "Контакт": {
           "type": [
             "PIN_LED1",
             "PIN_LED2",
@@ -722,9 +733,9 @@
             "PIN_FRONT_LED1",
             "PIN_FRONT_LED2"
           ],
-          "description": "Пин, настраиваемый для генерации шим"
+          "description": "Контакт, настраиваемый для генерации шим-сигнала"
         },
-        "Mode": {
+        "Режим": {
           "type": [
             "Gpio::PushPull",
             "Gpio::OpenDrain"
@@ -751,28 +762,28 @@
           "description": "настраивает частоту шим"
         },
         "setDuty": {
-          "alias": "Установить заполняемость",
+          "alias": "Установить заполнение",
           "img": "",
           "parameters": [
             {
-              "name": "Заполняемость",
+              "name": "Заполнение",
               "type": "целое число, от 0 до 255",
               "description": "целое число, от 0 до 255"
             }
           ],
-          "description": "Настраивает коэффициент заполняемости шим"
+          "description": "Настраивает коэффициент заполнения шим"
         },
         "setDutyPortion": {
-          "alias": "Установить долю заполняемости",
+          "alias": "Установить долю заполнения",
           "img": "",
           "parameters": [
             {
-              "name": "Заполняемость",
+              "name": "Заполнение",
               "type": "число, от 0 до 1",
               "description": "число, от 0 до 1"
             }
           ],
-          "description": "Настраивает коэффициент заполняемости шим"
+          "description": "Настраивает коэффициент заполнения шим"
         }
       },
       "loopActions": [],
