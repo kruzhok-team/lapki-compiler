@@ -794,6 +794,47 @@
         "Pwm_Control.h"
       ],
       "singletone": false
+    },
+    "Buzzer": {
+      "name": "Пищалка",
+      "description": "Компонент для взаимодействия с пищалкой",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {},
+      "methods": {
+        "beepSpecific": {
+          "alias": "Бип(настраиваемый)",
+          "img": "",
+          "parameters": [
+            {
+              "name": "Частота: ",
+              "type": "uint32_t",
+              "description": "целое число, Гц"
+            },
+            {
+              "name": "Громкость: ",
+              "type": "uint8_t",
+              "description": "целое число, Гц, 0 <= Громкость <= 22"
+            }
+          ],
+          "description": "Издаёт писк с заданными параметрами"
+        },
+        "beep": {
+          "alias": "Бип(короткий)",
+          "img": "",
+          "parameters": [],
+          "description": "Издаёт короткий писк"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "Buzzer.h"
+      ],
+      "importFiles": [
+        "Buzzer.h"
+      ],
+      "singletone": true
     }
   }
 }
