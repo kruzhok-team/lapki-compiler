@@ -140,7 +140,7 @@ class Compiler:
         # TODO вынести в отдельную функцию
         library_dir = _LIBRARY_PATH
         base_dir = base_dir.replace('\\', '/')
-        artifacts_dir = _ARTIFACTS_DIRECTORY
+        artifacts_dir = _ARTIFACTS_DIRECTORY.replace('\\', '/')
         flags = []
         for command in commands:
             flags = command.flags.copy()
