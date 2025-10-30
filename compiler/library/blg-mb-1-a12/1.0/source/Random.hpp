@@ -1,35 +1,18 @@
 #pragma once
+#include <random>
+
 
 namespace detail {
 
     namespace random {
-                
-        const uint32_t RAND_A { 1103515245 };
-        const uint32_t RAND_C { 12345 };
-        const uint32_t RAND_M { 2147483648 };
-
-        bool isSeeded { false };
-
-        uint32_t seed{};
-
-        uint32_t random() {
-
-            if (!isSeeded) {
-
-                seed = mrx::hal::random::mkSeed();
-                isSeeded = true;
-            }
-
-            seed = ( RAND_A * seed + RAND_C ) % RAND_M;
-
-            return seed;
-        }
+        uint32_t seed = mrx::hal::random::mkSeed();
     }
 }
 
+
 // Компонент для генерации псевдо-случайного числа. Seed задается при помощи отсчета времени
 class Random {
-
+    // FIXME: вызывает переполнение на INT_MIN, но это редкий кейс
     uint32_t abs(int32_t x) {
 
         if (x < 0)
@@ -44,28 +27,19 @@ public:
     uint32_t uValue;
     int32_t value;
 
-    Random() {}
+    Random() {
+        srand(detail::random::seed);
+    }
 
     void setSeed(const uint32_t seed) {
-        
-        detail::random::seed = seed;
-        detail::random::isSeeded = true;
+        srand(seed);
     }
 
     // Устанавливает новое случайное значение в value и uValue
     void doRandom() {
-
-        const auto oldRandomValue = detail::random::seed;
-        const auto randomValue = detail::random::random();
-
-        // put to value fields
-        value = randomValue;
-        uValue = randomValue;
-
-        // random sign for value
-        if ((oldRandomValue &1) == 0) {
-            value = - value;
-        }
+        int32_t newVal = rand();
+        value = newVal;
+        uValue = abs(newVal);
 
         return;
     }

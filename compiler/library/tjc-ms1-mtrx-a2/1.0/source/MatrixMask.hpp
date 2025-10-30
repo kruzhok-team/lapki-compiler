@@ -1,10 +1,8 @@
-#pragma once
-
 #include "MatrixTypes.hpp"
 
 namespace detail {
 
-    namespace matrix {
+    namespace matrixMask {
 
         namespace mask {
 
@@ -52,12 +50,12 @@ namespace detail {
 
 
 // TODO descr
-class Matrix {
+class MatrixMask {
 
 public:
 
     // ctor
-    Matrix() {
+    MatrixMask() {
         clear();
     }
 
@@ -126,7 +124,7 @@ public:
     // Аналогична setPixel с дополнительным аргументом, задающим бинарную маску для установки пикселя
     void maskPixel(const uint8_t idx, const uint8_t value, const Operand op) {
 
-        maskPixel(idx, value, detail::matrix::mask::getOpFunc(op));
+        maskPixel(idx, value, detail::matrixMask::mask::getOpFunc(op));
     }
 
     void maskRow(const uint8_t idx, const Pattern5& pattern, const Operand op) {
@@ -151,7 +149,7 @@ public:
 
     void maskPattern(const Pattern& pattern, const Operand op) {
 
-        const auto&& func = detail::matrix::mask::getOpFunc(op);
+        const auto&& func = detail::matrixMask::mask::getOpFunc(op);
         const uint8_t* const ptrPattern = reinterpret_cast<const uint8_t* const>(&pattern);
 
         for (int i = 0; i < detail::constants::NUM_LEDS; ++i) {
@@ -162,7 +160,7 @@ public:
 
 private:
 
-    void maskPixel(const uint8_t idx, const uint8_t value, const detail::matrix::mask::OpFunc func) {
+    void maskPixel(const uint8_t idx, const uint8_t value, const detail::matrixMask::mask::OpFunc func) {
 
         // logic toggle led for optimize calling from setPattern etc
 

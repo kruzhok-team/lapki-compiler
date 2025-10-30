@@ -35,6 +35,7 @@ public:
 
             detail::microphone::isInit = true;
         }
+        on();
     }
 
     void scan () {
