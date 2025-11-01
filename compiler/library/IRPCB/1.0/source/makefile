@@ -2,7 +2,7 @@
 ######################### Project Settings #########################
 PRJ_NAME = IR_PCB
 # What to include, in form dir1 dir2 dir3...
-INCLUDE_DIRS = ./ Audio FileSys lib usb yartos Lapki
+INCLUDE_DIRS = ./ Audio Filesys lib usb yartos Lapki
 # What to define in form MYDEF1 MYDEF2=18 MYDEF3... $(MAKECMDGOALS) is name of requested action
 DEFINS = 
 DEFINS += BUILD_CFG_$(GOAL_NAME)=1 # add BUILD_CFG_GOALNAME=1 define, uppercasing GOAL_NAME
@@ -30,7 +30,7 @@ ifneq ($(EXTRA_DIR),)
 	vpath %.h $(EXTRA_DIR)
 	vpath %.cpp $(EXTRA_DIR)
 endif
-COMMON_FLAGS += EXTRA_FLAGS
+COMMON_FLAGS += $(EXTRA_FLAGS)
 
 ######################### Common Cfg Settings #########################
 MCU = cortex-m4
@@ -41,7 +41,11 @@ COMMON_FLAGS = -mcpu=$(MCU) -mthumb -fmessage-length=0 -ffunction-sections -fdat
 CPP_FLAGS = -std=gnu++17 -fabi-version=0 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics $(DISABLED_WARNINGS)
 C_FLAGS = -std=gnu17
 # Add this to build commands. Nothing to change here.
-OBJ_FLAGS = -MMD -MP -MF"$(subst /,\,$(@:%.o=%.d))" -MT"$@" -c -o "$@" "$<"
+ifeq ($(OS),Windows_NT)
+	OBJ_FLAGS = -MMD -MP -MF"$(subst /,\,$(@:%.o=%.d))" -MT"$@" -c -o "$@" "$<"
+else
+   	OBJ_FLAGS = -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
+endif
 ifdef BUILD_DIR
 LINKER_FLAGS = -Xlinker --gc-sections --specs=nano.specs --specs=nosys.specs -nostartfiles -Wl,-Map,"$(BUILD_DIR)/$(PRJ_NAME).map" -o "$(BUILD_DIR)/$(PRJ_NAME).elf"
 else
