@@ -64,6 +64,9 @@ async def _add_platform(platform: Platform,
         source_files,
         images)
     platform_manager.platforms_info = new_versions_info
+    platform_manager.platforms_info[platform.id].dependencies = (
+        await platform_manager._resolve_dependencies(platform)
+    )
     return platform.id
 
 
