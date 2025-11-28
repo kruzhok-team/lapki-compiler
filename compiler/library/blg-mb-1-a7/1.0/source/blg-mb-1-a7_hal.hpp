@@ -449,7 +449,7 @@ namespace mrx {
                     TIM15 -> CR1 |= TIM_CR1_CEN;
 
                     NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
-                    //NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,15); //Посчитать аккуратнее
+                    NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,15); //Посчитать аккуратнее
                 }
                 
                 void enableDetector(bool que) {

@@ -698,10 +698,10 @@ void USB_HP_IRQHandler() {
                         }
 
                         // if complete and no new TX, add one empty packet to flush queue, send tx complete signal
-                        if (Transfers[ep - 1].Length == 0) {
-                            BTable[ep].COUNT_TX = 0;
-                            USB_SetEP(&USB->EP0R + ep * 2, USB_EP_TX_VALID, USB_EP_TX_VALID);
-                        }
+                        //if (Transfers[ep - 1].Length == 0) {
+                        //    BTable[ep].COUNT_TX = 0;
+                        //    USB_SetEP(&USB->EP0R + ep * 2, USB_EP_TX_VALID, USB_EP_TX_VALID);
+                        //}
                     }
                 }
 

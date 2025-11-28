@@ -1,22 +1,12 @@
 #pragma once
 
-//Длина буфера АЦП для ушей
-//Полезно для поиска максимумов
-#define EAR_SEQUENCE_LEN 1
+extern "C" {
 
-#include "Pins.hpp"
-#include "ADC.hpp"
-// #include "leds.c"
-namespace stm32g431 {
-
-  namespace ears {
-
-    using namespace stm32g431::adc;
-    using namespace stm32g431::periphery;
-
-  extern "C" {
-
-    uint32_t adcArray[2*EAR_SEQUENCE_LEN];
+    //Длина буфера АЦП для ушей
+    //Полезно для поиска максимумов
+    #define EAR_SEQUENCE_LEN 1
+    
+    #include "adc_common.c"
     
     //MicR
     void
@@ -51,13 +41,6 @@ namespace stm32g431 {
       OPAMP3 -> CSR |= OPAMP_CSR_OPAMPxEN;
     }
     
-    #define OP_GAIN_2 0
-    #define OP_GAIN_4 1
-    #define OP_GAIN_8 2
-    #define OP_GAIN_16 3
-    #define OP_GAIN_32 4
-    #define OP_GAIN_64 5
-    
     #define OP_GAIN_1 0
     #define OP_GAIN_3 1
     #define OP_GAIN_7 2
@@ -71,19 +54,19 @@ namespace stm32g431 {
     ( OPAMP_TypeDef * op, uint8_t gain )
     {
       bool result = true;
-      const auto&& mkGain = [&result, &gain]( void )  -> uint8_t {
+      uint8_t mkGain ( void ) {
         switch ( gain ) {
-          case OP_GAIN_2:  return 0b01000;
-          case OP_GAIN_4:  return 0b01001;
-          case OP_GAIN_8:  return 0b01010;
-          case OP_GAIN_16: return 0b01011;
-          case OP_GAIN_32: return 0b01100;
-          case OP_GAIN_64: return 0b01101;
+          case OP_GAIN_1:  return 0b01000;
+          case OP_GAIN_3:  return 0b01001;
+          case OP_GAIN_7:  return 0b01010;
+          case OP_GAIN_15: return 0b01011;
+          case OP_GAIN_31: return 0b01100;
+          case OP_GAIN_63: return 0b01101;
           default:
-          result = false;
-          return 0b01000;
+            result = false;
+            return 0b01000;
         }
-      };
+      }
       op -> CSR &= ~OPAMP_CSR_OPAMPxEN;
       op -> CSR &= ~OPAMP_CSR_PGGAIN_Msk;
       op -> CSR |= ( mkGain() << OPAMP_CSR_PGGAIN_Pos );
@@ -107,9 +90,9 @@ namespace stm32g431 {
       ADC2 -> CFGR |= ADC_CFGR_OVRMOD; //Перезаписывание непрочтённых данных
       //ADC2 -> DIFSEL |= ADC_DIFSEL_DIFSEL_3;
       ADC2 -> SQR1 = ((2-1) << ADC_SQR1_L_Pos )
-      | ( 16 << ADC_SQR1_SQ1_Pos ) //earRight RM0440 p392 t69
-      | ( 18 << ADC_SQR1_SQ2_Pos ) //earLeft RM0440 p392 t69
-      ;
+                   | ( 16 << ADC_SQR1_SQ1_Pos ) //earRight RM0440 p392 t69
+                   | ( 18 << ADC_SQR1_SQ2_Pos ) //earLeft RM0440 p392 t69
+                   ;
       //Калибровка
       ADC2 -> CFGR |= ADC_CFGR_DMACFG;
       ADC2 -> CFGR |= ADC_CFGR_DMAEN;
@@ -117,7 +100,9 @@ namespace stm32g431 {
       enableADC(ADC2);
       ADC2 -> CR |= ADC_CR_ADSTART;
     }
-
+    
+    uint32_t adcArray[2*EAR_SEQUENCE_LEN];
+    
     void
     initDMA
     ( void )
@@ -128,22 +113,20 @@ namespace stm32g431 {
       DMA1_Channel1 -> CMAR = (uint32_t)(&adcArray);
       DMA1_Channel1 -> CNDTR = 2*EAR_SEQUENCE_LEN;
       DMA1_Channel1 -> CCR |= DMA_CCR_MINC
-      | ( 0b10 << DMA_CCR_MSIZE_Pos )
-                          | ( 0b10 << DMA_CCR_PSIZE_Pos )
-                          | DMA_CCR_CIRC
-                          ;
-                          DMA1_Channel1 -> CCR |= DMA_CCR_EN;
-                          DMAMUX1_Channel0 -> CCR |= ( 36 << DMAMUX_CxCR_DMAREQ_ID_Pos );
-                        }
-                        
-                        
-                        void
-                        initEars
-                        ( uint8_t gain )
-                        {
-                          // initMxLed(mx_d1);
+                           | ( 0b10 << DMA_CCR_MSIZE_Pos )
+                           | ( 0b10 << DMA_CCR_PSIZE_Pos )
+                           | DMA_CCR_CIRC
+                           ;
+      DMA1_Channel1 -> CCR |= DMA_CCR_EN;
+      DMAMUX1_Channel0 -> CCR |= ( 36 << DMAMUX_CxCR_DMAREQ_ID_Pos );
+    }
+    
+    
+    void
+    initEars
+    ( uint8_t gain )
+    {
       initADC_Common();
-      // setMxLed(mx_d1, 1);
       initOPAMP2();
       initOPAMP3();
       hw_setGain(OPAMP2,gain);
@@ -179,7 +162,5 @@ namespace stm32g431 {
       }
       return result;
     }
-    
-  }
-  }
 }
+

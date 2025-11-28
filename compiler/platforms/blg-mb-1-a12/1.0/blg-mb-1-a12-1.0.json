@@ -70,7 +70,9 @@
         "-Xlinker",
         "--gc-sections",
         "-fpermissive",
-        "-w"
+        "-w",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
       ]
     },
     {
@@ -103,6 +105,8 @@
     "usb/user.c",
     "usb/writers.c",
     "commonEars.hpp",
+    "adc.c",
+    "adc.c",
     "ADC.hpp",
     "blg-mb-1-a7_hal.hpp",
     "Connector.hpp",
@@ -127,6 +131,32 @@
     "Pattern.hpp"
   ],
   "components": {
+    "EarsBytes": {
+      "name": "Уши-байты",
+      "description": "КиберМишка настроил уши на принятие сообщений.",
+      "img": "blg-mb/byteEars.svg",
+      "signals": {
+        "isByteReceived": {
+          "description": "Был получен байт по акустическому каналу",
+          "alias": "Получен байт",
+          "img": "arduino/byteReceived.svg",
+          "checkMethod": "isByteReceived"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "value": {
+          "alias": "Полученный байт",
+          "img": "tjc-ms/lastData.svg",
+          "type": "uint8_t",
+          "description": "Последний полученный байт."
+        }   
+         },
+      "methods": {},
+      "buildFiles": ["EarsBytes.cpp", "acoustic_modem.c"],
+      "importFiles": ["EarsBytes.cpp"],
+      "singletone": false
+    },
    "IR": {
     "name": "ИК-светодиод",
     "description": "ИК-светодиод позволяет КиберМишке посылать инфракрасные сигналы, которые не видны человеческим глазом.",
