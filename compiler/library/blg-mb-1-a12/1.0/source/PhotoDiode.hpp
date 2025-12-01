@@ -18,7 +18,7 @@ class PhotoDiode {
     
     public:
     uint16_t threshold{};
-    uint8_t mode = DIODE_OFF;
+    uint8_t mode = DIODE_ON;
     uint16_t value;
 
     PhotoDiode() {

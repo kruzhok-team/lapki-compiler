@@ -302,8 +302,8 @@ namespace mrx {
 
         namespace photoDiode {
 
-            GPIO_TypeDef* port = GPIOB;
-            const uint8_t num = 14;
+            GPIO_TypeDef* port = GPIOA;
+            const uint8_t num = 1;
 
             namespace detail {
 
@@ -331,18 +331,42 @@ namespace mrx {
                     adc -> CR |= ADC_CR_ADCAL; //Запускаем процедуру калибровки
                     while((adc -> CR ) & ADC_CR_ADCAL); //Ждём окончания процедуры калибровки
                 }
+                void
+                initOPAMP1
+                ( uint8_t gain )
+                {
+                    //TODO OPAHSM (s25.3.3 p782 RM0440)
+                    RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+                    // initPin_AnalogPD(GPIOA,1);
+                    RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+                    OPAMP1 -> CSR |= (0b10 << OPAMP_CSR_VMSEL_Pos);
+                    OPAMP1 -> CSR |= ( gain << OPAMP_CSR_PGGAIN_Pos );
+                    OPAMP1 -> CSR |= OPAMP_CSR_OPAMPINTEN;
+                    OPAMP1 -> CSR |= (0b00 << OPAMP_CSR_VPSEL_Pos); //VINP0; PA7
+                    OPAMP1 -> CSR |= OPAMP_CSR_OPAMPxEN;
+                }
             }
+
+            #define NOSE_GAIN_2  0b00000
+            #define NOSE_GAIN_4  0b00001
+            #define NOSE_GAIN_8  0b00010
+            #define NOSE_GAIN_16 0b00011
+            #define NOSE_GAIN_32 0b00100
+            #define NOSE_GAIN_64 0b00101
+
 
             const auto&& init = []() {
                 
                 // GPIO enabled in system init file
-
+                
                 // initADC_Common
                 RCC -> AHB2ENR |= RCC_AHB2ENR_ADC12EN; //Затактовать АЦП
                 RCC -> CCIPR |= ( 0b11 << RCC_CCIPR_ADC12SEL_Pos);
                 ADC12_COMMON -> CCR |= ( 0b1000 << ADC_CCR_PRESC_Pos );
                 ADC12_COMMON -> CCR |= ( 0b01 << ADC_CCR_CKMODE_Pos );
 
+                detail::initOPAMP1(NOSE_GAIN_16);
+                
                 // initPin
                 stm32g431::periphery::initPin_Analog(port, num); // 1+
 
@@ -357,11 +381,12 @@ namespace mrx {
                 ADC1 -> CFGR &= ~ ADC_CFGR_ALIGN; //Выравнивание вправо, для 12 бит самое то.
                 ADC1 -> CFGR |= ADC_CFGR_OVRMOD; //Перезаписывание непрочтённых данных
                 //ADC1 -> DIFSEL |= ADC_DIFSEL_DIFSEL_1;
-                ADC1 -> SQR1 = ( 0 << ADC_SQR1_L_Pos )
-                            | ( 5 << ADC_SQR1_SQ1_Pos ) //RM0440 p392 t69
-                            ;
+                ADC1 -> SQR1 = ((1-1) << ADC_SQR1_L_Pos )
+                            | ( 13 << ADC_SQR1_SQ1_Pos ) //RM0440 p392 t69
+                ;
                 //Калибровка
                 detail::calibrateADC(ADC1);
+                // ADC1 -> CR |= ADC_CR_ADSTART;
             };
 
             const auto&& start = []() {
