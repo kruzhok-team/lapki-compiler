@@ -141,7 +141,7 @@ extern "C" {
         rx.bit_thresh = 0.75f * rx.training_max;
         rx.bit_pend = 8;
         rx.bit_ttl = BIT_WINDOW;
-        rx.bit_holdoff = BIT_INTERVAL - (BIT_WINDOW * 2);
+        rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
         rx.bit_max = 0.0f;
         rx.bit_acc = 0;
         rx.fn = bit_sampling;
