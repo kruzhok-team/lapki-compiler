@@ -475,7 +475,7 @@ namespace mrx {
                 
                 void init() {
                         
-                    auto gain = OP_GAIN_2;
+                    auto gain = OP_GAIN_3;
 
                     initADC_Common();
                     initOPAMP2();
@@ -633,7 +633,7 @@ namespace mrx {
                 using namespace stm32g431::ears;
                 void init() {
                     
-                    auto gain = OP_GAIN_2;
+                    auto gain = OP_GAIN_3;
 
                     initADC_Common();
                     initOPAMP2();
