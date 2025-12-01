@@ -7,47 +7,38 @@
 
 extern "C" {
   void manageLoad( void ); 
+  void initClock (void) {
+    RCC -> CR |= RCC_CR_HSEON; //Set HSI on (will use it as temporary source)
+    RCC -> CRRCR |= RCC_CRRCR_HSI48ON;
+    while ((RCC -> CR & RCC_CR_HSERDY) == 0); //Wait until its ready
+    RCC -> CFGR = ((RCC->CFGR & ~RCC_CFGR_SW_Msk) | RCC_CFGR_SW_HSE); //Switch to HSI
+    RCC -> CRRCR |= RCC_CRRCR_HSI48ON;
+    RCC -> CFGR = (( RCC->CFGR & ~RCC_CFGR_HPRE ) | ( 0b1000 < RCC_CFGR_HPRE_Pos )); //NB s7.2.7 p282 RM0440
+    RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLSRC_Msk ) | RCC_PLLCFGR_PLLSRC_HSE );
+    RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLN_Msk ) | ( 18 << RCC_PLLCFGR_PLLN_Pos ));
+    RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLM_Msk ) | ( (1-1) << RCC_PLLCFGR_PLLM_Pos ));
+    RCC -> PLLCFGR |= RCC_PLLCFGR_PLLREN;
+    RCC -> PLLCFGR |= RCC_PLLCFGR_PLLPEN;
+    RCC -> PLLCFGR |= RCC_PLLCFGR_PLLQEN;
+    RCC -> CR |= RCC_CR_PLLON;
+    while ( RCC->CR & RCC_CR_PLLRDY);
+    RCC -> CFGR = ((RCC->CFGR & ~RCC_CFGR_SW_Msk) | RCC_CFGR_SW_PLL); //Switch clock source to PLL
+    RCC -> CR &= ~RCC_CR_HSION;
+  }
   
-void initClock (void) {
-  RCC -> CR |= RCC_CR_HSEBYP;
-  RCC -> CR |= RCC_CR_HSEON; //Set HSI on (will use it as temporary source)
-  RCC -> CRRCR |= RCC_CRRCR_HSI48ON;
-  while ((RCC -> CR & RCC_CR_HSERDY) == 0); //Wait until its ready
-  RCC -> CFGR = ((RCC->CFGR & ~RCC_CFGR_SW_Msk) | RCC_CFGR_SW_HSE); //Switch to HSI
+  void SystemInit ( void ) {
+    SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
+    CB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); // Включение FPU
 
-  // !! PLL May have been configured by bootloader
-  // !! While it is enabled, the settings are locked
-  // !! We must disable it to be able to change PLLN/PLLM
-  RCC -> CR &= ~RCC_CR_PLLON;
-
-  RCC -> CRRCR |= RCC_CRRCR_HSI48ON;
-  RCC -> CFGR = (( RCC->CFGR & ~RCC_CFGR_HPRE ) | ( 0b1000 < RCC_CFGR_HPRE_Pos )); //NB s7.2.7 p282 RM0440
-  RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLSRC_Msk ) | RCC_PLLCFGR_PLLSRC_HSE );
-  RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLN_Msk ) | ( 18 << RCC_PLLCFGR_PLLN_Pos ));
-  RCC -> PLLCFGR = (( RCC->PLLCFGR & ~RCC_PLLCFGR_PLLM_Msk ) | ( (1-1) << RCC_PLLCFGR_PLLM_Pos ));
-  RCC -> PLLCFGR |= RCC_PLLCFGR_PLLREN;
-  RCC -> PLLCFGR |= RCC_PLLCFGR_PLLPEN;
-  RCC -> PLLCFGR |= RCC_PLLCFGR_PLLQEN;
-  RCC -> CR |= RCC_CR_PLLON;
-  while ( RCC->CR & RCC_CR_PLLRDY == 0) {};
-  RCC -> CFGR = ((RCC->CFGR & ~RCC_CFGR_SW_Msk) | RCC_CFGR_SW_PLL); //Switch clock source to PLL
-  RCC -> CR &= ~RCC_CR_HSION;
-}
-
-void SystemInit ( void ) {
-  SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
-
-  SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); // FPU Enable OK PLEASE????
-
-  __enable_irq();  //включаем все прерывания TODO
-  FLASH -> SEC1R |= FLASH_SEC1R_BOOT_LOCK;
-  FLASH -> OPTR |= FLASH_OPTR_nBOOT0;
-  FLASH -> OPTR &= ~FLASH_OPTR_nSWBOOT0;
-  FLASH -> ACR |= ( 0b0011 << FLASH_ACR_LATENCY_Pos ); //0b0011=3ws, p216 RM0440
-  //initClock();
-  SysTick_Config ((uint32_t)(HCLK/1000));
-}
-
+    __enable_irq();  //включаем все прерывания TODO
+    FLASH -> SEC1R |= FLASH_SEC1R_BOOT_LOCK;
+    FLASH -> OPTR |= FLASH_OPTR_nBOOT0;
+    FLASH -> OPTR &= ~FLASH_OPTR_nSWBOOT0;
+    FLASH -> ACR |= ( 0b0011 << FLASH_ACR_LATENCY_Pos ); //0b0011=3ws, p216 RM0440
+    //initClock();
+    SysTick_Config ((uint32_t)(HCLK/1000));
+  }
+  
   volatile uint32_t waiter = 0;
   
   __attribute__((optimize("O0"))) 
