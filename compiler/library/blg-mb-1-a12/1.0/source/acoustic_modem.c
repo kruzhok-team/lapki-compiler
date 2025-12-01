@@ -15,9 +15,6 @@ extern "C" {
         static float y_past[3] = {0.0f};
         static float x_past[3] = {0.0f};
 
-        // Шкалу сдвинуть
-        x -= 2048.0f;
-
         const float feedforw[] = {1.0/40.0, 1.0/80.0, -1.0/27.0};
         const float feedback[] = {1.0, -9.0/5.0, 11.0/12.0};
 
@@ -40,9 +37,6 @@ extern "C" {
     float filter_6_0_next(float x) {
         static float y_past[3] = {0.0f};
         static float x_past[3] = {0.0f};
-
-        // Шкалу сдвинуть
-        x -= 2048.0f;
 
         const float feedforw[] = {1.0/33.0, 1.0/412.0, -1.0/31.0};
         const float feedback[] = {1.0, -11.0/8.0, 14.0/15.0};
@@ -227,9 +221,16 @@ extern "C" {
     TIM1_TRG_COM_TIM17_IRQHandler
     ( void )
     {
+        // TODO: использовать оба уха
+        // Получится какая-то диаграмма направленности
+        float value = stm32g431::ears::adcArray[0]; // + stm32g431::ears::adcArray[1];
+
+        // Шкалу сдвинуть
+        value -= 2048.0f;
+
         rx_advance(
-            filter_2_9_next(stm32g431::ears::adcArray[0]),
-            filter_6_0_next(stm32g431::ears::adcArray[1])
+            filter_2_9_next(value),
+            filter_6_0_next(value)
         );
 
         TIM17 -> SR &= ~TIM_SR_UIF;
