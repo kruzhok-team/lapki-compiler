@@ -28,7 +28,7 @@ extern "C" {
   
   void SystemInit ( void ) {
     SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
-    CB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); // Включение FPU
+    SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); // Включение FPU
 
     __enable_irq();  //включаем все прерывания TODO
     FLASH -> SEC1R |= FLASH_SEC1R_BOOT_LOCK;
