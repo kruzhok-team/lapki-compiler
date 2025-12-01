@@ -11,7 +11,7 @@ extern "C" {
     int BIT_WINDOW = 250;
 
     // Полосовой фильтр, IIR, ~2.9 КГц
-    float filter_2_9_next(float x) {
+    static float filter_2_9_next(float x) {
         static float y_past[3] = {0.0f};
         static float x_past[3] = {0.0f};
 
@@ -34,7 +34,7 @@ extern "C" {
     }
 
     // Полосовой фильтр, IIR, 6.0 КГц
-    float filter_6_0_next(float x) {
+    static float filter_6_0_next(float x) {
         static float y_past[3] = {0.0f};
         static float x_past[3] = {0.0f};
 
@@ -180,7 +180,7 @@ extern "C" {
     // Диспетчеризирующая функция
     // u     2.9 кГц сигнал
     // v     6.0 кГц сигнал
-    void rx_advance(float u, float v) {
+    static void rx_advance(float u, float v) {
         if (rx.fn) {
             rx.fn(u, v);
         }
