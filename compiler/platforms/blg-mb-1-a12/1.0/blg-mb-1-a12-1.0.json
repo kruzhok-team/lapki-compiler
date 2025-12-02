@@ -153,8 +153,8 @@
         }   
          },
       "methods": {},
-      "buildFiles": ["EarsBytes.cpp", "acoustic_modem.c"],
-      "importFiles": ["EarsBytes.cpp"],
+      "buildFiles": ["Microphone.hpp", "EarsBytes.cpp", "acoustic_modem.c"],
+      "importFiles": ["Microphone.hpp", "EarsBytes.cpp"],
       "singletone": false
     },
    "IR": {

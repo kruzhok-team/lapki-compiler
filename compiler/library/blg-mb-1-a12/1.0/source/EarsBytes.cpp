@@ -10,10 +10,11 @@ public:
     int value = 0;
     EarsBytes() {
         if (!initialized) {
-            mrx::hal::microphone::api::init();
-
-            mrx::hal::microphone::detail::initDetector();
-            mrx::hal::microphone::detail::enableDetector(true);
+            if (!detail::microphone::isInit) {
+                mrx::hal::microphone::api::init();
+                mrx::hal::microphone::detail::initDetector();
+                detail::microphone::isInit = true;
+            }
 
             initialized = true;
             initFrequency();
