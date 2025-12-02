@@ -481,7 +481,7 @@
         "isThresholdValue": {
           "img": "blg-mb/greaterThresholdValue.svg",
           "description": "Был достигнут порог яркости",
-          "checkMethod": "greaterThresholdValue",
+          "checkMethod": "isThresholdValue",
           "parameters": [],
           "alias": "Выше порогового значения"
         },
