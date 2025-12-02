@@ -478,7 +478,7 @@
       "description": "Нос мишки — это инфракрасный фотодиод. Он позволяет мишке реагировать на освещение, но только на инфракрасное, невидимое глазу, Его много в солнечном свете, но почти не бывает в искусственном. Мишка любит солнце!",
       "img": "blg-mb/nose.svg",
       "signals": {
-        "greaterThresholdValue": {
+        "isThresholdValue": {
           "img": "blg-mb/greaterThresholdValue.svg",
           "description": "Был достигнут порог яркости",
           "checkMethod": "greaterThresholdValue",

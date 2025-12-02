@@ -77,7 +77,7 @@ class PhotoDiode {
         return copy;
     }
 
-    bool greaterThresholdValue() {
+    bool isThresholdValue() {
 
         auto copy = isEvent;
         isEvent = false;
