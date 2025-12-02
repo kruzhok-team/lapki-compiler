@@ -105,8 +105,6 @@
     "usb/user.c",
     "usb/writers.c",
     "commonEars.hpp",
-    "adc.c",
-    "adc.c",
     "ADC.hpp",
     "blg-mb-1-a7_hal.hpp",
     "Connector.hpp",
