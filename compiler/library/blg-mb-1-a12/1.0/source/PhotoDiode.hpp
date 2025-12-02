@@ -13,12 +13,14 @@ namespace detail {
 class PhotoDiode {
 
     bool isEvent { false };
-
+    bool isLessEvent { false };
     bool isEventSetting { false };
     
+    bool isGreater { false };
+
     public:
     uint16_t threshold{};
-    uint8_t mode = DIODE_OFF;
+    uint8_t mode = DIODE_ON;
     uint16_t value;
 
     PhotoDiode() {
@@ -40,12 +42,23 @@ class PhotoDiode {
 
         value = mrx::hal::photoDiode::getSense();
 
-        if (mode == DIODE_ON && isEventSetting) {
+        if (!(mode == DIODE_ON) || !isEventSetting) return; 
 
-            if (value > threshold) {
-                isEvent = true;
-            }
+        if (value > threshold) {
+            isEvent = true;
+            isGreater = true;
+            
+            return;
         }
+
+        if (isGreater) {
+            isGreater = false;
+            isLessEvent = true;
+
+            return;
+        }
+
+        
     }
 
     void on() {
@@ -56,7 +69,15 @@ class PhotoDiode {
         mode = DIODE_OFF;
     }
 
-    bool isThresholdValue() {
+    bool lessThresholdValue() {
+
+        auto copy = isLessEvent;
+        isLessEvent = false;
+
+        return copy;
+    }
+
+    bool greaterThresholdValue() {
 
         auto copy = isEvent;
         isEvent = false;
