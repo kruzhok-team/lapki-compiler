@@ -3,7 +3,7 @@ from pydantic import BaseModel, model_validator, field_validator
 from pydantic.dataclasses import dataclass
 
 SupportedCompilers: TypeAlias = Literal['gcc', 'g++', 'arduino-cli',
-                                        'arm-none-eabi-g++', 'arm-none-eabi-objcopy']
+                                        'arm-none-eabi-g++', 'arm-none-eabi-objcopy','make']
 IncludeStr: TypeAlias = str  # include "blabla.h"
 
 
