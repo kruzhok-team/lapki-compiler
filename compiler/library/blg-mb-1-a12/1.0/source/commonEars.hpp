@@ -54,6 +54,13 @@ namespace stm32g431 {
       #define OP_GAIN_32 4
       #define OP_GAIN_64 5
 
+      #define OP_GAIN_1 0
+      #define OP_GAIN_3 1
+      #define OP_GAIN_7 2
+      #define OP_GAIN_15 3
+      #define OP_GAIN_31 4
+      #define OP_GAIN_63 5
+
       //Защита от стрельбы в ногу
       bool
       hw_setGain

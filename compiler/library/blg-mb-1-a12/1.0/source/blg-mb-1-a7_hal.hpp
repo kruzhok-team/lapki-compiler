@@ -7,6 +7,7 @@
 #include "Pins.hpp"
 #include "RGBController.hpp"
 #include "SoundController.hpp"
+// #include "adc.c"
 #include "ADC.hpp"
 #include "commonEars.hpp"
 #include "Pattern.hpp"
@@ -429,7 +430,7 @@ namespace mrx {
                     TIM2 -> PSC = 0;   //  The counter clock frequency CK_CNT is equal to f (CK_PSC) / (PSC[15:0] + 1)
                     TIM2 -> DIER |= TIM_DIER_UIE;
                     TIM2 -> CR1 |= TIM_CR1_CEN;
-                    NVIC_SetPriority(TIM2_IRQn, 0); // TODO: maybe set interrupt priorety == 90?
+                    NVIC_SetPriority(TIM2_IRQn, 1); // TODO: maybe set interrupt priorety == 90?
                     NVIC_EnableIRQ(TIM2_IRQn);
 
                     isInitTIM2 = true;
@@ -499,7 +500,7 @@ namespace mrx {
                 
                 void init() {
                         
-                    auto gain = OP_GAIN_2;
+                    auto gain = OP_GAIN_3;
 
                     initADC_Common();
                     initOPAMP2();
@@ -657,7 +658,7 @@ namespace mrx {
                 using namespace stm32g431::ears;
                 void init() {
                     
-                    auto gain = OP_GAIN_2;
+                    auto gain = OP_GAIN_3;
 
                     initADC_Common();
                     initOPAMP2();
