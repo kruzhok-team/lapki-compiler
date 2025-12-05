@@ -17,54 +17,23 @@
 // Мы задействуем его для генерации несущей + модуляции
 //
 extern "C" {
+	static int ir_emitter_period = 0;
+
 	void ir_modem_init_emitter(void) {
-		RCC -> APB2ENR |= RCC_APB2ENR_TIM1EN;
-		TIM1 -> CR1 &= ~TIM_CR1_CEN;
-		TIM1 -> PSC = 0; // Частота счетчика = 36 МГц
-		TIM1 -> ARR = 1; // Период таймера = 18 МГц
-		TIM1 -> CNT = 0;
-		TIM1 -> CR1 |= TIM_CR1_CEN;
-
-		//
-		// Конгфигурация PWM
-		//
-		// PWM1: Output High = TIMx_CNT < TIMx_CCR1
-		// PWM2: Output High = TIMx_CNT >= TIMx_CCR1
-		//
-		// У нас используется режим PWM1; следует иметь ввиду,
-		// что он инвертируется, т.к. излучатель подключен к
-		// комплементарному выходу
-		//
-		TIM1 -> CCER &= ~TIM_CCER_CC3NE;
-		TIM1 -> CCMR2 &= ~(TIM_CCMR2_OC3M | TIM_CCMR2_CC3S);
-		TIM1 -> CCMR2 |= (TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2);
-
-		// Рабочий цикл 0%
-		TIM1 -> CCR3 = 0;
-
-		// Включение выхода
-		TIM1 -> BDTR |= TIM_BDTR_MOE;
-		TIM1 -> CCER |= TIM_CCER_CC3NE;
-
-		// Настройка пина излучателя
 		RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-		initPin_AF_PP(GPIOE, 12, 2); // AF2, TIM1_CH3N
+		initPin_PP(GPIOE, 12);
 	}
 
 	static void ir_emitter_radiate_6000() {
-		TIM1 -> ARR = 6000 - 1;
-		TIM1 -> CNT = 0;
-		TIM1 -> CCR3 = 6000/2;
+		ir_emitter_period = 48000.0/6000.0 + 0.5;
 	}
 
 	static void ir_emitter_radiate_2730() {
-		TIM1 -> ARR = 13187 - 1;
-		TIM1 -> CNT = 0;
-		TIM1 -> CCR3 = 13187/2;
+		ir_emitter_period = 48000.0/2730.0 + 0.5;
 	}
 
 	static void ir_emitter_kill() {
-		TIM1 -> CCR3 = 0;
+		ir_emitter_period = 0;
 	}
 
 	typedef void (*tx_func_t)();
@@ -178,6 +147,8 @@ extern "C" {
 			tx.fn();
 		}
 		tx.tick++;
+
+		setPin_PP(GPIOE, 12, (tx.tick % ir_emitter_period) < (ir_emitter_period/2) ? ON : OFF);
 	}
 
 	// ============================================================================
@@ -263,7 +234,7 @@ extern "C" {
 	} ir_rx = { .fn = ir_preamble_detect, 0 };
 
 	static void ir_preamble_detect(float u, float v) {
-		if (ABS(v) > 200.0f) { // Порог детектирования сигнала
+		if (ABS(v) > 50) { // Порог детектирования сигнала
 			ir_rx.preamble_ttl = 100;
 			ir_rx.preamble_loc = 100;
 			ir_rx.preamble_max = ABS(v);

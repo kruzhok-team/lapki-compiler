@@ -10,10 +10,16 @@ public:
     int value = 0;
     NoseBytes() {
         if (!initialized) {
-            initialized = true;
+            if (!mrx::hal::photoDiode::initialized) {
+                mrx::hal::photoDiode::init();
+                mrx::hal::photoDiode::start();
+                mrx::hal::photoDiode::initialized = true;
+            }
 
             ir_modem_init();
             init_modem();
+
+            initialized = true;
         }
     }
 

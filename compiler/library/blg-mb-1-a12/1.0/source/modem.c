@@ -13,7 +13,7 @@ extern "C" {
 
     static struct {
         int initialized;
-    } modem_settings = {};
+    } modem_settings = { 0 };
     
 
     // Главное прерывание модема
