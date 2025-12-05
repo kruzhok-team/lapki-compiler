@@ -151,7 +151,7 @@
         }   
          },
       "methods": {},
-      "buildFiles": ["Microphone.hpp", "EarsBytes.cpp", "acoustic_modem.c"],
+      "buildFiles": ["Microphone.hpp", "EarsBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
       "importFiles": ["Microphone.hpp", "EarsBytes.cpp"],
       "singletone": false
     },
@@ -172,13 +172,44 @@
         "alias": "Выключить",
         "img": "arduino/switch-off.svg",
         "description": "Выключить ИК-светодиод."
+      },
+      "sendByte": {
+        "alias": "Отправить байт",
+        "img": "arduino/switch-on.svg",
+        "description": "Отправить байт через ИК-светодиод."
       }
     },
     "importFiles": ["ir.hpp"],
-    "buildFiles": ["ir.hpp", "ir.c"],
+    "buildFiles": ["ir.hpp", "ir.c", "modem.c", "ir_modem.c", "acoustic_modem.c"],
     "loopActions": [],
     "singletone": false
    },
+    "NoseBytes": {
+      "name": "Нос-байты",
+      "description": "КиберМишка настроил нос на принятие сообщений.",
+      "img": "blg-mb/byteNose.svg",
+      "signals": {
+        "isByteReceived": {
+          "alias": "Получен байт",
+          "description": "Получен байт по ИК-каналу.",
+          "img": "arduino/byteReceived.svg",
+          "checkMethod": "isByteReceived"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "value": {
+          "alias": "Полученный байт",
+          "img": "tjc-ms/lastData.svg",
+          "type": "uint8_t",
+          "description": "Последний полученный байт."
+        }   
+         },
+      "methods": {},
+      "buildFiles": ["NoseBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
+      "importFiles": ["NoseBytes.cpp"],
+      "singletone": false
+    },
    "Accel": {
       "name": "Акселерометр",
       "description": "Компонент для работы с акселерометром.",

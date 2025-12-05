@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./acoustic_modem.c"
 #include "./commonEars.hpp"
+#include "modem.c"
 
 bool initialized = false;
 
@@ -17,13 +17,13 @@ public:
             }
 
             initialized = true;
-            initFrequency();
+            init_modem();
         }
     }
 
     bool isByteReceived() {
-        if (rx_is_available()) {
-            value = rx_read_byte();
+        if (acoustic_rx_is_available()) {
+            value = acoustic_rx_read_byte();
             return true;
         }
         return false;

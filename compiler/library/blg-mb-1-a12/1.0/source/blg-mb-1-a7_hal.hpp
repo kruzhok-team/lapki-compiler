@@ -302,7 +302,7 @@ namespace mrx {
         }
 
         namespace photoDiode {
-
+            bool initialized = false;
             GPIO_TypeDef* port = GPIOA;
             const uint8_t num = 1;
 
@@ -357,7 +357,7 @@ namespace mrx {
 
 
             const auto&& init = []() {
-                
+                initialized = true;
                 // GPIO enabled in system init file
                 
                 // initADC_Common
@@ -430,7 +430,7 @@ namespace mrx {
                     TIM2 -> PSC = 0;   //  The counter clock frequency CK_CNT is equal to f (CK_PSC) / (PSC[15:0] + 1)
                     TIM2 -> DIER |= TIM_DIER_UIE;
                     TIM2 -> CR1 |= TIM_CR1_CEN;
-                    NVIC_SetPriority(TIM2_IRQn, 1); // TODO: maybe set interrupt priorety == 90?
+                    NVIC_SetPriority(TIM2_IRQn, 25); // TODO: maybe set interrupt priorety == 90?
                     NVIC_EnableIRQ(TIM2_IRQn);
 
                     isInitTIM2 = true;
@@ -475,7 +475,7 @@ namespace mrx {
                     TIM15 -> CR1 |= TIM_CR1_CEN;
 
                     NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
-                    //NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,15); //Посчитать аккуратнее
+                    NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,20); //Посчитать аккуратнее
                 }
                 
                 void enableDetector(bool que) {

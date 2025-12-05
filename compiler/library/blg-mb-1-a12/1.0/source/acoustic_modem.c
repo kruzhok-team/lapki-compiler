@@ -1,5 +1,4 @@
 #include "commonEars.hpp"
-#include "leds.c"
 
 extern "C" {
     //
@@ -85,154 +84,106 @@ extern "C" {
         float bit_max;
 
         int have_byte;
+        int is_enabled;
         // TODO: чувствительность как параметр
-    } rx = { .fn = preamble_detect, 0 };
+    } acoustic_rx = { .fn = preamble_detect, 0 };
 
     static void preamble_detect(float u, float v) {
         if (ABS(v) > 200.0f) {
-            rx.preamble_ttl = 100;
-            rx.preamble_loc = 100;
-            rx.preamble_max = ABS(v);
-            rx.fn = preamble_sync;
+            acoustic_rx.preamble_ttl = 100;
+            acoustic_rx.preamble_loc = 100;
+            acoustic_rx.preamble_max = ABS(v);
+            acoustic_rx.fn = preamble_sync;
         }
     }
 
     static void preamble_sync(float u, float v) {
-        if (rx.preamble_ttl >= 0) {
-            rx.preamble_ttl--;
+        if (acoustic_rx.preamble_ttl >= 0) {
+            acoustic_rx.preamble_ttl--;
 
-            if (ABS(v) > rx.preamble_max) {
-                rx.preamble_max = ABS(v);
-                rx.preamble_loc = 100 - rx.preamble_ttl;
+            if (ABS(v) > acoustic_rx.preamble_max) {
+                acoustic_rx.preamble_max = ABS(v);
+                acoustic_rx.preamble_loc = 100 - acoustic_rx.preamble_ttl;
             }
             return;
         }
 
-        if (rx.preamble_loc >= 0) {
-            rx.preamble_loc--;
+        if (acoustic_rx.preamble_loc >= 0) {
+            acoustic_rx.preamble_loc--;
             return;
         }
 
-        rx.training_ttl = BIT_WINDOW;
-        rx.training_max = 0.0f;
-        rx.fn = link_training;
+        acoustic_rx.training_ttl = BIT_WINDOW;
+        acoustic_rx.training_max = 0.0f;
+        acoustic_rx.fn = link_training;
     }
 
     static void link_training(float u, float v) {
-        if (rx.training_ttl >= 0) {
-            rx.training_ttl--;
+        if (acoustic_rx.training_ttl >= 0) {
+            acoustic_rx.training_ttl--;
 
-            if (ABS(u) > rx.training_max) {
-                rx.training_max = ABS(u);
+            if (ABS(u) > acoustic_rx.training_max) {
+                acoustic_rx.training_max = ABS(u);
             }
             return;
         }
 
-        rx.bit_thresh = 0.75f * rx.training_max;
-        rx.bit_pend = 8;
-        rx.bit_ttl = BIT_WINDOW;
-        rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
-        rx.bit_max = 0.0f;
-        rx.bit_acc = 0;
-        rx.fn = bit_sampling;
+        acoustic_rx.bit_thresh = 0.75f * acoustic_rx.training_max;
+        acoustic_rx.bit_pend = 8;
+        acoustic_rx.bit_ttl = BIT_WINDOW;
+        acoustic_rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
+        acoustic_rx.bit_max = 0.0f;
+        acoustic_rx.bit_acc = 0;
+        acoustic_rx.fn = bit_sampling;
     }
 
     static void bit_sampling(float u, float v) {
-        if (rx.bit_holdoff >= 0) {
-            rx.bit_holdoff--;
+        if (acoustic_rx.bit_holdoff >= 0) {
+            acoustic_rx.bit_holdoff--;
             return;
         }
 
-        if (rx.bit_ttl >= 0) {
-            rx.bit_ttl--;
+        if (acoustic_rx.bit_ttl >= 0) {
+            acoustic_rx.bit_ttl--;
 
-            if (ABS(u) > rx.bit_max) {
-                rx.bit_max = ABS(u);
+            if (ABS(u) > acoustic_rx.bit_max) {
+                acoustic_rx.bit_max = ABS(u);
             }
             return;
         }
 
-        int bit_detected = (rx.bit_max >= rx.bit_thresh);
+        int bit_detected = (acoustic_rx.bit_max >= acoustic_rx.bit_thresh);
 
-        rx.bit_pend--;
-        rx.bit_acc += (bit_detected << rx.bit_pend);
+        acoustic_rx.bit_pend--;
+        acoustic_rx.bit_acc += (bit_detected << acoustic_rx.bit_pend);
 
-        if (rx.bit_pend > 0) {
-            rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
-            rx.bit_ttl = BIT_WINDOW;
-            rx.bit_max = 0.0f;
+        if (acoustic_rx.bit_pend > 0) {
+            acoustic_rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
+            acoustic_rx.bit_ttl = BIT_WINDOW;
+            acoustic_rx.bit_max = 0.0f;
             return;
         }
 
-        rx.fn = preamble_detect;
-        rx.have_byte = 1;
+        acoustic_rx.fn = preamble_detect;
+        acoustic_rx.have_byte = 1;
     }
 
-    int rx_is_available() {
-        return rx.have_byte;
+    int acoustic_rx_is_available() {
+        return acoustic_rx.have_byte;
     }
 
-    int rx_read_byte() {
-        rx.have_byte = 0;
-        return rx.bit_acc & 0b11111111;
+    int acoustic_rx_read_byte() {
+        acoustic_rx.have_byte = 0;
+        return acoustic_rx.bit_acc & 0b11111111;
     }
 
     // Диспетчеризирующая функция
     // u     2.9 кГц сигнал
     // v     6.0 кГц сигнал
     static void rx_advance(float u, float v) {
-        if (rx.fn) {
-            rx.fn(u, v);
+        if (acoustic_rx.fn) {
+            acoustic_rx.fn(u, v);
         }
-        rx.tick++;
-    }
-
-    //
-    // Timer clock = 36 MHz
-    //
-    // FIXME: switch to 72 MHz
-    //
-    // Recall that:
-    // PSC = 0	36 MHz clock
-    // PSC = 1	18 MHz clock
-    // etc...
-    //
-    // ARR = 0	No output
-    // ARR = 1	18 MHz output
-    // etc...
-    //
-    void
-    initFrequency
-    ( void )
-    {
-        RCC -> APB2ENR |= RCC_APB2ENR_TIM17EN;
-        TIM17 -> CR1 &= ~TIM_CR1_CEN;
-        TIM17 -> CNT = 0;
-        TIM17 -> ARR = 75 - 1; // 48 kHz
-        TIM17 -> PSC = 10 - 1;
-        TIM17 -> DIER |= TIM_DIER_UIE;
-        TIM17 -> CR1 |= TIM_CR1_CEN;
-
-        NVIC_EnableIRQ(TIM1_TRG_COM_TIM17_IRQn);
-        NVIC_SetPriority(TIM1_TRG_COM_TIM17_IRQn, 0);
-    }
-
-    void
-    TIM1_TRG_COM_TIM17_IRQHandler
-    ( void )
-    {
-        // TODO: использовать оба уха
-        // Получится какая-то диаграмма направленности
-        float value = stm32g431::ears::adcArray[0]; // + stm32g431::ears::adcArray[1];
-
-        // Шкалу сдвинуть
-        value -= 2048.0f;
-
-        rx_advance(
-            filter_2_9_next(value),
-            filter_6_0_next(value)
-        );
-
-        TIM17 -> SR &= ~TIM_SR_UIF;
+        acoustic_rx.tick++;
     }
 }
