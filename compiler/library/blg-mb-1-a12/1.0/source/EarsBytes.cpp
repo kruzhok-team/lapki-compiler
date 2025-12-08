@@ -3,20 +3,21 @@
 #include "./commonEars.hpp"
 #include "modem.c"
 
-bool initialized = false;
+bool earsInitialized = false;
 
 class EarsBytes {
 public:
     int value = 0;
     EarsBytes() {
-        if (!initialized) {
+        if (!earsInitialized) {
             if (!detail::microphone::isInit) {
                 mrx::hal::microphone::api::init();
                 mrx::hal::microphone::detail::initDetector();
                 detail::microphone::isInit = true;
             }
 
-            initialized = true;
+            earsInitialized = true;
+            acoustic_rx.is_enabled = 1;
             init_modem();
         }
     }
