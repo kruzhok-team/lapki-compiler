@@ -84,7 +84,7 @@ int _read(int file, char *ptr, int len) {
     return 0;
 }
 
-void _exit() {
+void _exit(int) {
     while(true);
 }
 

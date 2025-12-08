@@ -1,11 +1,12 @@
 #ifndef IRRECIEVER_H
 #define IRRECIEVER_H
-#include "IRpkg.h"
+#include <cstdint>
 
+#include "IRpkg.h"
 namespace IRReciever {
 
 constexpr inline const char* fileName = "irpkgs.txt";
-constexpr uint32_t unstablePeriod = 39; //ms could be lower(but 20ms is too small)
+constexpr uint32_t unstablePeriod = 39;  // ms could be lower(but 20ms is too small)
 
 extern bool isUpdated_;
 

@@ -6,6 +6,7 @@ INCLUDE_DIRS = ./ Audio Filesys lib usb yartos Lapki
 # What to define in form MYDEF1 MYDEF2=18 MYDEF3... $(MAKECMDGOALS) is name of requested action
 DEFINS = 
 DEFINS += BUILD_CFG_$(GOAL_NAME)=1 # add BUILD_CFG_GOALNAME=1 define, uppercasing GOAL_NAME
+DEFINS += _GLIBCXX_FREESTANDING_EXTRA # new arm-none-eabi version prohibit stl compilation in freestangind mode(we use newlib)
 # DEFINS += APP LEDS
 
 ######################### Figure out what to do #########################
@@ -37,7 +38,7 @@ MCU = cortex-m4
 FLOAT_FLAGS = -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion -Wfloat-conversion -Wfloat-equal
 WARNING_FLAGS = -Wall -Wlogical-op -Werror
 DISABLED_WARNINGS = -Wno-address-of-packed-member -Wno-unknown-pragmas
-COMMON_FLAGS = -mcpu=$(MCU) -mthumb -fmessage-length=0 -ffunction-sections -fdata-sections -ffreestanding $(FLOAT_FLAGS) $(WARNING_FLAGS)
+COMMON_FLAGS = -mcpu=$(MCU) -mthumb -fmessage-length=0 -ffunction-sections -fdata-sections  $(FLOAT_FLAGS) $(WARNING_FLAGS) #-ffreestanding
 CPP_FLAGS = -std=gnu++17 -fabi-version=0 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics $(DISABLED_WARNINGS)
 C_FLAGS = -std=gnu17
 # Add this to build commands. Nothing to change here.
