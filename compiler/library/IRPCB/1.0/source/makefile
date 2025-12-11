@@ -1,3 +1,4 @@
+export MSYS2_ARG_CONV_EXCL=*
 # TODO решение с ifdef BUILD_DIR явно не лучшее
 ######################### Project Settings #########################
 PRJ_NAME = IR_PCB
@@ -42,11 +43,7 @@ COMMON_FLAGS = -mcpu=$(MCU) -mthumb -fmessage-length=0 -ffunction-sections -fdat
 CPP_FLAGS = -std=gnu++17 -fabi-version=0 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics $(DISABLED_WARNINGS)
 C_FLAGS = -std=gnu17
 # Add this to build commands. Nothing to change here.
-ifeq ($(OS),Windows_NT)
-	OBJ_FLAGS = -MMD -MP -MF"$(subst /,\,$(@:%.o=%.d))" -MT"$@" -c -o "$@" "$<"
-else
-   	OBJ_FLAGS = -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
-endif
+OBJ_FLAGS = -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
 ifdef BUILD_DIR
 LINKER_FLAGS = -Xlinker --gc-sections --specs=nano.specs --specs=nosys.specs -nostartfiles -Wl,-Map,"$(BUILD_DIR)/$(PRJ_NAME).map" -o "$(BUILD_DIR)/$(PRJ_NAME).elf"
 else
@@ -104,7 +101,11 @@ GDB_COM = :3333 #\\.\COM11
 # Current datetime
 TIMESTAMP = $(shell "date" "+%Y%m%d_%H%M")
 # Build include flag string out of INCLUDE_DIRS list
-INCLUDE_STR = $(addprefix -I,$(INCLUDE_DIRS))
+ABS_INCLUDE_DIRS := $(abspath $(INCLUDE_DIRS))
+ifneq (,$(shell which cygpath 2>/dev/null))
+    ABS_INCLUDE_DIRS := $(shell cygpath -m $(ABS_INCLUDE_DIRS))
+endif
+INCLUDE_STR = $(addprefix -I,$(ABS_INCLUDE_DIRS))
 Libraries_DIRS_STR = $(addprefix -L,$(LIBRARIES_DIRS))
 Libraries_STR = $(addprefix -l,$(LIBRARIES))
 
