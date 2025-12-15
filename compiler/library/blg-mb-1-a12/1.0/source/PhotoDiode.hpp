@@ -1,11 +1,4 @@
 #pragma once
-namespace detail {
-
-    namespace PtohotoDiode {
-
-        bool isInit = false;
-    }
-}
 
 #define DIODE_ON 1
 #define DIODE_OFF 0
@@ -25,13 +18,13 @@ class PhotoDiode {
 
     PhotoDiode() {
 
-        if (!detail::PtohotoDiode::isInit) {
+        if (!mrx::hal::photoDiode::initialized) {
 
             mrx::hal::photoDiode::init();
 
             mrx::hal::photoDiode::start();
 
-            detail::PtohotoDiode::isInit = true;
+            mrx::hal::photoDiode::initialized = true;
         }
         on();
     }
