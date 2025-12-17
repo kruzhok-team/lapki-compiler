@@ -366,7 +366,7 @@ namespace mrx {
                 ADC12_COMMON -> CCR |= ( 0b1000 << ADC_CCR_PRESC_Pos );
                 ADC12_COMMON -> CCR |= ( 0b01 << ADC_CCR_CKMODE_Pos );
 
-                detail::initOPAMP1(NOSE_GAIN_16);
+                detail::initOPAMP1(NOSE_GAIN_64);
                 
                 // initPin
                 stm32g431::periphery::initPin_Analog(port, num); // 1+
@@ -500,7 +500,7 @@ namespace mrx {
                 
                 void init() {
                         
-                    auto gain = OP_GAIN_3;
+                    auto gain = OP_GAIN_16;
 
                     initADC_Common();
                     initOPAMP2();
@@ -658,7 +658,7 @@ namespace mrx {
                 using namespace stm32g431::ears;
                 void init() {
                     
-                    auto gain = OP_GAIN_3;
+                    auto gain = OP_GAIN_16;
 
                     initADC_Common();
                     initOPAMP2();
