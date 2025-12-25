@@ -1043,6 +1043,83 @@
           "description": "Размер массива."
         }
       }
+    },
+    "Lcd": {
+      "description": "Класс-надстройка над LCD. Вызывает сигналы при получении данных.",
+      "img": "",
+      "signals": {},
+      "initializationParameters": {},
+      "constructorParameters": {
+        "address": {
+          "type": "uint8_t",
+          "name": "адрес",
+          "description": "I2C адрес дисплея"
+        },
+        "cols": {
+          "type": "uint8_t",
+          "name": "число столбцов",
+          "description": ""
+        },
+        "rows": {
+          "type": "uint8_t",
+          "name": "число строк",
+          "description": ""
+        }
+      },
+      "initializationFunction": "init",
+      "methods": {
+        "print": {
+          "alias": "Вывод",
+          "img": "arduino/print.svg",
+          "description": "Вывести данные на дисплей",
+          "parameters": [
+            {
+              "name": "Сообщение",
+              "description": "Данные для вывода",
+              "type": "int | char[]"
+            }
+          ]
+        },
+        "setCursor": {
+          "alias": "Задать позицию",
+          "img": "",
+          "description": "Устанавливает курсор в новую позиция так, что распечатанный текст будет выводиться с этой позиции",
+          "parameters": [
+            {
+              "name": "столбец",
+              "description": "",
+              "type": "int"
+            },
+            {
+              "name": "строка",
+              "description": "",
+              "type": "int"
+            }
+          ]
+        },
+        "reset": {
+          "alias": "Сброс",
+          "img": "",
+          "description": "Очистить дисплей",
+          "parameters": []
+        },
+        "backlight":{
+          "alias": "Включить подсветку",
+          "img": "",
+          "description": "Включает подсветку дисплея",
+          "parameters": []
+        },
+        "noBacklight":{
+          "alias": "Выключить подсветку",
+          "img": "",
+          "description": "Выключает подсветку дисплея",
+          "parameters": []
+        }
+      },
+      "variables": {},
+      "buildFiles": ["LCD_I2C.cpp", "Lcd.cpp", "LCD_I2C.h", "Lcd.h"],
+      "importFiles": ["LCD_I2C.h", "Lcd.h"],
+      "singletone": false
     }
   }
 }
