@@ -16,6 +16,8 @@ from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
 from compiler.os_commands import os_commands
 
+from .config import _LIBRARY_PATH, _ARTIFACTS_DIRECTORY
+
 
 async def get_build_files(
         project_path: AsyncPath) -> AsyncGenerator[BuildFile, None]:
@@ -135,10 +137,21 @@ class Compiler:
         command_results: List[CommandResult] = []
         # FIXME: грязный хак, чтобы устранить проблему с пропадающим файлом
         await asyncio.sleep(0.1)
+        # TODO вынести в отдельную функцию
+        library_dir = _LIBRARY_PATH
+        base_dir = base_dir.replace('\\', '/')
+        artifacts_dir = _ARTIFACTS_DIRECTORY.replace('\\', '/')
+        flags = []
+        for command in commands:
+            flags = command.flags.copy()
+            for i in range(len(command.flags)):
+                flags[i] = flags[i].replace('{library_dir}', library_dir)
+                flags[i] = flags[i].replace('{base_dir}', base_dir)
+                flags[i] = flags[i].replace('{artifacts_dir}', artifacts_dir)
         for command in commands:
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
-                *command.flags,
+                *flags,
                 cwd=base_dir,
                 text=False,
                 stdout=asyncio.subprocess.PIPE,

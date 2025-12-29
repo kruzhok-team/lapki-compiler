@@ -1,0 +1,43 @@
+#include "IRReciever.h"
+
+#include "Serial.h"
+// #include "ir.h"
+#include "File.h"
+#include "IRTransmitter.h"
+#include "kl_fs_utils.h"
+#include "usb_msdcdc.h"
+#include "yartos.h"
+
+IRpkg IRReciever::pkg;
+bool IRReciever::isUpdated_ = 0;
+
+extern UsbMsdCdc usb_msd_cdc;
+
+void IRReciever::savePkg() {
+    if (usb_msd_cdc.IsActive()) {
+        Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(),
+                       static_cast<std::string>(pkg).c_str());
+    } else {
+        // XXX
+        // File::Printf(fileName, "Timestamp: %u, Pkg: %s\r\n",
+        // Sys::GetSysTime(), pkg);
+    }
+}
+
+void IRReciever::printPkg() {
+    Serial::Printf("Timestamp: %u, Pkg: %s\r\n", Sys::GetSysTime(),
+                   static_cast<std::string>(pkg).c_str());
+}
+
+void IRReciever::update(uint8_t bits_count, uint16_t word) {
+    IRReciever::pkg.set(bits_count, word);
+    IRReciever::isUpdated_ = 1;
+}
+
+bool IRReciever::isUpdated() {
+    uint32_t currentTime = Sys::GetSysTime();
+    if (currentTime - IRTransmitter::lastIrSend < unstablePeriod) isUpdated_ = 0;
+    bool isUpd = isUpdated_;
+    isUpdated_ = 0;
+    return isUpd;
+}
