@@ -141,14 +141,15 @@ class Compiler:
         library_dir = _LIBRARY_PATH
         base_dir = base_dir.replace('\\', '/')
         artifacts_dir = _ARTIFACTS_DIRECTORY.replace('\\', '/')
-        flags = []
         for command in commands:
-            flags = command.flags.copy()
-            for i in range(len(command.flags)):
-                flags[i] = flags[i].replace('{library_dir}', library_dir)
-                flags[i] = flags[i].replace('{base_dir}', base_dir)
-                flags[i] = flags[i].replace('{artifacts_dir}', artifacts_dir)
-        for command in commands:
+            # Делаем подмену каталогов в команде
+            flags: List[str] = []
+            for flag in command.flags:
+                flag = flag.replace('{library_dir}', library_dir)
+                flag = flag.replace('{base_dir}', base_dir)
+                flag = flag.replace('{artifacts_dir}', artifacts_dir)
+                flags.append(flag)
+            # Запускаем саму команду
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
                 *flags,
