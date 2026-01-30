@@ -52,7 +52,7 @@ public:
 
         // mapping [0.255] -> [0..100]
         const uint8_t val = brightness; //const uint8_t val = map(brightness, 0, 255, 0, 100);
-        
+
         PWM().write(val, pin -4);
     }
 
@@ -70,15 +70,44 @@ public:
         value ? off() : on();
     }
 
-    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
-
-        for (byte i = 0; i < times; i++)
-        {
-            toggle();
-            delay(lightInterval);
-            toggle();
-            delay(offInterval);
+    void blinking() {
+        if (!isBlinking) return;
+        // Если время интервала еще не прошло, просто обновляем время проверки
+        if (millis() - startTime < currentBlinkInterval) {
+            return;
         }
+        unsigned int interval = 0;
+        // меняем фазу
+        if (!isLighting) {
+            // Считаем, что цикл закончился, когда переключаемся
+            // с выкл на вкл
+            isLighting = true;
+            currentBlink += 1;
+            currentBlinkInterval = blinkLightInterval;
+        } else {
+            isLighting = false;
+            currentBlinkInterval = blinkOffInterval;
+        }
+
+        if (currentBlink > overallBlinks) {
+            isBlinking = false;
+            return;
+        }
+
+        startTime = millis();
+        toggle();
+    }
+
+    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+        blinkOffInterval = offInterval;
+        blinkLightInterval = lightInterval;
+        overallBlinks = times;
+        currentBlink = 0;
+        isBlinking = true;
+
+        on();
+        currentBlinkInterval = lightInterval;
+        startTime = millis();
     }
 
 
@@ -102,5 +131,13 @@ public:
     bool value;
 
 private:
+    unsigned int blinkLightInterval = 0; // сколько светим
+    unsigned int blinkOffInterval = 0; // сколько выключены
+    unsigned int currentBlinkInterval = 0; // сколько длится текущая фаза
+    byte currentBlink = 0; // сколько всего миганий сделали
+    byte overallBlinks = 0; // сколько всего миганий нужно сделать
+    bool isBlinking = false; // мигаем ли сейчас
+    bool isLighting = false; // горим сейчас или нет
+    unsigned long startTime; // когда начали текущую фазу
     uint8_t pin;
 };

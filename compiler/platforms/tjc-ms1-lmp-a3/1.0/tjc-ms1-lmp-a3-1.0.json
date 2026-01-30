@@ -226,6 +226,7 @@
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
         },
+        "loopActions": ["blinking"],
         "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
         "importFiles": ["LED.h"],
         "singletone": false
