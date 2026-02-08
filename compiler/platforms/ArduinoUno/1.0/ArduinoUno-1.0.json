@@ -1045,7 +1045,8 @@
       }
     },
     "Lcd": {
-      "description": "Класс-надстройка над LCD. Вызывает сигналы при получении данных.",
+      "name": "Lcd",
+      "description": "Компонент для работы с lcd 1602 по i2c",
       "img": "",
       "signals": {},
       "initializationParameters": {},
@@ -1087,12 +1088,12 @@
           "parameters": [
             {
               "name": "столбец",
-              "description": "",
+              "description": "нумерация столбцов с нуля",
               "type": "int"
             },
             {
               "name": "строка",
-              "description": "",
+              "description": "нумерация строк с нуля",
               "type": "int"
             }
           ]
