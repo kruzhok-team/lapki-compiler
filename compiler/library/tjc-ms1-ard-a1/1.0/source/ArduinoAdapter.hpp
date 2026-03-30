@@ -2,7 +2,7 @@
 
 class ArduinoAdapter {
 public:
-    uint8_t lastByte = 0;
+    uint8_t lastData = 0;
     bool _isQueueOverflow = false;
 
     ArduinoAdapter() {}
@@ -12,7 +12,7 @@ public:
     }
 
     bool packetReceived() {
-        uint8_t status = arduino_link_recv_byte(&lastByte);
+        uint8_t status = arduino_link_recv_byte(&lastData);
         return status != 0;
     }
 
@@ -26,7 +26,11 @@ public:
     }
 
     bool isQueueOverflow() {
-        return _isQueueOverflow;
+        if (_isQueueOverflow) {
+            _isQueueOverflow = false;
+            return true;
+        }
+        return false;
     }
 
 };

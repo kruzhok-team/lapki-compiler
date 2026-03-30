@@ -24,6 +24,47 @@
   ],
   "delimeter": ";",
   "components": {
+    "TjcSerial": {
+      "description": "Компонент для коммуникации с МС-ТЮК",
+      "img": "arduino/serial.svg",
+      "signals": {
+        "isByteReceived": {
+          "alias": "Получен байт",
+          "img": "arduino/byteReceived.svg",
+          "description": "Получен байт со стороны МС-ТЮК",
+          "checkMethod": "isByteReceived"
+        }
+      },
+      "methods": {
+        "sendByte": {
+          "alias": "Отправить байт",
+          "img": "arduino/print.svg",
+          "description": "Отправить байт на МС-ТЮК",
+          "parameters": [
+            {
+              "name": "Байт",
+              "type": "unint8_t",
+              "description": "Байт для отправки"
+            }
+          ]
+        }
+      },
+      "variables": {
+        "value": {
+          "img": "common/value.svg",
+          "description": "Последний полученный байт",
+          "type": "int"
+        }
+      },
+      "constructorParameters": {},
+      "initializationFunction": "setup",
+      "buildFiles": [
+        "TjcSerial.hpp",
+        "AustereSerialMaster.h",
+        "AustereSerialMaster.cpp"
+      ],
+      "importFiles": ["TjcSerial.hpp"]
+    },
     "Button": {
       "description": "Компонент для взаимодействия с физической кнопкой",
       "img": "arduino/button.svg",
@@ -46,7 +87,9 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин, к которому подключена кнопка"
         },
         "buttonMode": {
@@ -75,7 +118,9 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин, к которому подключен сервопривод"
         },
         "min": {
@@ -137,7 +182,9 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин, к которому подключен светодиод"
         }
       },
@@ -378,7 +425,9 @@
       "signals": {},
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин, на который будет подаваться сигнал."
         }
       },
@@ -426,7 +475,9 @@
       },
       "constructorParameters": {
         "pin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин, с которого будут считываться данные."
         }
       },
@@ -518,15 +569,21 @@
       },
       "constructorParameters": {
         "dataPin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин вход/выхода, на который выводятся биты"
         },
         "clockPin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин по которому производится синхронизация "
         },
         "latchPin": {
-          "type": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+          "type": [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+          ],
           "description": "Пин строба "
         },
         "bitOrder": {
