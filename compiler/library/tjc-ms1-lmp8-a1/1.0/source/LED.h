@@ -24,6 +24,16 @@ LEDPin ledPins[8] = {
     {GPIOB, 0, RCC_IOPENR_GPIOBEN}   // 8
 };
 
+unsigned int blinkLightInterval = 0; // сколько светим
+unsigned int blinkOffInterval = 0; // сколько выключены
+unsigned int currentBlinkInterval = 0; // сколько длится текущая фаза
+byte currentBlink = 0; // сколько всего миганий сделали
+byte overallBlinks = 0; // сколько всего миганий нужно сделать
+bool isBlinking = false; // мигаем ли сейчас
+bool isLighting = false; // горим сейчас или нет
+unsigned long startTime; // когда начали текущую фазу
+
+
 public : LED(uint8_t ledPin)
     {
         pwmIndex = ledPin - 1; // Index at PWM array
@@ -87,16 +97,56 @@ public : LED(uint8_t ledPin)
         value ? off() : on();
     }
 
-    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+    void blinking() {
+        if (!isBlinking) return;
+        // Если время интервала еще не прошло, просто обновляем время проверки
+        if (millis() - startTime < currentBlinkInterval) {
+            return;
+        }
+        unsigned int interval = 0;
+        // меняем фазу
+        if (!isLighting) {
+            // Считаем, что цикл закончился, когда переключаемся
+            // с выкл на вкл
+            isLighting = true;
+            currentBlink += 1;
+            currentBlinkInterval = blinkLightInterval;
+        } else {
+            isLighting = false;
+            currentBlinkInterval = blinkOffInterval;
+        }
 
+        if (currentBlink > overallBlinks) {
+            isBlinking = false;
+            return;
+        }
+
+        startTime = millis();
+        toggle();
+    }
+
+    void blink(unsigned int time, byte times = 1) {
         for (byte i = 0; i < times; i++)
         {
             toggle();
-            delay(lightInterval);
+            delay(time / 2);
             toggle();
-            delay(offInterval);
+            delay(time / 2);
         }
     }
+
+    void async_blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+        blinkOffInterval = offInterval;
+        blinkLightInterval = lightInterval;
+        overallBlinks = times;
+        currentBlink = 0;
+        isBlinking = true;
+
+        on();
+        currentBlinkInterval = lightInterval;
+        startTime = millis();
+    }
+
 
 
     void setValue(byte val)

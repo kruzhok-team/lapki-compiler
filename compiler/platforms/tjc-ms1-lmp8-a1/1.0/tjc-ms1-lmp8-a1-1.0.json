@@ -205,6 +205,28 @@
             "description": "Меняет состояние светодиода на противоположное"
           },
           "blink": {
+            "img": "arduino/async_blink.svg",
+            "parameters": [
+              {
+                "name": "lightInterval",
+                "type": "unsigned int",
+                "description": "Интервал свечения (мс)"
+              },
+              {
+                "name": "pauseInterval",
+                "type": "unsigned int",
+                "description": "Интервал паузы (мс)"
+              },
+              {
+                "name": "times",
+                "type": "byte",
+                "description": "Количество миганий"
+              }
+            ],
+            "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания (блокирует на время мигания выполнение других команд, проверку сигналов)"
+          },
+
+          "async_blink": {
             "img": "arduino/blink.svg",
             "parameters": [
               {
@@ -226,6 +248,7 @@
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
         },
+        "loopActions": ["blinking"],
         "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
         "importFiles": ["LED.h"],
         "singletone": false
