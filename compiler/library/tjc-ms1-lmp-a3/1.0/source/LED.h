@@ -98,7 +98,17 @@ public:
         toggle();
     }
 
-    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+    void blink(unsigned int time, byte times = 1) {
+        for (byte i = 0; i < times; i++)
+        {
+            toggle();
+            delay(time / 2);
+            toggle();
+            delay(time / 2);
+        }
+    }
+
+    void async_blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
         blinkOffInterval = offInterval;
         blinkLightInterval = lightInterval;
         overallBlinks = times;
@@ -109,6 +119,8 @@ public:
         currentBlinkInterval = lightInterval;
         startTime = millis();
     }
+
+    
 
 
     void setValue(byte val) {
