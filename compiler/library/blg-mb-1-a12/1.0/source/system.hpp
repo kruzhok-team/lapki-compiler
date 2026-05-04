@@ -1,12 +1,12 @@
 #define SYSCLOCK 144e6
-#define HCLK 72e6
-#define PCLK 72e6
-#define PCLK2 72e6
+#define HCLK 36e6
+#define PCLK 36e6
+#define PCLK2 36e6
 
 #define FLASH_BASE_ADDR 0x0800a000U  //устанавливаем адрес приложения
 
 extern "C" {
-  void manageLoad( void ); 
+  void manageLoad( void );
   void initClock (void) {
     RCC -> CR |= RCC_CR_HSEON; //Set HSI on (will use it as temporary source)
     RCC -> CRRCR |= RCC_CRRCR_HSI48ON;
@@ -25,7 +25,7 @@ extern "C" {
     RCC -> CFGR = ((RCC->CFGR & ~RCC_CFGR_SW_Msk) | RCC_CFGR_SW_PLL); //Switch clock source to PLL
     RCC -> CR &= ~RCC_CR_HSION;
   }
-  
+
   void SystemInit ( void ) {
     SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
     SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2)); // Включение FPU
@@ -38,15 +38,15 @@ extern "C" {
     //initClock();
     SysTick_Config ((uint32_t)(HCLK/1000));
   }
-  
+
   volatile uint32_t waiter = 0;
-  
-  __attribute__((optimize("O0"))) 
+
+  __attribute__((optimize("O0")))
   void delay ( uint32_t wait ) {
     waiter = wait;
     while (waiter);
   }
-  
+
   volatile uint32_t counter = 0;
   volatile uint32_t blinkTimeout = 0;
   volatile uint32_t roarTimer = 0;
@@ -56,14 +56,14 @@ extern "C" {
   volatile uint32_t accelTimerStart = 0;
   volatile uint32_t accelTimerUpdate = 0;
   volatile uint32_t rebootAfter = 0;
-  
+
   __attribute__((optimize("O0")))
   uint32_t millis() {
     return counter;
   }
-  
+
   void reset ( void );
-  
+
   void SysTick_Handler ( void ) {
     switch ( rebootAfter ) {
       case 0: break;
@@ -79,6 +79,6 @@ extern "C" {
     !accelTimerStart ?: accelTimerStart--;
     !accelTimerUpdate ?: accelTimerUpdate--;
     ++counter;
-    //manageLoad(); 
+    //manageLoad();
   }
 }
