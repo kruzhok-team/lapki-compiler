@@ -15,10 +15,10 @@ struct {
   , .me = 3 //UC
   };
 
-uint64_t ref_B0_pr ( void ) { return *(uint64_t*)(0x37d8); }
-uint64_t ref_B0_hw ( void ) { return *(uint64_t*)(0x37e0); }
-uint64_t ref_B0_fw ( void ) { return *(uint64_t*)(0x37e8); }
-uint64_t ref_B0_ch ( void ) { return *(uint64_t*)(0x37f0); }
+uint64_t ref_B0_pr ( void ) { return *(uint64_t*)(0x47d8); }
+uint64_t ref_B0_hw ( void ) { return *(uint64_t*)(0x47e0); }
+uint64_t ref_B0_fw ( void ) { return *(uint64_t*)(0x47e8); }
+uint64_t ref_B0_ch ( void ) { return *(uint64_t*)(0x47f0); }
 
 uint64_t ref_B1_pr ( void ) { return *(uint64_t*)(0x9fe0); }
 uint64_t ref_B1_hw ( void ) { return *(uint64_t*)(0x9fe8); }

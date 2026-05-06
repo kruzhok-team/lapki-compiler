@@ -129,6 +129,45 @@
     "Pattern.hpp"
   ],
   "components": {
+    "BluetoothByte": {
+      "name": "Bluetooth-байт",
+      "description": "Компонент для общения с КиберМишкой по Bluetooth, отправляет и получает байты.",
+      "img": "blg-mb/bt.svg",
+      "signals": {
+        "isByteReceived": {
+          "description": "Было получено сообщение по Bluetooth",
+          "alias": "Получено сообщение",
+          "checkMethod": "isByteReceived",
+          "img": "arduino/byteReceived.svg"
+        }
+      },
+      "methods": {
+        "sendByte": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "Байт",
+              "type": "byte",
+              "description": "Байт, который будет отправлен"
+            }
+          ],
+          "description": "Отправляет байт"
+        }
+      },
+      "variables": {
+        "data": {
+          "alias": "Последний байт",
+          "img": "tjc-ms/lastData.svg",
+          "type": "char[]",
+          "description": "Последний полученный байт"
+        }
+      },
+      "loopActions": [],
+      "initializationFunction": "init",
+      "buildFiles": ["BluetoothByte.cpp", "bt.c"],
+      "importFiles": ["BluetoothByte.cpp"],
+      "singletone": false
+    },
     "EarsBytes": {
       "name": "Уши-байты",
       "description": "КиберМишка настроил уши на принятие сообщений.",
@@ -148,8 +187,8 @@
           "img": "tjc-ms/lastData.svg",
           "type": "uint8_t",
           "description": "Последний полученный байт."
-        }   
-         },
+        }
+      },
       "methods": {},
       "buildFiles": ["Microphone.hpp", "EarsBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
       "importFiles": ["Microphone.hpp", "EarsBytes.cpp"],
@@ -203,7 +242,7 @@
           "img": "tjc-ms/lastData.svg",
           "type": "uint8_t",
           "description": "Последний полученный байт."
-        }   
+        }
          },
       "methods": {},
       "buildFiles": ["NoseBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
@@ -243,7 +282,7 @@
           "description": "Мишка расположен как обычно, ушами вверх, нижними лапами вниз."
         },
         "ACCEL_DIR_LEFT": {
-          "alias": "На левом боку", 
+          "alias": "На левом боку",
           "img": "blg-mb/bearIsOnLeftSide.svg",
           "type": "uint8_t",
           "description": "Мишка на левом боку."
