@@ -12,6 +12,7 @@ readSerial_
 }
 
 uint16_t serialStrData[17];
+uint8_t serialStrData8[16];
 
 uint16_t *
 utfSerial
@@ -27,6 +28,19 @@ utfSerial
   return serialStrData;
 }
 
+uint8_t *
+asciiSerial
+( void )
+{
+  uint64_t s = readSerial_();
+  char tmp[17] = {0};
+  toBase16(tmp,16,s);
+  for (int i=0;i<16;i++) {
+    serialStrData8[i] = tmp[i];
+  }
+  return serialStrData8;
+}
+
 struct {
   bool busy;
   bool errProtocol;
@@ -35,7 +49,7 @@ struct {
   bool debug1;
   bool debug2;
   bool debug3;
-} status = 
+} status =
   { .busy = false
   , .errProtocol = false
   , .failEEPROM = false
