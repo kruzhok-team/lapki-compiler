@@ -13,7 +13,6 @@ public:
     }
 
     void sendByte(uint8_t byte) {
-        // putString("this is a test\r\n");
         putChar(byte);
     }
 

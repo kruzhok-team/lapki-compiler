@@ -203,9 +203,6 @@ uint32_t answerCode = ANSWER_NONE;
 void resetEyes (void);
 
 void USART1_IRQHandler (void) {
-  /* Зажигаем светодиодик
-   * Его потушит SysTick
-   */
   /* Читаем пришедшее значение
    * Других источников у этого прерывания нет
    * В хорошей ситуации, должен прийти лишь один байт
@@ -213,47 +210,22 @@ void USART1_IRQHandler (void) {
   while (USART1->ISR & USART_ISR_RXNE) {
     uint8_t got = USART1 -> RDR;
     answer[0]=got;
-    // if (got == '\n') {
-    // answer[answerCnt] = 0;
-    // pushUserQueue(answerCnt,answer);
-    // answerCnt=0;
-    // }
   }
   gotAnswer = true;
-  //answerCode = checkAnswer();
 
-  //if ( got == '\r' ) gotAnswer = true;
   USART1 -> RQR |= USART_RQR_RXFRQ; //Не нужно, этот флаг сбрасывается сразу при чтении из RDR
 }
 
 bool comp ( uint8_t * compare ) {
-uint32_t i=0;
-while ( compare[i] == answer[i] ) {
-    if ( compare[i] == 0 && answer[i] == 0 ) return true;
-    if ( compare[i] == 0 || answer[i] == 0 ) return false;
-    if ( i == ANSWER_SIZE ) return false;
-    i++;
-}
-return false;
+    uint32_t i=0;
+    while ( compare[i] == answer[i] ) {
+        if ( compare[i] == 0 && answer[i] == 0 ) return true;
+        if ( compare[i] == 0 || answer[i] == 0 ) return false;
+        if ( i == ANSWER_SIZE ) return false;
+        i++;
+    }
+    return false;
 };
-// uint32_t
-// checkAnswer
-// ( void )
-// {
-
-//   if (!gotAnswer) return 0;
-//   if (comp("OK\r\n")) return ANSWER_OK;
-//   if (comp("ERR\r\n")) return ANSWER_ERR;
-//   return ANSWER_NONE;
-
-//   gotAnswer = false;
-//   answerCnt = 0;
-//   if (answer[0] == 'O' && answer[1] == 'K') return 1;
-//   if (answer[0] == 'W' && answer[1] == 'C') return 2;
-//   if (answer[2] == 'E' && answer[3] == 'R') return 3;
-//   if (answer[0] == '1' && answer[1] == '1') return 4;
-//   return 9;
-// }
 
 #define AT_CMD_PAUSE 200
 uint32_t
