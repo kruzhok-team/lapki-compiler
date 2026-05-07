@@ -1,4 +1,5 @@
 #pragma once
+#define LED_COUNT 8
 #include <stdint.h>
 #include "stm32g030xx.h"
 #include "Pins.hpp"
@@ -12,7 +13,7 @@ struct LEDPin
     uint8_t counter;
 };
 
-LEDPin leds[8] = {
+LEDPin leds[LED_COUNT] = {
     {GPIOA, 9, 0, 0},  // 1
     {GPIOC, 6, 0, 0},  // 2
     {GPIOA, 11, 0, 0}, // 3
@@ -25,11 +26,7 @@ LEDPin leds[8] = {
 
 // Контроллер светодиодов, инициализируется вместе с ШИМ в setup();
 // По таймеру вызывается `update`
-class LEDController
-{
-private:
-    static const uint8_t LED_COUNT = 8;
-
+class LEDController {
 public:
     static void init()
     {
@@ -44,13 +41,13 @@ public:
             setPin_PP(leds[i].port, leds[i].pin, OFF);
         }
     }
-    
+
     // Выставить яркость, эта функция и дергается в LED.h
     static void set(uint8_t pin, uint8_t value)
     {
         leds[pin].value = value;
     }
-    
+
     // Выставить значение на пине
     static void setLed(uint8_t idx, uint8_t value)
     {

@@ -53,8 +53,7 @@ using byte = uint8_t;
      - s3.3.4 p56 RM00454
  */
 
-void initClock(void)
-{
+void initClock(void) {
 
     // RCC -> IOPENR |= RCC_IOPENR_GPIOCEN;
     // initPin_AF_PP ( GPIOC, 15, 1 );
@@ -136,8 +135,7 @@ void initClock(void)
      * tek
          Ждём нужного бита в вечном цикле
      */
-    while ((RCC->CR & RCC_CR_PLLRDY) == 0)
-        ;
+    while ((RCC->CR & RCC_CR_PLLRDY) == 0);
 
     /* m1.Reg #clk.2 [A.3]
      * ext
@@ -181,8 +179,7 @@ void initClock(void)
      * tek
          Ожидание нужной маски в вечном цикле
      */
-    while ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) != 0b010)
-        ;
+    while ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) != 0b010);
 
     /* m1.Reg #clk.1 [A.4]
      * ext
@@ -197,12 +194,10 @@ void initClock(void)
 }
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    void SystemInit(void)
-    {
+    void SystemInit(void) {
 
         // init modules
         // GPIO (A, B, C, D, F)
@@ -234,35 +229,29 @@ extern "C"
         RCC->AHBRSTR |= RCC_AHBRSTR_DMA1RST_Msk;
         RCC->AHBRSTR &= ~RCC_AHBRSTR_DMA1RST_Msk;
 
-#define FLASH_BASE_ADDR 0x08003800
-        SCB->VTOR = FLASH_BASE_ADDR; // установка VECT_TAB_OFFSET
-        __enable_irq();              // включаем все прерывания TODO
+        #define FLASH_BASE_ADDR 0x08003800
+        SCB->VTOR = FLASH_BASE_ADDR;  //установка VECT_TAB_OFFSET
+        __enable_irq();  //включаем все прерывания TODO
 
         initClock();
-        SysTick_Config((uint32_t)(HCLK / 4 / 1000)); // Почему оно в 2 раза быстрее? o_O //Работает, константы HPRE,PPRE верны, и славно
-        initPWM();
+        SysTick_Config((uint32_t)(HCLK /4 /1000)); // Почему оно в 2 раза быстрее? o_O //Работает, константы HPRE,PPRE верны, и славно
     }
 
     volatile uint32_t waiter = 0;
     volatile uint32_t counter = 0;
 
-    __attribute__((optimize("O0"))) void delay(uint32_t wait)
-    {
+    __attribute__((optimize("O0")))
+    void delay(uint32_t wait) {
         waiter = wait;
-        while (waiter)
-        {
-        }
+        while (waiter) {}
     }
 
     __attribute__((optimize("O0")))
-    uint32_t
-    millis()
-    {
+    uint32_t millis() {
         return counter;
     }
 
-    void SysTick_Handler(void)
-    {
+    void SysTick_Handler(void) {
         if (waiter > 0)
             --waiter;
         ++counter;
