@@ -1,54 +1,44 @@
-#pragma once
+#include "stm32g030xx.h"
+#include "LEDController.hpp"
+#if __has_include("LED.h")
+#define USE_LED
+#endif
+void initTimer()
+{
+    RCC->APBENR2 |= RCC_APBENR2_TIM14EN;
+    TIM14->ARR = 120;
+    TIM14->PSC = 9; //  The counter clock frequency CK_CNT is equal to f (CK_PSC) / (PSC[15:0] + 1)
+    TIM14->DIER |= TIM_DIER_UIE;
+    TIM14->CR1 |= TIM_CR1_CEN;
+    NVIC_SetPriority(TIM14_IRQn, 90);
+    NVIC_EnableIRQ(TIM14_IRQn);
+    // RCC->IOPENR |= RCC_IOPENR_GPIOCEN;
+    // initPin_PP(GPIOC, 6);
+    // setPin_OD(GPIOC, 6, 100);
+}
 
-#include "PWMInit.hpp"
-#include "Connector.hpp"
+void initPWM(void)
+{
+#ifdef USE_LED
+    LEDController::init();
+#endif
+    initTimer();
+    // Инициализация контроллеров?
+}
+// Без extern C не линкуется
+extern "C"
+{
+    void TIM14_IRQHandler(void)
+    {
 
-bool isInit = false;
-
-// Класс-прокси
-// Фактически является прокси-классом, предоставляющим api для работы с ШИМ
-class PWM {
-
-    public:
-
-        //static bool isInit;
-
-        // ctor
-        PWM() {
-            if (!isInit) {
-                detail::hal::initPWM();
-                isInit = true;
-            }
-        }
-
-        // Generate a PWM signal with a specified duty cycle on a specified pin
-        // duty in range [ 0 .. detail::data::MAX_LEVEL ]
-        // pin depends on the specific board and is already specifically implemented through callback function
-        // pin value use more as an identifier
-        void write(const uint8_t duty, const int8_t pin) const {
-
-            write(duty, pin, detail::data::defaultFrequency);
-        }
-
-        // overload for write(...) with specified frequency argument
-        // frequency [Hz]
-        void write(const uint8_t duty, const int8_t pin, uint32_t frequency) const {
-
-            // check frequency range
-            if (frequency == 0) frequency = 1;
-            else if (frequency > detail::data::clkRate) frequency = detail::data::clkRate;
-
-            // if need to turn on pwm on pin
-            if (duty != 0) {
-                
-                auto actFunc = Connector::Api::getActFunc(pin);
-                // if pin is supported
-                if (actFunc != nullptr) {
-
-                    detail::code::addPWMEntity(pin, duty, actFunc, frequency);
-                }
-            } else {
-                detail::code::removePWMEntity(pin);
-            }
-        }
-};
+        TIM14->CR1 &= ~TIM_CR1_CEN;
+        TIM14->SR &= ~TIM_SR_UIF;
+#ifdef USE_LED
+        // RCC->IOPENR |= RCC_IOPENR_GPIOCEN;
+        // initPin_PP(GPIOC, 6);
+        // setPin_OD(GPIOC, 6, 100);
+        LEDController::update();
+#endif
+        TIM14->CR1 |= TIM_CR1_CEN;
+    }
+}

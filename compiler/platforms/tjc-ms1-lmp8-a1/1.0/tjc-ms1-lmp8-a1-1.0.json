@@ -17,6 +17,10 @@
       {
         "functionName": "detail::hal::initUartWrapper",
         "args": []
+      },
+      {
+        "functionName": "initPWM",
+        "args": []
       }
     ],
     "compilingSettings": [
@@ -52,11 +56,14 @@
     "mainFunction": true,
     "delimeter": ";",
     "staticActionDelimeter": "::",
-    "defaultIncludeFiles": ["stm32g030xx.h", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
+    "defaultIncludeFiles": ["stm32g030xx.h", "PWM.hpp", "system.c", "UART.hpp", "Pins.hpp", "macros.hpp"],
     "defaultBuildFiles": [
+      "const.h",
       "tjc-ms1-b4272ba421624bbe-usercode.ld",
       "system.c",
+      "LEDController.hpp",
       "startup_stm32g030xx.s",
+      "PWM.hpp",
       "stm32g030xx.h",
       "core_cm0plus.h",
       "core_cmInstr.h",
@@ -165,7 +172,7 @@
         "importFiles": ["DataBus.hpp"],
         "singletone": false
       },
-      
+
       "LED": {
         "description": "Компонент для взаимодействия со светодиодом",
         "img": "arduino/led.svg",
@@ -248,8 +255,8 @@
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
         },
+        "buildFiles": ["LED.h"],
         "loopActions": ["blinking"],
-        "buildFiles": ["LED.h", "Connector.hpp", "PWMInit.hpp", "PWM.hpp"],
         "importFiles": ["LED.h"],
         "singletone": false
       },
@@ -305,7 +312,7 @@
           }
         }
       },
-  
+
       "Timer": {
         "description": "Программный таймер",
         "img": "arduino/timer.svg",
@@ -439,7 +446,7 @@
         "importFiles": ["Counter.h"],
         "singletone": false
       },
-        
+
       "CalcInt": {
         "description": "Компонент для целочисленных вычислений. Хранит счётчик (32-разрядное знаковое число), над которым можно совершать арифметические и битовые операции.",
         "img": "math/calcInt.svg",
@@ -605,7 +612,7 @@
         "importFiles": ["CalcInt.hpp"],
         "singletone": false
       },
-      
+
       "CalcFloat": {
         "description": "Компонент для вычислений c плавающей точкой. Хранит счётчик (вещественное число), над которым можно совершать арифметические операции.",
         "img": "math/calcFloat.svg",
@@ -703,7 +710,7 @@
             "description": "Возвести значение счетчика в степень.",
             "parameters": [
               {
-                "name": "power",  
+                "name": "power",
                 "type": "float",
                 "description": "Значение для операции (возводимая степень)."
               }
@@ -847,7 +854,7 @@
         "singletone": false,
         "variables": {}
       },
-      
+
       "UserSignal": {
         "description": "Пользовательский сигнал",
         "img": "arduino/timer.svg",
@@ -870,7 +877,7 @@
         "singletone": false,
         "variables": {}
       },
-  
+
       "Iterator": {
         "description": "Итератор",
         "img": "arduino/timer.svg",

@@ -54,7 +54,7 @@ using byte = uint8_t;
  */
 
 void initClock(void) {
-    
+
     // RCC -> IOPENR |= RCC_IOPENR_GPIOCEN;
     // initPin_AF_PP ( GPIOC, 15, 1 );
     RCC->CR |= RCC_CR_HSEBYP;
@@ -199,7 +199,7 @@ extern "C" {
 
     void SystemInit(void) {
 
-        // init modules        
+        // init modules
         // GPIO (A, B, C, D, F)
         // A
         RCC->IOPRSTR |= RCC_IOPRSTR_GPIOARST_Msk;

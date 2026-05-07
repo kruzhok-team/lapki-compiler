@@ -120,9 +120,6 @@ public:
         startTime = millis();
     }
 
-    
-
-
     void setValue(byte val) {
 
         value = (val <= 127) ? 0 : 1;
