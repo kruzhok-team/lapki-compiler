@@ -1,6 +1,7 @@
 #pragma once
 #include "LEDController.hpp"
 #include "const.h"
+#include <cstdint>
 #define USE_LED
 
 class LED
@@ -114,7 +115,7 @@ public:
         return;
     }
 
-    bool value;
+    uint8_t value;
 
 private:
     LEDPin ledPinInfo;
