@@ -172,7 +172,7 @@
         "importFiles": ["DataBus.hpp"],
         "singletone": false
       },
-      
+
       "LED": {
         "description": "Компонент для взаимодействия со светодиодом",
         "img": "arduino/led.svg",
@@ -212,23 +212,51 @@
             "description": "Меняет состояние светодиода на противоположное"
           },
           "blink": {
+            "img": "arduino/async_blink.svg",
+            "parameters": [
+              {
+                "name": "lightInterval",
+                "type": "unsigned int",
+                "description": "Интервал свечения (мс)"
+              },
+              {
+                "name": "pauseInterval",
+                "type": "unsigned int",
+                "description": "Интервал паузы (мс)"
+              },
+              {
+                "name": "times",
+                "type": "byte",
+                "description": "Количество миганий"
+              }
+            ],
+            "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания (блокирует на время мигания выполнение других команд, проверку сигналов)"
+          },
+
+          "async_blink": {
             "img": "arduino/blink.svg",
             "parameters": [
-            {
-              "name": "interval",
-              "type": "unsigned int",
-              "description": "Длительность каждого мигания (мс)"
-            },
-            {
-              "name": "times",
-              "type": "byte",
-              "description": "Количество миганий"
-            }
+              {
+                "name": "lightInterval",
+                "type": "unsigned int",
+                "description": "Интервал свечения (мс)"
+              },
+              {
+                "name": "pauseInterval",
+                "type": "unsigned int",
+                "description": "Интервал паузы (мс)"
+              },
+              {
+                "name": "times",
+                "type": "byte",
+                "description": "Количество миганий"
+              }
             ],
             "description": "Мигает светодиодом определенное количество раз с определенной длительностью каждого мигания"
           }
         },
         "buildFiles": ["LED.h"],
+        "loopActions": ["blinking"],
         "importFiles": ["LED.h"],
         "singletone": false
       },
@@ -284,7 +312,7 @@
           }
         }
       },
-  
+
       "Timer": {
         "description": "Программный таймер",
         "img": "arduino/timer.svg",
@@ -418,7 +446,7 @@
         "importFiles": ["Counter.h"],
         "singletone": false
       },
-        
+
       "CalcInt": {
         "description": "Компонент для целочисленных вычислений. Хранит счётчик (32-разрядное знаковое число), над которым можно совершать арифметические и битовые операции.",
         "img": "math/calcInt.svg",
@@ -584,7 +612,7 @@
         "importFiles": ["CalcInt.hpp"],
         "singletone": false
       },
-      
+
       "CalcFloat": {
         "description": "Компонент для вычислений c плавающей точкой. Хранит счётчик (вещественное число), над которым можно совершать арифметические операции.",
         "img": "math/calcFloat.svg",
@@ -682,7 +710,7 @@
             "description": "Возвести значение счетчика в степень.",
             "parameters": [
               {
-                "name": "power",  
+                "name": "power",
                 "type": "float",
                 "description": "Значение для операции (возводимая степень)."
               }
@@ -826,7 +854,7 @@
         "singletone": false,
         "variables": {}
       },
-      
+
       "UserSignal": {
         "description": "Пользовательский сигнал",
         "img": "arduino/timer.svg",
@@ -849,7 +877,7 @@
         "singletone": false,
         "variables": {}
       },
-  
+
       "Iterator": {
         "description": "Итератор",
         "img": "arduino/timer.svg",

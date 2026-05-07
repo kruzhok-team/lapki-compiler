@@ -167,163 +167,195 @@
       },
       
       "Matrix": {
-        "description": "Компонент для взаимодействия со светодиодной матрицы.",
-        "img": "arduino/led.svg",
+        "name": "Матрица светодиодов",
+        "description": "Компонент для взаимодействия со светодиодной матрицей.",
+        "img": "tjc-ms/matrix.svg",
         "signals": {},
         "methods": {
           "setPixel": {
-            "img": "arduino/blink.svg",
+            "alias": "Отдельный светодиод",
+            "img": "tjc-ms/cellSet.svg",
             "description": "Включить или выключить светодиод.",
             "parameters": [
               {
-                "name": "row",
+                "name": "Строка",
                 "type": "uint8_t",
                 "description": "Номер строки, на которой расположен светодиод."
               },
               {
-                "name": "col",
+                "name": "Столбец",
                 "type": "uint8_t",
                 "description": "Номер столбца, на котором расположен светодиод."
               },
               {
-                "name": "value",
+                "name": "Действие",
                 "type": ["0", "1"],
-                "description": "Состояние светодиода вкл./выкл."
+                "valueAlias": ["Выключить", "Включить"],
+                "description": "Включение, либо выключение светодиода."
               }
             ]
           },
           "offPixel": {
-            "img": "arduino/blink.svg",
-            "description": "Выключить светодиод.",
+            "alias": "Выключить светодиод",
+            "img": "tjc-ms/cellClear.svg",
+            "description": "Выключение указанного светодиода.",
             "parameters": [
               {
-                "name": "row",
+                "name": "Строка",
                 "type": "uint8_t",
                 "description": "Номер строки, на которой расположен светодиод."
               },
               {
-                "name": "col",
+                "name": "Столбец",
                 "type": "uint8_t",
                 "description": "Номер столбца, на котором расположен светодиод."
               }
             ]
           },
           "setPattern": {
-            "img": "arduino/blink.svg",
-            "description": "Изобразить паттерн на матрице.",
+            "alias": "Рисунок",
+            "img": "tjc-ms/draw.svg",
+            "description": "Изобразить рисунок на матрице.",
             "parameters": [
               {
-                "name": "pattern",
+                "name": "Рисунок",
                 "type": "Matrix5x5",
-                "description": "Паттерн, который будет изображен на матрице."
+                "description": "Рисунок, который будет изображен на матрице.",
+                "range": {
+                  "min": 0,
+                  "max": 100
+                }
               }
             ]
           },
           "fill": {
-            "img": "arduino/blink.svg",
-            "description": "Установить уровень яркости на каждый светодиод.",
+            "alias": "Яркость",
+            "img": "tjc-ms/fill.svg",
+            "description": "Установить уровень яркости на все светодиоды.",
             "parameters": [
               {
-                "name": "value",
+                "name": "Уровень",
                 "type": "uint8_t",
                 "description": "Уровень яркости, который будет установлен на каждый светодиод."
               }
             ]
           },
           "clear": {
-            "img": "arduino/blink.svg",
+            "alias": "Очистить",
+            "img": "tjc-ms/matrixEmpty.svg",
             "description": "Выключить все светодиоды.",
             "parameters": []
-          },
+          }
+        },
+        "variables": {},
+        "constructorParameters": {},
+        "buildFiles": ["Matrix.hpp", "MatrixTypes.hpp"],
+        "importFiles": ["Matrix.hpp"],
+        "singletone": false
+      },
+      "MatrixMask": {
+        "name": "Матрица-маска",
+        "description": "Применяйте разные маски для матрицы светодиодов с использованием операций.",
+        "img": "blg-mb/matrixMask.svg",
+        "signals": {},
+        "methods": {
           "maskPixel": {
+            "alias": "Маска для светодиода",
             "img": "tjc-ms/maskCell.svg",
             "description": "Включить или выключить светодиод, используя битовую маску.",
             "parameters": [
               {
-                "name": "row",
+                "name": "Строка",
                 "type": "uint8_t",
                 "description": "Номер строки, на которой расположен светодиод."
               },
               {
-                "name": "col",
+                "name": "Столбец",
                 "type": "uint8_t",
                 "description": "Номер столбца, на котором расположен светодиод."
               },
               {
-                "name": "value",
+                "name": "Значение",
                 "type": ["0", "1"],
-                "description": "Состояние светодиода вкл./выкл."
+                "description": "Второй параметр применяемой функции. Первый – текущее значение светодиода. Значение 0 соответствует выключенному светодиоду, а 1 – включенному."
               },
               {
-                "name": "op",
+                "name": "Операция",
                 "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
+                "valueAlias": ["AND", "OR", "XOR"],
+                "description": "Битовая функция, используемая для установки значения."
               }
             ]
           },
           "maskRow": {
+            "alias": "Маска для строки",
             "img": "tjc-ms/maskRow.svg",
             "description": "Включить или выключить строку светодиодов, используя битовую маску.",
             "parameters": [
               {
-                "name": "idx",
+                "name": "Строка",
                 "type": "uint8_t",
                 "description": "Номер строки, для которой нужно применить маску."
-              },              
-              {
-                "name": "pattern",
-                "type": "Matrix5",
-                "description": "Паттерн, который будет применен к строке на матрице."
               },
               {
-                "name": "op",
+                "name": "Рисунок",
+                "type": "Matrix5x1",
+                "description": "Рисунок, который будет применен к строке на матрице."
+              },
+              {
+                "name": "Операция",
                 "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
+                "valueAlias": ["AND", "OR", "XOR"],
+                "description": "Битовая функция, используемая для установки значения."
               }
             ]
           },
           "maskCol": {
+            "alias": "Маска для столбца",
             "img": "tjc-ms/maskCol.svg",
             "description": "Включить или выключить столбец светодиодов, используя битовую маску.",
             "parameters": [
               {
-                "name": "idx",
+                "name": "Столбец",
                 "type": "uint8_t",
                 "description": "Номер столбца, для которого нужно применить маску."
-              },              
-              {
-                "name": "pattern",
-                "type": "Matrix5",
-                "description": "Паттерн, который будет применен к столбцу на матрице."
               },
               {
-                "name": "op",
+                "name": "Рисунок",
+                "type": "Matrix1x5",
+                "description": "Рисунок, который будет применен к столбцу на матрице."
+              },
+              {
+                "name": "Операция",
                 "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
+                "valueAlias": ["AND", "OR", "XOR"],
+                "description": "Битовая функция, используемая для установки значения."
               }
             ]
           },
           "maskPattern": {
+            "alias": "Маска для матрицы",
             "img": "tjc-ms/maskGrid.svg",
-            "description": "Изобразить паттерн на матрице, используя битовую маску.",
+            "description": "Изобразить рисунок на матрице, используя битовую маску.",
             "parameters": [
               {
-                "name": "pattern",
+                "name": "Рисунок",
                 "type": "Matrix5x5",
-                "description": "Паттерн, который будет изображен на матрице."
+                "description": "Рисунок, который будет изображен на матрице."
               },
               {
-                "name": "op",
+                "name": "Операция",
                 "type": ["mask_and", "mask_or", "mask_xor"],
-                "description": "Битовая маска для установки значения пикселя."
+                "valueAlias": ["AND", "OR", "XOR"],
+                "description": "Битовая функция, используемая для установки значения."
               }
             ]
           }
         },
         "variables": {},
         "constructorParameters": {},
-        "buildFiles": ["Matrix.hpp"],
-        "importFiles": ["Matrix.hpp"],
+        "buildFiles": ["MatrixMask.hpp", "MatrixTypes.hpp"],
+        "importFiles": ["MatrixMask.hpp"],
         "singletone": false
       },
 

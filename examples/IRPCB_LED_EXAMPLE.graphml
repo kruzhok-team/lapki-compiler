@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key attr.name="name" attr.type="string" for="node" id="dName"></key>
+  <key attr.name="data" attr.type="string" for="node" id="dData"></key>
+  <key attr.name="data" attr.type="string" for="edge" id="dData"></key>
+  <key attr.name="initial" attr.type="string" for="node" id="dInitial"></key>
+  <key for="edge" id="dGeometry"></key>
+  <key for="node" id="dGeometry"></key>
+  <key for="edge" id="dColor"></key>
+  <key for="node" id="dNote"></key>
+  <key for="node" id="dColor"></key>
+  <graph id="Machine1">
+    <data key="dStateMachine"></data>
+    <data key="dGeometry">
+      <rect x="0" y="0" width="450" height="100"></rect>
+    </data>
+    <node id="coreMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ IRPCB
+
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+lapkiVisual/ true
+
+</data>
+    </node>
+    <node id="ztcldydpeocjcqgglcab">
+      <data key="dName">Включается</data>
+      <data key="dData">entry/
+Led1.fadeIn(1500);
+
+</data>
+      <data key="dGeometry">
+        <rect x="-34.76214599609375" y="86.26456069946289" width="450" height="100"></rect>
+      </data>
+    </node>
+    <node id="mgaljvhjtpapgzwigdbg">
+      <data key="dName">Выключается</data>
+      <data key="dData">entry/
+Led1.fadeOut(1500);
+
+</data>
+      <data key="dGeometry">
+        <rect x="-30.5242919921875" y="370.5291213989258" width="450" height="100"></rect>
+      </data>
+    </node>
+    <node id="msufiqwdptomgutgmasb">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="-134.76214599609375" y="70.26456069946289"></point>
+      </data>
+    </node>
+    <node id="cLed1">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ Led1
+
+type/ Led
+
+Контакт/ LED_PWM4
+
+</data>
+      <data key="dLapkiSchemePosition">
+        <point x="30" y="30"></point>
+      </data>
+    </node>
+    <edge id="zsmkbqvfpanquvbdvffz" source="msufiqwdptomgutgmasb" target="ztcldydpeocjcqgglcab"></edge>
+    <edge id="pllxilqdfuslideziwqt" source="ztcldydpeocjcqgglcab" target="mgaljvhjtpapgzwigdbg">
+      <data key="dData">Led1.isReady/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="249.35678100585938" y="237.89684104919434"></point>
+      </data>
+    </edge>
+    <edge id="vjkyzsxwseivvcamhslw" source="mgaljvhjtpapgzwigdbg" target="ztcldydpeocjcqgglcab">
+      <data key="dData">Led1.isReady/
+
+</data>
+      <data key="dLabelGeometry">
+        <point x="-20.643218994140625" y="242.39684104919434"></point>
+      </data>
+    </edge>
+  </graph>
+</graphml>

@@ -3,7 +3,8 @@ import asyncio.subprocess
 import os
 import asyncio
 from asyncio.subprocess import Process
-from typing import Dict, List, Set, TypedDict, AsyncGenerator
+from typing import Dict, List, Set, TypedDict, AsyncGenerator, DefaultDict
+from collections import defaultdict
 
 from aiopath import AsyncPath
 from aiofile import async_open
@@ -14,6 +15,8 @@ from compiler.config import get_config
 from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
 from compiler.os_commands import os_commands
+
+from .config import _LIBRARY_PATH, _ARTIFACTS_DIRECTORY
 
 
 async def get_build_files(
@@ -46,6 +49,9 @@ async def create_project(project_path: AsyncPath,
         if it doesn't exist."""
     await project_path.mkdir(parents=True, exist_ok=True)
     for source_file in source_files:
+        await AsyncPath(source_file.filename).parent.mkdir(
+            parents=True, exist_ok=True
+        )
         if source_file.extension != '':
             file = f'{source_file.filename}.{source_file.extension}'
         else:
@@ -131,10 +137,22 @@ class Compiler:
         command_results: List[CommandResult] = []
         # FIXME: грязный хак, чтобы устранить проблему с пропадающим файлом
         await asyncio.sleep(0.1)
+        # TODO вынести в отдельную функцию
+        library_dir = _LIBRARY_PATH
+        base_dir = base_dir.replace('\\', '/')
+        artifacts_dir = _ARTIFACTS_DIRECTORY.replace('\\', '/')
         for command in commands:
+            # Делаем подмену каталогов в команде
+            flags: List[str] = []
+            for flag in command.flags:
+                flag = flag.replace('{library_dir}', library_dir)
+                flag = flag.replace('{base_dir}', base_dir)
+                flag = flag.replace('{artifacts_dir}', artifacts_dir)
+                flags.append(flag)
+            # Запускаем саму команду
             process: Process = await asyncio.create_subprocess_exec(
                 command.command,
-                *command.flags,
+                *flags,
                 cwd=base_dir,
                 text=False,
                 stdout=asyncio.subprocess.PIPE,
@@ -204,11 +222,26 @@ class Compiler:
         """Include source files from platform's \
             library directory to target directory."""
         path = get_source_path(platform_id, platform_version)
-        path_to_libs = set([os.path.join(path, library)
+        path_to_libs = set([(str(AsyncPath(path).joinpath(library)))
                            for library in libraries])
-
-        await os_commands.copy(path_to_libs, target_directory,
-                               get_config().build_directory)
+        parents: DefaultDict[str, list[str]] = defaultdict(list)
+        for library in libraries:
+            relative_parent_folder = AsyncPath(library).parent
+            parent_folder = AsyncPath(target_directory).joinpath(
+                relative_parent_folder)
+            parents[str(parent_folder)].append(library)
+            if await parent_folder.exists():
+                continue
+            await parent_folder.mkdir(parents=True)
+        for parent, libs in parents.items():
+            path_to_libs = {
+                str(AsyncPath(path).joinpath(library)) for library in libs
+            }
+            await os_commands.copy(
+                path_to_libs,
+                parent,
+                get_config().build_directory
+            )
 
     @staticmethod
     async def include_library_files(

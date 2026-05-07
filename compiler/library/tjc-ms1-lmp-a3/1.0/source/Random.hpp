@@ -1,17 +1,17 @@
 #pragma once
+#include <random>
 
-// https://habr.com/ru/companies/vk/articles/574414/
-// https://ru.wikipedia.org/wiki/Xorshift
 
-struct stateRandom {
-    uint32_t a, b, c, d;
-};
+namespace detail {
+    namespace random {
+        uint32_t seed = millis();
+    }
+}
+
 
 // Компонент для генерации псевдо-случайного числа. Seed задается при помощи отсчета времени
 class Random {
-
-    stateRandom state{1, 2, 3, 4};
-
+    // FIXME: вызывает переполнение на INT_MIN, но это редкий кейс
     uint32_t abs(int32_t x) {
 
         if (x < 0)
@@ -22,40 +22,23 @@ class Random {
 
 public:
 
-    Random() {
-        state.a = millis();
-    }
-
-    void setSeed(const uint32_t seed) {
-        
-        state = stateRandom{seed, 2, 3, 4};
-    }
-
     /* Снимаемые значения: знаковое и беззнаковое */
     uint32_t uValue;
     int32_t value;
 
+    Random() {
+        srand(detail::random::seed);
+    }
+
+    void setSeed(const uint32_t seed) {
+        srand(seed);
+    }
+
     // Устанавливает новое случайное значение в value и uValue
     void doRandom() {
-
-        uint32_t t = state.d;
-        t ^= t << 11;
-        t ^= t >> 8;
-
-        // shift states
-        state.d = state.c;
-        state.c = state.b;
-        state.b = state.a;
-
-        const uint32_t s = state.a;
-        state.a = t ^ s ^ (s >> 19);
-
-        // put to value fields
-        value = state.a;
-        uValue = value;
-        if ((s &1) == 0) {
-            value = - value;
-        }
+        int32_t newVal = rand();
+        value = newVal;
+        uValue = abs(newVal);
 
         return;
     }

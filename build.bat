@@ -32,6 +32,13 @@ for %%X in (%ITEMS%) do (
     )
 )
 
+REM Copy compiler\fullgraphmlparser\templates to dist\fullgraphmlparser\templates
+if exist "compiler\fullgraphmlparser\templates" (
+    echo Copying directory compiler\fullgraphmlparser\templates → %TARGET_DIR%\fullgraphmlparser\templates ...
+    xcopy "compiler\fullgraphmlparser\templates" "%TARGET_DIR%\fullgraphmlparser\templates" /E /I /Y >nul
+) else (
+    echo WARNING: compiler\fullgraphmlparser\templates not found!
+)
 del .\lapki-compiler.spec
 echo All specified items have been copied to %TARGET_DIR%\
 endlocal
