@@ -27,7 +27,6 @@ public:
     }
 
     bool getState() {
-
         return value;
     }
 
@@ -62,12 +61,11 @@ public:
         value = 0;
 
         // Выключаем ШИМ, если включение было через него
-        PWM().write(0, pin -4);
+        PWM().write(0, pin - 4);
     }
 
     void toggle() {
-
-        value ? off() : on();
+        value > 0 ? off() : on();
     }
 
     void blinking() {
@@ -76,7 +74,6 @@ public:
         if (millis() - startTime < currentBlinkInterval) {
             return;
         }
-        unsigned int interval = 0;
         // меняем фазу
         if (!isLighting) {
             // Считаем, что цикл закончился, когда переключаемся
@@ -89,7 +86,7 @@ public:
             currentBlinkInterval = blinkOffInterval;
         }
 
-        if (currentBlink > overallBlinks) {
+        if (currentBlink >= overallBlinks) {
             isBlinking = false;
             return;
         }
@@ -98,13 +95,13 @@ public:
         toggle();
     }
 
-    void blink(unsigned int time, byte times = 1) {
+    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
         for (byte i = 0; i < times; i++)
         {
-            toggle();
-            delay(time / 2);
-            toggle();
-            delay(time / 2);
+            on();
+            delay(lightInterval);
+            off();
+            delay(offInterval);
         }
     }
 
@@ -114,27 +111,18 @@ public:
         overallBlinks = times;
         currentBlink = 0;
         isBlinking = true;
+        isLighting = true;
 
         on();
         currentBlinkInterval = lightInterval;
         startTime = millis();
     }
 
-    void setValue(byte val) {
 
+    void setValue(byte val) {
         value = (val <= 127) ? 0 : 1;
         toggle();
         toggle();
-    }
-
-    void fadeIn(unsigned int time) {
-
-        return;
-    }
-
-    void fadeOut(unsigned int time) {
-
-        return;
     }
 
     bool value;
