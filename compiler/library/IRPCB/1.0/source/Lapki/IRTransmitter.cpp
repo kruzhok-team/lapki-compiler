@@ -1,3 +1,11 @@
+#ifndef IR_TRANSMITTER
+#define IR_TRANSMITTER
+#ifndef IR_TRANSMITTER_MODE
+    #define IR_TRANSMITTER_MODE STANDARD
+#else
+    #error "Нельзя одновременно использовать стандартный передатчик и для КиберМишки!"
+#endif
+
 #include "IRTransmitter.h"
 
 #include "IRpkg.h"
@@ -14,3 +22,4 @@ void IRTransmitter::setPower(int pwr) {
     if(pwr > 255) pwr = 255;
     power = pwr;
 }
+#endif

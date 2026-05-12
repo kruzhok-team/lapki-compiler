@@ -586,6 +586,48 @@
       ],
       "singletone": true
     },
+    "BlgIrTransmitter": {
+      "name": "ИК-передатчик (КиберМишка)",
+      "description": "Компонент для общения с КиберМишкой по ИК-каналу",
+      "img": "blg-mb/ir.svg",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {},
+      "methods": {
+        "transmit": {
+          "alias": "Передать сообщение",
+          "img": "",
+          "parameters": [
+            {
+              "name": "Данные",
+              "type": "IRpkg",
+              "description": "ИК-пакет или 16-битное число; Данные для передачи"
+            }
+          ],
+          "description": "Передаёт пакет данных"
+        },
+        "setPower": {
+          "alias": "Установить мощность",
+          "img": "",
+          "parameters": [
+            {
+              "name": "Мощность",
+              "type": "uint8_t",
+              "description": "целое число, от 0 до 255; мощность, с которой будут отправлять ик-пакеты"
+            }
+          ],
+          "description": "Устанавливает мощность ик-передатчика"
+        }
+      },
+      "loopActions": [],
+      "buildFiles": [
+        "BlgIrTransmitter.h"
+      ],
+      "importFiles": [
+        "BlgIrTransmitter.h"
+      ],
+      "singletone": true
+    },
     "IRTransmitter": {
       "name": "ИК-передатчик",
       "description": "Компонент для взаимодействия с ик-передатчиком",
