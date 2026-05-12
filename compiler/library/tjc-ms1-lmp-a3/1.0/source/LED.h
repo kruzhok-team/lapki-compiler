@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PWM.hpp"
+#define MAX_BRIGHTNESS 100
 
 class LED {
 
@@ -26,17 +27,15 @@ public:
         off();
     }
 
-    bool getState() {
-        return value;
-    }
-
-    void on(const uint8_t brightness = 100) {
-
+    void on(const uint8_t brightness = MAX_BRIGHTNESS, const bool offBlinking = true) {
+        if (offBlinking) {
+            isBlinking = false;
+        }
         // change state
         value = 1;
 
         // Если на всю яркость - все просто
-        if (brightness == 100) {
+        if (brightness == MAX_BRIGHTNESS) {
             GPIOA->BSRR |= ( GPIO_BSRR_BS0 << pin );
             return;
         }
@@ -55,8 +54,10 @@ public:
         PWM().write(val, pin -4);
     }
 
-    void off() {
-
+    void off(const bool offBlinking = true) {
+        if (offBlinking) {
+            isBlinking = false;
+        }
         GPIOA->BSRR |= ( GPIO_BSRR_BR0 << pin );
         value = 0;
 
@@ -64,8 +65,8 @@ public:
         PWM().write(0, pin - 4);
     }
 
-    void toggle() {
-        value > 0 ? off() : on();
+    void toggle(const bool offBlinking = true) {
+        value > 0 ? off(offBlinking) : on(MAX_BRIGHTNESS, offBlinking);
     }
 
     void blinking() {
@@ -92,7 +93,7 @@ public:
         }
 
         startTime = millis();
-        toggle();
+        toggle(false);
     }
 
     void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
@@ -113,15 +114,9 @@ public:
         isBlinking = true;
         isLighting = true;
 
-        on();
+        on(MAX_BRIGHTNESS, false);
         currentBlinkInterval = lightInterval;
         startTime = millis();
-    }
-
-    void setValue(byte val) {
-        value = (val <= 127) ? 0 : 1;
-        toggle();
-        toggle();
     }
 
     bool value;

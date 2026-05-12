@@ -23,26 +23,27 @@ public:
             value = 0;             // Брать из LEDController?
     }
 
-    bool getState()
+    void on(const uint8_t brightness = MAX_LED_BRIGHTNESS, const bool offBlinking = true)
     {
-        return value;
-    }
-
-    void on(const uint8_t brightness = MAX_LED_BRIGHTNESS)
-    {
+        if (offBlinking) {
+            isBlinking = false;
+        }
         value = brightness;
         LEDController::set(pwmIndex, value);
     }
 
-    void off()
+    void off(const bool offBlinking = true)
     {
+        if (offBlinking) {
+            isBlinking = false;
+        }
         value = 0;
         LEDController::set(pwmIndex, 0);
     }
 
-    void toggle()
+    void toggle(const bool offBlinking = true)
     {
-        value > 0 ? off() : on();
+        value > 0 ? off(offBlinking) : on(MAX_LED_BRIGHTNESS, offBlinking);
     }
 
     void blinking() {
@@ -69,7 +70,7 @@ public:
         }
 
         startTime = millis();
-        toggle();
+        toggle(false);
     }
 
     void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
@@ -90,26 +91,9 @@ public:
         isBlinking = true;
         isLighting = true;
 
-        on();
+        on(MAX_LED_BRIGHTNESS, false);
         currentBlinkInterval = lightInterval;
         startTime = millis();
-    }
-
-    void setValue(byte val)
-    {
-        value = (val <= 127) ? 0 : 1;
-        toggle();
-        toggle();
-    }
-
-    void fadeIn(unsigned int time)
-    {
-        return;
-    }
-
-    void fadeOut(unsigned int time)
-    {
-        return;
     }
 
     uint8_t value;
