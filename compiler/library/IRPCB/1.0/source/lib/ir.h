@@ -29,7 +29,6 @@ inline const uint32_t InterBitTimeot_us = 900UL; // For reception: after rising 
 namespace IRLed {
     void Init();
     void SetCarrierFreq(uint32_t carrier_freq_Hz);
-    void TransmitCyberBearWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI);
     void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI);
     void ResetI();
 } // namespace
