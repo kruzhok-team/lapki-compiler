@@ -9,11 +9,6 @@
 #include "gd_uart.h"
 #include "Settings.h"
 
-uint8_t STANDARD_MODE = 0;
-uint8_t CYBERBEAR_MODE = 1;
-
-uint8_t mode = STANDARD_MODE;
-
 #if IR_TX_ENABLED // ========================== IR TX ==========================
 
 
@@ -171,7 +166,7 @@ namespace IRLed {
     // Эта функция нам нужна, чтобы не менять интерфейс
     // отправки данных в функциях инициализации и при отправке команд 
     void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI) {
-        if (mode == CYBERBEAR_MODE) {
+        if (settings.tx_mode == CYBERBEAR_MODE) {
             TransmitCyberBearWord(data, bit_cnt, power, callbackI);
         } else {
             TransmitStandardWord(data, bit_cnt, power, callbackI);

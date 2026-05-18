@@ -5,11 +5,8 @@
 #include "IRpkg.h"
 #include "ir.h"
 
-// extern uint8_t mode;
-// extern uint8_t CYBERBEAR_MODE;
-
 void BlgIrTransmitter::init() {
-    // mode = CYBERBEAR_MODE;
+    settings.tx_mode = CYBERBEAR_MODE;
 }
 
 void BlgIrTransmitter::transmit(IRpkg pkg) {

@@ -6,11 +6,8 @@
 #include "IRpkg.h"
 #include "ir.h"
 
-// extern uint8_t mode;
-// extern uint8_t STANDARD_MODE;
-
 void IRTransmitter::init() {
-    // mode = STANDARD_MODE;
+    settings.tx_mode = STANDARD_MODE;
 }
 
 void IRTransmitter::transmit(IRpkg pkg) {
