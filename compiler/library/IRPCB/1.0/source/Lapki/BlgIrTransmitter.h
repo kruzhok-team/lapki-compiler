@@ -1,14 +1,16 @@
 #ifndef BEAR_IR_TRANSMITTER
 #define BEAR_IR_TRANSMITTER
 #ifndef IR_TRANSMITTER_MODE
-    #define IR_TRANSMITTER_MODE BEAR
+    #define IR_TRANSMITTER_MODE
 #else
-    #error "Нельзя одновременно использовать стандартный передатчик и для КиберМишки!"
+    #error "It is not possible to use the CyberBear transmitter and the standard transmitter together!"
 #endif
+
 
 #include "IRpkg.h"
 #include "Settings.h"
 #include "ir.h"
+#include <cstdint>
 
 
 class BlgIrTransmitter {
@@ -20,6 +22,8 @@ public:
 
     // TODO magical numbers: redo with settings v_min v_max
     static void setPower(int pwr);
+
+    static void init();
 };
 
 #endif

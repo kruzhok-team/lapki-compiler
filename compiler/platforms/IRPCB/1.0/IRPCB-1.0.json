@@ -619,6 +619,7 @@
           "description": "Устанавливает мощность ик-передатчика"
         }
       },
+      "initializationFunction": "init",
       "loopActions": [],
       "buildFiles": [
         "BlgIrTransmitter.h"
@@ -661,6 +662,7 @@
           "description": "Устанавливает мощность ик-передатчика"
         }
       },
+      "initializationFunction": "init",
       "loopActions": [],
       "buildFiles": [
         "IRTransmitter.h"

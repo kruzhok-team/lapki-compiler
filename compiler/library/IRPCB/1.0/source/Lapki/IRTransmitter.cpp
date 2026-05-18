@@ -1,15 +1,17 @@
 #ifndef IR_TRANSMITTER
 #define IR_TRANSMITTER
-#ifndef IR_TRANSMITTER_MODE
-    #define IR_TRANSMITTER_MODE STANDARD
-#else
-    #error "Нельзя одновременно использовать стандартный передатчик и для КиберМишки!"
-#endif
 
 #include "IRTransmitter.h"
 
 #include "IRpkg.h"
 #include "ir.h"
+
+// extern uint8_t mode;
+// extern uint8_t STANDARD_MODE;
+
+void IRTransmitter::init() {
+    // mode = STANDARD_MODE;
+}
 
 void IRTransmitter::transmit(IRpkg pkg) {
     lastIrSend = Sys::GetSysTime();
