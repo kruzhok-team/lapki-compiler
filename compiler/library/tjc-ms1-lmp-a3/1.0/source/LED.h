@@ -27,46 +27,19 @@ public:
         off();
     }
 
-    void on(const uint8_t brightness = MAX_BRIGHTNESS, const bool offBlinking = true) {
-        if (offBlinking) {
-            isBlinking = false;
-        }
-        // change state
-        value = 1;
-
-        // Если на всю яркость - все просто
-        if (brightness == MAX_BRIGHTNESS) {
-            GPIOA->BSRR |= ( GPIO_BSRR_BS0 << pin );
-            return;
-        }
-
-        // Если яркость == 0, то выключаем светодиод (меняем состояние класса)
-        if (brightness == 0) {
-            off();
-            return;
-        }
-
-        // Иначе подключаем ШИМ
-
-        // mapping [0.255] -> [0..100]
-        const uint8_t val = brightness; //const uint8_t val = map(brightness, 0, 255, 0, 100);
-
-        PWM().write(val, pin -4);
+    void on(const uint8_t brightness = MAX_BRIGHTNESS) {
+        isBlinking = false;
+        _on(brightness);
     }
 
-    void off(const bool offBlinking = true) {
-        if (offBlinking) {
-            isBlinking = false;
-        }
-        GPIOA->BSRR |= ( GPIO_BSRR_BR0 << pin );
-        value = 0;
-
-        // Выключаем ШИМ, если включение было через него
-        PWM().write(0, pin - 4);
+    void off() {
+        isBlinking = false;
+        _off();
     }
 
-    void toggle(const bool offBlinking = true) {
-        value > 0 ? off(offBlinking) : on(MAX_BRIGHTNESS, offBlinking);
+    void toggle() {
+        isBlinking = false;
+        _toggle();
     }
 
     void blinking() {
@@ -93,7 +66,7 @@ public:
         }
 
         startTime = millis();
-        toggle(false);
+        _toggle();
     }
 
     void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
@@ -114,7 +87,7 @@ public:
         isBlinking = true;
         isLighting = true;
 
-        on(MAX_BRIGHTNESS, false);
+        _on(MAX_BRIGHTNESS);
         currentBlinkInterval = lightInterval;
         startTime = millis();
     }
@@ -122,6 +95,45 @@ public:
     bool value;
 
 private:
+    void _on(const uint8_t brightness = MAX_BRIGHTNESS)
+    {
+        // change state
+        value = 1;
+
+        // Если на всю яркость - все просто
+        if (brightness == MAX_BRIGHTNESS) {
+            GPIOA->BSRR |= ( GPIO_BSRR_BS0 << pin );
+            return;
+        }
+
+        // Если яркость == 0, то выключаем светодиод (меняем состояние класса)
+        if (brightness == 0) {
+            off();
+            return;
+        }
+
+        // Иначе подключаем ШИМ
+
+        // mapping [0.255] -> [0..100]
+        const uint8_t val = brightness; //const uint8_t val = map(brightness, 0, 255, 0, 100);
+
+        PWM().write(val, pin -4);
+    }
+
+    void _off()
+    {
+        GPIOA->BSRR |= ( GPIO_BSRR_BR0 << pin );
+        value = 0;
+
+        // Выключаем ШИМ, если включение было через него
+        PWM().write(0, pin - 4);
+    }
+
+    void _toggle()
+    {
+        value > 0 ? _off() : _on(MAX_BRIGHTNESS);
+    }
+
     unsigned int blinkLightInterval = 0; // сколько светим
     unsigned int blinkOffInterval = 0; // сколько выключены
     unsigned int currentBlinkInterval = 0; // сколько длится текущая фаза
