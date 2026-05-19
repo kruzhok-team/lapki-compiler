@@ -37,7 +37,8 @@ public:
 
     void toggle()
     {
-        value > 0 ? off() : on(MAX_LED_BRIGHTNESS);
+        isBlinking = false;
+        _toggle();
     }
 
     void blinking() {
