@@ -1,7 +1,14 @@
+#ifndef IR_TRANSMITTER
+#define IR_TRANSMITTER
+
 #include "IRTransmitter.h"
 
 #include "IRpkg.h"
 #include "ir.h"
+
+void IRTransmitter::init() {
+    settings.tx_mode = STANDARD_MODE;
+}
 
 void IRTransmitter::transmit(IRpkg pkg) {
     lastIrSend = Sys::GetSysTime();
@@ -14,3 +21,4 @@ void IRTransmitter::setPower(int pwr) {
     if(pwr > 255) pwr = 255;
     power = pwr;
 }
+#endif
