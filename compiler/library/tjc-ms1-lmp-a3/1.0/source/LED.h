@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PWM.hpp"
+#define MAX_BRIGHTNESS 100
 
 class LED {
 
@@ -26,18 +27,81 @@ public:
         off();
     }
 
-    bool getState() {
-
-        return value;
+    void on(const uint8_t brightness = MAX_BRIGHTNESS) {
+        isBlinking = false;
+        _on(brightness);
     }
 
-    void on(const uint8_t brightness = 100) {
+    void off() {
+        isBlinking = false;
+        _off();
+    }
 
+    void toggle() {
+        isBlinking = false;
+        _toggle();
+    }
+
+    void blinking() {
+        if (!isBlinking) return;
+        // Если время интервала еще не прошло, просто обновляем время проверки
+        if (millis() - startTime < currentBlinkInterval) {
+            return;
+        }
+        // меняем фазу
+        if (!isLighting) {
+            // Считаем, что цикл закончился, когда переключаемся
+            // с выкл на вкл
+            isLighting = true;
+            currentBlink += 1;
+            currentBlinkInterval = blinkLightInterval;
+        } else {
+            isLighting = false;
+            currentBlinkInterval = blinkOffInterval;
+        }
+
+        if (currentBlink >= overallBlinks) {
+            isBlinking = false;
+            return;
+        }
+
+        startTime = millis();
+        _toggle();
+    }
+
+    void blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+        for (byte i = 0; i < times; i++)
+        {
+            on();
+            delay(lightInterval);
+            off();
+            delay(offInterval);
+        }
+    }
+
+    void async_blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
+        blinkOffInterval = offInterval;
+        blinkLightInterval = lightInterval;
+        overallBlinks = times;
+        currentBlink = 0;
+        isBlinking = true;
+        isLighting = true;
+
+        _on(MAX_BRIGHTNESS);
+        currentBlinkInterval = lightInterval;
+        startTime = millis();
+    }
+
+    bool value;
+
+private:
+    void _on(const uint8_t brightness = MAX_BRIGHTNESS)
+    {
         // change state
         value = 1;
 
         // Если на всю яркость - все просто
-        if (brightness == 100) {
+        if (brightness == MAX_BRIGHTNESS) {
             GPIOA->BSRR |= ( GPIO_BSRR_BS0 << pin );
             return;
         }
@@ -56,90 +120,20 @@ public:
         PWM().write(val, pin -4);
     }
 
-    void off() {
-
+    void _off()
+    {
         GPIOA->BSRR |= ( GPIO_BSRR_BR0 << pin );
         value = 0;
 
         // Выключаем ШИМ, если включение было через него
-        PWM().write(0, pin -4);
+        PWM().write(0, pin - 4);
     }
 
-    void toggle() {
-
-        value ? off() : on();
+    void _toggle()
+    {
+        value > 0 ? _off() : _on(MAX_BRIGHTNESS);
     }
 
-    void blinking() {
-        if (!isBlinking) return;
-        // Если время интервала еще не прошло, просто обновляем время проверки
-        if (millis() - startTime < currentBlinkInterval) {
-            return;
-        }
-        unsigned int interval = 0;
-        // меняем фазу
-        if (!isLighting) {
-            // Считаем, что цикл закончился, когда переключаемся
-            // с выкл на вкл
-            isLighting = true;
-            currentBlink += 1;
-            currentBlinkInterval = blinkLightInterval;
-        } else {
-            isLighting = false;
-            currentBlinkInterval = blinkOffInterval;
-        }
-
-        if (currentBlink > overallBlinks) {
-            isBlinking = false;
-            return;
-        }
-
-        startTime = millis();
-        toggle();
-    }
-
-    void blink(unsigned int time, byte times = 1) {
-        for (byte i = 0; i < times; i++)
-        {
-            toggle();
-            delay(time / 2);
-            toggle();
-            delay(time / 2);
-        }
-    }
-
-    void async_blink(unsigned int lightInterval, unsigned int offInterval, byte times = 1) {
-        blinkOffInterval = offInterval;
-        blinkLightInterval = lightInterval;
-        overallBlinks = times;
-        currentBlink = 0;
-        isBlinking = true;
-
-        on();
-        currentBlinkInterval = lightInterval;
-        startTime = millis();
-    }
-
-    void setValue(byte val) {
-
-        value = (val <= 127) ? 0 : 1;
-        toggle();
-        toggle();
-    }
-
-    void fadeIn(unsigned int time) {
-
-        return;
-    }
-
-    void fadeOut(unsigned int time) {
-
-        return;
-    }
-
-    bool value;
-
-private:
     unsigned int blinkLightInterval = 0; // сколько светим
     unsigned int blinkOffInterval = 0; // сколько выключены
     unsigned int currentBlinkInterval = 0; // сколько длится текущая фаза
