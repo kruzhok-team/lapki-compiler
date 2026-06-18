@@ -1333,6 +1333,97 @@
       "buildFiles": ["LCD_I2C.cpp", "Lcd.cpp", "LCD_I2C.h", "Lcd.h"],
       "importFiles": ["LCD_I2C.h", "Lcd.h"],
       "singletone": false
+    },
+    "KeypadWrapper" : {
+      "name": "Символьно-цифровая клавиатура",
+      "description": "Компонент для работы с матрицей кнопок(не мультинажатие)",
+      "img": "",
+      "signals": {
+        "keyPressed": {
+          "alias": "Кнопка нажата",
+          "img": "",
+          "description": "Срабатывает при отпускании кнопки",
+          "checkMethod": "keyPressed"
+        },
+        "keyHeld": {
+          "alias": "Кнопка удержана",
+          "img": "",
+          "description": "Срабатывает, если кнопка зажата 500мс",
+          "checkMethod": "keyHeld"
+        },
+        "digit_1_9": {
+          "alias": "Цифра 1-9",
+          "img": "",
+          "description": "Нажата цифра от 1 до 9 включительно",
+          "checkMethod": "digit_1_9"
+        },
+        "letter_ABCD": {
+          "alias": "Буква ABCD",
+          "img": "",
+          "description": "Нажата одна из буква: ABCD",
+          "checkMethod": "letter_ABCD"
+        },
+        "digit_0": {
+          "alias": "Цифра 0",
+          "img": "",
+          "description": "Нажата цифра 0",
+          "checkMethod": "digit_0"
+        },
+        "digit_0_held": {
+          "alias": "Цифра 0 удержана",
+          "img": "",
+          "description": "Удержана цифра 0",
+          "checkMethod": "digit_0_held"
+        },
+        "symbol_star_hashtag": {
+          "alias": "Символ Звёдочка, Решётка",
+          "img": "",
+          "description": "Нажата звёздочка или решётка",
+          "checkMethod": "symbol_star_hashtag"
+        }
+      },
+      "constructorParameters": {
+        "address": {
+          "name": "Пины",
+          "type": "uint8_t[8]",
+          "description": "Пины куда подключена клавиатура от 1 до 8, например {2, 3, 4, 5, 6, 8, 9, 10}"
+        }
+      },
+      "methods": {
+        "change_key": {
+          "alias": "Изменить символ кнопки",
+          "img": "",
+          "description": "Изменят символ, получаемый при нажатии кнопки",
+          "parameters": [
+            {
+              "name": "Строка",
+              "description": "Индекс строки(от 0)",
+              "type": "int"
+            },
+            {
+              "name": "Столбец",
+              "description": "Индекс столбца(от 0)",
+              "type": "int"
+            },
+            {
+              "name": "Новый символ",
+              "description": "",
+              "type": "char"
+            }
+          ]
+        }
+      },
+      "variables": {
+        "lastSymbol": {
+          "alias": "Символ",
+          "img": "common/value.svg",
+          "type": "char",
+          "description": "Символ нажатой кнопки."
+        }
+      },
+      "buildFiles": ["Key.cpp", "Keypad.cpp", "Key.h", "Keypad.h", "KeypadWrapper.h"],
+      "importFiles": ["Key.h", "Keypad.h", "KeypadWrapper.h"],
+      "loopActions": ["updateSymbol"]
     }
   }
 }
