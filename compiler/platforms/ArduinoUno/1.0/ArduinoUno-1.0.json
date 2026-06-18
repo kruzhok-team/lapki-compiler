@@ -1333,6 +1333,116 @@
       "buildFiles": ["LCD_I2C.cpp", "Lcd.cpp", "LCD_I2C.h", "Lcd.h"],
       "importFiles": ["LCD_I2C.h", "Lcd.h"],
       "singletone": false
+    },
+    "CharBuffer": {
+      "name": "Строка32",
+      "description": "Массив символов на 32 элемента.",
+      "img": "",
+      "signals": {
+        "isBufferOverflow": {
+          "alias": "Переполнение",
+          "img": "",
+          "description": "Возникло переполнение буффера.",
+          "checkMethod": "isBufferOverflow"
+        },
+        "isError": {
+          "alias": "Ошибка",
+          "img": "",
+          "description": "Ошибка операции с буфером.",
+          "checkMethod": "isError"
+        }
+      },
+      "methods": {
+        "appendChar": {
+          "alias": "Добавить символ",
+          "img": "",
+          "description": "Добавляет символ в конец строки.",
+          "parameters": [
+            {
+              "name": "Символ",
+              "type": "char",
+              "description": "Символ, который нужно добавить в конец строки."
+            }
+          ]
+        },
+        "appendBuffer": {
+          "alias": "Добавить строку",
+          "img": "",
+          "description": "Добавляет строку в конец текущей.",
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "char[]",
+              "description": "Строка, которую нужно дописать в конец текущей."
+            }
+          ]
+        },
+        "popChars": {
+          "alias": "Удалить символы",
+          "img": "",
+          "description": "Удаляет N символов из конца строки.",
+          "parameters": [
+            {
+              "name": "N",
+              "type": "uint8_t",
+              "description": "Сколько символов нужно удалить из конца строки."
+            }
+          ]
+        },
+        "toNumber": {
+          "alias": "В число",
+          "img": "",
+          "description": "Преобразует строку в число, если допустимо.",
+          "parameters": [
+            {
+              "name": "Переменная",
+              "type": "double&",
+              "description": "Переменная, в которую нужно записать полученное число."
+            }
+          ]
+        },
+        "fromNumber": {
+          "alias": "Из числа",
+          "img": "",
+          "description": "Преобразует число в строку и перезаписывает ей текущую.",
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "double",
+              "description": "Число, которое требуется преобразовать в строку."
+            }
+          ]
+        },
+        "reset": {
+          "alias": "Сброс",
+          "img": "",
+          "description": "Очистить строку и сбросить флаги ошибок.",
+          "parameters": []
+        }
+      },
+      "variables": {
+        "buf": {
+          "alias": "Содержание",
+          "img": "common/value.svg",
+          "type": "char[]",
+          "description": "Содержание строки"
+        },
+        "isBufferOverflowF": {
+          "alias": "Переполнение?",
+          "img": "",
+          "type": "bool",
+          "description": "Флаг переполнения строки."
+        },
+        "isErrorF": {
+          "img": "Ошибка?",
+          "type": "bool",
+          "description": "Флаг ошибки операции строки; Переполнение тоже считается ошибкой."
+        }
+      },
+      "constructorParameters": {},
+      "buildFiles": ["CharBuffer.h"],
+      "importFiles": ["CharBuffer.h"],
+      "singletone": false
     }
   }
 }
