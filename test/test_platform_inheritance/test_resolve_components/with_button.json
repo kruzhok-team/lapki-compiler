@@ -1,0 +1,59 @@
+{
+  "name": "Пустая платформа",
+  "id": "with_button",
+  "nameTag": "empty",
+  "description": "Пустая платформа без компонентов.",
+  "icon": "путь/до/иконки",
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "author": "Maxim Klypin",
+  "visual": false,
+  "compile": false,
+  "staticComponents": true,
+  "mainFileExtension": "graphml",
+  "staticActionDelimeter": ".",
+  "delimeter": "",
+  "defaultIncludeFiles": ["Button.c", "Serial.c"],
+  "defaultBuildFiles": ["Button.c"],
+  "defaultSetupFunctions": [{
+    "functionName": "initButtons",
+    "args": []
+  }],
+  "components": {
+    "Button": {
+            "description": "Компонент для взаимодействия с физической кнопкой",
+            "img": "arduino/button.svg",
+            "signals": {
+            "isPressed": {
+                "img": "arduino/isPressed.svg",
+                "description": "Создает сигнал, если кнопка была нажата",
+                "checkMethod": "isPressed"
+            },
+            "clicked": {
+                "img": "arduino/clicked.svg",
+                "description": "Создает сигнал, если кнопка была кликнута",
+                "checkMethod": "clicked"
+            }
+            },
+            "constructorParameters": {
+            "pin": {
+                "type": ["1", "2", "3", "4"],
+                "description": "Номер кнопки"
+            }
+            },
+            "variables": {
+            "value": {
+                "img": "common/value.svg",
+                "type": "int",
+                "description": "Текущее значение на пине"
+            }
+            },
+            "buildFiles": ["Button.c"],
+            "importFiles": ["Button.c"],
+            "methods": {},
+            "loopActions": ["scan"],
+            "singletone": false
+    }
+  }
+}

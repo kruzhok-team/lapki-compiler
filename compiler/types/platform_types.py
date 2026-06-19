@@ -81,6 +81,12 @@ class SetupFunction:
     args: List[str]
 
 
+@dataclass
+class Inheritance:
+    version: str
+    platform_id: str = Field(alias='id')
+
+
 class Platform(BaseModel):
     id: str = ''
     name: str
@@ -97,6 +103,7 @@ class Platform(BaseModel):
     language: str = ''
     delimeter: str
     visual: bool
+    inherits: List[Inheritance] = Field(default_factory=list)
     default_include_files: List[str] = Field(
         default_factory=list, alias='defaultIncludeFiles')
     default_build_files: Set[str] = Field(
@@ -124,3 +131,4 @@ class PlatformMeta:
     versions: Set[str] = Field(default_factory=set)
     name: str = ''
     author: str = ''
+    dependencies: List[Platform] = Field(default_factory=list)
