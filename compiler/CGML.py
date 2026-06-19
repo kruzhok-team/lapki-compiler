@@ -1,7 +1,7 @@
 """Module for parse CyberiadaMl schemes and generate code from ."""
 import re
 import random
-from typing import Dict, List, Set, Any
+from typing import Dict, List, Set, Any, Optional
 from copy import deepcopy
 from string import Template
 
@@ -62,6 +62,15 @@ if($condition) {
 )
 STATE_MACHINE_ID = str
 ERROR = str
+
+# Маппинг значения поля art: (вывод CyberBearLoader identify) → имя C #define.
+_REVISION_TO_DEFINE: Dict[str, str] = {
+    'blg-mb-1-a12': 'BLG_MB_REVISION_A12',
+    'blg-mb-1-b2':  'BLG_MB_REVISION_B2',
+}
+
+# Команды компилятора, принимающие флаги -D
+_COMPILERS_ACCEPTING_DEFINES = {'gcc', 'g++', 'arm-none-eabi-g++', 'arduino-cli'}
 
 
 class _InnerCGMLException(Exception):
@@ -767,8 +776,9 @@ def check_sm_id(sm_id: str) -> bool:
     return regex is not None
 
 
-async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
-                                   Dict[StateMachineId, StateMachine]]:
+async def parse(xml: str,
+                board_revision: str = '') -> tuple[Dict[StateMachineId, ERROR],
+                                                   Dict[StateMachineId, StateMachine]]:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachines for CppWriter class.
@@ -889,12 +899,20 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
             if platform.main_function:
                 notes.append(__generate_main_function())
 
+            platform_compiler_settings = deepcopy(platform.compiling_settings)
+            if platform_compiler_settings and board_revision:
+                revision_define = _REVISION_TO_DEFINE.get(board_revision)
+                if revision_define:
+                    for cs in platform_compiler_settings:
+                        if cs.command in _COMPILERS_ACCEPTING_DEFINES:
+                            cs.flags.append(f'-D{revision_define}')
+
             compiling_settings = SMCompilingSettings(
                 included_libraries,
                 build_files,
                 platform.id,
                 platform_version,
-                platform.compiling_settings
+                platform_compiler_settings
             )
             state_machines[sm_id] = StateMachine(
                 start_node=start_node,
