@@ -152,7 +152,7 @@ async def create_sm_directory(base_directory: str,
 async def compile_xml(
     xml: str,
     base_dir_path: str,
-    refs: Dict[str, str] = {}) -> tuple[Dict[str, str],
+    refs: Optional[Dict[str, str]] = None) -> tuple[Dict[str, str],
                                         Dict[str,
                                              tuple[
                                                  List[CommandResult],
@@ -166,6 +166,8 @@ async def compile_xml(
 
     Doesn't send anything.
     """
+    if refs is None:
+        refs = {}
     errors, state_machines = await parse(xml, refs)
     compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
     for sm_id, sm in state_machines.items():

@@ -769,8 +769,8 @@ def check_sm_id(sm_id: str) -> bool:
 
 
 async def parse(xml: str,
-                refs: Dict[str, Any] = {}) -> tuple[Dict[StateMachineId, ERROR],
-                                                    Dict[StateMachineId, StateMachine]]:
+                refs: Optional[Dict[str, Any]] = None) -> tuple[Dict[StateMachineId, ERROR],
+                                                                 Dict[StateMachineId, StateMachine]]:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachines for CppWriter class.
@@ -780,6 +780,8 @@ async def parse(xml: str,
     - initialization components in setup function;
     - signal checks in loop function;
     """
+    if refs is None:
+        refs = {}
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
