@@ -4,6 +4,7 @@ import random
 from typing import Dict, List, Set, Any, Optional
 from copy import deepcopy
 from string import Template
+from compiler.types.ref import REF_HANDLERS
 
 from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
@@ -62,15 +63,6 @@ if($condition) {
 )
 STATE_MACHINE_ID = str
 ERROR = str
-
-# Маппинг значения поля art: (вывод CyberBearLoader identify) → имя C #define.
-_REVISION_TO_DEFINE: Dict[str, str] = {
-    'blg-mb-1-a12': 'BLG_MB_REVISION_A12',
-    'blg-mb-1-b2':  'BLG_MB_REVISION_B2',
-}
-
-# Команды компилятора, принимающие флаги -D
-_COMPILERS_ACCEPTING_DEFINES = {'gcc', 'g++', 'arm-none-eabi-g++', 'arduino-cli'}
 
 
 class _InnerCGMLException(Exception):
@@ -777,8 +769,8 @@ def check_sm_id(sm_id: str) -> bool:
 
 
 async def parse(xml: str,
-                board_revision: str = '') -> tuple[Dict[StateMachineId, ERROR],
-                                                   Dict[StateMachineId, StateMachine]]:
+                refs: Dict[str, Any] = {}) -> tuple[Dict[StateMachineId, ERROR],
+                                                    Dict[StateMachineId, StateMachine]]:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachines for CppWriter class.
@@ -900,12 +892,15 @@ async def parse(xml: str,
                 notes.append(__generate_main_function())
 
             platform_compiler_settings = deepcopy(platform.compiling_settings)
-            if platform_compiler_settings and board_revision:
-                revision_define = _REVISION_TO_DEFINE.get(board_revision)
-                if revision_define:
+            if platform_compiler_settings and refs and platform.ref_handler:
+                handler = REF_HANDLERS.get(platform.ref_handler)
+                if handler is not None:
+                    handler_result = handler(refs)
+                    notes.extend(handler_result.code_insertions)
                     for cs in platform_compiler_settings:
-                        if cs.command in _COMPILERS_ACCEPTING_DEFINES:
-                            cs.flags.append(f'-D{revision_define}')
+                        cs.flags.extend(
+                            handler_result.extra_flags.get(cs.command, [])
+                        )
 
             compiling_settings = SMCompilingSettings(
                 included_libraries,

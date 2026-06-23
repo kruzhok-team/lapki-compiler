@@ -152,13 +152,13 @@ async def create_sm_directory(base_directory: str,
 async def compile_xml(
     xml: str,
     base_dir_path: str,
-    board_revision: str = '') -> tuple[Dict[str, str],
-                                       Dict[str,
-                                            tuple[
-                                                List[CommandResult],
-                                                StateMachine]
-                                            ]
-                                       ]:
+    refs: Dict[str, str] = {}) -> tuple[Dict[str, str],
+                                        Dict[str,
+                                             tuple[
+                                                 List[CommandResult],
+                                                 StateMachine]
+                                             ]
+                                        ]:
     """
     Compile CGML scheme.
 
@@ -166,7 +166,7 @@ async def compile_xml(
 
     Doesn't send anything.
     """
-    errors, state_machines = await parse(xml, board_revision)
+    errors, state_machines = await parse(xml, refs)
     compile_results: Dict[str, tuple[List[CommandResult], StateMachine]] = {}
     for sm_id, sm in state_machines.items():
         try:
@@ -257,7 +257,8 @@ class Handler:
             await ws.prepare(request)
         try:
             xml = await ws.receive_str()
-            board_revision = await ws.receive_str()
+            refs_raw = await ws.receive_str()
+            refs: Dict[str, str] = json.loads(refs_raw) if refs_raw else {}
             base_dir = os.path.join(
                 config.build_directory,
                 str(datetime.now()).replace(' ', '_').replace(':', '_'),
@@ -266,7 +267,7 @@ class Handler:
             validation_errors, compiler_result = await compile_xml(
                 xml,
                 base_dir,
-                board_revision
+                refs
             )
             response = await create_response(validation_errors, base_dir,
                                              compiler_result,
