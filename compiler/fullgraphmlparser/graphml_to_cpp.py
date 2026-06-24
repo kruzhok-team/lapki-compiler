@@ -15,7 +15,7 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     BaseParserVertex,
     Condition,
-    GeneratorShallowHistory
+    GeneratorHistory
 )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
@@ -131,6 +131,8 @@ class CppFileWriter:
         self.states = state_machine.states
         self.shallow_history = self.__convert_local_history_to_dict(
             state_machine.shallow_history)
+        self.deep_history = self.__convert_deep_history_to_dict(
+            state_machine.deep_history)
         for state in self.states:
             self.id_to_name[state.id] = state.name
             for trigger in state.trigs:
@@ -142,8 +144,8 @@ class CppFileWriter:
 
     def __convert_local_history_to_dict(
         self,
-        shallow_history: List[GeneratorShallowHistory]
-    ) -> Dict[str, GeneratorShallowHistory]:
+        shallow_history: List[GeneratorHistory]
+    ) -> Dict[str, GeneratorHistory]:
         """
         Конвертировать массив локальных историй в словарь, где ключом является\
             id родителя.
@@ -155,7 +157,7 @@ class CppFileWriter:
         - `CodeGeneratorException` - если на одном уровне находится\
             более одной локальной истории
         """
-        sh_dict: Dict[str, GeneratorShallowHistory] = {}
+        sh_dict: Dict[str, GeneratorHistory] = {}
 
         for sh in shallow_history:
             if sh.parent is None:
@@ -169,6 +171,30 @@ class CppFileWriter:
             sh_dict[sh.parent] = sh
 
         return sh_dict
+
+    def __convert_deep_history_to_dict(
+        self,
+        deep_history: List[GeneratorHistory]
+    ) -> Dict[str, GeneratorHistory]:
+        """
+        Глубокая история
+
+        todo: нужна проверка, если есть ещё одна глубокая история ниже по иерархии, то кинуть исключение
+        """
+        d_dict: Dict[str, GeneratorHistory] = {}
+
+        for d in deep_history:
+            if d.parent is None:
+                d.parent = 'global'
+            is_exist = d_dict.get(d.parent) is not None
+            if is_exist:
+                raise CodeGenerationException( # Переделать
+                    f'У элемента {d.parent} более одной'
+                    ' дочерней локальной истории.'
+                )
+            d_dict[d.parent] = d
+
+        return d_dict
 
     async def _write_unconditional_transition(
         self,
@@ -364,6 +390,38 @@ class CppFileWriter:
                 shallow_history,
                 'Shallow history')
 
+    async def _write_deep_history_initialization(self) -> None:
+        """
+        Генерация иниализации массива глубокой истории для sketch.h.
+        """
+        def get_casted_state(target_id: str | None) -> str:
+            if target_id is None:
+                target_id = 'QHsm_top'
+            return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
+        insert_strings = [
+            f'QStateHandler deepHistory[{len(self.deep_history)}] = ' + '{'
+        ]
+        deep_history_sorted_by_index = sorted(
+            self.deep_history.values(), key=lambda lh: lh.index)
+
+        insert_deeps = [
+            f'{get_casted_state(lh.default_value)},'
+            for lh in deep_history_sorted_by_index]
+        insert_strings.extend(insert_deeps)
+        insert_strings.append('};')
+
+        await self._insert_string('\n'.join(insert_strings) + '\n')
+
+    async def _write_deep_history_definition(self):
+        """
+        Генерация тела глубоких историй и запись их в файл.
+        """
+        for deep_history in self.deep_history.values():
+            await self._write_vertex_definition(
+                f'status_ = Q_TRAN(deepHistory[{deep_history.index}]);\n',
+                deep_history,
+                'Deep history')
+
     async def _write_final_states_definition(self):
         for final in self.final_states:
             await self._write_full_line_comment(f'Final pseudostate {final.id}', ' ')
@@ -392,6 +450,7 @@ class CppFileWriter:
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
             await self._write_local_history_definition()
+            await self._write_deep_history_definition()
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
@@ -440,6 +499,9 @@ class CppFileWriter:
                 *list(
                     self.shallow_history.values()
                 )
+                *list(
+                    self.deep_history.values()
+                )
             ])
             await self._insert_string('\n#ifdef DESKTOP\n')
             await self._insert_string('#endif /* def DESKTOP */\n\n')
@@ -460,6 +522,7 @@ class CppFileWriter:
             else:
                 await self._insert_string('void);\n')
             await self._write_local_history_initialization()
+            await self._write_deep_history_initialization()
             if self.notes_dict['declare_h_code']:
                 await self._insert_string('//Start of h code from diagram\n')
                 await self._insert_string('\n'.join(self.notes_dict['declare_h_code'].split('\n')[1:]) + '\n')
@@ -553,6 +616,16 @@ class CppFileWriter:
                 if shallow_history is not None:
                     await self._insert_string(
                         f'shallowHistory[{shallow_history.index}] '
+                        '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
+                        f'{state.id});')
+
+            # Такая же штука, но для другой истории
+            # todo: переделать
+            if state.parent is not None:
+                deep_history = self.deep_history.get(state.parent.id)
+                if deep_history is not None:
+                    await self._insert_string(
+                        f'deepHistory[{deep_history.index}] '
                         '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
                         f'{state.id});')
 
