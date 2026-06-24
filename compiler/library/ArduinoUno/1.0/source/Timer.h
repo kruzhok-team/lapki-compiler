@@ -32,6 +32,7 @@ class Timer
     bool timeout();
     void setInterval(unsigned long interval);
     void start(unsigned long interval);
+    void updateDifference();
   private:
     bool _active;
     unsigned long _previous;

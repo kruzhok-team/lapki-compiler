@@ -54,6 +54,8 @@ void Timer::disable()
 */
 void Timer::enable()
 {
+  if(_active) return;
+  _previous = millis() - (_interval - difference);
   _active = true;
 }
 
@@ -64,10 +66,10 @@ void Timer::enable()
 */
 bool Timer::timeout()
 {
-  difference -= millis() - _previous;
-  if (_active && (millis() - _previous >= _interval))
+  if (_active && difference == 0)
   {
-    _previous = millis();
+    difference = _interval;
+    _previous += _interval;
     return true;
   }
   return false;
@@ -87,8 +89,23 @@ void Timer::setInterval(unsigned long intervl)
 
 void Timer::start(unsigned long interval)
 {
+  difference = interval;
   setInterval(interval);
   reset();
   enable();
-  difference = interval;
+}
+
+void Timer::updateDifference() {
+  if (_active)
+  {
+    auto currentTime = millis();
+    if(_interval >= (currentTime - _previous))
+    {
+      difference = _interval - (currentTime - _previous);
+    }
+    else
+    {
+      difference = 0;
+    }
+  }
 }
