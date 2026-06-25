@@ -179,7 +179,7 @@ class CppFileWriter:
         """
         Глубокая история
 
-        todo: нужна проверка, если есть ещё одна глубокая история ниже по иерархии, то кинуть исключение
+        todo: нужна проверка, если есть ещё одна глубокая история ниже, то кинуть исключение
         """
         d_dict: Dict[str, GeneratorHistory] = {}
 
@@ -188,10 +188,7 @@ class CppFileWriter:
                 d.parent = 'global'
             is_exist = d_dict.get(d.parent) is not None
             if is_exist:
-                raise CodeGenerationException( # Переделать
-                    f'У элемента {d.parent} более одной'
-                    ' дочерней локальной истории.'
-                )
+                pass
             d_dict[d.parent] = d
 
         return d_dict
@@ -346,7 +343,7 @@ class CppFileWriter:
         };
         ```
         """
-        def get_casted_state(target_id: str | None) -> str:
+        def get_casted_stateLOCAL(target_id: str | None) -> str:
             if target_id is None:
                 target_id = 'QHsm_top'
             return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
@@ -357,9 +354,31 @@ class CppFileWriter:
             self.shallow_history.values(), key=lambda lh: lh.index)
 
         insert_shallows = [
-            f'{get_casted_state(lh.default_value)},'
+            f'{get_casted_stateLOCAL(lh.default_value)},'
             for lh in shallow_history_sorted_by_index]
         insert_strings.extend(insert_shallows)
+        insert_strings.append('};')
+
+        await self._insert_string('\n'.join(insert_strings) + '\n')
+
+    async def _write_deep_history_initialization(self) -> None:
+        """
+        Генерация иниализации массива глубокой истории для sketch.h.
+        """
+        def get_casted_state(target_id: str | None) -> str:
+            if target_id is None:
+                target_id = 'QHsm_top'
+            return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
+        insert_strings = [
+            f'QStateHandler deepHistory[{len(self.deep_history)}] = ' + '{'
+        ]
+        deep_history_sorted_by_index = sorted(
+            self.deep_history.values(), key=lambda lh: lh.index)
+
+        insert_deeps = [
+            f'{get_casted_state(lh.default_value)},'
+            for lh in deep_history_sorted_by_index]
+        insert_strings.extend(insert_deeps)
         insert_strings.append('};')
 
         await self._insert_string('\n'.join(insert_strings) + '\n')
@@ -389,28 +408,6 @@ class CppFileWriter:
                 f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
                 shallow_history,
                 'Shallow history')
-
-    async def _write_deep_history_initialization(self) -> None:
-        """
-        Генерация иниализации массива глубокой истории для sketch.h.
-        """
-        def get_casted_state(target_id: str | None) -> str:
-            if target_id is None:
-                target_id = 'QHsm_top'
-            return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
-        insert_strings = [
-            f'QStateHandler deepHistory[{len(self.deep_history)}] = ' + '{'
-        ]
-        deep_history_sorted_by_index = sorted(
-            self.deep_history.values(), key=lambda lh: lh.index)
-
-        insert_deeps = [
-            f'{get_casted_state(lh.default_value)},'
-            for lh in deep_history_sorted_by_index]
-        insert_strings.extend(insert_deeps)
-        insert_strings.append('};')
-
-        await self._insert_string('\n'.join(insert_strings) + '\n')
 
     async def _write_deep_history_definition(self):
         """
@@ -498,7 +495,7 @@ class CppFileWriter:
                 *self.final_states,
                 *list(
                     self.shallow_history.values()
-                )
+                ),
                 *list(
                     self.deep_history.values()
                 )
@@ -618,10 +615,6 @@ class CppFileWriter:
                         f'shallowHistory[{shallow_history.index}] '
                         '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
                         f'{state.id});')
-
-            # Такая же штука, но для другой истории
-            # todo: переделать
-            if state.parent is not None:
                 deep_history = self.deep_history.get(state.parent.id)
                 if deep_history is not None:
                     await self._insert_string(

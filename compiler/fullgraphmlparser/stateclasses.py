@@ -203,6 +203,7 @@ class GeneratorHistory(BaseParserVertex):
     index: int
     default_value: str | None = None
 
+
 @dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class ParserState:
     """
