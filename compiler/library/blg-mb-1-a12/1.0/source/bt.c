@@ -247,7 +247,11 @@ initBT
   putString("\r\n");
   delay(AT_CMD_PAUSE);
   //delay(5); if (answerCode != ANSWER_OK) return answerCode;
+#ifdef BLG_MB_REVISION_B2
+  putString("AT+PNAME=blg-mb-1-b2\r\n");
+#else
   putString("AT+PNAME=blg-mb-1-a12\r\n");
+#endif
   delay(AT_CMD_PAUSE);
   //delay(5); if (answerCode == ANSWER_OK) return answerCode;
   putString("AT+PASS=665816\r\n");
