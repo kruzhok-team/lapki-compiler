@@ -1,9 +1,10 @@
 """Module for parse CyberiadaMl schemes and generate code from ."""
 import re
 import random
-from typing import Dict, List, Set, Any
+from typing import Dict, List, Set, Any, Optional
 from copy import deepcopy
 from string import Template
+from compiler.types.ref import REF_HANDLERS
 
 from compiler.platform_manager import PlatformManager
 from compiler.types.ide_types import Bounds
@@ -767,8 +768,9 @@ def check_sm_id(sm_id: str) -> bool:
     return regex is not None
 
 
-async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
-                                   Dict[StateMachineId, StateMachine]]:
+async def parse(xml: str,
+                refs: Optional[Dict[str, Any]] = None) -> tuple[Dict[StateMachineId, ERROR],
+                                                                 Dict[StateMachineId, StateMachine]]:
     """
     Parse XML with cyberiadaml-py library and convert it\
         to StateMachines for CppWriter class.
@@ -778,6 +780,8 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
     - initialization components in setup function;
     - signal checks in loop function;
     """
+    if refs is None:
+        refs = {}
     parser = CGMLParser()
     cgml_scheme: CGMLElements = parser.parse_cgml(xml)
     platfrom_manager = PlatformManager()
@@ -889,12 +893,23 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
             if platform.main_function:
                 notes.append(__generate_main_function())
 
+            platform_compiler_settings = deepcopy(platform.compiling_settings)
+            if platform_compiler_settings and refs and platform.ref_handler:
+                handler = REF_HANDLERS.get(platform.ref_handler)
+                if handler is not None:
+                    handler_result = handler(refs)
+                    notes.extend(handler_result.code_insertions)
+                    for cs in platform_compiler_settings:
+                        cs.flags.extend(
+                            handler_result.extra_flags.get(cs.command, [])
+                        )
+
             compiling_settings = SMCompilingSettings(
                 included_libraries,
                 build_files,
                 platform.id,
                 platform_version,
-                platform.compiling_settings
+                platform_compiler_settings
             )
             state_machines[sm_id] = StateMachine(
                 start_node=start_node,

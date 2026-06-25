@@ -1,5 +1,5 @@
 {
-  "name": "Кибермишка (a12)",
+  "name": "Кибермишка",
   "id": "blg-mb-1-a12",
   "nameTag": "CyBear",
   "description": "Платформа для программирования Кибермишки blg-mb-1-a12.",
@@ -81,6 +81,7 @@
     }
   ],
   "mainFunction": true,
+  "refHandler": "blg_mb_revision",
   "delimeter": ";",
   "defaultIncludeFiles": ["blg-mb-1-a7_hal.hpp", "lib/pins.c", "i2c.c",  "usb/core.c", "lib/helpers.c", "Pins.hpp", "load.c"],
   "defaultBuildFiles": [
