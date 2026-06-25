@@ -233,16 +233,17 @@ class JsonConverter:
                         graph
                     )
                     )
-
         else:
             node_type = 'y:GenericNode'
-
             if state.parent:
+                parent = self.states.get(state.parent)
+                if parent is None:
+                    raise Exception('Parent is doesnt exist!')
                 if state.bounds:
-                    state.bounds.x += (state.parent.bounds.x
-                                       if state.parent.bounds else 0)
-                    state.bounds.y += (state.parent.bounds.y
-                                       if state.parent.bounds else 0)
+                    state.bounds.x += (parent.bounds.x
+                                       if parent.bounds else 0)
+                    state.bounds.y += (parent.bounds.y
+                                       if parent.bounds else 0)
 
             xmlstate['data'][0][node_type] = {
                 'y:NodeLabel': [
