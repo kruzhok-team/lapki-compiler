@@ -1,3 +1,5 @@
+"""В этом модуле находятся классы для кодогенератора."""
+
 from typing import (
     List,
     Optional,
@@ -11,6 +13,8 @@ from enum import Enum
 from pydantic import Field, BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 from compiler.types.platform_types import CompilingSettings
+
+GLOBAL_STATE = 'global'  # дефолтный родитель элемента
 
 TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
 StateType = Literal['group', 'choice', 'internal']
@@ -150,6 +154,10 @@ class BaseParserVertex:
     id: str
     parent: str | None
 
+    def __post_init__(self):
+        if self.parent is None:
+            self.parent = 'global'
+
 
 @dataclass
 class GeneratorFinalVertex(BaseParserVertex):
@@ -208,6 +216,7 @@ class GeneratorShallowHistory(BaseParserVertex):
 class ParserState:
     """
     class State describes state of uml-diagram and trigslates to qm format.
+
     Fields:
             name: name of state
             type: state or choice
@@ -229,16 +238,16 @@ class ParserState:
     exit: str
     id: str
     new_id: List[str]
-    parent: Optional['ParserState']
+    parent: str | None
     childs: List['ParserState']
     bounds: Optional[GeometryBounds] = None
     initial_state: Optional[str] = None
 
     def __str__(self) -> str:
-        if self.parent is not None:
-            return f"{self.name, self.parent.name, ', '.join([child.name for child in self.childs]) }"
-        else:
-            return f"{self.name}, parent: None, {', '.join([child.name for child in self.childs])}"
+        return (
+            f'Состояние({self.name}), Родитель: {self.parent}, '
+            f'Дочерние состояния: [{", ".join([child.name for child in self.childs])}])'
+        )
 
 
 @dataclass
@@ -252,24 +261,30 @@ class SMCompilingSettings:
 
 @dataclass
 class StateMachine:
-    """
-    Данные машины состояний, на основе которых генерируется кода
-    """
+    """Данные машины состояний, на основе которых генерируется код."""
+
     name: str | None
     start_node: str
     start_action: str
     notes: List[ParserNote]
-    states: List[ParserState]
+    global_state: ParserState
+    # точка входа, из которой рекурсивно берутся все состояния
     signals: Set[str]
     main_file_extension: str
     header_file_extension: str
     language: str
-    # Установлено дефолтное значение, чтобы не трогать легаси.
+    # Установлено дефолтное значение, чтобы не трогать легаси
     id: str = 'sketch'
+    # легаси для берлоги, в кодогенераторе не используется
+    states: List[ParserState] = Field(default_factory=list)
+    # TODO (L140-beep): Мб их тоже хранить в
+    # качестве дочерних элементов в состояниях?
     initial_states: List[GeneratorInitialVertex] = Field(default_factory=list)
     choices: List[GeneratorChoiceVertex] = Field(default_factory=list)
     final_states: List[GeneratorFinalVertex] = Field(default_factory=list)
-    shallow_history: List[GeneratorShallowHistory] = Field(default=list)
+    shallow_history: List[GeneratorShallowHistory] = Field(
+        default_factory=list
+    )
     compiling_settings: Optional[SMCompilingSettings] = None
 
 

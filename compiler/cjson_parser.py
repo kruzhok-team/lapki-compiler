@@ -419,10 +419,10 @@ class CJsonParser:
         for statename in ide_states:
             state: State = ide_states[statename]
             if state.parent is not None:
-                new_states[statename].parent = new_states[state.parent]
+                new_states[statename].parent = state.parent
                 new_states[state.parent].childs.append(new_states[statename])
             else:
-                new_states[statename].parent = global_state
+                new_states[statename].parent = global_state.id
                 global_state.childs.append(new_states[statename])
 
         return new_states
@@ -536,6 +536,7 @@ class CJsonParser:
             states=[global_state, *list(proccesed_states.values())],
             notes=notes,
             start_action='',
+            global_state=global_state,
             signals=set([*player_signals.keys(),
                          *self._addSignals(data.components, player_signals)]),
             start_node=startNode,

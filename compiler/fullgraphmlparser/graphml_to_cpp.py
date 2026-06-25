@@ -15,7 +15,7 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     BaseParserVertex,
     Condition,
-    GeneratorShallowHistory
+    GeneratorShallowHistory,
 )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
@@ -65,7 +65,6 @@ def get_enum(text_labels: List[str]) -> str:
 
 
 class CppFileWriter:
-    id_to_name = {}
     notes_dict = {}
     f = None
     all_signals = []
@@ -128,14 +127,9 @@ class CppFileWriter:
 
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
-        self.states = state_machine.states
+        self.global_state = state_machine.global_state
         self.shallow_history = self.__convert_local_history_to_dict(
             state_machine.shallow_history)
-        for state in self.states:
-            self.id_to_name[state.id] = state.name
-            for trigger in state.trigs:
-                if trigger.guard:
-                    trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
         self.final_states = state_machine.final_states
@@ -159,7 +153,10 @@ class CppFileWriter:
 
         for sh in shallow_history:
             if sh.parent is None:
-                sh.parent = 'global'
+                raise CodeGenerationException(
+                    'Почему-то родитель у локальной '
+                    ' истории равен None, а не global!'
+                )
             is_exist = sh_dict.get(sh.parent) is not None
             if is_exist:
                 raise CodeGenerationException(
@@ -300,7 +297,7 @@ class CppFileWriter:
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n          default: {')
-        await self._insert_string(f'\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{vertex.parent if vertex.parent is not None else "global"});')
+        await self._insert_string(f'\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{vertex.parent});')
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n         }\n')
@@ -316,7 +313,7 @@ class CppFileWriter:
         QStateHandler shallowHistory[3] = {
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
-            Q_STATE_CAST(QHsm_top) // если default_value отсутствует
+            Q_STATE_CAST(Sketch_global) // если default_value отсутствует
         };
         ```
         """
@@ -329,7 +326,6 @@ class CppFileWriter:
         ]
         shallow_history_sorted_by_index = sorted(
             self.shallow_history.values(), key=lambda lh: lh.index)
-
         insert_shallows = [
             f'{get_casted_state(lh.default_value)},'
             for lh in shallow_history_sorted_by_index]
@@ -387,7 +383,10 @@ class CppFileWriter:
             await self._insert_file_template(f'preamble_c.txt')
             await self._write_constructor()
             await self._write_initial()
-            await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
+            await self._write_states_definitions_recursively(
+                self.global_state,
+                'SMs::%s::SM' % self._sm_capitalized_name()
+            )
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
@@ -432,7 +431,7 @@ class CppFileWriter:
             await self._insert_string('} STATE_MACHINE_CAPITALIZED_NAME;\n\n')
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
-            await self._write_states_declarations_recursively(self.states[0])
+            await self._write_states_declarations_recursively(self.global_state)
             await self._write_vertexes_declaration([
                 *self.initial_states,
                 *self.choices,
@@ -549,7 +548,7 @@ class CppFileWriter:
             # Если локальная история находится на одном уровне,
             # то добавляем посещение состояния в массив
             if state.parent is not None:
-                shallow_history = self.shallow_history.get(state.parent.id)
+                shallow_history = self.shallow_history.get(state.parent)
                 if shallow_history is not None:
                     await self._insert_string(
                         f'shallowHistory[{shallow_history.index}] '
@@ -603,7 +602,7 @@ class CppFileWriter:
                     state.id if state.name is None else state.name,
                     'Состояние',
                     triggers,
-                    state.parent.id if state.parent is not None else None,
+                    state.parent,
                     '\t\t\t'
                 )
             )
@@ -611,7 +610,7 @@ class CppFileWriter:
             await self._insert_string('        }\n')
         await self._insert_string('        default: {\n')
         if state.parent:
-            await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
+            await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent)
         else:
             await self._insert_string('            status_ = Q_SUPER(&QHsm_top);\n')
         await self._insert_string('            break;\n')
@@ -619,7 +618,6 @@ class CppFileWriter:
         await self._insert_string('    }\n')
         await self._insert_string('    return status_;\n')
         await self._insert_string('}\n')
-
         for child_state in state.childs:
             await self._write_states_definitions_recursively(child_state, state_path)
 
@@ -648,7 +646,7 @@ class CppFileWriter:
         if trigger.type == 'internal':
             if trigger.propagate:
                 if state.parent:
-                    actions += '            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id
+                    actions += '            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent
                 else:
                     actions += '            status_ = Q_SUPER(&QHsm_top);\n'
             else:
