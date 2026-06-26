@@ -614,7 +614,7 @@ def __init_initial_states(
     start_node_id: str | None = None
     parser_initials: Dict[str, GeneratorInitialVertex] = {}
     for initial_id, initial in initial_states.items():
-        if initial.parent is None:
+        if initial.parent == GLOBAL_STATE:
             if start_node_id is not None:
                 raise _InnerCGMLException(
                     'Два начальных состояния на одном уровне вложенности.')
@@ -658,7 +658,7 @@ def _add_initials_to_states(
 ) -> Dict[str, ParserState]:
     new_states = deepcopy(states)
     for initial in initials.values():
-        if initial.parent is None or initial.parent == 'global':
+        if initial.parent == GLOBAL_STATE:
             continue
         state = new_states[initial.parent]
         state.initial_state = initial.id

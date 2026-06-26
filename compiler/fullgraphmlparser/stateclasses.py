@@ -135,11 +135,12 @@ class BaseParserVertex:
     """Базовый класс для всех узлов-псевдосостояний."""
 
     id: str
-    parent: str | None
+    _parent: str | None
 
-    def __post_init__(self):
-        if self.parent is None:
-            self.parent = 'global'
+    @property
+    def parent(self):
+        """Получить родителя элемента."""
+        return self._parent or GLOBAL_STATE
 
 
 @dataclass

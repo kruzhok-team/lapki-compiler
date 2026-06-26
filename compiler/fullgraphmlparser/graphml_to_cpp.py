@@ -115,11 +115,6 @@ class CppFileWriter:
         sh_dict: Dict[str, GeneratorShallowHistory] = {}
 
         for sh in shallow_history:
-            if sh.parent is None:
-                raise CodeGenerationException(
-                    'Почему-то родитель у локальной '
-                    ' истории равен None, а не global!'
-                )
             is_exist = sh_dict.get(sh.parent) is not None
             if is_exist:
                 raise CodeGenerationException(
