@@ -179,29 +179,16 @@ class CppFileWriter:
         """
         Глубокая история
 
-        todo: проверка, если есть ещё одна глубокая история ниже, то кинуть исключение
-        проверить, работает ли проверка вообще
+        todo: нужна проверка, если есть ещё одна глубокая история ниже, то кинуть исключение
         """
         d_dict: Dict[str, GeneratorHistory] = {}
 
         for d in deep_history:
-            par = d.parent
-            while par is not None:
-                is_exist = d_dict.get(par) is not None
-                if is_exist:
-                    raise CodeGenerationException(
-                        f'У элемента {d.parent} более одной'
-                        ' дочерней глубокой истории.'
-                    )
-                par = par.parent
-            if par is None:
-                par = 'global'
-            is_exist = d_dict.get(par) is not None
+            if d.parent is None:
+                d.parent = 'global'
+            is_exist = d_dict.get(d.parent) is not None
             if is_exist:
-                raise CodeGenerationException(
-                    f'У элемента {d.parent} более одной'
-                    ' дочерней глубокой истории.'
-                )
+                pass
             d_dict[d.parent] = d
 
         return d_dict
@@ -356,7 +343,7 @@ class CppFileWriter:
         };
         ```
         """
-        def get_casted_stateLOCAL(target_id: str | None) -> str:
+        def get_casted_state(target_id: str | None) -> str:
             if target_id is None:
                 target_id = 'QHsm_top'
             return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
@@ -367,7 +354,7 @@ class CppFileWriter:
             self.shallow_history.values(), key=lambda lh: lh.index)
 
         insert_shallows = [
-            f'{get_casted_stateLOCAL(lh.default_value)},'
+            f'{get_casted_state(lh.default_value)},'
             for lh in shallow_history_sorted_by_index]
         insert_strings.extend(insert_shallows)
         insert_strings.append('};')
