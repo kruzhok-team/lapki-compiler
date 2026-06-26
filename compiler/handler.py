@@ -320,7 +320,8 @@ class Handler:
                     sm: StateMachine = parser.parseStateMachine(data)
                     await CppFileWriter(sm).write_to_file(path, extension)
                     libraries = libraries.union(
-                        libraries, Compiler.c_default_libraries)
+                        libraries, Compiler.c_default_libraries
+                    )
                     await Compiler.include_library_files(
                         libraries,
                         dirname,

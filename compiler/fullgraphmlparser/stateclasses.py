@@ -10,7 +10,7 @@ from typing import (
 )
 from enum import Enum
 
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import Field, ConfigDict
 from pydantic.dataclasses import dataclass
 from compiler.types.platform_types import CompilingSettings
 
@@ -28,13 +28,7 @@ def create_note(label: 'Labels', content: str) -> 'ParserNote':
     Между label и контентом добавляется \\n, так как по этому символу\
         сплитится строка в функции write_to_file.
     """
-    # TODO: убрать это недаразумение
-    return ParserNote(
-        umlNote=_ParserNoteNodeLabel(
-            nodeLabel=_ParserNoteNodeContent(
-                text=f'{label.value}:\n{content}')
-        )
-    )
+    return ParserNote(label, content)
 
 
 class Labels(Enum):
@@ -71,23 +65,12 @@ class GeometryBounds(Protocol):
     width: Optional[float]
 
 
-class _ParserNoteNodeContent(BaseModel):
-    text: str = Field(serialization_alias='#text')
+@dataclass
+class ParserNote():
+    """Class for code inserting."""
 
-
-class _ParserNoteNodeLabel(BaseModel):
-    nodeLabel: _ParserNoteNodeContent = Field(
-        serialization_alias='y:NodeLabel')
-
-
-class ParserNote(BaseModel):
-    """
-    Class for code inserting.
-
-    ### Create only by create_note function.
-    """
-
-    umlNote: _ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
+    label: Labels
+    content: str
 
 
 @dataclass
