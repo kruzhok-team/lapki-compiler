@@ -109,7 +109,7 @@ async def _read_platform_files(
     async for source in AsyncPath(source_dir).rglob('*'):
         if not await source.is_file():
             continue
-        async with async_open(source, mode) as f:
+        async with async_open(source, mode, encoding='utf-8') as f:
             content = await f.read()
             # Убираем точку в начале .suff.suff
             extension = ''.join(source.suffixes).replace('.', '', 1)
@@ -238,7 +238,11 @@ class PlatformManager:
                             path_to_platform: str | AsyncPath) -> Platform:
         """Load platform from file and add it to dict."""
         try:
-            async with async_open(path_to_platform, 'r') as f:
+            async with async_open(
+                path_to_platform,
+                'r',
+                encoding='utf-8'
+            ) as f:
                 unprocessed_platform_data: str = await f.read()
                 platform = Platform(
                     **json.loads(unprocessed_platform_data))
@@ -273,7 +277,7 @@ class PlatformManager:
         print(f'Поиск схем в папке "{path_to_schemas_dir}"...')
         async for path in AsyncPath(path_to_schemas_dir).rglob('*json'):
             try:
-                async with async_open(path, 'r') as f:
+                async with async_open(path, 'r', encoding='utf-8') as f:
                     unprocessed_platform_data: str = await f.read()
                     platform = Platform(
                         **json.loads(unprocessed_platform_data))
@@ -335,7 +339,7 @@ class PlatformManager:
             raise PlatformException(f'Unsupported platform {platform_id}')
 
         path_to_platform = get_path_to_platform(platform_id, version)
-        async with async_open(path_to_platform, 'r') as f:
+        async with async_open(path_to_platform, 'r', encoding='utf-8') as f:
             return await f.read()
 
     def platform_exist(self, platform_id: str) -> bool:

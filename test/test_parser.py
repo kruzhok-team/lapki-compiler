@@ -41,7 +41,7 @@ async def test_graphmlParser(path: str, path_to_platform: str, platform: str):
     platform_manager = PlatformManager()
     platform_obj = await platform_manager.load_platform(path_to_platform)
     await Logger.init_logger()
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         unprocessed_xml = f.read()
 
     parsed_graphml = await GraphmlParser.parse(

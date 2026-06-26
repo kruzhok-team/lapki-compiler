@@ -1,3 +1,5 @@
+"""В этом модуле находятся классы для кодогенератора."""
+
 from typing import (
     List,
     Optional,
@@ -8,9 +10,11 @@ from typing import (
 )
 from enum import Enum
 
-from pydantic import Field, BaseModel, ConfigDict
+from pydantic import Field, ConfigDict
 from pydantic.dataclasses import dataclass
 from compiler.types.platform_types import CompilingSettings
+
+GLOBAL_STATE = 'global'  # дефолтный родитель элемента
 
 TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
 StateType = Literal['group', 'choice', 'internal']
@@ -24,13 +28,7 @@ def create_note(label: 'Labels', content: str) -> 'ParserNote':
     Между label и контентом добавляется \\n, так как по этому символу\
         сплитится строка в функции write_to_file.
     """
-    # TODO: убрать это недаразумение
-    return ParserNote(
-        umlNote=_ParserNoteNodeLabel(
-            nodeLabel=_ParserNoteNodeContent(
-                text=f'{label.value}:\n{content}')
-        )
-    )
+    return ParserNote(label, content)
 
 
 class Labels(Enum):
@@ -67,23 +65,12 @@ class GeometryBounds(Protocol):
     width: Optional[float]
 
 
-class _ParserNoteNodeContent(BaseModel):
-    text: str = Field(serialization_alias='#text')
+@dataclass
+class ParserNote():
+    """Class for code inserting."""
 
-
-class _ParserNoteNodeLabel(BaseModel):
-    nodeLabel: _ParserNoteNodeContent = Field(
-        serialization_alias='y:NodeLabel')
-
-
-class ParserNote(BaseModel):
-    """
-    Class for code inserting.
-
-    ### Create only by create_note function.
-    """
-
-    umlNote: _ParserNoteNodeLabel = Field(serialization_alias='y:UMLNoteNode')
+    label: Labels
+    content: str
 
 
 @dataclass
@@ -148,7 +135,12 @@ class BaseParserVertex:
     """Базовый класс для всех узлов-псевдосостояний."""
 
     id: str
-    parent: str | None
+    _parent: str | None
+
+    @property
+    def parent(self):
+        """Получить родителя элемента."""
+        return self._parent or GLOBAL_STATE
 
 
 @dataclass
@@ -208,6 +200,7 @@ class GeneratorShallowHistory(BaseParserVertex):
 class ParserState:
     """
     class State describes state of uml-diagram and trigslates to qm format.
+
     Fields:
             name: name of state
             type: state or choice
@@ -229,16 +222,16 @@ class ParserState:
     exit: str
     id: str
     new_id: List[str]
-    parent: Optional['ParserState']
-    childs: List['ParserState']
+    parent: str | None
+    children: List['ParserState']
     bounds: Optional[GeometryBounds] = None
     initial_state: Optional[str] = None
 
     def __str__(self) -> str:
-        if self.parent is not None:
-            return f"{self.name, self.parent.name, ', '.join([child.name for child in self.childs]) }"
-        else:
-            return f"{self.name}, parent: None, {', '.join([child.name for child in self.childs])}"
+        return (
+            f'Состояние({self.name}), Родитель: {self.parent}, '
+            f'Дочерние состояния: [{", ".join([child.name for child in self.children])}])'
+        )
 
 
 @dataclass
@@ -252,24 +245,30 @@ class SMCompilingSettings:
 
 @dataclass
 class StateMachine:
-    """
-    Данные машины состояний, на основе которых генерируется кода
-    """
+    """Данные машины состояний, на основе которых генерируется код."""
+
     name: str | None
     start_node: str
     start_action: str
     notes: List[ParserNote]
-    states: List[ParserState]
+    global_state: ParserState
+    # точка входа, из которой рекурсивно берутся все состояния
     signals: Set[str]
     main_file_extension: str
     header_file_extension: str
     language: str
-    # Установлено дефолтное значение, чтобы не трогать легаси.
+    # Установлено дефолтное значение, чтобы не трогать легаси
     id: str = 'sketch'
+    # легаси для берлоги, в кодогенераторе не используется
+    states: List[ParserState] = Field(default_factory=list)
+    # TODO (L140-beep): Мб их тоже хранить в
+    # качестве дочерних элементов в состояниях?
     initial_states: List[GeneratorInitialVertex] = Field(default_factory=list)
     choices: List[GeneratorChoiceVertex] = Field(default_factory=list)
     final_states: List[GeneratorFinalVertex] = Field(default_factory=list)
-    shallow_history: List[GeneratorShallowHistory] = Field(default=list)
+    shallow_history: List[GeneratorShallowHistory] = Field(
+        default_factory=list
+    )
     compiling_settings: Optional[SMCompilingSettings] = None
 
 

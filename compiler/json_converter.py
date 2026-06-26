@@ -110,7 +110,7 @@ class JsonConverter:
             ]
         }
 
-        if len(state.childs) > 0:
+        if len(state.children) > 0:
             if state.name != 'global':
                 node_type = 'y:GroupNode'
                 xmlstate['data'].insert(0, {
@@ -223,26 +223,27 @@ class JsonConverter:
                 }
 
                 xmlstate['graph']['node'] = []  # type: ignore
-                for child in state.childs:
+                for child in state.children:
                     xmlstate['graph']['node'].append(
                         self._recursiveGetStates(child, xmlstate['graph']))
             else:
-                for child in state.childs:
+                for child in state.children:
                     graph['node'].append(self._recursiveGetStates(
                         child,
                         graph
                     )
                     )
-
         else:
             node_type = 'y:GenericNode'
-
             if state.parent:
+                parent = self.states.get(state.parent)
+                if parent is None:
+                    raise Exception('Parent is doesnt exist!')
                 if state.bounds:
-                    state.bounds.x += (state.parent.bounds.x
-                                       if state.parent.bounds else 0)
-                    state.bounds.y += (state.parent.bounds.y
-                                       if state.parent.bounds else 0)
+                    state.bounds.x += (parent.bounds.x
+                                       if parent.bounds else 0)
+                    state.bounds.y += (parent.bounds.y
+                                       if parent.bounds else 0)
 
             xmlstate['data'][0][node_type] = {
                 'y:NodeLabel': [

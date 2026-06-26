@@ -1,9 +1,8 @@
 import os.path
-import inspect
 import re
 import string
 from collections import defaultdict
-from typing import List, Sequence, Tuple, Dict
+from typing import List, Sequence, Tuple, Dict, DefaultDict
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
@@ -15,7 +14,7 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     BaseParserVertex,
     Condition,
-    GeneratorShallowHistory
+    GeneratorShallowHistory,
 )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
@@ -65,12 +64,9 @@ def get_enum(text_labels: List[str]) -> str:
 
 
 class CppFileWriter:
-    id_to_name = {}
-    notes_dict = {}
     f = None
     all_signals = []
     userFlag = False  # Флаг на наличие кода для класса User
-    list_notes_dict: Dict[str, List[str]] = {}
 
     def __init__(self,
                  state_machine: StateMachine,
@@ -84,58 +80,19 @@ class CppFileWriter:
         self.sm_id = 'sketch'
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
-        notes_mapping: List[Tuple[str, str]] = [
-            (Labels.H_INCLUDE.value, 'raw_h_code'),
-            (Labels.H.value,
-             'declare_h_code'),
-            (Labels.CPP.value,
-             'raw_cpp_code'),
-            (Labels.CTOR_FIELDS.value,
-             'constructor_fields'),
-            (Labels.STATE_FIELDS.value, 'state_fields'),
-            (Labels.CTOR.value,
-             'constructor_code'),
-            (Labels.EVENT_FIELDS.value, 'event_fields'),
-            (Labels.USER_VAR_H.value,
-             'user_variables_h'),
-            (Labels.USER_FUNC_H.value,
-             'user_methods_h'),
-            (Labels.USER_VAR_C.value,
-             'user_variables_c'),
-            (Labels.USER_FUNC_C.value, 'user_methods_c'),
-            (Labels.SETUP.value, 'setup'),
-            (Labels.LOOP.value, 'loop'),
-            (Labels.MAIN_FUNCTION.value, 'main_function')
-        ]
 
-        self.list_notes_dict: Dict[str, List[str]] = {key: [''] for _, key
-                                                      in notes_mapping}
+        self.notes: DefaultDict[str, List[str]] = defaultdict(list)
 
         for note in state_machine.notes:
-            dict_note = note.model_dump(by_alias=True)
-            for prefix, key in notes_mapping:
-                # Делаем так, чтобы при повторении меток, их содержимое
-                # объединялось, а не перезаписывалось
-                if dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].startswith(prefix):
-                    if self.list_notes_dict != []:
-                        self.list_notes_dict[key].append(
-                            '\n'.join(dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'].split('\n')[1:]))
-                    else:
-                        self.list_notes_dict[key].append(
-                            dict_note['y:UMLNoteNode']['y:NodeLabel']['#text'])
-        self.notes_dict = {key: '\n'.join(
-            self.list_notes_dict[key]) for _, key in notes_mapping}
+            # Делаем так, чтобы при повторении меток, их содержимое
+            # объединялось, а не перезаписывалось
+            self.notes[note.label.value].append(note.content)
 
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
-        self.states = state_machine.states
+        self.global_state = state_machine.global_state
         self.shallow_history = self.__convert_local_history_to_dict(
             state_machine.shallow_history)
-        for state in self.states:
-            self.id_to_name[state.id] = state.name
-            for trigger in state.trigs:
-                if trigger.guard:
-                    trigger.guard = trigger.guard.strip()
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
         self.final_states = state_machine.final_states
@@ -158,8 +115,6 @@ class CppFileWriter:
         sh_dict: Dict[str, GeneratorShallowHistory] = {}
 
         for sh in shallow_history:
-            if sh.parent is None:
-                sh.parent = 'global'
             is_exist = sh_dict.get(sh.parent) is not None
             if is_exist:
                 raise CodeGenerationException(
@@ -300,7 +255,7 @@ class CppFileWriter:
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n          default: {')
-        await self._insert_string(f'\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{vertex.parent if vertex.parent is not None else "global"});')
+        await self._insert_string(f'\n              status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_{vertex.parent});')
         await self._insert_string('\n              break;')
         await self._insert_string('\n          }')
         await self._insert_string('\n         }\n')
@@ -316,7 +271,7 @@ class CppFileWriter:
         QStateHandler shallowHistory[3] = {
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
             Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
-            Q_STATE_CAST(QHsm_top) // если default_value отсутствует
+            Q_STATE_CAST(Sketch_global) // если default_value отсутствует
         };
         ```
         """
@@ -329,7 +284,6 @@ class CppFileWriter:
         ]
         shallow_history_sorted_by_index = sorted(
             self.shallow_history.values(), key=lambda lh: lh.index)
-
         insert_shallows = [
             f'{get_casted_state(lh.default_value)},'
             for lh in shallow_history_sorted_by_index]
@@ -387,28 +341,37 @@ class CppFileWriter:
             await self._insert_file_template(f'preamble_c.txt')
             await self._write_constructor()
             await self._write_initial()
-            await self._write_states_definitions_recursively(self.states[0], 'SMs::%s::SM' % self._sm_capitalized_name())
+            await self._write_states_definitions_recursively(
+                self.global_state,
+                'SMs::%s::SM' % self._sm_capitalized_name()
+            )
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
             await self._write_local_history_definition()
-            if self.notes_dict['setup'] or self.create_setup:
+            setup_notes = self.notes[Labels.SETUP.value]
+            if setup_notes or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
-                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
+                await self._insert_string('\n\t' + '\n\t'.join(
+                    setup_notes)
+                )
                 await self._insert_string('\n\tSTATE_MACHINE_CAPITALIZED_NAME_ctor();')
                 await self._insert_string('\n\tQEvt event;')
                 await self._insert_string(f'\n\tQMsm_init(the_{self.sm_id}, &event);')
                 await self._insert_string('\n}')
-            if self.notes_dict['loop'] or self.create_loop:
+            loop_notes = self.notes[Labels.LOOP.value]
+            if loop_notes or self.create_loop:
                 await self._insert_string('\nvoid loop() {')
                 await self._insert_file_template('q_vertex_sig.txt')
                 await self._insert_file_template('defer_loop.txt')
-                await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['loop'].split('\n')[1:]))
+                await self._insert_string('\n\t' + '\n\t'.join(loop_notes))
                 await self._insert_string('\n}')
-            if self.notes_dict['main_function']:
-                await self._insert_string(self.notes_dict['main_function'])
-            if self.notes_dict['raw_cpp_code']:
-                await self._insert_string('\n'.join(self.notes_dict['raw_cpp_code'].split('\n')[1:]) + '\n')
+            main_notes = self.notes[Labels.MAIN_FUNCTION.value]
+            if main_notes:
+                await self._insert_string(main_notes)
+            raw_code = self.notes[Labels.CPP.value]
+            if raw_code:
+                await self._insert_string('\n'.join(raw_code) + '\n')
             self.f = None
 
         async with async_open(os.path.join(folder, f'{self.filename}.{self.header_file_extension}'), 'w') as f:
@@ -417,9 +380,10 @@ class CppFileWriter:
             await self._insert_file_template(f'preamble_{self.header_file_extension}.txt')
             # if self.userFlag:
             # await self._insert_string('#include "User.h"\n')
-            if self.notes_dict['raw_h_code']:
+            h_notes = self.notes[Labels.H_INCLUDE.value]
+            if h_notes:
                 await self._insert_string('//Start of h code from diagram\n')
-                await self._insert_string('\n'.join(self.notes_dict['raw_h_code'].split('\n')[1:]) + '\n')
+                await self._insert_string('\n'.join(h_notes) + '\n')
                 await self._insert_string('//End of h code from diagram\n\n\n')
 
             await self._insert_string('typedef struct {\n')
@@ -427,12 +391,12 @@ class CppFileWriter:
             await self._insert_string('    QHsm super;\n')
             await self._insert_string('\n')
             await self._insert_string('/* public: */\n')
-            constructor_fields: str = self.notes_dict['state_fields']
-            await self._insert_string('    ' + '\n    '.join(constructor_fields.split('\n')[1:]) + '\n')
+            state_fields = self.notes[Labels.STATE_FIELDS.value]
+            await self._insert_string('    ' + '\n    '.join(state_fields) + '\n')
             await self._insert_string('} STATE_MACHINE_CAPITALIZED_NAME;\n\n')
             await self._insert_string('/* protected: */\n')
             await self._insert_string('QState DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial(STATE_MACHINE_CAPITALIZED_NAME * const me, void const * const par);\n')
-            await self._write_states_declarations_recursively(self.states[0])
+            await self._write_states_declarations_recursively(self.global_state)
             await self._write_vertexes_declaration([
                 *self.initial_states,
                 *self.choices,
@@ -447,37 +411,48 @@ class CppFileWriter:
 
             await self._insert_string('typedef struct STATE_MACHINE_LOWERED_NAMEQEvt {\n')
             await self._insert_string('    QEvt super;\n')
-            event_fields: str = self.notes_dict['event_fields']
-            await self._insert_string('    ' + '\n    '.join(event_fields.split('\n')[1:]) + '\n')
+            event_fields = self.notes[Labels.EVENT_FIELDS.value]
+            await self._insert_string('    ' + '\n    '.join(event_fields) + '\n')
             await self._insert_string('} STATE_MACHINE_LOWERED_NAMEQEvt;\n\n')
-            await self._insert_string(get_enum(self.player_signal) + '\n')
+            await self._insert_string(
+                get_enum(list(self.player_signal)) + '\n'
+            )
             await self._insert_string('\nstatic STATE_MACHINE_CAPITALIZED_NAME STATE_MACHINE_LOWERED_NAME; /* the only instance of the STATE_MACHINE_CAPITALIZED_NAME class */\n\n\n\n')
             await self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
-            constructor_fields: str = self.notes_dict['constructor_fields']
+            constructor_fields = self.notes[Labels.CTOR_FIELDS.value]
             if constructor_fields:
                 await self._insert_string(
-                    '\n    ' + ',\n    '.join(constructor_fields.replace(';', '').split('\n')[1:]) + ');\n')
+                    '\n    ' + ',\n    '.join(constructor_fields)
+                    .replace(';', '') + ');\n'
+                )
             else:
                 await self._insert_string('void);\n')
             await self._write_local_history_initialization()
-            if self.notes_dict['declare_h_code']:
+            declare_h_notes = self.notes[Labels.H.value]
+            if declare_h_notes:
                 await self._insert_string('//Start of h code from diagram\n')
-                await self._insert_string('\n'.join(self.notes_dict['declare_h_code'].split('\n')[1:]) + '\n')
+                await self._insert_string('\n'.join(declare_h_notes) + '\n')
                 await self._insert_string('//End of h code from diagram\n\n\n')
             await self._insert_file_template(f'footer_{self.header_file_extension}.txt')
             self.f = None
 
     async def _write_constructor(self):
         await self._insert_string('void STATE_MACHINE_CAPITALIZED_NAME_ctor(')
-        constructor_fields: str = self.notes_dict['constructor_fields']
+        constructor_fields = self.notes[Labels.CTOR_FIELDS.value]
         if constructor_fields:
-            await self._insert_string('\n    ' + ',\n    '.join(constructor_fields.replace(';', '').split('\n')[1:]) + ')\n')
+            await self._insert_string(
+                '\n    ' +
+                ',\n    '.join(constructor_fields).replace(';', '') + ')\n'
+            )
             await self._insert_string('{\n')
         else:
             await self._insert_string('void) {\n')
         await self._insert_string('    STATE_MACHINE_CAPITALIZED_NAME *me = &STATE_MACHINE_LOWERED_NAME;\n')
-        constructor_code: str = self.notes_dict['constructor_code']
-        await self._insert_string('     ' + '\n    '.join(constructor_code.replace('\r', '').split('\n')[1:]))
+        constructor_code = self.notes[Labels.CTOR.value]
+        await self._insert_string(
+            '     ' +
+            '\n    '.join(constructor_code).replace('\r', '')
+        )
         await self._insert_string('\n')
         await self._insert_string('    QHsm_ctor(&me->super, Q_STATE_CAST(&DEFAULT_STATE_MACHINE_CAPITALIZED_NAME_initial));\n')
         await self._insert_string('}\n')
@@ -513,7 +488,9 @@ class CppFileWriter:
     def _sm_lowered_name(self) -> str:
         return self.sm_id[0].lower() + self.sm_id[1:]
 
-    async def _insert_string(self, s: str):
+    async def _insert_string(self, s: str | List[str]):
+        if isinstance(s, list):
+            s = '\n\t'.join(s)
         await self.f.write(re.sub('[ ]*\n', '\n',
                                   s.replace('STATE_MACHINE_LOWERED_NAME', self._sm_lowered_name()).replace('STATE_MACHINE_CAPITALIZED_NAME', self._sm_capitalized_name()).replace('STATE_MACHINE_NAME', self.sm_id).replace('HEADER_EXTENSION', self.header_file_extension)))
 
@@ -549,7 +526,7 @@ class CppFileWriter:
             # Если локальная история находится на одном уровне,
             # то добавляем посещение состояния в массив
             if state.parent is not None:
-                shallow_history = self.shallow_history.get(state.parent.id)
+                shallow_history = self.shallow_history.get(state.parent)
                 if shallow_history is not None:
                     await self._insert_string(
                         f'shallowHistory[{shallow_history.index}] '
@@ -603,7 +580,7 @@ class CppFileWriter:
                     state.id if state.name is None else state.name,
                     'Состояние',
                     triggers,
-                    state.parent.id if state.parent is not None else None,
+                    state.parent,
                     '\t\t\t'
                 )
             )
@@ -611,7 +588,7 @@ class CppFileWriter:
             await self._insert_string('        }\n')
         await self._insert_string('        default: {\n')
         if state.parent:
-            await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id)
+            await self._insert_string('            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent)
         else:
             await self._insert_string('            status_ = Q_SUPER(&QHsm_top);\n')
         await self._insert_string('            break;\n')
@@ -619,8 +596,7 @@ class CppFileWriter:
         await self._insert_string('    }\n')
         await self._insert_string('    return status_;\n')
         await self._insert_string('}\n')
-
-        for child_state in state.childs:
+        for child_state in state.children:
             await self._write_states_definitions_recursively(child_state, state_path)
 
         for trigger in state.trigs:
@@ -631,7 +607,7 @@ class CppFileWriter:
 
     async def _write_states_declarations_recursively(self, state: ParserState):
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.id)
-        for child_state in state.childs:
+        for child_state in state.children:
             await self._write_states_declarations_recursively(child_state)
 
     def _generate_trigger(self,
@@ -648,7 +624,7 @@ class CppFileWriter:
         if trigger.type == 'internal':
             if trigger.propagate:
                 if state.parent:
-                    actions += '            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent.id
+                    actions += '            status_ = Q_SUPER(&STATE_MACHINE_CAPITALIZED_NAME_%s);\n' % state.parent
                 else:
                     actions += '            status_ = Q_SUPER(&QHsm_top);\n'
             else:

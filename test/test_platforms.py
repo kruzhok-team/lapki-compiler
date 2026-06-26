@@ -66,8 +66,12 @@ def images() -> List[File]:
 @pytest.fixture
 def platform() -> Platform:
     """Load Autoborder platform."""
-    with open('compiler/platforms/BearlogaDefend-Autoborder/1.0/'
-              'BearlogaDefend-Autoborder-1.0.json', 'r') as f:
+    with open(
+        'compiler/platforms/BearlogaDefend-Autoborder/1.0/'
+            'BearlogaDefend-Autoborder-1.0.json',
+        'r',
+        encoding='utf-8'
+    ) as f:
         data = json.load(f)
     return Platform(**data)
 
@@ -140,7 +144,8 @@ async def test_get_platform_sources(platform_manager: PlatformManager,
     """Test receiving source files with code."""
     async with add_platform(platform, source_files, []) as platform_id:
         source_gen = await platform_manager.get_platform_sources(
-            platform_id, platform.version)
+            platform_id, platform.version
+        )
         result_sources: List[File] = [source async
                                       for source in source_gen]
         assert result_sources == source_files
