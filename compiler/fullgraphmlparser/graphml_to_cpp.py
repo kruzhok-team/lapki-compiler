@@ -367,9 +367,9 @@ class CppFileWriter:
 
         await self._insert_string('\n'.join(insert_strings) + '\n')
 
-    async def _write_local_history_definition(self):
+    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], h_type: str):
         """
-        Генерация тела локальных историй и запись их в файл.
+        Генерация тела локальных/глубоких историй и запись их в файл.
 
         ```cpp
         QState local_history_id(Sketch * const me, QEvt const * const e) {
@@ -387,21 +387,11 @@ class CppFileWriter:
         }
         ```
         """
-        for shallow_history in self.shallow_history.values():
+        for history in histories.values():
             await self._write_vertex_definition(
-                f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
-                shallow_history,
-                'Shallow history')
-
-    async def _write_deep_history_definition(self):
-        """
-        Генерация тела глубоких историй и запись их в файл.
-        """
-        for deep_history in self.deep_history.values():
-            await self._write_vertex_definition(
-                f'status_ = Q_TRAN(deepHistory[{deep_history.index}]);\n',
-                deep_history,
-                'Deep history')
+                f'status_ = Q_TRAN(shallowHistory[{history.index}]);\n',
+                history,
+                '{h_type} history')
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
@@ -430,8 +420,8 @@ class CppFileWriter:
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
-            await self._write_local_history_definition()
-            await self._write_deep_history_definition()
+            await self._write_history_definition(self.shallow_history, 'Shallow')
+            await self._write_history_definition(self.deep_history, 'Deep')
             if self.notes_dict['setup'] or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
                 await self._insert_string('\n\t' + '\n\t'.join(self.notes_dict['setup'].split('\n')[1:]))
