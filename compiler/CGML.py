@@ -614,7 +614,7 @@ def __init_initial_states(
     start_node_id: str | None = None
     parser_initials: Dict[str, GeneratorInitialVertex] = {}
     for initial_id, initial in initial_states.items():
-        if initial.parent == GLOBAL_STATE:
+        if initial.parent is None:
             if start_node_id is not None:
                 raise _InnerCGMLException(
                     'Два начальных состояния на одном уровне вложенности.')
