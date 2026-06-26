@@ -388,10 +388,18 @@ class CppFileWriter:
         ```
         """
         for history in histories.values():
-            await self._write_vertex_definition(
-                f'status_ = Q_TRAN(shallowHistory[{history.index}]);\n',
-                history,
-                '{h_type} history')
+            if h_type=='Shallow':
+                await self._write_vertex_definition(
+                    f'status_ = Q_TRAN(shallowHistory[{history.index}]);\n',
+                    history,
+                    '{h_type} history')
+            elif h_type=='Deep':
+                await self._write_vertex_definition(
+                    f'status_ = Q_TRAN(deepHistory[{history.index}]);\n',
+                    history,
+                    '{h_type} history')
+            else:
+                raise ValueError
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
