@@ -420,10 +420,10 @@ class CJsonParser:
             state: State = ide_states[statename]
             if state.parent is not None:
                 new_states[statename].parent = state.parent
-                new_states[state.parent].childs.append(new_states[statename])
+                new_states[state.parent].children.append(new_states[statename])
             else:
                 new_states[statename].parent = global_state.id
-                global_state.childs.append(new_states[statename])
+                global_state.children.append(new_states[statename])
 
         return new_states
 
@@ -478,7 +478,7 @@ class CJsonParser:
                                    actions='', trigs=[],
                                    entry='', exit='',
                                    id='global', new_id=['global'],
-                                   parent=None, childs=[],
+                                   parent=None, children=[],
                                    bounds=Bounds(
                                        x=0,
                                        y=0,
@@ -516,7 +516,7 @@ class CJsonParser:
                 id=state_id,
                 new_id=[state_id],
                 parent=None,
-                childs=[])
+                children=[])
         transitions, player_signals = self._getTransitions(
             data.transitions, compiler)
         player_signals: Dict[EventName,

@@ -596,7 +596,7 @@ class CppFileWriter:
         await self._insert_string('    }\n')
         await self._insert_string('    return status_;\n')
         await self._insert_string('}\n')
-        for child_state in state.childs:
+        for child_state in state.children:
             await self._write_states_definitions_recursively(child_state, state_path)
 
         for trigger in state.trigs:
@@ -607,7 +607,7 @@ class CppFileWriter:
 
     async def _write_states_declarations_recursively(self, state: ParserState):
         await self._insert_string('QState STATE_MACHINE_CAPITALIZED_NAME_%s(STATE_MACHINE_CAPITALIZED_NAME * const me, QEvt const * const e);\n' % state.id)
-        for child_state in state.childs:
+        for child_state in state.children:
             await self._write_states_declarations_recursively(child_state)
 
     def _generate_trigger(self,

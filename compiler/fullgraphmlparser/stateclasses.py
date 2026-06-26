@@ -223,14 +223,14 @@ class ParserState:
     id: str
     new_id: List[str]
     parent: str | None
-    childs: List['ParserState']
+    children: List['ParserState']
     bounds: Optional[GeometryBounds] = None
     initial_state: Optional[str] = None
 
     def __str__(self) -> str:
         return (
             f'Состояние({self.name}), Родитель: {self.parent}, '
-            f'Дочерние состояния: [{", ".join([child.name for child in self.childs])}])'
+            f'Дочерние состояния: [{", ".join([child.name for child in self.children])}])'
         )
 
 

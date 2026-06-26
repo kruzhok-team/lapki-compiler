@@ -211,7 +211,7 @@ def __process_state(
         bounds=None,
         actions='',
         trigs=parser_triggers,
-        childs=[]
+        children=[]
     )
 
 
@@ -277,12 +277,12 @@ def __connect_parents_to_states(
     global_state: ParserState,
 ) -> tuple[Dict[_StateId, ParserState], ParserState]:
     """
-    Fill parent field for states and update global_state.childs.
+    Fill parent field for states and update global_state.children.
 
     We can't fill it during first iteration,\
         because not everyone state is ready.
     So we can't add parent, that doesn't exist yet.
-    Returns: (updated states dict, updated global_state with filled childs)
+    Returns: (updated states dict, updated global_state with filled children)
     """
     global_copy = deepcopy(global_state)
     states_with_parents = deepcopy(parser_states)
@@ -292,11 +292,11 @@ def __connect_parents_to_states(
         parent = cgml_state.parent
         if parent is None:
             parser_state.parent = global_copy.id
-            global_copy.childs.append(parser_state)
+            global_copy.children.append(parser_state)
         else:
             parent_state = states_with_parents[parent]
             parser_state.parent = parent
-            parent_state.childs.append(parser_state)
+            parent_state.children.append(parser_state)
             parent_state.type = 'group'
     return states_with_parents, global_copy
 
@@ -776,12 +776,12 @@ def __update_global_state(
         parent: ParserState,
         states: Dict[str, ParserState]
     ):
-        for i, child in enumerate(parent.childs):
+        for i, child in enumerate(parent.children):
             state = states.get(child.id)
             if state is None:
                 raise _InnerCGMLException(
                     'Отсутствует дочернее состояние в списке состояний')
-            parent.childs[i] = state
+            parent.children[i] = state
             __recursive_update(state, states)
         return parent
     copy_states = deepcopy(states)
@@ -848,7 +848,7 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 id=GLOBAL_STATE,
                 new_id=[GLOBAL_STATE],
                 parent=None,
-                childs=[],
+                children=[],
                 bounds=Bounds(
                     x=0,
                     y=0,
