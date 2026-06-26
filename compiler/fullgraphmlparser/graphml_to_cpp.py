@@ -179,16 +179,29 @@ class CppFileWriter:
         """
         Глубокая история
 
-        todo: нужна проверка, если есть ещё одна глубокая история ниже, то кинуть исключение
+        todo: проверка, если есть ещё одна глубокая история ниже, то кинуть исключение
+        проверить, работает ли проверка вообще
         """
         d_dict: Dict[str, GeneratorHistory] = {}
 
         for d in deep_history:
-            if d.parent is None:
-                d.parent = 'global'
-            is_exist = d_dict.get(d.parent) is not None
+            par = d.parent
+            while par is not None:
+                is_exist = d_dict.get(par) is not None
+                if is_exist:
+                    raise CodeGenerationException(
+                        f'У элемента {d.parent} более одной'
+                        ' дочерней глубокой истории.'
+                    )
+                par = par.parent
+            if par is None:
+                par = 'global'
+            is_exist = d_dict.get(par) is not None
             if is_exist:
-                pass
+                raise CodeGenerationException(
+                    f'У элемента {d.parent} более одной'
+                    ' дочерней глубокой истории.'
+                )
             d_dict[d.parent] = d
 
         return d_dict
