@@ -720,56 +720,32 @@ def __create_choices(
     return parser_choices, new_transitions
 
 
-def __create_shallow_history(
-    shallow_histories: Dict[_VertexId, CGMLShallowHistory],
+def __create_history(
+    histories: Dict[_VertexId, CGMLShallowHistory | CGMLDeepHistory],
     transitions: List[ParserTrigger]
 ) -> tuple[List[GeneratorHistory],
            List[ParserTrigger]]:
     """
-    Подготовка элементов локальной истории к генерации кода.
+    Подготовка элементов локальной/глубокой истории к генерации кода.
 
     Возвращает данные для генерации и триггеры без переходов
     из локальных состояний.
     """
-    generator_shallow_histories: Dict[str, GeneratorHistory] = {}
+    generator_histories: Dict[str, GeneratorHistory] = {}
     new_transitions: List[ParserTrigger] = []
 
-    for i, sh in enumerate(shallow_histories.items()):
-        id, val = sh
-        generator_shallow_histories[id] = (
+    for i, h in enumerate(histories.items()):
+        id, val = h
+        generator_histories[id] = (
             GeneratorHistory(id, val.parent, index=i)
         )
     for transition in transitions:
-        sh = generator_shallow_histories.get(transition.source)
-        if sh is None:
+        h = generator_histories.get(transition.source)
+        if h is None:
             new_transitions.append(transition)
             continue
-        sh.default_value = transition.target
-    return list(generator_shallow_histories.values()), new_transitions
-
-def __create_deep_history(
-    deep_histories: Dict[_VertexId, CGMLDeepHistory],
-    transitions: List[ParserTrigger]
-) -> tuple[List[GeneratorHistory],
-           List[ParserTrigger]]:
-    """
-    Подготовка элементов глубокой истории к генерации кода
-    """
-    generator_deep_histories: Dict[str, GeneratorHistory] = {}
-    new_transitions: List[ParserTrigger] = []
-
-    for i, d in enumerate(deep_histories.items()):
-        id, val = d
-        generator_deep_histories[id] = (
-            GeneratorHistory(id, val.parent, index=i)
-        )
-    for transition in transitions:
-        d = generator_deep_histories.get(transition.source)
-        if d is None:
-            new_transitions.append(transition)
-            continue
-        d.default_value = transition.target
-    return list(generator_deep_histories.values()), new_transitions
+        h.default_value = transition.target
+    return list(generator_histories.values()), new_transitions
 
 
 def __create_final_states(
@@ -883,12 +859,12 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
             choices, transitions_without_choices = __create_choices(
                 state_machine.choices, transitions_without_initials)
             shallow_history, transitions_without_shallow_history = (
-                __create_shallow_history(
+                __create_history(
                     state_machine.shallow_history, transitions_without_choices
                 )
             )
             deep_history, transitions_without_deep_history = (
-                __create_deep_history(
+                __create_history(
                     state_machine.deep_history, transitions_without_shallow_history
                 )
             )
