@@ -63,7 +63,7 @@ def test_parse(path: str):
 )
 def test_new_platform_creation(path: str):
     """Test Platform object creation."""
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         Platform(**json.loads(f.read()))
 
 
@@ -198,7 +198,7 @@ async def test_compile_schemes(scheme_path: str,
     platform_manager = PlatformManager()
     test_path = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
     await init_platform(platform_id, platform_path)
-    with open(scheme_path, 'r') as f:
+    with open(scheme_path, 'r', encoding='utf-8') as f:
         path = test_path + '/test_project/sketch/'
         with create_test_folder(path, 0):
             data = f.read()

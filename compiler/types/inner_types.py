@@ -1,6 +1,7 @@
 """Module implements inner compiler's types."""
 
 from typing import List, Literal, Dict, Optional, TypeAlias, Any
+from pathlib import Path
 
 from pydantic import BaseModel, field_validator
 from pydantic.dataclasses import dataclass
@@ -65,7 +66,7 @@ class File(BaseModel):
         """Check, that filepath is not relative."""
         if '..' in v:
             raise ValueError('Path is not correct, remove all .. from path.')
-        return v
+        return str(Path(v))
 
 
 class StateMachineResult(BaseModel):
