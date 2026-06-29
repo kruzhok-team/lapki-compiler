@@ -317,6 +317,21 @@ class CppFileWriter:
                 f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
                 shallow_history,
                 'Shallow history')
+            
+    async def _copy_library_files(self, folder: str):
+        """Копирует библиотечные файлы в выходную папку."""
+        lib_src = os.path.join(MODULE_PATH, '..', 'library', 'default', '1.0', 'source')
+        if not os.path.exists(lib_src):
+            return
+        files_to_copy = ['func.hpp', 'func.cpp', 'ClassFunc.hpp', 'ClassFunc.cpp']
+        for fname in files_to_copy:
+            src = os.path.join(lib_src, fname)
+            dst = os.path.join(folder, fname)
+            if os.path.exists(src):
+                async with async_open(src, 'r') as fsrc:
+                    content = await fsrc.read()
+                async with async_open(dst, 'w') as fdst:
+                    await fdst.write(content)
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
@@ -349,6 +364,7 @@ class CppFileWriter:
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
             await self._write_local_history_definition()
+            await self._copy_library_files(folder)
             setup_notes = self.notes[Labels.SETUP.value]
             if setup_notes or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
