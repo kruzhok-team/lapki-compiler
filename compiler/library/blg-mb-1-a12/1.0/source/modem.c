@@ -19,12 +19,16 @@ extern "C" {
     // Главное прерывание модема
     void TIM1_TRG_COM_TIM17_IRQHandler(void) {
         if (ir_rx.is_enabled) {
-            uint16_t ir_level = ADC1 -> DR;
-            ir_tx_advance();
-            ir_rx_advance(
-                filter_2730_next(ir_level),
-                filter_6000_next(ir_level)
-            );
+            if (tx.turn_mode) {
+                ir_on();
+            } else {
+                uint16_t ir_level = ADC1 -> DR;
+                ir_tx_advance();
+                ir_rx_advance(
+                    filter_2730_next(ir_level),
+                    filter_6000_next(ir_level)
+                );
+            }
         
         //	ir_rx_buf[tim17_up % 32] = ir_level;
         //	if (tim17_up % 32 == 0)

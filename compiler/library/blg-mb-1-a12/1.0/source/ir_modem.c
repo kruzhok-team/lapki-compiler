@@ -17,11 +17,13 @@
 // Мы задействуем его для генерации несущей + модуляции
 //
 extern "C" {
+	static GPIO_TypeDef* ir_port = GPIOE;
+    static uint8_t ir_pin = 12;
 	static int ir_emitter_period = 0;
 
-	void ir_modem_init_emitter(void) {
+	static void ir_modem_init_emitter(void) {
 		RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-		initPin_PP(GPIOE, 12);
+		initPin_PP(ir_port, ir_pin);
 	}
 
 	static void ir_emitter_radiate_6000() {
@@ -54,7 +56,9 @@ extern "C" {
 
 		int not_empty;
 		int bit_queue;
-	} tx = { .fn = emitter_idle };
+
+		int turn_mode; // Простой режим передачи ON/OFF
+	} tx = { .fn = emitter_idle, .turn_mode = 0 };
 
 	static void preamble() {
 		if (tx.preamble_ttl > 0) {
@@ -141,6 +145,18 @@ extern "C" {
 		tx.fn = preamble;
 	}
 
+	static void ir_off() {
+		tx.turn_mode = 0;
+        setPin_PP(ir_port, ir_pin, OFF);
+		tx.tick++;
+    }
+
+    static void ir_on(){
+		tx.turn_mode = 1;
+        setPin_PP(ir_port, ir_pin, ON);
+		tx.tick++;
+    }
+
 	// Диспетчиризирующая функция
 	static void ir_tx_advance() {
 		if (tx.fn) {
@@ -148,7 +164,7 @@ extern "C" {
 		}
 		tx.tick++;
 
-		setPin_PP(GPIOE, 12, (tx.tick % ir_emitter_period) < (ir_emitter_period/2) ? ON : OFF);
+		setPin_PP(ir_port, ir_pin, (tx.tick % ir_emitter_period) < (ir_emitter_period/2) ? ON : OFF);
 	}
 
 	// ============================================================================

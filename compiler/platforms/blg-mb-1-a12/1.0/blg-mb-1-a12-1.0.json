@@ -219,7 +219,7 @@
       }
     },
     "importFiles": ["ir.hpp"],
-    "buildFiles": ["ir.hpp", "ir.c", "modem.c", "ir_modem.c", "acoustic_modem.c"],
+    "buildFiles": ["ir.hpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
     "loopActions": [],
     "singletone": false
    },
