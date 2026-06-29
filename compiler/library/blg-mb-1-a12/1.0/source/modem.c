@@ -18,43 +18,8 @@ extern "C" {
 
     // Главное прерывание модема
     void TIM1_TRG_COM_TIM17_IRQHandler(void) {
-        if (ir_rx.is_enabled) {
-            uint16_t ir_level = ADC1 -> DR;
-            ir_rx_advance(
-                filter_2730_next(ir_level),
-                filter_6000_next(ir_level)
-            );
-            
-        //	ir_rx_buf[tim17_up % 32] = ir_level;
-        //	if (tim17_up % 32 == 0)
-        //		USB_Transmit(TEST_FIXTURE_DATA_EP, (char*)ir_rx_buf, 64);
-        
-            // if (ir_rx_is_available())
-            //     USB_Transmit(TEST_FIXTURE_DATA_EP, (char*) & (struct {int x[16];}) { ir_rx_read_byte(), 0 }, 64);
-        
-        }
-
-        if (tx.is_enabled) {
-            if (tx.turn_mode) {
-                ir_on();
-            } else {
-                ir_tx_advance();
-            }
-        }
-        
-        if (acoustic_rx.is_enabled) {
-            // TODO: использовать оба уха
-            // Получится какая-то диаграмма направленности
-            float value = stm32g431::ears::adcArray[0]; // + stm32g431::ears::adcArray[1];
-
-            // Шкалу сдвинуть
-            value -= 2048.0f;
-
-            rx_advance(
-                filter_2_9_next(value),
-                filter_6_0_next(value)
-            );
-        }
+        ir_modem();
+        acoustic_modem();
         TIM17 -> SR &= ~TIM_SR_UIF;
         tim17_up++;
     }

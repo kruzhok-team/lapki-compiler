@@ -358,4 +358,22 @@ extern "C" {
 		ir_rx.is_enabled = 1;
 		ir_modem_init_emitter();
 	}
+
+	void ir_modem() {
+		if (ir_rx.is_enabled) {
+            uint16_t ir_level = ADC1 -> DR;
+            ir_rx_advance(
+                filter_2730_next(ir_level),
+                filter_6000_next(ir_level)
+            );
+        }
+
+        if (tx.is_enabled) {
+            if (tx.turn_mode) {
+                ir_on();
+            } else {
+                ir_tx_advance();
+            }
+        }
+	}
 }
