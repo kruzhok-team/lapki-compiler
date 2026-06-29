@@ -19,17 +19,12 @@ extern "C" {
     // Главное прерывание модема
     void TIM1_TRG_COM_TIM17_IRQHandler(void) {
         if (ir_rx.is_enabled) {
-            if (tx.turn_mode) {
-                ir_on();
-            } else {
-                uint16_t ir_level = ADC1 -> DR;
-                ir_tx_advance();
-                ir_rx_advance(
-                    filter_2730_next(ir_level),
-                    filter_6000_next(ir_level)
-                );
-            }
-        
+            uint16_t ir_level = ADC1 -> DR;
+            ir_rx_advance(
+                filter_2730_next(ir_level),
+                filter_6000_next(ir_level)
+            );
+            
         //	ir_rx_buf[tim17_up % 32] = ir_level;
         //	if (tim17_up % 32 == 0)
         //		USB_Transmit(TEST_FIXTURE_DATA_EP, (char*)ir_rx_buf, 64);
@@ -37,6 +32,14 @@ extern "C" {
             // if (ir_rx_is_available())
             //     USB_Transmit(TEST_FIXTURE_DATA_EP, (char*) & (struct {int x[16];}) { ir_rx_read_byte(), 0 }, 64);
         
+        }
+
+        if (tx.is_enabled) {
+            if (tx.turn_mode) {
+                ir_on();
+            } else {
+                ir_tx_advance();
+            }
         }
         
         if (acoustic_rx.is_enabled) {

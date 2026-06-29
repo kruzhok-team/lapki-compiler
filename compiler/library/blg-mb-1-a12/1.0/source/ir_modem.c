@@ -21,11 +21,6 @@ extern "C" {
     static uint8_t ir_pin = 12;
 	static int ir_emitter_period = 0;
 
-	static void ir_modem_init_emitter(void) {
-		RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-		initPin_PP(ir_port, ir_pin);
-	}
-
 	static void ir_emitter_radiate_6000() {
 		ir_emitter_period = 48000.0/6000.0 + 0.5;
 	}
@@ -57,8 +52,15 @@ extern "C" {
 		int not_empty;
 		int bit_queue;
 
+		int is_enabled;
 		int turn_mode; // Простой режим передачи ON/OFF
-	} tx = { .fn = emitter_idle, .turn_mode = 0 };
+	} tx = { .fn = emitter_idle, .is_enabled = 0, .turn_mode = 0};
+
+	static void ir_modem_init_emitter(void) {
+		RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
+		initPin_PP(ir_port, ir_pin);
+		tx.is_enabled = 1;
+	}
 
 	static void preamble() {
 		if (tx.preamble_ttl > 0) {
