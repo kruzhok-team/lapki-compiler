@@ -433,6 +433,7 @@
       },
       "buildFiles": ["Timer.h", "Timer.ino"],
       "importFiles": ["Timer.h"],
+      "loopActions": ["updateDifference"],
       "singletone": false,
       "variables": {
         "difference": {
