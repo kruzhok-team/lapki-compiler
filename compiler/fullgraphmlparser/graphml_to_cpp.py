@@ -574,11 +574,13 @@ class CppFileWriter:
                         f'{state.id});')
                 deep_history = None
                 current = state
-                while current.parent is not None:
-                    deep_history = self.deep_history.get(current.parent.id)
+                while current is not None and current.parent is not None:
+                    deep_history = self.deep_history.get(current.parent)
                     if deep_history is not None:
                         break
-                    current = current.parent
+                    if self.states.get(current.parent) is None:
+                        break
+                    current = self.states.get(current.parent)
                 if deep_history is not None:
                     await self._insert_string(
                         f'deepHistory[{deep_history.index}] '
