@@ -222,7 +222,6 @@ class ParserState:
     exit: str
     id: str
     new_id: List[str]
-    #parent_obj: Optional['ParserState']
     parent: str | None
     children: List['ParserState']
     bounds: Optional[GeometryBounds] = None

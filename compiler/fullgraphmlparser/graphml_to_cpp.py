@@ -91,6 +91,9 @@ class CppFileWriter:
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.global_state = state_machine.global_state
+        self.states: Dict[str, ParserState] = {}
+        for state in state_machine.states:
+            self.states[state.id] = state
         self.shallow_history = self.__convert_local_history_to_dict(
             state_machine.shallow_history)
         self.deep_history = self.__convert_deep_history_to_dict(
@@ -98,9 +101,6 @@ class CppFileWriter:
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
         self.final_states = state_machine.final_states
-        self.states: Dict[str, ParserState] = {}
-        for state in state_machine.states:
-            self.states[state.id] = state
 
     def __convert_local_history_to_dict(
         self,
@@ -135,16 +135,36 @@ class CppFileWriter:
         deep_history: List[GeneratorHistory]
     ) -> Dict[str, GeneratorHistory]:
         """
-        Глубокая история
+        Глубокая история.
 
-        todo: нужна проверка если есть ещё одна глубокая история ниже по иерархии, то кинуть исключение
+        проверка: если есть ещё одна глубокая история ниже по иерархии, то кинуть исключение
         """
         d_dict: Dict[str, GeneratorHistory] = {}
 
+        def is_parent(par: str, child: str) -> bool:
+            """Проверяет, является ли par предком child """
+            curr = child
+            while curr and curr != 'global':
+                state = self.states.get(curr)
+                if not state:
+                    break
+                curr = state.parent
+                if curr == par:
+                    return True
+            return False
+
         for d in deep_history:
-            is_exist = d_dict.get(d.parent) is not None
-            if is_exist:
-                pass #здесь
+            if d.parent in d_dict:
+                raise CodeGenerationException(
+                    f'У элемента более одной дочерней глубокой истории.'
+                )
+            
+            for hist in d_dict:
+                if is_parent(hist, d.parent) or is_parent(d.parent, hist):
+                    raise CodeGenerationException(
+                        f'У элемента более одной'
+                        ' дочерней глубокой истории.'
+                )
             d_dict[d.parent] = d
 
         return d_dict
