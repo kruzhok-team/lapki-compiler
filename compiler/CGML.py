@@ -725,7 +725,9 @@ def __create_choices(
 
 
 def __create_history(
-    histories: Dict[_VertexId, CGMLShallowHistory] | Dict[_VertexId, CGMLDeepHistory],
+    histories:
+    Dict[_VertexId, CGMLShallowHistory] |
+    Dict[_VertexId, CGMLDeepHistory],
     transitions: List[ParserTrigger]
 ) -> tuple[List[GeneratorHistory],
            List[ParserTrigger]]:
