@@ -898,12 +898,14 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 state_machine.choices, transitions_without_initials)
             shallow_history, transitions_without_shallow_history = (
                 __create_history(
-                    state_machine.shallow_history, transitions_without_choices
+                    {**state_machine.shallow_history},
+                    transitions_without_choices
                 )
             )
             deep_history, transitions_without_deep_history = (
                 __create_history(
-                    state_machine.deep_history, transitions_without_shallow_history
+                    {**state_machine.deep_history},
+                    transitions_without_shallow_history
                 )
             )
             final_states = __create_final_states(state_machine.finals)
