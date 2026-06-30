@@ -21,9 +21,9 @@ void DigitalOut::init() {
 
 void DigitalOut::toggle(){
     if(value == LOW) {
-        digitalWrite(pin, HIGH);
+        high();
     }
     else {
-        digitalWrite(pin, LOW);
+        low();
     }
 }

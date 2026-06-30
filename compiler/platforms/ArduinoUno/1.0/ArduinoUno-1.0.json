@@ -611,6 +611,7 @@
           "description": "Текущее значение на пине."
         }
       },
+      "initializationFunction": "init",
       "buildFiles": ["DigitalOut.h", "DigitalOut.ino"],
       "importFiles": ["DigitalOut.h"],
       "singletone": false
