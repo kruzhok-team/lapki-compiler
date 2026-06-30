@@ -725,7 +725,7 @@ def __create_choices(
 
 
 def __create_history(
-    histories: Dict[_VertexId, CGMLShallowHistory | CGMLDeepHistory],
+    histories: Dict[_VertexId, CGMLShallowHistory] | Dict[_VertexId, CGMLDeepHistory],
     transitions: List[ParserTrigger]
 ) -> tuple[List[GeneratorHistory],
            List[ParserTrigger]]:
@@ -898,13 +898,13 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 state_machine.choices, transitions_without_initials)
             shallow_history, transitions_without_shallow_history = (
                 __create_history(
-                    {**state_machine.shallow_history},
+                    state_machine.shallow_history,
                     transitions_without_choices
                 )
             )
             deep_history, transitions_without_deep_history = (
                 __create_history(
-                    {**state_machine.deep_history},
+                    state_machine.deep_history,
                     transitions_without_shallow_history
                 )
             )
