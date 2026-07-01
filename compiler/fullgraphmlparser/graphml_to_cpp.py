@@ -307,7 +307,7 @@ class CppFileWriter:
         await self._insert_string('\n         return status_;')
         await self._insert_string('\n}\n\n')
 
-    async def _write_history_initialization(self, histories: Dict[str, GeneratorHistory], history_type: Literal['deep', 'shallow']) -> None:
+    async def _write_history_initialization(self, histories: Dict[str, GeneratorHistory], history_type: HistoryType) -> None:
         """
         Генерация иниализации массива локальной/глубокой истории для sketch.h.
 
