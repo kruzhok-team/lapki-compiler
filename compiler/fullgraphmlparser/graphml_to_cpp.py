@@ -2,7 +2,7 @@ import os.path
 import re
 import string
 from collections import defaultdict
-from typing import List, Sequence, Tuple, Dict, DefaultDict
+from typing import List, Sequence, Tuple, Dict, DefaultDict, Literal
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
@@ -306,7 +306,7 @@ class CppFileWriter:
         await self._insert_string('\n         return status_;')
         await self._insert_string('\n}\n\n')
 
-    async def _write_history_initialization(self, history_type: str) -> None:
+    async def _write_history_initialization(self, histories: Dict[str, GeneratorHistory], history_type: Literal['deep', 'shallow']) -> None:
         """
         Генерация иниализации массива локальной/глубокой истории для sketch.h.
 
@@ -323,14 +323,10 @@ class CppFileWriter:
             if target_id is None:
                 target_id = 'QHsm_top'
             return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
-        if history_type=='shallowHistory':
-            insert_strings = [f'QStateHandler {history_type}[{len(self.shallow_history)}] = ' + '{']
-            history_sorted_by_index = sorted(self.shallow_history.values(), key=lambda h: h.index)
-        elif history_type=='deepHistory':
-            insert_strings = [f'QStateHandler {history_type}[{len(self.deep_history)}] = ' + '{']
-            history_sorted_by_index = sorted(self.deep_history.values(), key=lambda h: h.index)
-        else:
-            raise ValueError
+
+        insert_strings = [f'QStateHandler {history_type}History[{len(histories)}] = ' + '{']
+        history_sorted_by_index = sorted(histories.values(), key=lambda h: h.index)
+
         insert_history = [
             f'{get_casted_state(h.default_value)},'
             for h in history_sorted_by_index]
@@ -339,7 +335,7 @@ class CppFileWriter:
 
         await self._insert_string('\n'.join(insert_strings) + '\n')
 
-    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], h_type: str):
+    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], history_type: Literal['deep', 'shallow']):
         """
         Генерация тела локальных/глубоких историй и запись их в файл.
 
@@ -360,18 +356,10 @@ class CppFileWriter:
         ```
         """
         for history in histories.values():
-            if h_type=='Shallow':
-                await self._write_vertex_definition(
-                    f'status_ = Q_TRAN(shallowHistory[{history.index}]);\n',
-                    history,
-                    '{h_type} history')
-            elif h_type=='Deep':
-                await self._write_vertex_definition(
-                    f'status_ = Q_TRAN(deepHistory[{history.index}]);\n',
-                    history,
-                    '{h_type} history')
-            else:
-                raise ValueError
+            await self._write_vertex_definition(
+                f'status_ = Q_TRAN({history_type}History[{history.index}]);\n',
+                history,
+                f'{str(history_type)[0].upper()}{str(history_type)[1:]} history')
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
@@ -403,8 +391,8 @@ class CppFileWriter:
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
-            await self._write_history_definition(self.shallow_history, 'Shallow')
-            await self._write_history_definition(self.deep_history, 'Deep')
+            await self._write_history_definition(self.shallow_history, 'shallow')
+            await self._write_history_definition(self.deep_history, 'deep')
             setup_notes = self.notes[Labels.SETUP.value]
             if setup_notes or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
@@ -486,8 +474,8 @@ class CppFileWriter:
                 )
             else:
                 await self._insert_string('void);\n')
-            await self._write_history_initialization('shallowHistory')
-            await self._write_history_initialization('deepHistory')
+            await self._write_history_initialization(self.shallow_history, 'shallow')
+            await self._write_history_initialization(self.deep_history, 'deep')
             declare_h_notes = self.notes[Labels.H.value]
             if declare_h_notes:
                 await self._insert_string('//Start of h code from diagram\n')
