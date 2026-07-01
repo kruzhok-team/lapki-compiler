@@ -1185,7 +1185,6 @@
       "importFiles": ["CalcFloat.hpp"],
       "singletone": false
     },
-
     "Array": {
       "description": "Статический массив",
       "img": "arduino/timer.svg",
@@ -1333,6 +1332,276 @@
       "buildFiles": ["LCD_I2C.cpp", "Lcd.cpp", "LCD_I2C.h", "Lcd.h"],
       "importFiles": ["LCD_I2C.h", "Lcd.h"],
       "singletone": false
+    },
+    "MathFloat": {
+      "name": "Математика",
+      "description": "Компонент для вычислений c плавающей точкой.",
+      "img": "",
+      "signals": {
+        "isOverflow": {
+          "img": "math/overflow.svg",
+          "description": "Переполнение счетчика.",
+          "checkMethod": "isOverflow"
+        },
+        "isZeroDivision": {
+          "img": "math/divZero.svg",
+          "description": "Деление на ноль.",
+          "checkMethod": "isZeroDivision"
+        }
+      },
+      "methods": {
+        "sum": {
+          "alias": "Сложить",
+          "img": "math/add.svg",
+          "description": "Вычислить суммух двух чисел.",
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Первое слагаемое."
+            },
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Второе слагаемое."
+            }
+          ]
+        },
+        "dif": {
+          "alias": "Вычесть",
+          "img": "math/sub.svg",
+          "description": "Вычислить разность двух чисел.",
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Уменьшаемое."
+            },
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Вычитаемое."
+            }
+          ]
+        },
+        "mult": {
+          "alias": "Умножить",
+          "img": "math/mul.svg",
+          "description": "Вычислить произведение двух чисел",
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Первый множитель."
+            },
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Второй множитель."
+            }
+          ]
+        },
+        "div": {
+          "alias": "Разделить",
+          "img": "math/div.svg",
+          "description": "Вычислить частное двух чисел.",
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Делимое."
+            },
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Делитель."
+            }
+          ]
+        },
+        "mod": {
+          "alias": "Остаток от деления",
+          "img": "math/mod.svg",
+          "description": "Вычислить остаток от деления",
+          "parameters": [
+             {
+              "name": "Значение",
+              "type": "float",
+              "description": "Делимое."
+            },
+            {
+              "name": "Значение",
+              "type": "float",
+              "description": "Делитель."
+            }
+          ]
+        },
+        "ABS": {
+          "alias": "Модуль",
+          "img": "math/abs.svg",
+          "description": "Вычислить модуль числа.",
+          "parameters": [
+             {
+              "name": "Значение",
+              "type": "float",
+              "description": "Число, модуль которого требуется получить."
+            }
+          ]
+        },
+        "pow": {
+          "alias": "Степень",
+          "img": "math/pow.svg",
+          "description": "Вычислить степень числа.",
+          "parameters": [
+             {
+              "name": "Основание",
+              "type": "float",
+              "description": "Основание степени."
+            },
+            {
+              "name": "Показатель",
+              "type": "float",
+              "description": "Показатель степени."
+            }
+          ]
+        },
+        "sqrt": {
+          "alias": "Кв. корень",
+          "img": "math/sqrt.svg",
+          "description": "Вычислить квадратный корень из числа.",
+          "parameters": [
+             {
+              "name": "Значение",
+              "type": "float",
+              "description": "Число, для которого требуется вычислить квадратный корень"
+            }
+          ]
+        },
+        "log": {
+          "alias": "Логарифм",
+          "img": "math/log.svg",
+          "description": "Логарифм от числа по заданному основанию.",
+          "parameters": [
+            {
+              "name": "Аргумент",
+              "type": "float",
+              "description": "Аргумент логарифма."
+            },
+            {
+              "name": "Основание",
+              "type": "float",
+              "description": "Основание логарифма."
+            }
+          ]
+        },
+        "applyBasicOperator": {
+          "alias": "Вычислить операцию",
+          "img": "",
+          "description": "",
+          "parameters": [
+            {
+              "name": "Левая часть",
+              "type": "float",
+              "description": "Левая часть операции."
+            },
+            {
+              "name": "Операция",
+              "type": "char",
+              "description": "тип операции '+', '-', '*', '/'."
+            },
+            {
+              "name": "Правая часть",
+              "type": "float",
+              "description": "Правая часть операции."
+            }
+          ]
+        },
+        "reset_state": {
+          "alias": "Сброс",
+          "img": "math/log.svg",
+          "description": "Сбросить флаги ошибок.",
+          "parameters": []
+        }
+      },
+      "variables": {
+        "value": {
+          "alias": "Значение",
+          "img": "common/value.svg",
+          "type": "float",
+          "description": "Значение"
+        },
+        "zeroDivideF": {
+          "alias": "Ошибка деления на нуль",
+          "img": "math/divZero.svg",
+          "type": "char",
+          "description": "Логическая переменная, возникла ли ошибка при делении"
+        }
+      },
+      "constructorParameters": {},
+      "buildFiles": ["MathFloat.hpp", "OverflowHelpers.hpp"],
+      "importFiles": ["MathFloat.hpp"],
+      "singletone": true
+    },
+    "VarFloat": {
+      "description": "Переменная, хранящая число с плавающей точкой",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {},
+      "methods": {
+        "set": {
+          "alias": "Установить",
+          "img": "common/set-value.svg",
+          "description": "Сохраняет в текущую переменную новое значение.",
+          "parameters": [
+            {
+              "name": "Значение",
+              "description": "Новое значение.",
+              "type": "float"
+            }
+          ]
+        }
+      },
+      "buildFiles": ["VarFloat.hpp"],
+      "importFiles": ["VarFloat.hpp"],
+      "singletone": false,
+      "variables": {
+        "value": {
+          "alias": "Значение",
+          "img": "common/value.svg",
+          "type": "float",
+          "description": "Значение переменной."
+        }
+      }
+    },
+    "VarInt": {
+      "description": "Переменная, хранящая целое число",
+      "img": "",
+      "signals": {},
+      "constructorParameters": {},
+      "methods": {
+         "set": {
+          "alias": "Установить",
+          "img": "common/set-value.svg",
+          "description": "Сохраняет в текущую переменную новое значение.",
+          "parameters": [
+            {
+              "name": "Значение",
+              "description": "Новое значение.",
+              "type": "int32_t"
+            }
+          ]
+        }
+      },
+      "buildFiles": ["VarInt.hpp"],
+      "importFiles": ["VarInt.hpp"],
+      "singletone": false,
+      "variables": {
+        "value": {
+          "alias": "Значение",
+          "img": "common/value.svg",
+          "type": "int32_t",
+          "description": "Значение переменной."
+        }
+      }
     }
   }
 }
