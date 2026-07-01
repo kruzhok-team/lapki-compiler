@@ -910,12 +910,6 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 platform, list(parsed_components.values()))
             build_files = __get_build_files(
                 platform, list(parsed_components.values()))
-            
-            extra_includes = ["func.hpp", "ClassFunc.hpp"]
-            extra_build = ["func.cpp", "ClassFunc.cpp"]
-            included_libraries.extend(extra_includes)
-            build_files.update(extra_build)
-
             notes: List[ParserNote] = [
                 *__generate_create_components_code(parsed_components,
                                                    platform),
