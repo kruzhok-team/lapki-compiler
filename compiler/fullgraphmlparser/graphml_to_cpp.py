@@ -15,8 +15,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     BaseParserVertex,
     Condition,
     GeneratorHistory,
+    HistoryType,
 )
-from compiler.fullgraphmlparser.stateclasses import ( HistoryType )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
 MODULE_PATH = os.path.join(get_config().module_directory, 'fullgraphmlparser')
