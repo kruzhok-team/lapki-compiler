@@ -19,6 +19,7 @@ GLOBAL_STATE = 'global'  # дефолтный родитель элемента
 TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
 StateType = Literal['group', 'choice', 'internal']
 VertexType = Literal['final', 'initial', 'choice', 'terminate']
+HistoryType = Literal['shallow', 'deep']
 
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
@@ -165,14 +166,14 @@ class GeneratorChoiceVertex(BaseParserVertex):
 
 
 @dataclass
-class GeneratorShallowHistory(BaseParserVertex):
+class GeneratorHistory(BaseParserVertex):
     """
-    Псевдосостояние локальной истории.
+    Псевдосостояние локальной/глобальной истории.
 
     Генерация псевдосостояния истории помимо генерации стандартного вертекса
     состоит из инициализации массива и хранении последних последних посещений.
     ```cpp
-    // инициализация
+    // пример инициализации локальной истории
     QStateHandler shallowHistory[3] = {
         Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
         Q_STATE_CAST(Sketch_pixtlgycbblxtahjlzhl),
@@ -184,10 +185,10 @@ class GeneratorShallowHistory(BaseParserVertex):
     // Совершили переход и сохранили состояние
     shallowHistory[0] = {  Q_STATE_CAST(Sketch_mlqctlmxugztidzjjhfz) };
     ```
-    `index`: индекс в массиве локальных историй.
+    `index`: индекс в массиве локальных/глубоких историй.
 
     `default_value`: идентификатор состояния, в которое ведет переход
-    в локальную историю, если на уровне локального
+    в локальную/глубокую историю, если на уровне локального
     состояния не было совершено переходов.
 
     """
@@ -266,7 +267,10 @@ class StateMachine:
     initial_states: List[GeneratorInitialVertex] = Field(default_factory=list)
     choices: List[GeneratorChoiceVertex] = Field(default_factory=list)
     final_states: List[GeneratorFinalVertex] = Field(default_factory=list)
-    shallow_history: List[GeneratorShallowHistory] = Field(
+    shallow_history: List[GeneratorHistory] = Field(
+        default_factory=list
+    )
+    deep_history: List[GeneratorHistory] = Field(
         default_factory=list
     )
     compiling_settings: Optional[SMCompilingSettings] = None

@@ -2,7 +2,7 @@ import os.path
 import re
 import string
 from collections import defaultdict
-from typing import List, Sequence, Tuple, Dict, DefaultDict
+from typing import List, Sequence, Tuple, Dict, DefaultDict, Literal
 
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
@@ -14,7 +14,8 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     BaseParserVertex,
     Condition,
-    GeneratorShallowHistory,
+    GeneratorHistory,
+    HistoryType,
 )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
@@ -91,16 +92,21 @@ class CppFileWriter:
         self.start_node = state_machine.start_node
         self.start_action = state_machine.start_action
         self.global_state = state_machine.global_state
+        self.states: Dict[str, ParserState] = {}
+        for state in state_machine.states:
+            self.states[state.id] = state
         self.shallow_history = self.__convert_local_history_to_dict(
             state_machine.shallow_history)
+        self.deep_history = self.__convert_deep_history_to_dict(
+            state_machine.deep_history)
         self.initial_states = state_machine.initial_states
         self.choices = state_machine.choices
         self.final_states = state_machine.final_states
 
     def __convert_local_history_to_dict(
         self,
-        shallow_history: List[GeneratorShallowHistory]
-    ) -> Dict[str, GeneratorShallowHistory]:
+        shallow_history: List[GeneratorHistory]
+    ) -> Dict[str, GeneratorHistory]:
         """
         Конвертировать массив локальных историй в словарь, где ключом является\
             id родителя.
@@ -112,7 +118,7 @@ class CppFileWriter:
         - `CodeGeneratorException` - если на одном уровне находится\
             более одной локальной истории
         """
-        sh_dict: Dict[str, GeneratorShallowHistory] = {}
+        sh_dict: Dict[str, GeneratorHistory] = {}
 
         for sh in shallow_history:
             is_exist = sh_dict.get(sh.parent) is not None
@@ -124,6 +130,45 @@ class CppFileWriter:
             sh_dict[sh.parent] = sh
 
         return sh_dict
+    
+    def __convert_deep_history_to_dict(
+        self,
+        deep_history: List[GeneratorHistory]
+    ) -> Dict[str, GeneratorHistory]:
+        """
+        Глубокая история.
+
+        проверка: если есть ещё одна глубокая история ниже по иерархии, то кинуть исключение
+        """
+        d_dict: Dict[str, GeneratorHistory] = {}
+
+        def is_parent(par: str, child: str) -> bool:
+            """Проверяет, является ли par предком child """
+            curr = child
+            while curr and curr != 'global':
+                state = self.states.get(curr)
+                if not state:
+                    break
+                curr = state.parent
+                if curr == par:
+                    return True
+            return False
+
+        for d in deep_history:
+            if d.parent in d_dict:
+                raise CodeGenerationException(
+                    f'У элемента более одной дочерней глубокой истории.'
+                )
+            
+            for hist in d_dict:
+                if is_parent(hist, d.parent) or is_parent(d.parent, hist):
+                    raise CodeGenerationException(
+                        f'У элемента более одной'
+                        ' дочерней глубокой истории.'
+                )
+            d_dict[d.parent] = d
+
+        return d_dict
 
     async def _write_unconditional_transition(
         self,
@@ -262,9 +307,9 @@ class CppFileWriter:
         await self._insert_string('\n         return status_;')
         await self._insert_string('\n}\n\n')
 
-    async def _write_local_history_initialization(self) -> None:
+    async def _write_history_initialization(self, histories: Dict[str, GeneratorHistory], history_type: HistoryType) -> None:
         """
-        Генерация иниализации массива локальной истории для sketch.h.
+        Генерация иниализации массива локальной/глубокой истории для sketch.h.
 
         ```cpp
         // Пример кода инициализации
@@ -279,22 +324,21 @@ class CppFileWriter:
             if target_id is None:
                 target_id = 'QHsm_top'
             return f'\tQ_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_{target_id})'
-        insert_strings = [
-            f'QStateHandler shallowHistory[{len(self.shallow_history)}] = ' + '{'
-        ]
-        shallow_history_sorted_by_index = sorted(
-            self.shallow_history.values(), key=lambda lh: lh.index)
-        insert_shallows = [
-            f'{get_casted_state(lh.default_value)},'
-            for lh in shallow_history_sorted_by_index]
-        insert_strings.extend(insert_shallows)
+
+        insert_strings = [f'QStateHandler {history_type}History[{len(histories)}] = ' + '{']
+        history_sorted_by_index = sorted(histories.values(), key=lambda h: h.index)
+
+        insert_history = [
+            f'{get_casted_state(h.default_value)},'
+            for h in history_sorted_by_index]
+        insert_strings.extend(insert_history)
         insert_strings.append('};')
 
         await self._insert_string('\n'.join(insert_strings) + '\n')
 
-    async def _write_local_history_definition(self):
+    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], history_type: HistoryType):
         """
-        Генерация тела локальных историй и запись их в файл.
+        Генерация тела локальных/глубоких историй и запись их в файл.
 
         ```cpp
         QState local_history_id(Sketch * const me, QEvt const * const e) {
@@ -312,11 +356,11 @@ class CppFileWriter:
         }
         ```
         """
-        for shallow_history in self.shallow_history.values():
+        for history in histories.values():
             await self._write_vertex_definition(
-                f'status_ = Q_TRAN(shallowHistory[{shallow_history.index}]);\n',
-                shallow_history,
-                'Shallow history')
+                f'status_ = Q_TRAN({history_type}History[{history.index}]);\n',
+                history,
+                f'{str(history_type)[0].upper()}{str(history_type)[1:]} history')
 
     async def _write_final_states_definition(self):
         for final in self.final_states:
@@ -348,7 +392,8 @@ class CppFileWriter:
             await self._write_initial_vertexes_definition()
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
-            await self._write_local_history_definition()
+            await self._write_history_definition(self.shallow_history, 'shallow')
+            await self._write_history_definition(self.deep_history, 'deep')
             setup_notes = self.notes[Labels.SETUP.value]
             if setup_notes or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
@@ -403,6 +448,9 @@ class CppFileWriter:
                 *self.final_states,
                 *list(
                     self.shallow_history.values()
+                ),
+                *list(
+                    self.deep_history.values()
                 )
             ])
             await self._insert_string('\n#ifdef DESKTOP\n')
@@ -427,7 +475,8 @@ class CppFileWriter:
                 )
             else:
                 await self._insert_string('void);\n')
-            await self._write_local_history_initialization()
+            await self._write_history_initialization(self.shallow_history, 'shallow')
+            await self._write_history_initialization(self.deep_history, 'deep')
             declare_h_notes = self.notes[Labels.H.value]
             if declare_h_notes:
                 await self._insert_string('//Start of h code from diagram\n')
@@ -487,7 +536,7 @@ class CppFileWriter:
 
     def _sm_lowered_name(self) -> str:
         return self.sm_id[0].lower() + self.sm_id[1:]
-
+            
     async def _insert_string(self, s: str | List[str]):
         if isinstance(s, list):
             s = '\n\t'.join(s)
@@ -532,7 +581,20 @@ class CppFileWriter:
                         f'shallowHistory[{shallow_history.index}] '
                         '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
                         f'{state.id});')
-
+                deep_history = None
+                current = state
+                while current is not None and current.parent is not None:
+                    deep_history = self.deep_history.get(current.parent)
+                    if deep_history is not None:
+                        break
+                    if self.states.get(current.parent) is None:
+                        break
+                    current = self.states.get(current.parent)
+                if deep_history is not None:
+                    await self._insert_string(
+                        f'deepHistory[{deep_history.index}] '
+                        '= Q_STATE_CAST(STATE_MACHINE_CAPITALIZED_NAME_'
+                        f'{state.id});')
             await self._insert_string('            status_ = Q_HANDLED();\n')
             await self._insert_string('\n'.join(['            ' + line for line in state.entry.split('\n')]) + '\n')
             await self._insert_string('            break;\n')
