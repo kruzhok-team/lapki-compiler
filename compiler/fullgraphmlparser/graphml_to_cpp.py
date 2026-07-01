@@ -679,7 +679,7 @@ class CppFileWriter:
 
         body_lines = []
         for bid in sorted_blocks:
-            var_type = 'int32_t'
+            block = next(b for b in func.blocks if b.id == bid)
             if block.type == 'abs':
                 body_lines.append(f'    // Блок {block.id} (abs) требует массив, пропускаем')
                 continue
@@ -751,6 +751,10 @@ class CppFileWriter:
             declarations.append(decl)
             definitions.append(defin)
         if declarations:
-            self.notes_dict['user_methods_h'] += '\n// Вычислительные функции\n' + '\n'.join(declarations) + '\n'
+            self.notes[Labels.USER_FUNC_H.value].append(
+                '\n// Вычислительные функции\n' + '\n'.join(declarations)
+            )
         if definitions:
-            self.notes_dict['user_methods_c'] += '\n// Определения вычислительных функций\n' + '\n'.join(definitions) + '\n'
+            self.notes[Labels.USER_FUNC_C.value].append(
+                '\n// Определения вычислительных функций\n' + '\n'.join(definitions)
+            )
