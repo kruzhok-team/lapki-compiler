@@ -7,6 +7,7 @@ from typing import List, Sequence, Tuple, Dict, DefaultDict
 from aiofile import async_open
 from compiler.fullgraphmlparser.stateclasses import (
     CodeGenerationException,
+    ComputationFunction,
     ParserState,
     ParserTrigger,
     StateMachine,
@@ -80,6 +81,7 @@ class CppFileWriter:
         self.sm_id = 'sketch'
         self.sm_name = state_machine.name
         self.player_signal = state_machine.signals
+        self.computation_functions = state_machine.computation_functions
 
         self.notes: DefaultDict[str, List[str]] = defaultdict(list)
 
@@ -349,6 +351,7 @@ class CppFileWriter:
             await self._write_choice_vertex_definition()
             await self._write_final_states_definition()
             await self._write_local_history_definition()
+            await self._write_computation_functions()
             setup_notes = self.notes[Labels.SETUP.value]
             if setup_notes or self.create_setup:
                 await self._insert_string('\nvoid setup() {')
@@ -637,3 +640,117 @@ class CppFileWriter:
             raise Exception('Unknown trigger type: %s' % trigger.type)
 
         return actions
+
+    def _generate_function_code(self, func: ComputationFunction) -> tuple[str, str]:
+        """
+        Генерирует объявление и определение C++ функции для одного ComputationFunction.
+        Возвращает (объявление, определение).
+        """
+        dependencies = {block.id: [] for block in func.blocks}
+        in_degree = {block.id: 0 for block in func.blocks}
+        for conn in func.connections:
+            if conn.target_block_id in dependencies:
+                dependencies[conn.target_block_id].append(conn.source_block_id)
+                in_degree[conn.target_block_id] += 1
+
+        from collections import deque
+        queue = deque([bid for bid, deg in in_degree.items() if deg == 0])
+        sorted_blocks = []
+        while queue:
+            bid = queue.popleft()
+            sorted_blocks.append(bid)
+            for dep in dependencies.get(bid, []):
+                in_degree[dep] -= 1
+                if in_degree[dep] == 0:
+                    queue.append(dep)
+
+        if len(sorted_blocks) != len(func.blocks):
+            raise CodeGenerationException(f'Циклическая зависимость в функции {func.name}')
+
+        temp_vars = {}
+        used_as_source = {conn.source_block_id for conn in func.connections}
+        output_block_id = None
+        for block in func.blocks:
+            if block.id not in used_as_source:
+                output_block_id = block.id
+                break
+        if output_block_id is None and func.blocks:
+            output_block_id = sorted_blocks[-1] if sorted_blocks else None
+
+        body_lines = []
+        for bid in sorted_blocks:
+            var_type = 'int32_t'
+            if block.type == 'abs':
+                body_lines.append(f'    // Блок {block.id} (abs) требует массив, пропускаем')
+                continue
+
+            args = []
+            for port, value in block.inputs.items():
+                if value.isdigit() or (value.startswith('-') and value[1:].isdigit()):
+                    args.append(value)
+                else:
+                    if value in temp_vars:
+                        args.append(temp_vars[value])
+                    else:
+                        args.append(value)
+
+            if block.type == 'sum':
+                if len(args) >= 2:
+                    array_arg = args[0]
+                    size_arg = args[1]
+                else:
+                    array_arg = 'data'
+                    size_arg = '60'
+                body_lines.append(f'    int32_t temp_{bid} = func_sum({array_arg}, {size_arg});')
+            elif block.type == 'smooth':
+                coeff = block.parameters.get('coeff', '0.4f')
+                static_var = f'static int32_t prev_{bid} = 0;'
+                if len(args) >= 1:
+                    value_arg = args[0]
+                else:
+                    value_arg = '0'
+                body_lines.append(f'    {static_var}')
+                body_lines.append(f'    int32_t temp_{bid} = func_smooth({value_arg}, {coeff}, &prev_{bid});')
+            elif block.type == 'greater':
+                if len(args) >= 2:
+                    a = args[0]
+                    b = args[1]
+                else:
+                    a = '0'
+                    b = '0'
+                body_lines.append(f'    int32_t temp_{bid} = func_greater({a}, {b}) ? 1 : 0;')
+            elif block.type == 'const':
+                const_value = block.parameters.get('value', '0')
+                body_lines.append(f'    int32_t temp_{bid} = {const_value};')
+            else:
+                body_lines.append(f'    // Неизвестный блок {block.type} (id={bid})')
+
+            temp_vars[bid] = f'temp_{bid}'
+
+        if output_block_id and output_block_id in temp_vars:
+            return_expr = temp_vars[output_block_id]
+        else:
+            return_expr = '0'
+
+        signature = f'int32_t {func.name}()'
+        declaration = f'{signature};'
+        definition = f'{signature} {{\n'
+        definition += '\n'.join(body_lines)
+        definition += f'\n    return {return_expr};\n'
+        definition += '}'
+
+        return declaration, definition
+        
+    async def _write_computation_functions(self):
+        if not self.computation_functions:
+            return
+        declarations = []
+        definitions = []
+        for func in self.computation_functions:
+            decl, defin = self._generate_function_code(func)
+            declarations.append(decl)
+            definitions.append(defin)
+        if declarations:
+            self.notes_dict['user_methods_h'] += '\n// Вычислительные функции\n' + '\n'.join(declarations) + '\n'
+        if definitions:
+            self.notes_dict['user_methods_c'] += '\n// Определения вычислительных функций\n' + '\n'.join(definitions) + '\n'

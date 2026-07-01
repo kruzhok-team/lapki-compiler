@@ -45,6 +45,9 @@ from compiler.fullgraphmlparser.stateclasses import (
     UnconditionalTransition,
     GeneratorFinalVertex,
     GeneratorShallowHistory,
+    ComputationFunction,
+    FunctionBlock,
+    FunctionConnection,
     GLOBAL_STATE
 )
 _StartNodeId = str
@@ -799,6 +802,45 @@ def check_sm_id(sm_id: str) -> bool:
     regex = re.match(sm_id, r'^\w+$')
     return regex is not None
 
+def __parse_computation_functions(
+    cgml_functions: List[Any]  # Здесь тип будет из cyberiadaml_py
+) -> List[ComputationFunction]:
+    """
+    Преобразует список CGML-объектов вычислительных функций
+    во внутреннее представление для кодогенератора.
+    """
+    result: List[ComputationFunction] = []
+    for cgml_func in cgml_functions:
+        blocks = []
+        for cgml_block in cgml_func.blocks:
+            block = FunctionBlock(
+                id=cgml_block.id,
+                type=cgml_block.type,
+                position=(cgml_block.x, cgml_block.y),
+                parameters=cgml_block.parameters,
+                inputs=cgml_block.inputs,
+                outputs=cgml_block.outputs,
+            )
+            blocks.append(block)
+
+        connections = []
+        for cgml_conn in cgml_func.connections:
+            conn = FunctionConnection(
+                source_block_id=cgml_conn.source_block_id,
+                source_port=cgml_conn.source_port,
+                target_block_id=cgml_conn.target_block_id,
+                target_port=cgml_conn.target_port,
+            )
+            connections.append(conn)
+
+        func = ComputationFunction(
+            id=cgml_func.id,
+            name=cgml_func.name,
+            blocks=blocks,
+            connections=connections,
+        )
+        result.append(func)
+    return result
 
 async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                                    Dict[StateMachineId, StateMachine]]:
@@ -901,6 +943,11 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 )
             )
             final_states = __create_final_states(state_machine.finals)
+            computation_functions = []
+            if hasattr(state_machine, 'computation_functions'):
+                computation_functions = __parse_computation_functions(
+                    state_machine.computation_functions
+                )
             all_triggers = __get_all_triggers(
                 list(states.values()),
                 transitions_without_shallow_history)
@@ -949,7 +996,8 @@ async def parse(xml: str) -> tuple[Dict[StateMachineId, ERROR],
                 final_states=final_states,
                 language=platform.language,
                 header_file_extension=platform.header_file_extension,
-                shallow_history=shallow_history
+                shallow_history=shallow_history,
+                computation_functions=computation_functions
             )
         except _InnerCGMLException as e:
             errors[sm_id] = (
