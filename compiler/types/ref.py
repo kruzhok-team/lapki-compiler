@@ -41,6 +41,8 @@ def blg_mb_revision(refs: Dict[str, Any]) -> RefHandlerResult:
     """Map Hardware ref ID from CyberBearLoader identify to a C #define flag."""
     board = BlgMbRefs.from_dict(refs)
     define = _HARDWARE_REF_TO_DEFINE.get(board.hardware_ref)
+    print(f"{board} | {define}")
+    # exit()
     if not define:
         return RefHandlerResult()
     extra_flags = {cmd: [f'-D{define}'] for cmd in _COMPILERS_ACCEPTING_DEFINES}
