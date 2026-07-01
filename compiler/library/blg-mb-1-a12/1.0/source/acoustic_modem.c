@@ -186,4 +186,21 @@ extern "C" {
         }
         acoustic_rx.tick++;
     }
+
+    void acoustic_modem() {
+        if (acoustic_rx.is_enabled) {
+            // TODO: использовать оба уха
+            // Получится какая-то диаграмма направленности
+            float value = stm32g431::ears::adcArray[0]; // + stm32g431::ears::adcArray[1];
+
+            // Шкалу сдвинуть
+            value -= 2048.0f;
+
+            rx_advance(
+                filter_2_9_next(value),
+                filter_6_0_next(value)
+            );
+        }
+        // TODO: acoustic tx
+    }
 }
