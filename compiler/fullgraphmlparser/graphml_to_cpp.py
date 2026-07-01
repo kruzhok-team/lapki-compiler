@@ -16,6 +16,7 @@ from compiler.fullgraphmlparser.stateclasses import (
     Condition,
     GeneratorHistory,
 )
+from compiler.fullgraphmlparser.stateclasses import ( HistoryType )
 from compiler.fullgraphmlparser.graphml import *
 from compiler.config import get_config
 MODULE_PATH = os.path.join(get_config().module_directory, 'fullgraphmlparser')
@@ -335,7 +336,7 @@ class CppFileWriter:
 
         await self._insert_string('\n'.join(insert_strings) + '\n')
 
-    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], history_type: Literal['deep', 'shallow']):
+    async def _write_history_definition(self, histories: Dict[str, GeneratorHistory], history_type: HistoryType):
         """
         Генерация тела локальных/глубоких историй и запись их в файл.
 

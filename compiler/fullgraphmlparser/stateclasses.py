@@ -19,6 +19,7 @@ GLOBAL_STATE = 'global'  # дефолтный родитель элемента
 TriggerType = Literal['internal', 'external', 'choice_start', 'choice_result']
 StateType = Literal['group', 'choice', 'internal']
 VertexType = Literal['final', 'initial', 'choice', 'terminate']
+HistoryType = Literal['shallow', 'deep']
 
 
 def create_note(label: 'Labels', content: str) -> 'ParserNote':
