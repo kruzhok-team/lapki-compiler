@@ -623,17 +623,17 @@
         "isChanged": {
           "img": "arduino/toggle.svg",
           "description": "Сигнал вызывается, когда меняется значение на пине.",
-          "checkMethod": "isChanged"
+          "checkMethod": "changed"
         },
         "isLow": {
           "img": "arduino/isLow.svg",
           "description": "Сигнал вызывается, когда значение на пине меняется на LOW",
-          "checkMethod": "isLow"
+          "checkMethod": "highToLow"
         },
         "isHigh": {
           "img": "arduino/isHigh.svg",
           "description": "Сигнал вызывается, когда значение на пине меняется на HIGH",
-          "checkMethod": "isHigh"
+          "checkMethod": "lowToHigh"
         }
       },
       "constructorParameters": {
@@ -650,6 +650,7 @@
           "description": "Текущее значение на пине."
         }
       },
+      "loopActions": ["update"],
       "buildFiles": ["DigitalIn.h", "DigitalIn.ino"],
       "importFiles": ["DigitalIn.h"],
       "singletone": false
