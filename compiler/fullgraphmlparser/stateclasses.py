@@ -242,7 +242,32 @@ class SMCompilingSettings:
     platform_version: str
     platform_compiler_settings: List[CompilingSettings]
 
+@dataclass
+class FunctionBlock:
+    """Блок в вычислительной функции."""
+    id: str
+    type: str  # 'abs', 'sum', 'smooth', 'greater', 'const'
+    position: tuple[float, float]
+    parameters: dict[str, str | int | float]  # например, {'value': 5} для const
+    inputs: dict[str, str]  # имя входного порта -> id блока-источника (или 'constant')
+    outputs: list[str]  # имена выходных портов
 
+@dataclass
+class FunctionConnection:
+    """Связь между двумя блоками."""
+    source_block_id: str
+    source_port: str
+    target_block_id: str
+    target_port: str
+
+@dataclass
+class ComputationFunction:
+    """Контейнер для вычислительной функции."""
+    id: str
+    name: str
+    blocks: list[FunctionBlock]
+    connections: list[FunctionConnection]
+    
 @dataclass
 class StateMachine:
     """Данные машины состояний, на основе которых генерируется код."""
@@ -270,6 +295,7 @@ class StateMachine:
         default_factory=list
     )
     compiling_settings: Optional[SMCompilingSettings] = None
+    computation_functions: list[ComputationFunction] = Field(default_factory=list)
 
 
 class CodeGenerationException(Exception):
