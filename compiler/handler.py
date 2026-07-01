@@ -142,8 +142,6 @@ def get_default_libraries(main_file_extension: str,
     func_libraries = {
         'func.cpp',
         'func.hpp',
-        'ClassFunc.cpp',
-        'ClassFunc.hpp',
     }
     
     libraries.update(func_libraries)
