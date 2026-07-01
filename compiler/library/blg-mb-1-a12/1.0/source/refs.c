@@ -8,7 +8,12 @@ struct {
   _REF(protocol)
   uint8_t me;
 } refs =
-  { .hardware = 0x08c1d6bb4bf0433f
+  {
+    #ifdef BLG_MB_REVISION_B2
+    .hardware = 0x9c0f9b027b6df847
+    #else
+    .hardware = 0x08c1d6bb4bf0433f
+    #endif
   , .firmware = 0xb0839d8249cf105e
   , .memory   = 0x9468ee190e322f67
   , .protocol = 0x625244e1ecabcfdf

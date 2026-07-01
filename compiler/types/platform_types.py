@@ -114,6 +114,8 @@ class Platform(BaseModel):
         default='', alias='mainFileExtension')
     header_file_extension: str = Field(
         default='', alias='headerFileExtension')
+    ref_handler: Optional[str] = Field(
+        default=None, alias='refHandler')
 
 
 @dataclass
