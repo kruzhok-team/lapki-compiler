@@ -38,7 +38,11 @@ public:
             off();
             return;
         }
-        detail::ReservedColor1 = detail::Color{ red, green, blue, black };
+#ifdef BLG_MB_REVISION_B2
+        detail::ReservedColor1 = detail::Color{ {blue, green, red, black} };
+#else
+        detail::ReservedColor1 = detail::Color{ {red, green, blue, black} };
+#endif
         mrx::hal::rgbLed::registerPin(_pin, &detail::ReservedColor1);
     }
 

@@ -6,7 +6,11 @@
 #include "buffers.c"
 #include "status.c"
 
+#ifdef BLG_MB_REVISION_B2
+#define e1_full "blg-mb-1-b2"
+#else
 #define e1_full "blg-mb-1-a12"
+#endif
 
 void
 writeE1
