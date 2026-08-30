@@ -80,10 +80,10 @@ class Led {
 
 class LedMultiBlinker : public LedBlinker {
     using LedBlinker::LedBlinker;
-    bool isActive = 0;
     inline static BeepChunk pattern[] = {{Chunk::Setup, 0, 0}, {Chunk::End}};
 
    public:
+    bool isActive = 0;
     uint32_t blinkt, blinkT;
     virtual ~LedMultiBlinker() {};
 
@@ -120,7 +120,16 @@ class SystemLed {
     }
 
     inline void stop() {
-        lb_->Stop(); }
+        lb_->Stop();
+    }
+
+    inline void toggle() {\
+        // isActive is changed inside
+        if (lb_->isActive)
+            off();
+        else
+            on();
+    }
 
     void blink(uint32_t t, uint32_t T);
 
