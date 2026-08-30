@@ -16,6 +16,10 @@
 #ifdef APP
 extern CustomOutPin output_hits_present;
 #endif
+
+#define STANDARD_MODE 0
+#define CYBERBEAR_MODE 1
+
 class ValueBase {
 protected:
     const char* const section;
@@ -229,6 +233,8 @@ private:
     static constexpr const char* kGrpGpio = "Gpio";
     static constexpr const char* kGrpBehavior = "Behavior";
 public:
+    // настройка режима отправки данных
+    uint8_t tx_mode = STANDARD_MODE;
     // ==== IDs ====
     ValueMinMax player_id          {  0, 0, 127, kGrpIDs, "PlayerID", "Player ID, must be unique" };
     ValueMinMax team_id            {  0, 0,   3, kGrpIDs, "TeamID", "Team ID, must be unique" };
@@ -273,5 +279,6 @@ public:
 };
 
 extern Settings settings;
+
 
 #endif // SETTINGS_H_
