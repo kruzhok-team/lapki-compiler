@@ -16,8 +16,6 @@ from compiler.types.inner_types import CommandResult, BuildFile, File
 from compiler.utils import get_file_extension, get_filename
 from compiler.os_commands import os_commands
 
-from .config import _LIBRARY_PATH, _ARTIFACTS_DIRECTORY
-
 
 async def get_build_files(
         project_path: AsyncPath) -> AsyncGenerator[BuildFile, None]:
@@ -138,9 +136,9 @@ class Compiler:
         # FIXME: грязный хак, чтобы устранить проблему с пропадающим файлом
         await asyncio.sleep(0.1)
         # TODO вынести в отдельную функцию
-        library_dir = _LIBRARY_PATH
+        library_dir = get_config().library_path
         base_dir = base_dir.replace('\\', '/')
-        artifacts_dir = _ARTIFACTS_DIRECTORY.replace('\\', '/')
+        artifacts_dir = get_config().artifacts_directory.replace('\\', '/')
         for command in commands:
             # Делаем подмену каталогов в команде
             flags: List[str] = []

@@ -39,6 +39,7 @@ def get_default_config() -> Config:
                   _LOG_PATH,
                   _ACCESS_TOKENS_FILE,
                   _BUILD_DIRECTORY,
+                  _ARTIFACTS_DIRECTORY,
                   _MODULE_PATH,
                   _BASE_DIRECTORY,
                   _KILLABLE)
@@ -101,12 +102,16 @@ def configure(parser: ArgumentParser):
     platform_directory = _choice(
         args.platform_directory, 'LAPKI_COMPILER_PLATFORM_DIRECTORY',
         _PLATFORM_DIRECTORY)
+    artifacts_directory = _choice(
+        args.artifacts_directory, 'LAPKI_COMPILER_ARTIFACTS_DIRECTORY',
+        _ARTIFACTS_DIRECTORY
+    )
     log_path = _choice(
         args.log_path, 'LAPKI_COMPILER_LOG_PATH', _LOG_PATH)
     max_msg_size = _choice(
         args.max_msg_size, 'LAPKI_COMPILER_MAX_MSG_SIZE', _MAX_MSG_SIZE)
     build_directory = _choice(
-        args.build_path, 'LAPKI_COMPILER_BUILD_PATH', _BUILD_DIRECTORY)
+        args.build_directory, 'LAPKI_COMPILER_BUILD_PATH', _BUILD_DIRECTORY)
     killable = _choice(
         args.killable, 'LAPKI_COMPILER_KILLABLE', _KILLABLE
     )
@@ -119,6 +124,7 @@ def configure(parser: ArgumentParser):
         log_path,
         access_token_file,
         build_directory,
+        artifacts_directory,
         _MODULE_PATH,
         _BASE_DIRECTORY,
         bool(killable))

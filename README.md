@@ -40,14 +40,18 @@
 Способы конфигурации указаны в порядке их приоритета.
 > Внимание! Конфигурация по умолчанию выставляется для ОС Linux, поэтому пользователям Windows нужно поменять директорию создания проекта!
 
-| Название                         | Описание                                                                                                                                                             | Флаг                   | Окружение                           | config.py             |
-| -------------------------------- | ------------------------------------------------- | ----------------------------- | ----------------------------------- | --------------------- |
-| **Порт хоста**                   | Порт, на котором будет доступен сервис                                                                                                                               | *--server-port*        | *LAPKI_COMPILER_SERVER_PORT*        | *_SERVER_PORT*        |
-| **Адрес хоста**                  | Адрес, на котором будет доступен сервис                                                                                                                              | *--server-host*        | *LAPKI_COMPILER_SERVER_HOST*        | *_SERVER_HOST*        |
-| **Директория создания проектов** | Директория, в которой будут создаваться проекты со сгенерированным кодом и используемыми библиотеками                                                                | *--build-directory*    | *LAPKI_COMPILER_BUILD_PATH*         | *_BUILD_DIRECTORY*    |
-| Директория с библиотеками        | Директория, в которой находятся файлы реализации библиотек.                                                                | *--library-path*       | *LAPKI_COMPILER_LIBRARY_PATH*       | *_LIBRARY_PATH*       |
-| Директория с платформами         | Директория, в которой находятся файлы-конфигурации платформ.| *--platform-directory* | *LAPKI_COMPILER_PLATFORM_DIRECTORY* | *_PLATFORM_DIRECTORY* |
-| Лог-файл                         | Путь до лог-файла, если файл не существует, то он будет создан.                                                                                                      | *--log-path*           | *LAPKI_COMPILER_LOG_PATH*           | *_LOG_PATH*           |
+| Название | Описание | Флаг | Окружение | `config.py` |
+| --- | --- | --- | --- | --- |
+| **Порт хоста** | Порт, на котором будет доступен сервис. | `--server-port` | `LAPKI_COMPILER_SERVER_PORT` | `_SERVER_PORT` |
+| **Адрес хоста** | Адрес, на котором будет доступен сервис. | `--server-host` | `LAPKI_COMPILER_SERVER_HOST` | `_SERVER_HOST` |
+| **Директория создания проектов** | Директория, в которой создаются проекты со сгенерированным кодом и библиотеками. | `--build-directory` | `LAPKI_COMPILER_BUILD_PATH` | `_BUILD_DIRECTORY` |
+| **Директория артефактов сборки** | Директория для кэша артефактов сборки. | `--artifacts-directory` | `LAPKI_COMPILER_ARTIFACTS_DIRECTORY` | `_ARTIFACTS_DIRECTORY` |
+| **Директория с библиотеками** | Директория с файлами реализации библиотек. | `--library-path` | `LAPKI_COMPILER_LIBRARY_PATH` | `_LIBRARY_PATH` |
+| **Директория с платформами** | Директория с файлами-конфигурациями платформ. | `--platform-directory` | `LAPKI_COMPILER_PLATFORM_DIRECTORY` | `_PLATFORM_DIRECTORY` |
+| **Лог-файл** | Путь до лог-файла; если файла нет, он будет создан. | `--log-path` | `LAPKI_COMPILER_LOG_PATH` | `_LOG_PATH` |
+| **Файл токенов доступа** | Путь до файла с токенами доступа к API платформ. | `--access-token-path` | `LAPKI_COMPILER_ACCESS_TOKENS_FILE` | `_ACCESS_TOKENS_FILE` |
+| **Максимальный размер сообщения** | Максимальный размер сообщения WebSocket в байтах. | `--max-msg-size` | `LAPKI_COMPILER_MAX_MSG_SIZE` | `_MAX_MSG_SIZE` |
+| **Разрешить `/kill`** | Включает endpoint `/kill`. | `--killable` | `LAPKI_COMPILER_KILLABLE` | `_KILLABLE` |
 
 
 ## Запуск тестов

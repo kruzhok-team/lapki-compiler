@@ -17,6 +17,7 @@ class Config:
     log_path: str
     access_token_path: str
     build_directory: str
+    artifacts_directory: str
     module_directory: str
     base_path: str
     KILLABLE: bool = False
@@ -32,7 +33,8 @@ class ArgumentParser(Tap):
     max_msg_size: str | None = None
     log_path: str | None = None
     access_token_path: str | None = None
-    build_path: str | None = None
+    build_directory: str | None = None
+    artifacts_directory: str | None = None
     killable: bool = False
 
     def configure(self):
@@ -48,6 +50,11 @@ class ArgumentParser(Tap):
                           )
         self.add_argument('--build-directory', help='The path to the directory'
                           ' where the build'
+                          ' will take place',
+                          required=False
+                          )
+        self.add_argument('--artifacts-directory', help='The path to the directory'
+                          ' where the build artifacts cache'
                           ' will take place',
                           required=False
                           )
