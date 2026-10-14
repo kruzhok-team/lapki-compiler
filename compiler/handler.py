@@ -133,12 +133,22 @@ def get_default_libraries(main_file_extension: str,
 
     Return example: 'qhsm.c', 'qhsm.h'
     """
-    return set(list(
+    libraries = set(list(
         chain.from_iterable((f'{library}.{main_file_extension}',
                              f'{library}.{header_file_extension}')
                             for library in Compiler.c_default_libraries))
                )
 
+    func_libraries = {
+        'func.cpp',
+        'func.hpp',
+        'ClassFunc.cpp',
+        'ClassFunc.hpp',
+    }
+    
+    libraries.update(func_libraries)
+    
+    return libraries
 
 async def create_sm_directory(base_directory: str,
                               sm_id: str) -> str:
