@@ -1,5 +1,5 @@
 {
-  "name": "МС-ТЮК-2: Атмосферная плата A1 (M2)",
+  "name": "МС-ТЮК-2: Атмосферная плата A1",
   "id": "tjc-ms2-atm-a1",
   "description": "Программирование M2 STM32G030K8. Пять датчиков S2–S6.",
   "version": "1.0",
@@ -130,7 +130,7 @@
         "SimpleBus.hpp"
       ],
       "singletone": false,
-      "name": "SimpleBus",
+      "name": "Простая шина",
       "initializationFunction": "begin"
     },
     "DataBus": {
@@ -178,7 +178,7 @@
         "DataBus.hpp"
       ],
       "singletone": false,
-      "name": "DataBus",
+      "name": "Шина данных",
       "initializationFunction": "begin"
     },
     "RGBLed": {
@@ -244,7 +244,7 @@
       "singletone": false
     },
     "SCD41": {
-      "name": "Датчик CO₂ S3 (SCD41)",
+      "name": "Датчик CO₂ (SCD41)",
       "description": "S3: CO₂ и температура, автоопрос. Новая выборка примерно раз в 5 секунд. Ошибка после 15 секунд без данных запускает восстановление; предыдущие значения сохраняются.",
       "img": "common/value.svg",
       "signals": {
@@ -299,7 +299,7 @@
       "singletone": false
     },
     "HP203B": {
-      "name": "Датчик давления S2 (HP203B)",
+      "name": "Датчик давления (HP203B)",
       "description": "S2: давление и температура, автоопрос примерно раз в секунду. При ошибке предыдущая выборка сохраняется.",
       "img": "common/value.svg",
       "signals": {
@@ -354,7 +354,7 @@
       "singletone": false
     },
     "XGZP6859D": {
-      "name": "Датчик давления S6 (XGZP6859D)",
+      "name": "Датчик давления (XGZP6859D)",
       "description": "S6: XGZP6859D040KPG, давление и температура, автоопрос примерно раз в секунду. При ошибке предыдущая выборка сохраняется.",
       "img": "common/value.svg",
       "signals": {
@@ -409,7 +409,7 @@
       "singletone": false
     },
     "SHT30": {
-      "name": "Датчик влажности S4/S5",
+      "name": "Датчик влажности (NSHT30-CLAR / SHT30)",
       "description": "S4 — NSHT30-CLAR, S5 — SHT30. Влажность и температура, автоопрос примерно раз в секунду. Адрес 0x44/0x45 определяется при инициализации. При ошибке предыдущая выборка сохраняется.",
       "img": "common/value.svg",
       "signals": {
@@ -453,7 +453,11 @@
             "4",
             "5"
           ],
-          "description": "Позиция датчика на плате: S4 или S5."
+          "description": "Модель датчика влажности.",
+          "valueAlias": [
+            "NSHT30-CLAR",
+            "SHT30"
+          ]
         }
       },
       "initializationFunction": "begin",
