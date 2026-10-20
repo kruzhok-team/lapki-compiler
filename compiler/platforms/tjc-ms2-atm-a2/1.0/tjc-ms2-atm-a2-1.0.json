@@ -1,0 +1,419 @@
+{
+  "name": "МС-ТЮК-2: Атмосферная плата A2 (M2)",
+  "id": "tjc-ms2-atm-a2",
+  "description": "Программирование M2 STM32G030K8. Три датчика S2, S3, S5.",
+  "version": "1.0",
+  "standardVersion": "1.0",
+  "formatVersion": "1.0",
+  "language": "cpp",
+  "author": "Lapki TEAM",
+  "icon": "",
+  "staticComponents": false,
+  "visual": true,
+  "compile": true,
+  "mainFileExtension": "cpp",
+  "headerFileExtension": "hpp",
+  "mainFunction": true,
+  "delimeter": ";",
+  "defaultSetupFunctions": [],
+  "defaultIncludeFiles": [
+    "AtmRuntime.hpp"
+  ],
+  "defaultBuildFiles": [
+    "Board.hpp",
+    "AtmRuntime.hpp",
+    "AtmRuntime.cpp",
+    "stm32g030k8.ld",
+    "startup_stm32g030xx.s",
+    "stm32g030xx.h",
+    "core_cm0plus.h",
+    "core_cmInstr.h",
+    "cmsis_gcc.h",
+    "core_cmFunc.h",
+    "system_stm32g0xx.h"
+  ],
+  "compilingSettings": [
+    {
+      "command": "arm-none-eabi-g++",
+      "flags": [
+        "-std=c++11",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-DSTM32G030x8",
+        "-T",
+        "./stm32g030k8.ld",
+        "./startup_stm32g030xx.s",
+        "./sketch.cpp",
+        "./AtmRuntime.cpp",
+        "qhsm.cpp",
+        "-o",
+        "./build/sketch.elf",
+        "--specs=nosys.specs",
+        "-Os",
+        "-g",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-fno-threadsafe-statics",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-Wl,-Map=./build/sketch.map"
+      ]
+    },
+    {
+      "command": "arm-none-eabi-objcopy",
+      "flags": [
+        "-Obinary",
+        "./build/sketch.elf",
+        "./build/sketch.bin"
+      ]
+    }
+  ],
+  "components": {
+    "SimpleBus": {
+      "description": "Компонент для базового взаимодействия с общей шиной данных на основе простого протокола. Шина является полудуплексной – отправку в конкретный момент времени может осуществлять только один участник. Использует USART1 (PB6/PB7), управление передачей PA0. SimpleBus и DataBus взаимоисключающие; используйте один экземпляр выбранного типа.",
+      "img": "arduino/serial.svg",
+      "signals": {
+        "packetReceived": {
+          "img": "arduino/byteReceived.svg",
+          "description": "Получен адресованный пакет.",
+          "checkMethod": "packetReceived"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "myAddress": {
+          "img": "common/value.svg",
+          "type": "uint8_t",
+          "description": "Адрес устройства."
+        },
+        "lastData": {
+          "img": "common/value.svg",
+          "type": "uint8_t",
+          "description": "Последний полученный символ."
+        }
+      },
+      "methods": {
+        "setAddress": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "address",
+              "type": "byte",
+              "description": "Новое значение для адреса."
+            }
+          ],
+          "description": "Назначить новый адрес для получения пакетов."
+        },
+        "sendPacket": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "address",
+              "type": "byte",
+              "description": "Адрес устройства-получателя."
+            },
+            {
+              "name": "data",
+              "type": "byte",
+              "description": "Байт данных (сообщение)."
+            }
+          ],
+          "description": "Отправляет символ по адресу."
+        }
+      },
+      "buildFiles": [
+        "SimpleBus.hpp",
+        "AtmUart.hpp"
+      ],
+      "importFiles": [
+        "SimpleBus.hpp"
+      ],
+      "singletone": false,
+      "name": "SimpleBus",
+      "initializationFunction": "begin"
+    },
+    "DataBus": {
+      "description": "Компонент для низкоуровневого взаимодействия с общей шиной данных. Шина является полудуплексной – отправку в конкретный момент времени может отсуществлять только один участник. Использует USART1 (PB6/PB7), управление передачей PA0. SimpleBus и DataBus взаимоисключающие; используйте один экземпляр выбранного типа.",
+      "img": "arduino/serial.svg",
+      "signals": {
+        "isByteReceived": {
+          "img": "arduino/byteReceived.svg",
+          "description": "Получен байт.",
+          "checkMethod": "isByteReceived"
+        }
+      },
+      "constructorParameters": {
+        "baudrate": {
+          "type": "uint32_t",
+          "description": "Частота работы.",
+          "optional": true
+        }
+      },
+      "variables": {
+        "lastByte": {
+          "img": "common/value.svg",
+          "type": "uint8_t",
+          "description": "Последний полученный байт."
+        }
+      },
+      "methods": {
+        "sendByte": {
+          "img": "arduino/blink.svg",
+          "parameters": [
+            {
+              "name": "data",
+              "type": "byte",
+              "description": "Байт данных (сообщение)."
+            }
+          ],
+          "description": "Отправить байт в шину."
+        }
+      },
+      "buildFiles": [
+        "DataBus.hpp",
+        "AtmUart.hpp"
+      ],
+      "importFiles": [
+        "DataBus.hpp"
+      ],
+      "singletone": false,
+      "name": "DataBus",
+      "initializationFunction": "begin"
+    },
+    "RGBLed": {
+      "name": "RGB-светодиод",
+      "description": "Встроенный RGB-светодиод PA5/PA6/PA7. Один экземпляр. После запуска выключен.",
+      "img": "arduino/led.svg",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {
+        "red": {
+          "description": "Яркость канала от 0 до 255. Меняйте через setColor.",
+          "type": "uint8_t",
+          "img": "common/value.svg",
+          "alias": "Красный"
+        },
+        "green": {
+          "description": "Яркость канала от 0 до 255. Меняйте через setColor.",
+          "type": "uint8_t",
+          "img": "common/value.svg",
+          "alias": "Зелёный"
+        },
+        "blue": {
+          "description": "Яркость канала от 0 до 255. Меняйте через setColor.",
+          "type": "uint8_t",
+          "img": "common/value.svg",
+          "alias": "Синий"
+        }
+      },
+      "methods": {
+        "setColor": {
+          "img": "arduino/led.svg",
+          "description": "Установить цвет",
+          "parameters": [
+            {
+              "name": "red",
+              "type": "uint8_t",
+              "description": "Красный (0–255)"
+            },
+            {
+              "name": "green",
+              "type": "uint8_t",
+              "description": "Зелёный (0–255)"
+            },
+            {
+              "name": "blue",
+              "type": "uint8_t",
+              "description": "Синий (0–255)"
+            }
+          ]
+        },
+        "off": {
+          "img": "arduino/switch-off.svg",
+          "description": "Выключить"
+        }
+      },
+      "initializationFunction": "begin",
+      "buildFiles": [
+        "RGBLed.hpp"
+      ],
+      "importFiles": [
+        "RGBLed.hpp"
+      ],
+      "singletone": false
+    },
+    "SCD41": {
+      "name": "Датчик CO₂ S3 (SCD41)",
+      "description": "S3: CO₂ и температура, автоопрос. Новая выборка примерно раз в 5 секунд. Ошибка после 15 секунд без данных запускает восстановление; предыдущие значения сохраняются.",
+      "img": "common/value.svg",
+      "signals": {
+        "valueReceived": {
+          "img": "common/value.svg",
+          "description": "Получено значение",
+          "alias": "Получено значение",
+          "checkMethod": "valueReceived"
+        },
+        "readingError": {
+          "img": "common/value.svg",
+          "description": "Ошибка чтения",
+          "alias": "Ошибка чтения",
+          "checkMethod": "readingError"
+        }
+      },
+      "variables": {
+        "temperature": {
+          "description": "Температура в сотых долях °C: 2350 означает 23,50 °C.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "Температура"
+        },
+        "co2": {
+          "description": "Концентрация CO₂ в сотых долях ppm: 40000 означает 400 ppm.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "CO₂"
+        },
+        "error": {
+          "description": "Последняя попытка чтения завершилась ошибкой. Успешное чтение сбрасывает флаг. До первого чтения — false.",
+          "type": "bool",
+          "img": "common/value.svg",
+          "alias": "Произошла ошибка"
+        }
+      },
+      "methods": {},
+      "constructorParameters": {},
+      "initializationFunction": "begin",
+      "loopActions": [
+        "poll"
+      ],
+      "buildFiles": [
+        "AtmSensors.hpp",
+        "AtmI2c.hpp",
+        "SensorDrivers.hpp",
+        "SensorMath.hpp"
+      ],
+      "importFiles": [
+        "AtmSensors.hpp"
+      ],
+      "singletone": false
+    },
+    "HP203B": {
+      "name": "Датчик давления S2 (HP203B)",
+      "description": "S2: давление и температура, автоопрос примерно раз в секунду. При ошибке предыдущая выборка сохраняется.",
+      "img": "common/value.svg",
+      "signals": {
+        "valueReceived": {
+          "img": "common/value.svg",
+          "description": "Получено значение",
+          "alias": "Получено значение",
+          "checkMethod": "valueReceived"
+        },
+        "readingError": {
+          "img": "common/value.svg",
+          "description": "Ошибка чтения",
+          "alias": "Ошибка чтения",
+          "checkMethod": "readingError"
+        }
+      },
+      "variables": {
+        "temperature": {
+          "description": "Температура в сотых долях °C: 2350 означает 23,50 °C.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "Температура"
+        },
+        "pressure": {
+          "description": "Давление в сотых долях Па: 10132500 означает 101325 Па.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "Давление"
+        },
+        "error": {
+          "description": "Последняя попытка чтения завершилась ошибкой. Успешное чтение сбрасывает флаг. До первого чтения — false.",
+          "type": "bool",
+          "img": "common/value.svg",
+          "alias": "Произошла ошибка"
+        }
+      },
+      "methods": {},
+      "constructorParameters": {},
+      "initializationFunction": "begin",
+      "loopActions": [
+        "poll"
+      ],
+      "buildFiles": [
+        "AtmSensors.hpp",
+        "AtmI2c.hpp",
+        "SensorDrivers.hpp",
+        "SensorMath.hpp"
+      ],
+      "importFiles": [
+        "AtmSensors.hpp"
+      ],
+      "singletone": false
+    },
+    "SHT30": {
+      "name": "Датчик влажности S5 (SHT30)",
+      "description": "S5 — SHT30; позиция S4 отсутствует. Влажность и температура, автоопрос примерно раз в секунду. Адрес 0x44/0x45 определяется при инициализации. При ошибке предыдущая выборка сохраняется.",
+      "img": "common/value.svg",
+      "signals": {
+        "valueReceived": {
+          "img": "common/value.svg",
+          "description": "Получено значение",
+          "alias": "Получено значение",
+          "checkMethod": "valueReceived"
+        },
+        "readingError": {
+          "img": "common/value.svg",
+          "description": "Ошибка чтения",
+          "alias": "Ошибка чтения",
+          "checkMethod": "readingError"
+        }
+      },
+      "variables": {
+        "temperature": {
+          "description": "Температура в сотых долях °C: 2350 означает 23,50 °C.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "Температура"
+        },
+        "humidity": {
+          "description": "Относительная влажность в сотых долях %: 5000 означает 50%.",
+          "type": "int32_t",
+          "img": "common/value.svg",
+          "alias": "Влажность"
+        },
+        "error": {
+          "description": "Последняя попытка чтения завершилась ошибкой. Успешное чтение сбрасывает флаг. До первого чтения — false.",
+          "type": "bool",
+          "img": "common/value.svg",
+          "alias": "Произошла ошибка"
+        }
+      },
+      "methods": {},
+      "constructorParameters": {
+        "position": {
+          "type": [
+            "5"
+          ],
+          "description": "Позиция датчика на плате: S4 или S5."
+        }
+      },
+      "initializationFunction": "begin",
+      "loopActions": [
+        "poll"
+      ],
+      "buildFiles": [
+        "AtmSensors.hpp",
+        "AtmI2c.hpp",
+        "SensorDrivers.hpp",
+        "SensorMath.hpp"
+      ],
+      "importFiles": [
+        "AtmSensors.hpp"
+      ],
+      "singletone": false
+    }
+  }
+}

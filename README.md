@@ -63,5 +63,9 @@
 - `python3 -m pytest [флаги]`
 
 ## Связанные проекты
+
+Поддержка атмосферных плат МС-ТЮК-2 A1/A2 (M2), компоненты и примеры:
+[описание платформ](docs/ms2-atm.md).
+
 - [Lapki IDE](https://github.com/kruzhok-team/lapki-client) - среда визуального программирования, в которую внедрен модуль компилятора.
 - [cyberiadaml-py](https://github.com/kruzhok-team/cyberiadaml-py) - библиотека для парсинга Cyberiada-GraphML схем.

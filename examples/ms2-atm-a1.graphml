@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+<key id="gFormat" for="graphml" attr.name="format" attr.type="string"/>
+<key id="dName" for="node" attr.name="name" attr.type="string"/>
+<key id="dVertex" for="node" attr.name="vertex" attr.type="string"/>
+<key id="dStateMachine" for="graph" attr.name="stateMachine" attr.type="string"/>
+<key id="dNote" for="node" attr.name="note" attr.type="string"/>
+<key id="dData" for="node" attr.name="data" attr.type="string"/>
+<key id="dGeometry" for="node" attr.name="geometry"/>
+<data key="gFormat">Cyberiada-GraphML-1.0</data>
+<graph id="Atmosphere" edgedefault="directed">
+<data key="dStateMachine"/>
+<node id="meta"><data key="dNote">formal</data><data key="dName">CGML_META</data>
+<data key="dData">platform/ tjc-ms2-atm-a1
+
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+name/ Атмосферная плата A1
+
+author/ Lapki TEAM</data></node>
+<node id="component_led">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ led
+
+type/ RGBLed</data>
+</node>
+<node id="component_bus">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ bus
+
+type/ SimpleBus</data>
+</node>
+<node id="component_s2">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ s2
+
+type/ HP203B</data>
+</node>
+<node id="component_s3">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ s3
+
+type/ SCD41</data>
+</node>
+<node id="component_s5">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ s5
+
+type/ SHT30
+
+position/ 5</data>
+</node>
+<node id="component_s4">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ s4
+
+type/ SHT30
+
+position/ 4</data>
+</node>
+<node id="component_s6">
+<data key="dNote">formal</data><data key="dName">CGML_COMPONENT</data>
+<data key="dData">id/ s6
+
+type/ XGZP6859D</data>
+</node>
+<node id="initial"><data key="dVertex">initial</data><data key="dGeometry"><point x="0" y="0"/></data></node>
+<node id="monitor"><data key="dName">Наблюдение</data><data key="dData">entry/
+led.off();
+bus.setAddress(1);
+
+s2.valueReceived/
+led.setColor(0, 64, 0);
+
+s2.readingError/
+led.setColor(64, 0, 0);
+
+s3.valueReceived/
+led.setColor(0, 64, 0);
+
+s3.readingError/
+led.setColor(64, 0, 0);
+
+s5.valueReceived/
+led.setColor(0, 64, 0);
+
+s5.readingError/
+led.setColor(64, 0, 0);
+
+s4.valueReceived/
+led.setColor(0, 64, 0);
+
+s4.readingError/
+led.setColor(64, 0, 0);
+
+s6.valueReceived/
+led.setColor(0, 64, 0);
+
+s6.readingError/
+led.setColor(64, 0, 0);
+
+bus.packetReceived/
+bus.sendPacket(2, bus.lastData);</data><data key="dGeometry"><rect x="100" y="0" width="500" height="500"/></data></node>
+<edge id="start" source="initial" target="monitor"/>
+</graph>
+</graphml>
