@@ -5,6 +5,13 @@
 // Frame: one 0-frequency header, one silent symbol, eight data bits (MSB first).
 // Keep the acoustic receiver and the public IR / NoseBytes interfaces separate.
 extern "C" {
+    // Настройка чувствительности ИК-приёмника. После изменения пересобрать прошивку.
+    // Пороги относятся к энергии после фильтров, а не к сырым значениям АЦП.
+    static constexpr float IR_RX_START_THRESHOLD = 40.0f; // Минимум для старта кадра.
+    static constexpr float IR_RX_BIT_THRESHOLD = 40.0f;   // Минимум для чтения бита.
+    // Отношение краёв к пику старта: меньше — строже, больше — мягче (от 0 до 1).
+    static constexpr float IR_RX_START_PEAK_RATIO = 0.5f;
+
     enum {
         IR_BIT_SAMPLES = 256,
         IR_DECIMATION = 16,
@@ -123,9 +130,9 @@ extern "C" {
             return;
         }
 
-        if (!ir_rx.reading && zero > 40.0f &&
-            zero * 0.5f > ir_history(0, center - IR_DETECT_STEP) &&
-            zero * 0.5f > ir_history(0, center + IR_DETECT_STEP) &&
+        if (!ir_rx.reading && zero > IR_RX_START_THRESHOLD &&
+            zero * IR_RX_START_PEAK_RATIO > ir_history(0, center - IR_DETECT_STEP) &&
+            zero * IR_RX_START_PEAK_RATIO > ir_history(0, center + IR_DETECT_STEP) &&
             zero >= ir_history(0, center - 1) &&
             zero >= ir_history(0, center + 1)) {
             ir_rx.reading = 1;
@@ -140,7 +147,7 @@ extern "C" {
         if (ir_rx.read_count == (2 + ir_rx.bit_count) *
                                 (IR_BIT_SAMPLES / IR_DECIMATION)) {
             // A missing carrier is an incomplete frame, not a logical one.
-            if (zero <= 40.0f && one <= 40.0f) {
+            if (zero <= IR_RX_BIT_THRESHOLD && one <= IR_RX_BIT_THRESHOLD) {
                 ir_rx.reading = 0;
                 return;
             }
