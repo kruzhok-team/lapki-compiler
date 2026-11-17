@@ -19,6 +19,8 @@ ftVoidVoid icallbackI = nullptr;
 static uint32_t transaction_sz;
 static uint32_t standard_carrier_freq_Hz = 56000;
 static volatile bool tx_busy = false;
+static volatile uint32_t last_tx_end_ms = 0;
+static volatile bool have_tx_end = false;
 static void DmaTxEndIrqHandler(void *p, uint32_t flags);
 static const DMA_t dma_tx {DAC_DMA, DmaTxEndIrqHandler, nullptr, IRQ_PRIO_MEDIUM};
 // Samples count
@@ -71,6 +73,8 @@ static void DmaTxEndIrqHandler(void *p, uint32_t flags) {
     dma_tx.Disable();
     DAC->PutDataR0(0);
     sampling_tmr.GenerateUpdateEvt();
+    last_tx_end_ms = Sys::Time_ + Sys::GetSysTimeX();
+    have_tx_end = true;
     ftVoidVoid callback = icallbackI;
     icallbackI = nullptr;
     tx_busy = false;
@@ -177,6 +181,10 @@ void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid call
 }
 
 void ResetI() {
+    if(tx_busy) {
+        last_tx_end_ms = Sys::Time_ + Sys::GetSysTimeX();
+        have_tx_end = true;
+    }
     dma_tx.DisableAndClearIRQ();
     sampling_tmr.Disable();
     DAC->PutDataR0(0);
@@ -184,6 +192,18 @@ void ResetI() {
     icallbackI = nullptr;
     tx_busy = false;
 }
+
+bool IsTransmitting() { return tx_busy; }
+
+bool IsEchoSuppressed(uint32_t now_ms, uint32_t quiet_ms) {
+    uint32_t mask = __get_PRIMASK();
+    __disable_irq();
+    bool suppressed = tx_busy ||
+        (have_tx_end && static_cast<uint32_t>(now_ms - last_tx_end_ms) < quiet_ms);
+    __set_PRIMASK(mask);
+    return suppressed;
+}
+
 } // namespace
 #endif
 
@@ -206,8 +226,9 @@ namespace IRRcvr {
 
 ftVoidU8U16 callbackI;
 TimHw tmr_rx{TMR_IR_RX};
+static CyberBearReceiver cyberbear_rx;
 
-void Init() {
+static void ConfigureStandard() {
     Gpio::SetupInput(IR_RX_DATA_PIN, Gpio::PullUp);
     tmr_rx.Init();
     tmr_rx.DisableAutoreloadBuffering(); // To put there timeout immediately
@@ -274,6 +295,58 @@ static void ProcessIrqI(uint32_t flags, uint32_t dur) {
     }
 }
 
+// Keep the standard capture decoder and the raw-carrier sampler independent.
+void SetMode(uint8_t mode) {
+    if(mode != STANDARD_MODE && mode != CYBERBEAR_MODE) return;
+    uint32_t mask = __get_PRIMASK();
+    __disable_irq();
+    tmr_rx.Disable();
+    tmr_rx.DisableIrqOnCompare0();
+    tmr_rx.DisableIrqOnUpdate();
+    settings.rx_mode = mode;
+    bit_indx = -1;
+    rx_data = 0;
+    cyberbear_rx = CyberBearReceiver{};
+    if(mode == STANDARD_MODE) ConfigureStandard();
+    else {
+        Gpio::SetupInput(IR_RX_DATA_PIN, Gpio::PullUp);
+        tmr_rx.Init();
+        // This mode needs the raw carrier at PA3, not a demodulated envelope.
+        tmr_rx.SelectSlaveMode(TimHw::SlaveMode::Disable);
+        tmr_rx.DisableAutoreloadBuffering();
+        tmr_rx.SetUpdateSrcOvfOnly();
+        tmr_rx.SetPrescaler(0);
+        tmr_rx.SetUpdateFreqChangingTopValue(48000);
+        tmr_rx.EnableIrqOnUpdate();
+        Nvic::EnableVector(TMR_IR_RX_IRQ, IRQ_PRIO_HIGH);
+        tmr_rx.Enable();
+    }
+    tmr_rx.SetCounter(0);
+    tmr_rx.GenerateUpdateEvt();
+    tmr_rx.ClearAllIrqFlags();
+    __set_PRIMASK(mask);
+}
+
+void Init() { SetMode(settings.rx_mode); }
+
+CyberBearReceiver::Diagnostics GetDiagnostics() {
+    uint32_t mask = __get_PRIMASK();
+    __disable_irq();
+    CyberBearReceiver::Diagnostics diagnostics = cyberbear_rx.GetDiagnostics();
+    __set_PRIMASK(mask);
+    return diagnostics;
+}
+
+static void ProcessCyberBearSample(bool level) {
+    uint8_t byte;
+    bool muted = false;
+#if IR_TX_ENABLED
+    muted = IRLed::IsTransmitting();
+#endif
+    if(cyberbear_rx.Sample(level, byte, muted) && callbackI)
+        callbackI(8, byte);
+}
+
 } // namespace
 
 // ==== IRQ ====
@@ -283,7 +356,13 @@ void TMR_IR_RX_IRQ_HNDLR() {
     Sys::LockFromIRQ();
     uint32_t flags = IRRcvr::tmr_rx.GetIrqFlags();
     IRRcvr::tmr_rx.ClearAllIrqFlags();
-    IRRcvr::ProcessIrqI(flags, IRRcvr::tmr_rx.GetChnl0Value());
+    if(settings.rx_mode == CYBERBEAR_MODE) {
+        if(TimHw::IsUpdateFlagSet(flags))
+            IRRcvr::ProcessCyberBearSample(Gpio::IsHi(IR_RX_DATA_PIN));
+    }
+    else if(settings.rx_mode == STANDARD_MODE) {
+        IRRcvr::ProcessIrqI(flags, IRRcvr::tmr_rx.GetChnl0Value());
+    }
     Sys::UnlockFromIRQ();
     Sys::IrqEpilogue();
 }

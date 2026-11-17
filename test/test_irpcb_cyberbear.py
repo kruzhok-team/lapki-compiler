@@ -1,4 +1,4 @@
-"""IRPCB transmission: shared RAM, legacy format and A12 interoperability."""
+"""IRPCB exchange: shared RAM, legacy formats and A12 interoperability."""
 import json
 from pathlib import Path
 import shutil
@@ -34,6 +34,28 @@ def test_native_transmitter(tmp_path):
         f'-I{ROOT / "compiler/library/blg-mb-1-a12/1.0/source"}',
         str(FIXTURES / 'transmitter.cpp'), '-o', str(binary)
     ], check=True, capture_output=True, text=True)
+    subprocess.run([str(binary)], check=True, capture_output=True, text=True)
+
+@pytest.mark.parametrize('driver', [False, True])
+def test_native_receiver(tmp_path, driver):
+    """Decode the real A12 stream and exercise the timer ISR and mode switch."""
+    compiler = shutil.which('g++')
+    if compiler is None:
+        pytest.skip('g++ is needed for receiver tests')
+    binary = tmp_path / 'receiver'
+    flags = ['-std=c++17', '-Wall', '-Wextra', '-Werror',
+             '-Wno-unused-parameter', '-fsanitize=undefined',
+             '-fno-sanitize-recover=all', f'-I{SOURCE / "lib"}']
+    if driver:
+        shutil.copyfile(SOURCE / 'lib/ir.cpp', tmp_path / 'ir.cpp')
+        flags = [f'-I{tmp_path}', f'-I{FIXTURES / "stubs"}',
+                 '-DIR_RX_ENABLED=1', *flags]
+    else:
+        flags.append(
+            f'-I{ROOT / "compiler/library/blg-mb-1-a12/1.0/source"}')
+    name = 'receiver_driver.cpp' if driver else 'receiver.cpp'
+    subprocess.run([compiler, *flags, str(FIXTURES / name), '-o', str(binary)],
+                   check=True, capture_output=True, text=True)
     subprocess.run([str(binary)], check=True, capture_output=True, text=True)
 
 
@@ -83,11 +105,12 @@ def artifacts(tmp_path_factory):
 @pytest.mark.asyncio
 @pytest.mark.parametrize('configuration', ['Fromboot', 'Debug'])
 @pytest.mark.parametrize('transmitter', [
-    'none', 'IRTransmitter', 'BlgIrTransmitter'
+    'none', 'IRTransmitter', 'BlgIrTransmitter',
+    'IRReciever', 'BlgIrReceiver', 'duplex'
 ])
 async def test_generate_build_and_ram(
         configuration, transmitter, tmp_path, artifacts):
-    """Compile LED-only and both transmitter schemes and require 3 KiB heap."""
+    """Build all modes and duplex schemes with at least 3 KiB heap."""
     platform = Platform(**json.loads(PLATFORM_PATH.read_text()))
     manager = PlatformManager()
     if not manager.is_loaded(platform.id, '1.0'):
@@ -97,29 +120,48 @@ async def test_generate_build_and_ram(
     document = ElementTree.fromstring(
         (ROOT / 'examples/IRPCB_LED_EXAMPLE.graphml').read_text())
     graph = document.find(f'{namespace}graph')
-    if transmitter != 'none':
-        node = ElementTree.SubElement(graph, f'{namespace}node', id='sender')
+    components = [] if transmitter == 'none' else [transmitter]
+    if transmitter == 'duplex':
+        components = ['BlgIrTransmitter', 'BlgIrReceiver']
+    state_id = 'ztcldydpeocjcqgglcab'
+    for component in components:
+        node = ElementTree.SubElement(
+            graph, f'{namespace}node', id=f'component_{component}')
         ElementTree.SubElement(
             node, f'{namespace}data', key='dNote').text = 'formal'
         ElementTree.SubElement(
             node, f'{namespace}data', key='dName').text = 'CGML_COMPONENT'
         ElementTree.SubElement(node, f'{namespace}data', key='dData').text = (
-            f'id/ {transmitter}\n\ntype/ {transmitter}')
-        data = graph.find(f'{namespace}node[@id="ztcldydpeocjcqgglcab"]/'
+            f'id/ {component}\n\ntype/ {component}')
+        data = graph.find(f'{namespace}node[@id="{state_id}"]/'
                           f'{namespace}data[@key="dData"]')
+        if component.endswith('Transmitter'):
+            action = f'{component}::setPower(90);\n'
+            action += f'{component}::transmit(150);'
+        else:
+            action = f'{component}::printPkg();'
+            edge = ElementTree.SubElement(
+                graph, f'{namespace}edge', id=f'event_{component}',
+                source=state_id, target=state_id)
+            ElementTree.SubElement(
+                edge, f'{namespace}data', key='dData').text = (
+                    f'{component}.isUpdated/\n{component}::printPkg();')
+            if component == 'BlgIrReceiver':
+                action += '\nBlgIrReceiver::printDiagnostics();'
         data.text = data.text.replace(
-            'Led1.fadeIn(1500);', 'Led1.fadeIn(1500);\n'
-            f'{transmitter}::setPower(90);\n{transmitter}::transmit(150);')
+            'Led1.fadeIn(1500);', 'Led1.fadeIn(1500);\n' + action)
     xml = ElementTree.tostring(document, encoding='unicode')
     errors, machines = await parse(xml)
     assert not errors
     machine = machines['Machine1']
     await CppFileWriter(machine, True, True).write_to_file(
         str(tmp_path), 'cpp')
-    if transmitter != 'none':
-        generated = (tmp_path / 'sketch.cpp').read_text()
-        assert f'{transmitter}::init();' in generated
-        assert f'{transmitter}::transmit(150);' in generated
+    generated = (tmp_path / 'sketch.cpp').read_text()
+    for component in components:
+        assert f'{component}::init();' in generated
+        method = ('transmit(150)' if component.endswith('Transmitter')
+                  else 'isUpdated()')
+        assert f'{component}::{method}' in generated
     for name in ['qhsm.hpp', 'qhsm.cpp']:
         shutil.copyfile(ROOT / 'compiler/library/default/1.0/source' / name,
                         tmp_path / name)

@@ -577,12 +577,58 @@
           "description": "выводит сообщение в usb-терминал"
         }
       },
+      "initializationFunction": "init",
       "loopActions": [],
       "buildFiles": [
         "Lapki/IRReciever.h"
       ],
       "importFiles": [
         "IRReciever.h"
+      ],
+      "singletone": true
+    },
+    "BlgIrReceiver": {
+      "name": "ИК-приёмник (КиберМишка)",
+      "description": "Приём байтов нового протокола КиберМишки. Требует сохранения несущих 12 кГц и 1,5 кГц на цифровом входе PA3.",
+      "img": "blg-mb/byteNose.svg",
+      "signals": {
+        "isUpdated": {
+          "alias": "Получен байт",
+          "description": "Получен байт от КиберМишки.",
+          "checkMethod": "isUpdated",
+          "img": "arduino/byteReceived.svg"
+        }
+      },
+      "constructorParameters": {},
+      "variables": {
+        "pkg": {
+          "alias": "Последний пакет",
+          "type": "IRpkg",
+          "description": "Последний полученный байт в младших восьми битах word16; bits_count равен 8.",
+          "img": "tjc-ms/lastData.svg"
+        }
+      },
+      "methods": {
+        "printPkg": {
+          "alias": "Вывести последнее сообщение",
+          "description": "Выводит принятый байт в USB-терминал.",
+          "parameters": [],
+          "img": "tjc-ms/lastData.svg"
+        },
+        "printDiagnostics": {
+          "alias": "Вывести диагностику приёма",
+          "description": "Выводит в USB-терминал счётчики фронтов, частот и кадров на PA3.",
+          "parameters": [],
+          "img": "tjc-ms/lastData.svg"
+        }
+      },
+      "initializationFunction": "init",
+      "loopActions": [],
+      "buildFiles": [
+        "Lapki/BlgIrReceiver.h"
+      ],
+      "importFiles": [
+        "BlgIrReceiver.h"
       ],
       "singletone": true
     },

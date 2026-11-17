@@ -3,7 +3,8 @@
 #include "Serial.h"
 // #include "ir.h"
 #include "File.h"
-#include "IRTransmitter.h"
+#include "ir.h"
+#include "Settings.h"
 #include "kl_fs_utils.h"
 #include "usb_msdcdc.h"
 #include "yartos.h"
@@ -12,6 +13,12 @@ IRpkg IRReciever::pkg;
 bool IRReciever::isUpdated_ = 0;
 
 extern UsbMsdCdc usb_msd_cdc;
+
+void IRReciever::init() {
+    isUpdated_ = false;
+    pkg.set(0, 0);
+    IRRcvr::SetMode(STANDARD_MODE);
+}
 
 void IRReciever::savePkg() {
     if (usb_msd_cdc.IsActive()) {
@@ -36,7 +43,7 @@ void IRReciever::update(uint8_t bits_count, uint16_t word) {
 
 bool IRReciever::isUpdated() {
     uint32_t currentTime = Sys::GetSysTime();
-    if (currentTime - IRTransmitter::lastIrSend < unstablePeriod) isUpdated_ = 0;
+    if (IRLed::IsEchoSuppressed(currentTime, unstablePeriod)) isUpdated_ = 0;
     bool isUpd = isUpdated_;
     isUpdated_ = 0;
     return isUpd;

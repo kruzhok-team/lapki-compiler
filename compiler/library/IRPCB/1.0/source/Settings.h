@@ -234,6 +234,8 @@ private:
 public:
     // Selected by the transmitter component during scheme initialization.
     uint8_t tx_mode = STANDARD_MODE;
+    // Reception can use the other protocol independently of transmission.
+    uint8_t rx_mode = STANDARD_MODE;
     // ==== IDs ====
     ValueMinMax player_id          {  0, 0, 127, kGrpIDs, "PlayerID", "Player ID, must be unique" };
     ValueMinMax team_id            {  0, 0,   3, kGrpIDs, "TeamID", "Team ID, must be unique" };

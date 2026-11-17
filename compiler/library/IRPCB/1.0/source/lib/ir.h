@@ -31,12 +31,18 @@ namespace IRLed {
     void SetCarrierFreq(uint32_t carrier_freq_Hz);
     void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI);
     void ResetI();
+    bool IsTransmitting();
+    bool IsEchoSuppressed(uint32_t now_ms, uint32_t quiet_ms);
 } // namespace
 #endif
 
 #if IR_RX_ENABLED // ========================== IR RX ==========================
+#include "CyberBearReceiver.h"
+
 namespace IRRcvr {
     void Init();
+    void SetMode(uint8_t mode);
+    CyberBearReceiver::Diagnostics GetDiagnostics();
     extern ftVoidU8U16 callbackI;
 } // namespace
 #endif

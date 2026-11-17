@@ -12,6 +12,7 @@ extern bool isUpdated_;
 
 extern IRpkg pkg;
 
+void init();
 bool isUpdated();
 
 void savePkg();
