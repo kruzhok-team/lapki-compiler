@@ -1,379 +1,216 @@
+#pragma once
 
-//
-// Потоковый приёмопередатчик данных посредством ИК канала
-// Прямая адаптация акустического модема
-//
-// TODO: упростить для ИК диапазона
-//
-
-// ============================================================================
-// Передатчик
-// ============================================================================
-
-//
-// На blg-mb-1-a12 инфракрасный излучатель управляется через PE12,
-// на PE12 доступен выход таймера TIM1_CH3N
-//
-// Мы задействуем его для генерации несущей + модуляции
-//
+// Streaming port of bear_opt.zip: signal_reciever.ipynb / demo.
+// TIM17 supplies 48 kHz: 0 = 12 kHz, 1 = 1.5 kHz, 256 samples/symbol.
+// Frame: one 0-frequency header, one silent symbol, eight data bits (MSB first).
+// Keep the acoustic receiver and the public IR / NoseBytes interfaces separate.
 extern "C" {
-	static GPIO_TypeDef* ir_port = GPIOE;
-    static uint8_t ir_pin = 12;
-	static int ir_emitter_period = 0;
+    enum {
+        IR_BIT_SAMPLES = 256,
+        IR_DECIMATION = 16,
+        IR_BUFFER_SIZE = 64,
+        IR_DETECT_STEP = 15,
+        IR_STARTUP_MARGIN = 70,
+        IR_QUEUE_SIZE = 16
+    };
 
-	static void ir_emitter_radiate_6000() {
-		ir_emitter_period = 48000.0/6000.0 + 0.5;
-	}
+    static struct {
+        int initialized;
+        int turn_mode;
+        unsigned frame_sample;
+        unsigned gap;
+        int active;
+        uint8_t byte;
+        volatile uint8_t queue[IR_QUEUE_SIZE];
+        volatile unsigned head;
+        volatile unsigned tail;
+    } ir_tx = {};
 
-	static void ir_emitter_radiate_2730() {
-		ir_emitter_period = 48000.0/2730.0 + 0.5;
-	}
+    static struct {
+        int is_enabled;
+        unsigned phase;
+        unsigned decimation;
+        unsigned margin;
+        float previous_input;
+        float previous_highpass;
+        float lowpass[4];
+        float lowpass_twice[4];
+        float envelope[2];
+        float history[2][IR_BUFFER_SIZE];
+        unsigned end;
+        int reading;
+        unsigned read_count;
+        unsigned bit_count;
+        uint8_t byte;
+        volatile uint8_t queue[IR_QUEUE_SIZE];
+        volatile unsigned head;
+        volatile unsigned tail;
+    } ir_rx = {};
 
-	static void ir_emitter_kill() {
-		ir_emitter_period = 0;
-	}
-
-	typedef void (*tx_func_t)();
-
-	static void emitter_idle();
-	static void preamble();
-	static void training();
-	static void bits();
-
-	static struct {
-		tx_func_t fn;
-		int tick;
-
-		int preamble_ttl;
-		int bit_holdoff;
-		int bit_pend;
-		int bit_ttl;
-
-		int not_empty;
-		int bit_queue;
-
-		int is_enabled;
-		int turn_mode; // Простой режим передачи ON/OFF
-	} tx = { .fn = emitter_idle, .is_enabled = 0, .turn_mode = 0};
-
-	static void ir_modem_init_emitter(void) {
-		RCC -> AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-		initPin_PP(ir_port, ir_pin);
-		tx.is_enabled = 1;
-	}
-
-	static void preamble() {
-		if (tx.preamble_ttl > 0) {
-			tx.preamble_ttl--;
-			return;
-		}
-
-		ir_emitter_kill();
-
-		// 135 = расстояние от преамбулы до бита
-		// 64 = длительность заполнения бита
-		tx.bit_holdoff = 135 - 64;
-		tx.bit_ttl = 64;
-		tx.fn = training;
-	}
-
-	// Бит для оценки состояния канала
-	// Помогает приемнику определить уровень логической единицы
-	static void training() {
-		if (tx.bit_holdoff > 0) {
-			tx.bit_holdoff--;
-
-			if (tx.bit_holdoff == 0)
-				ir_emitter_radiate_2730();
-
-			return;
-		}
-
-		if (tx.bit_ttl > 0) {
-			tx.bit_ttl--;
-			return;
-		}
-
-		ir_emitter_kill();
-
-		// 595 = расстояние между битами
-		// 64 = длительность заполнения бита
-		tx.bit_holdoff = 595 - 64;
-		tx.bit_ttl = 64;
-		tx.bit_pend = 8;
-		tx.fn = bits;
-	}
-
-	static void bits() {
-		if (tx.bit_holdoff > 0) {
-			tx.bit_holdoff--;
-
-			if (tx.bit_holdoff == 0) {
-				if (tx.bit_queue & 0x80)
-					ir_emitter_radiate_2730();
-
-				tx.bit_queue <<= 1;
-			}
-
-			return;
-		}
-
-		if (tx.bit_ttl > 0) {
-			tx.bit_ttl--;
-			return;
-		}
-
-		ir_emitter_kill();
-
-		if (tx.bit_pend > 0) {
-			tx.bit_holdoff = 595 - 64;
-			tx.bit_ttl = 64;
-			tx.bit_pend--;
-			return;
-		}
-
-		tx.not_empty = 0;
-		tx.fn = emitter_idle;
-	}
-
-	static void emitter_idle() {
-		if (tx.not_empty == 0)
-			return;
-
-		ir_emitter_radiate_6000();
-
-		// 64 = длительность преамбулы
-		tx.preamble_ttl = 64;
-		tx.fn = preamble;
-	}
-
-	static void ir_off() {
-		tx.turn_mode = 0;
-        setPin_PP(ir_port, ir_pin, OFF);
-		tx.tick++;
+    // These operations run in the foreground; restore the caller's IRQ state.
+    static void ir_set_mode(int on) {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_tx.turn_mode = on;
+        ir_tx.active = 0;
+        ir_tx.gap = IR_BIT_SAMPLES;
+        ir_tx.tail = ir_tx.head;
+        setPin_PP(GPIOE, 12, on ? ON : OFF);
+        __set_PRIMASK(mask);
     }
 
-    static void ir_on(){
-		tx.turn_mode = 1;
-        setPin_PP(ir_port, ir_pin, ON);
-		tx.tick++;
+    static void ir_off() { ir_set_mode(0); }
+    static void ir_on() { ir_set_mode(1); }
+
+    static void ir_tx_send_byte(int byte) {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_tx.turn_mode = 0;
+        unsigned next = (ir_tx.head + 1) % IR_QUEUE_SIZE;
+        // A full queue drops the new byte, never corrupts the frame in flight.
+        if (next != ir_tx.tail) {
+            ir_tx.queue[ir_tx.head] = static_cast<uint8_t>(byte);
+            ir_tx.head = next;
+        }
+        __set_PRIMASK(mask);
     }
 
-	// Диспетчиризирующая функция
-	static void ir_tx_advance() {
-		if (tx.fn) {
-			tx.fn();
-		}
-		tx.tick++;
-
-		setPin_PP(ir_port, ir_pin, (tx.tick % ir_emitter_period) < (ir_emitter_period/2) ? ON : OFF);
-	}
-
-	// ============================================================================
-	// Приемник
-	// ============================================================================
-
-	// Полосовой фильтр, IIR, ~2.73 КГц
-	static float filter_2730_next(float x) {
-		static float y_past[3] = {0.0f};
-		static float x_past[3] = {0.0f};
-
-		const float feedforw[] = {1.0/40.0, 1.0/80.0, -1.0/27.0};
-		const float feedback[] = {1.0, -9.0/5.0, 11.0/12.0};
-
-		x_past[2] = x_past[1];
-		x_past[1] = x_past[0];
-		x_past[0] = x;
-
-		y_past[2] = y_past[1];
-		y_past[1] = y_past[0];
-		y_past[0] = 	feedforw[0] * x_past[0] +
-				feedforw[1] * x_past[1] +
-				feedforw[2] * x_past[2] -
-				feedback[1] * y_past[1] -
-				feedback[2] * y_past[2];
-
-		return y_past[0];
-	}
-
-	// Полосовой фильтр, IIR, 6.0 КГц
-	static float filter_6000_next(float x) {
-		static float y_past[3] = {0.0f};
-		static float x_past[3] = {0.0f};
-
-		const float feedforw[] = {1.0/33.0, 1.0/412.0, -1.0/31.0};
-		const float feedback[] = {1.0, -11.0/8.0, 14.0/15.0};
-
-		x_past[2] = x_past[1];
-		x_past[1] = x_past[0];
-		x_past[0] = x;
-
-		y_past[2] = y_past[1];
-		y_past[1] = y_past[0];
-		y_past[0] = 	feedforw[0] * x_past[0] +
-				feedforw[1] * x_past[1] +
-				feedforw[2] * x_past[2] -
-				feedback[1] * y_past[1] -
-				feedback[2] * y_past[2];
-
-		return y_past[0];
-	}
-
-
-	#define ABS(val) ((val) > 0 ? (val) : -(val))
-
-	typedef void (*ir_rx_func_t)(float u, float v);
-
-	static void ir_preamble_detect(float u, float v);
-	static void ir_preamble_sync(float u, float v);
-	static void ir_link_training(float u, float v);
-	static void ir_bit_sampling(float u, float v);
-
-	static struct {
-		ir_rx_func_t fn;
-		uint32_t tick;
-
-		int preamble_ttl;
-		int preamble_loc;
-		float preamble_max;
-
-		int training_ttl;
-		float training_max;
-
-		float bit_thresh;
-		int bit_holdoff;
-		int bit_pend;
-		int bit_ttl;
-		int bit_acc;
-		float bit_max;
-
-		int have_byte;
-		int is_enabled;
-	} ir_rx = { .fn = ir_preamble_detect, 0 };
-
-	static void ir_preamble_detect(float u, float v) {
-		if (ABS(v) > 50) { // Порог детектирования сигнала
-			ir_rx.preamble_ttl = 100;
-			ir_rx.preamble_loc = 100;
-			ir_rx.preamble_max = ABS(v);
-			ir_rx.fn = ir_preamble_sync;
-		}
-	}
-
-	static void ir_preamble_sync(float u, float v) {
-		if (ir_rx.preamble_ttl >= 0) {
-			ir_rx.preamble_ttl--;
-
-			if (ABS(v) > ir_rx.preamble_max) {
-				ir_rx.preamble_max = ABS(v);
-				ir_rx.preamble_loc = 100 - ir_rx.preamble_ttl;
-			}
-
-			return;
-		}
-
-		if (ir_rx.preamble_loc >= 0) {
-			ir_rx.preamble_loc--;
-			return;
-		}
-
-		ir_rx.training_ttl = 100;
-		ir_rx.training_max = 0.0f;
-		ir_rx.fn = ir_link_training;
-	}
-
-	static void ir_link_training(float u, float v) {
-		if (ir_rx.training_ttl >= 0) {
-			ir_rx.training_ttl--;
-
-			if (ABS(u) > ir_rx.training_max) {
-				ir_rx.training_max = ABS(u);
-			}
-
-			return;
-		}
-
-		ir_rx.bit_thresh = 0.75f * ir_rx.training_max;
-		ir_rx.bit_holdoff = 495;
-		ir_rx.bit_pend = 8;
-		ir_rx.bit_ttl = 100;
-		ir_rx.bit_max = 0.0f;
-		ir_rx.bit_acc = 0;
-		ir_rx.fn = ir_bit_sampling;
-	}
-
-	static void ir_bit_sampling(float u, float v) {
-		if (ir_rx.bit_holdoff >= 0) {
-			ir_rx.bit_holdoff--;
-			return;
-		}
-
-		if (ir_rx.bit_ttl >= 0) {
-			ir_rx.bit_ttl--;
-
-			if (ABS(u) > ir_rx.bit_max) {
-				ir_rx.bit_max = ABS(u);
-			}
-
-			return;
-		}
-
-		int bit_detected = (ir_rx.bit_max >= ir_rx.bit_thresh);
-
-		ir_rx.bit_pend--;
-		ir_rx.bit_acc += (bit_detected << ir_rx.bit_pend);
-
-		if (ir_rx.bit_pend > 0) {
-			ir_rx.bit_holdoff = 495;
-			ir_rx.bit_ttl = 100;
-			ir_rx.bit_max = 0.0f;
-			return;
-		}
-
-		ir_rx.fn = ir_preamble_detect;
-		ir_rx.have_byte = 1;
-	}
-
-	int ir_rx_is_available() {
-		return ir_rx.have_byte;
-	}
-
-	int ir_rx_read_byte() {
-		ir_rx.have_byte = 0;
-		return ir_rx.bit_acc;
-	}
-
-	// Диспетчеризирующая функция
-	// u     2.9 кГц сигнал
-	// v     6.0 кГц сигнал
-	static void ir_rx_advance(float u, float v) {
-		if (ir_rx.fn) {
-			ir_rx.fn(u, v);
-		}
-		ir_rx.tick++;
-	}
-
-
-	void ir_modem_init() {
-		ir_rx.is_enabled = 1;
-		ir_modem_init_emitter();
-	}
-
-	void ir_modem() {
-		if (ir_rx.is_enabled) {
-            uint16_t ir_level = ADC1 -> DR;
-            ir_rx_advance(
-                filter_2730_next(ir_level),
-                filter_6000_next(ir_level)
-            );
+    // Return the LED level for exactly one sample; no waits in the IRQ.
+    static int ir_tx_advance() {
+        if (ir_tx.turn_mode)
+            return ON;
+        if (!ir_tx.active) {
+            if (ir_tx.gap) {
+                --ir_tx.gap;
+                return OFF;
+            }
+            if (ir_tx.tail == ir_tx.head)
+                return OFF;
+            ir_tx.byte = ir_tx.queue[ir_tx.tail];
+            ir_tx.tail = (ir_tx.tail + 1) % IR_QUEUE_SIZE;
+            ir_tx.frame_sample = 0;
+            ir_tx.active = 1;
         }
 
-        if (tx.is_enabled) {
-            if (tx.turn_mode) {
-                ir_on();
-            } else {
-                ir_tx_advance();
+        unsigned symbol = ir_tx.frame_sample / IR_BIT_SAMPLES;
+        unsigned period = 4;
+        if (symbol >= 2 && (ir_tx.byte & (0x80 >> (symbol - 2))))
+            period = 32;
+        int level = symbol != 1 && ir_tx.frame_sample % period < period / 2;
+        if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
+            ir_tx.active = 0;
+            ir_tx.gap = IR_BIT_SAMPLES;
+        }
+        return level ? ON : OFF;
+    }
+
+    static float ir_history(unsigned channel, unsigned index) {
+        return ir_rx.history[channel][(ir_rx.end + index) % IR_BUFFER_SIZE];
+    }
+
+    static void ir_rx_decimate(float energy_0, float energy_1) {
+        ir_rx.envelope[0] = 0.5f * (ir_rx.envelope[0] + energy_0);
+        ir_rx.envelope[1] = 0.5f * (ir_rx.envelope[1] + energy_1);
+        for (unsigned channel = 0; channel < 2; ++channel)
+            ir_rx.history[channel][ir_rx.end] = ir_rx.envelope[channel];
+        ir_rx.end = (ir_rx.end + 1) % IR_BUFFER_SIZE;
+
+        const unsigned center = IR_BUFFER_SIZE / 2;
+        float zero = ir_history(0, center);
+        float one = ir_history(1, center);
+        if (ir_rx.margin < IR_STARTUP_MARGIN) {
+            ++ir_rx.margin;
+            return;
+        }
+
+        if (!ir_rx.reading && zero > 40.0f &&
+            zero * 0.5f > ir_history(0, center - IR_DETECT_STEP) &&
+            zero * 0.5f > ir_history(0, center + IR_DETECT_STEP) &&
+            zero >= ir_history(0, center - 1) &&
+            zero >= ir_history(0, center + 1)) {
+            ir_rx.reading = 1;
+            ir_rx.read_count = 0;
+            ir_rx.bit_count = 0;
+            ir_rx.byte = 0;
+        }
+
+        if (!ir_rx.reading)
+            return;
+        // Notebook positions: 32, 48, ..., 144 decimated samples after header.
+        if (ir_rx.read_count == (2 + ir_rx.bit_count) *
+                                (IR_BIT_SAMPLES / IR_DECIMATION)) {
+            // A missing carrier is an incomplete frame, not a logical one.
+            if (zero <= 40.0f && one <= 40.0f) {
+                ir_rx.reading = 0;
+                return;
+            }
+            ir_rx.byte = (ir_rx.byte << 1) | (zero <= one ? 1 : 0);
+            if (++ir_rx.bit_count == 8) {
+                unsigned next = (ir_rx.head + 1) % IR_QUEUE_SIZE;
+                if (next != ir_rx.tail) {
+                    ir_rx.queue[ir_rx.head] = ir_rx.byte;
+                    ir_rx.head = next;
+                }
+                ir_rx.reading = 0;
             }
         }
-	}
+        ++ir_rx.read_count;
+    }
+
+    static void ir_rx_advance(float sample) {
+        // HPF, tau = 64: a0=(1+exp(-1/64))/2, a1=-a0, b1=exp(-1/64).
+        float signal = 0.9922482185f * (sample - ir_rx.previous_input) +
+                       0.9844964370f * ir_rx.previous_highpass;
+        ir_rx.previous_input = sample;
+        ir_rx.previous_highpass = signal;
+        ir_rx.phase = (ir_rx.phase + 1) % 32;
+        unsigned phase_0 = ir_rx.phase % 4;
+        float products[4] = {
+            phase_0 >= 2 ? signal : -signal,
+            (phase_0 + 1) % 4 < 2 ? signal : -signal,
+            ir_rx.phase >= 16 ? signal : -signal,
+            (ir_rx.phase + 8) % 32 < 16 ? signal : -signal
+        };
+        for (unsigned i = 0; i < 4; ++i) {
+            ir_rx.lowpass[i] += (products[i] - ir_rx.lowpass[i]) / 48.0f;
+            ir_rx.lowpass_twice[i] +=
+                (ir_rx.lowpass[i] - ir_rx.lowpass_twice[i]) / 48.0f;
+        }
+        // The notebook decimates the first processed sample, then every 16th.
+        if (ir_rx.decimation == 0) {
+            const float *v = ir_rx.lowpass_twice;
+            ir_rx_decimate(v[0] * v[0] + v[1] * v[1],
+                           v[2] * v[2] + v[3] * v[3]);
+        }
+        ir_rx.decimation = (ir_rx.decimation + 1) % IR_DECIMATION;
+    }
+
+    int ir_rx_is_available() {
+        return ir_rx.head != ir_rx.tail;
+    }
+
+    int ir_rx_read_byte() {
+        if (ir_rx.head == ir_rx.tail)
+            return 0;
+        int byte = ir_rx.queue[ir_rx.tail];
+        ir_rx.tail = (ir_rx.tail + 1) % IR_QUEUE_SIZE;
+        return byte;
+    }
+
+    void ir_modem_init() {
+        if (ir_tx.initialized)
+            return;
+        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
+        initPin_PP(GPIOE, 12);
+        setPin_PP(GPIOE, 12, OFF);
+        ir_tx.initialized = 1;
+    }
+
+    void ir_modem() {
+        // NoseBytes enables reception only after the photodiode ADC is ready.
+        if (ir_rx.is_enabled)
+            ir_rx_advance(ADC1->DR);
+        if (ir_tx.initialized)
+            setPin_PP(GPIOE, 12, ir_tx_advance());
+    }
 }

@@ -17,6 +17,7 @@ public:
             }
 
             ir_modem_init();
+            ir_rx.is_enabled = 1;
             init_modem();
 
             noseInitialized = true;

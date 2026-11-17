@@ -69,3 +69,7 @@
 
 - [Lapki IDE](https://github.com/kruzhok-team/lapki-client) - среда визуального программирования, в которую внедрен модуль компилятора.
 - [cyberiadaml-py](https://github.com/kruzhok-team/cyberiadaml-py) - библиотека для парсинга Cyberiada-GraphML схем.
+
+ИК-приём и передача КиберМишки A12 по протоколу `bear_opt.zip`,
+без изменения интерфейсов `IR` и `NoseBytes`:
+[формат сигнала и тесты](docs/cyberbear-ir.md).

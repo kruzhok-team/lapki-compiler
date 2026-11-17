@@ -10,9 +10,7 @@ public:
     }
 
     void sendByte(int byte) {
-        ir_off();
-        tx.bit_queue = byte;
-        tx.not_empty = 1;
+        ir_tx_send_byte(byte);
     }
     
     void off() {
