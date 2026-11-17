@@ -1,0 +1,4 @@
+#pragma once
+#define STANDARD_MODE 0
+#define CYBERBEAR_MODE 1
+struct { uint8_t tx_mode = STANDARD_MODE; } settings;

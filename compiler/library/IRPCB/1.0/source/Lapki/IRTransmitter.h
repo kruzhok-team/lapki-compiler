@@ -1,5 +1,11 @@
 #ifndef IRTRANSMITTER_H
 #define IRTRANSMITTER_H
+#ifndef IR_TRANSMITTER_MODE
+#define IR_TRANSMITTER_MODE
+#else
+#error "It is not possible to use the CyberBear transmitter and the standard transmitter together!"
+#endif
+
 #include "IRpkg.h"
 #include "Settings.h"
 
@@ -8,6 +14,7 @@ class IRTransmitter {
 
    public:
     inline static uint32_t lastIrSend = 0;
+    static void init();
     static void transmit(IRpkg pkg);
     static void setPower(int pwr);
 };

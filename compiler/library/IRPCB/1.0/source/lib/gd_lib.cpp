@@ -638,8 +638,8 @@ void DMA_t::Init(volatile void* PeriphAddr, void* MemAddr, uint32_t AMode, uint1
 }
 
 void DMA_t::ClearIrq() const { // DMA0: chnls [0;6]; DMA1: chnls [7;11]
-    if(chnl_n <= 6) DMA0->INTC = 0b1111UL << chnl_n;  // [0;6]
-    else DMA1->INTC = 0b1111UL << (chnl_n - 7);      // [7;11]
+    if(chnl_n <= 6) DMA0->INTC = 0b1111UL << (chnl_n * 4);  // [0;6]
+    else DMA1->INTC = 0b1111UL << ((chnl_n - 7) * 4); // [7;11]
 }
 
 void DMA_t::DisableAndClearIRQ() const {

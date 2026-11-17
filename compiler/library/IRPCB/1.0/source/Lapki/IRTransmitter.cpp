@@ -3,6 +3,10 @@
 #include "IRpkg.h"
 #include "ir.h"
 
+void IRTransmitter::init() {
+    settings.tx_mode = STANDARD_MODE;
+}
+
 void IRTransmitter::transmit(IRpkg pkg) {
     lastIrSend = Sys::GetSysTime();
     IRLed::TransmitWord(pkg.word16, pkg.bits_count, power, nullptr);

@@ -17,6 +17,8 @@ namespace IRLed {
 TimHw sampling_tmr{TMR_DAC_SMPL};
 ftVoidVoid icallbackI = nullptr;
 static uint32_t transaction_sz;
+static uint32_t standard_carrier_freq_Hz = 56000;
+static volatile bool tx_busy = false;
 static void DmaTxEndIrqHandler(void *p, uint32_t flags);
 static const DMA_t dma_tx {DAC_DMA, DmaTxEndIrqHandler, nullptr, IRQ_PRIO_MEDIUM};
 // Samples count
@@ -43,17 +45,42 @@ union DacSamplePair {
     DacSamplePair(uint8_t pwr) : on_pwr1(pwr), off_pwr1(0), on_pwr2(pwr), off_pwr2(0) {}
 } __attribute__((packed));
 
+// One existing 3996-byte allocation, reused as byte samples in CyberBear mode.
 DacSamplePair dac_buf[DAC_BUF_SZ];
+static constexpr uint32_t kBearSymbolSamples = 256;
+// Two quiet symbols let the receiver distinguish a new header after zero bits.
+static constexpr uint32_t kBearFrameSamples = 12 * kBearSymbolSamples;
+static_assert(sizeof(DacSamplePair) == 4, "Unexpected DAC sample layout");
+static_assert(kBearFrameSamples <= sizeof(dac_buf), "CyberBear frame exceeds shared buffer");
+
+static bool ReserveTx() {
+    // The buffer is shared by all callers, including the shell and app thread.
+    uint32_t mask = __get_PRIMASK();
+    __disable_irq();
+    bool available = !tx_busy;
+    if(available) tx_busy = true;
+    __set_PRIMASK(mask);
+    return available;
+}
 
 static void DmaTxEndIrqHandler(void *p, uint32_t flags) {
+    // A cleared/pending IRQ after ResetI must not complete a new frame.
+    if((flags & 0b0010UL) == 0) return; // DMA transfer-complete flag.
     Sys::LockFromIRQ();
     sampling_tmr.Disable();
     dma_tx.Disable();
-    if(icallbackI) icallbackI();
+    DAC->PutDataR0(0);
+    sampling_tmr.GenerateUpdateEvt();
+    ftVoidVoid callback = icallbackI;
+    icallbackI = nullptr;
+    tx_busy = false;
+    if(callback) callback();
     Sys::UnlockFromIRQ();
 }
 
 static inline void StartTx() {
+    dma_tx.DisableAndClearIRQ();
+    dma_tx.SetMode(IRLED_DMA_MODE); // DisableAndClearIRQ also clears TCIE.
     dma_tx.SetMemoryAddr(dac_buf);
     dma_tx.SetTransferDataCnt(transaction_sz);
     dma_tx.Enable();
@@ -80,8 +107,11 @@ void Init() {
 }
 
 void SetCarrierFreq(uint32_t carrier_freq_Hz) {
-    uint32_t sampling_freq_Hz = carrier_freq_Hz * 2;
-    sampling_tmr.SetUpdateFreqChangingTopValue(sampling_freq_Hz);
+    // Settings support up to 56 kHz, for which the standard frame fits.
+    if(carrier_freq_Hz == 0 || carrier_freq_Hz > 56000) return;
+    standard_carrier_freq_Hz = carrier_freq_Hz;
+    // Do not disturb an active DMA transfer, regardless of its protocol.
+    if(!tx_busy) sampling_tmr.SetUpdateFreqChangingTopValue(carrier_freq_Hz * 2);
     // Every SamplePair contains 4 actual samples
     samples_cnt.header = (((kIr::Header_us * carrier_freq_Hz) + 1999999L) / 2000000L);
     samples_cnt.space  = (((kIr::Space_us  * carrier_freq_Hz) + 1999999L) / 2000000L);
@@ -94,8 +124,8 @@ void SetCarrierFreq(uint32_t carrier_freq_Hz) {
 }
 
 // power is 8-bit DAC value
-void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI) {
-    icallbackI = callbackI;
+static void TransmitStandardWord(uint16_t data, int32_t bit_cnt, uint8_t power) {
+    sampling_tmr.SetUpdateFreqChangingTopValue(standard_carrier_freq_Hz * 2);
     // ==== Fill buffer depending on data ====
     DacSamplePair *p = dac_buf, sample_carrier{power}, sample_space{0};
     int32_t i, j;
@@ -118,11 +148,41 @@ void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid call
     StartTx();
 }
 
+static void TransmitCyberBearWord(uint16_t data, uint8_t power) {
+    sampling_tmr.SetUpdateFreqChangingTopValue(48000);
+    // uint8_t aliases the object representation of the same DacSamplePair array.
+    uint8_t *samples = reinterpret_cast<uint8_t*>(dac_buf);
+    uint8_t byte = static_cast<uint8_t>(data);
+    for(uint32_t t = 0; t < kBearFrameSamples; ++t) {
+        uint32_t symbol = t / kBearSymbolSamples;
+        uint32_t period = 4; // Header and logical zero: 12 kHz.
+        if(symbol >= 2 && symbol < 10 && (byte & (0x80 >> (symbol - 2))))
+            period = 32; // Logical one: 1.5 kHz.
+        // Symbol 1 is the header gap; symbols 10 and 11 are the inter-frame pause.
+        samples[t] = symbol != 1 && symbol < 10 && t % period < period / 2 ? power : 0;
+    }
+    transaction_sz = kBearFrameSamples;
+    StartTx();
+}
+
+// Preserve the original Settings dispatcher and the public transmission API.
+void TransmitWord(uint16_t data, int32_t bit_cnt, uint8_t power, ftVoidVoid callbackI) {
+    if(settings.tx_mode != STANDARD_MODE && settings.tx_mode != CYBERBEAR_MODE) return;
+    if(settings.tx_mode == STANDARD_MODE && (bit_cnt < 1 || bit_cnt > IR_BIT_CNT_MAX)) return;
+    // A second call is ignored while DMA owns the shared buffer.
+    if(!ReserveTx()) return;
+    icallbackI = callbackI;
+    if(settings.tx_mode == CYBERBEAR_MODE) TransmitCyberBearWord(data, power);
+    else TransmitStandardWord(data, bit_cnt, power);
+}
+
 void ResetI() {
-    dma_tx.Disable();
+    dma_tx.DisableAndClearIRQ();
     sampling_tmr.Disable();
     DAC->PutDataR0(0);
     sampling_tmr.GenerateUpdateEvt();
+    icallbackI = nullptr;
+    tx_busy = false;
 }
 } // namespace
 #endif
