@@ -8,22 +8,42 @@ bool earsInitialized = false;
 class EarsBytes {
 public:
     int value = 0;
-    EarsBytes() {
+    static volatile uint16_t &threshold;
+
+    EarsBytes() = default;
+
+    void setThreshold(int level) {
+        if (level < 0) level = 0;
+        if (level > 65535) level = 65535;
+        threshold = static_cast<uint16_t>(level);
+    }
+
+    void on() {
         if (!earsInitialized) {
             if (!detail::microphone::isInit) {
                 mrx::hal::microphone::api::init();
-                mrx::hal::microphone::detail::initDetector();
                 detail::microphone::isInit = true;
             }
 
             earsInitialized = true;
-            acoustic_rx.is_enabled = 1;
-            init_modem();
         }
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        acoustic_rx_set_enabled(true);
+        init_modem();
+        __set_PRIMASK(mask);
+    }
+
+    void off() {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        acoustic_rx_set_enabled(false);
+        update_modem_timer();
+        __set_PRIMASK(mask);
     }
 
     bool isByteReceived() {
-        if (acoustic_rx_is_available()) {
+        if (acoustic_rx.is_enabled && acoustic_rx_is_available()) {
             value = acoustic_rx_read_byte();
             return true;
         }
@@ -31,3 +51,5 @@ public:
     };
 
 };
+
+volatile uint16_t &EarsBytes::threshold = acoustic_rx_start_threshold;

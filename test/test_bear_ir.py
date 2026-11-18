@@ -121,6 +121,28 @@ def test_acoustic_receiver(tmp_path):
     subprocess.run([str(binary)], check=True, capture_output=True, text=True)
 
 
+def test_receiver_controls(tmp_path):
+    """Real component APIs: default off, runtime threshold and shared TX clock."""
+    compiler = shutil.which('g++')
+    if compiler is None:
+        pytest.skip('g++ is needed for native modem control tests')
+    for name in ['modem.c', 'ir_modem.c', 'acoustic_modem.c', 'Microphone.hpp',
+                 'NoseBytes.cpp', 'EarsBytes.cpp', 'ir.hpp']:
+        shutil.copyfile(SOURCES / name, tmp_path / name)
+    (tmp_path / 'commonEars.hpp').write_text(
+        '#pragma once\n#include <cstdint>\n'
+        'namespace stm32g431 { namespace ears { uint32_t adcArray[2] = {}; } }\n')
+    (tmp_path / 'leds.c').write_text('#pragma once\n')
+    binary = tmp_path / 'controls'
+    subprocess.run([
+        compiler, '-std=c++17', '-Wall', '-Wextra', '-Werror',
+        '-Wno-unused-parameter', '-Wno-missing-field-initializers',
+        '-fsanitize=undefined', '-fno-sanitize-recover=all', f'-I{tmp_path}',
+        str(FIXTURES / 'controls.cpp'), '-o', str(binary)
+    ], check=True, capture_output=True, text=True)
+    subprocess.run([str(binary)], check=True, capture_output=True, text=True)
+
+
 def test_irpcb_transmitter(tmp_path):
     """Preserved opt-in backend; production builds disable it by default."""
     compiler = shutil.which('g++')
@@ -146,7 +168,8 @@ def test_irpcb_transmitter(tmp_path):
     ['IR'], ['NoseBytes'], ['EarsBytes'], ['IR', 'NoseBytes'],
     ['NoseBytes', 'IR', 'EarsBytes'], ['IRPcb'], ['IR', 'IRPcb'],
     ['IRPcb', 'IR'], ['NoseBytes', 'IRPcb', 'IR', 'EarsBytes'],
-    ['NoseBytes', 'IR', 'EarsBytes', 'MatrixPicture']
+    ['NoseBytes', 'IR', 'EarsBytes', 'MatrixPicture'],
+    ['EarsBytes', 'Microphone', 'NoseBytes', 'IR', 'MatrixPicture']
 ])
 async def test_generate_and_build(components, tmp_path):
     """Existing component interfaces and all modem include orders build for ARM."""
@@ -162,7 +185,7 @@ async def test_generate_and_build(components, tmp_path):
         if node.attrib['id'].startswith('component_'):
             graph.remove(node)
     ids = {'IR': 'ir', 'IRPcb': 'irpcb', 'NoseBytes': 'nose', 'EarsBytes': 'ears',
-           'MatrixPicture': 'matrix'}
+           'MatrixPicture': 'matrix', 'Microphone': 'mic'}
     for component in components:
         node = ElementTree.SubElement(graph, f'{namespace}node', id=f'component_{component}')
         ElementTree.SubElement(node, f'{namespace}data', key='dNote').text = 'formal'
@@ -170,6 +193,13 @@ async def test_generate_and_build(components, tmp_path):
         ElementTree.SubElement(node, f'{namespace}data', key='dData').text = (
             f'id/ {ids[component]}\n\ntype/ {component}')
     body = 'entry/\n'
+    if 'NoseBytes' in components:
+        body += 'nose.off();\nnose.on();\n'
+    if 'EarsBytes' in components:
+        body += 'ears.setThreshold(600);\nears.setThreshold(ears.threshold);\n'
+        body += 'ears.off();\nears.on();\n'
+    if 'Microphone' in components:
+        body += 'mic.setupEvent(600);\n'
     if 'MatrixPicture' in components:
         body += 'matrix.draw(heart);\n'
     if 'IRPcb' in components:

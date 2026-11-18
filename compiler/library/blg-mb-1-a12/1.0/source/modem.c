@@ -14,6 +14,32 @@ extern "C" {
     static struct {
         int initialized;
     } modem_settings = { 0 };
+
+    // Shared by both receivers and IR TX. No clock is needed for constant light.
+    static void update_modem_timer() {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        if (modem_settings.initialized) {
+            bool needed = ir_rx.is_enabled || acoustic_rx.is_enabled ||
+                          ir_tx.active || ir_tx.head != ir_tx.tail;
+            if (needed) {
+                if (!(TIM17->CR1 & TIM_CR1_CEN)) {
+                    TIM17->CNT = 0;
+                    TIM17->SR &= ~TIM_SR_UIF;
+                    NVIC_ClearPendingIRQ(TIM1_TRG_COM_TIM17_IRQn);
+                    TIM17->DIER |= TIM_DIER_UIE;
+                    TIM17->CR1 |= TIM_CR1_CEN;
+                }
+            }
+            else {
+                TIM17->CR1 &= ~TIM_CR1_CEN;
+                TIM17->DIER &= ~TIM_DIER_UIE;
+                TIM17->SR &= ~TIM_SR_UIF;
+                NVIC_ClearPendingIRQ(TIM1_TRG_COM_TIM17_IRQn);
+            }
+        }
+        __set_PRIMASK(mask);
+    }
     
 
     // Главное прерывание модема
@@ -46,12 +72,15 @@ extern "C" {
             TIM17 -> CNT = 0;
             TIM17 -> ARR = 75 - 1; // 48 kHz
             TIM17 -> PSC = 10 - 1;
-            TIM17 -> DIER |= TIM_DIER_UIE;
-            TIM17 -> CR1 |= TIM_CR1_CEN;
+            TIM17 -> DIER &= ~TIM_DIER_UIE;
+            TIM17 -> EGR = TIM_EGR_UG;
+            TIM17 -> SR &= ~TIM_SR_UIF;
         
             NVIC_EnableIRQ(TIM1_TRG_COM_TIM17_IRQn);
             NVIC_SetPriority(TIM1_TRG_COM_TIM17_IRQn, 7);
             modem_settings.initialized = 1;
+            ir_update_timer = update_modem_timer;
         }
+        update_modem_timer();
     }
 }

@@ -10,15 +10,21 @@ extern "C" {
     int BIT_WINDOW = 250;
 
     // Пороги амплитуды после полосовых фильтров, не проценты громкости.
-    // Больше порог — меньше чувствительность; после изменения пересобрать прошивку.
-    static constexpr float ACOUSTIC_RX_START_THRESHOLD = 400.0f; // Раньше 200.
+    // Больше порог — меньше чувствительность. Меняется через EarsBytes.threshold.
+    static volatile uint16_t acoustic_rx_start_threshold = 400;
     static constexpr float ACOUSTIC_RX_TRAINING_THRESHOLD = 100.0f;
     static constexpr float ACOUSTIC_RX_BIT_THRESHOLD_RATIO = 0.75f;
 
+    struct AcousticFilterState {
+        float x_past[3];
+        float y_past[3];
+    };
+    static AcousticFilterState acoustic_filter_2_9 = {}, acoustic_filter_6_0 = {};
+
     // Полосовой фильтр, IIR, ~2.9 КГц
     static float filter_2_9_next(float x) {
-        static float y_past[3] = {0.0f};
-        static float x_past[3] = {0.0f};
+        auto &y_past = acoustic_filter_2_9.y_past;
+        auto &x_past = acoustic_filter_2_9.x_past;
 
         const float feedforw[] = {1.0/40.0, 1.0/80.0, -1.0/27.0};
         const float feedback[] = {1.0, -9.0/5.0, 11.0/12.0};
@@ -40,8 +46,8 @@ extern "C" {
 
     // Полосовой фильтр, IIR, 6.0 КГц
     static float filter_6_0_next(float x) {
-        static float y_past[3] = {0.0f};
-        static float x_past[3] = {0.0f};
+        auto &y_past = acoustic_filter_6_0.y_past;
+        auto &x_past = acoustic_filter_6_0.x_past;
 
         const float feedforw[] = {1.0/33.0, 1.0/412.0, -1.0/31.0};
         const float feedback[] = {1.0, -11.0/8.0, 14.0/15.0};
@@ -90,11 +96,21 @@ extern "C" {
         float bit_max;
 
         int have_byte;
-        int is_enabled;
+        volatile int is_enabled;
     } acoustic_rx = { .fn = preamble_detect, 0 };
 
+    // Called with interrupts masked by the component; threshold is preserved.
+    static inline void acoustic_rx_set_enabled(bool enabled) {
+        if (bool(acoustic_rx.is_enabled) == enabled) return;
+        acoustic_rx = {};
+        acoustic_filter_2_9 = {};
+        acoustic_filter_6_0 = {};
+        acoustic_rx.fn = preamble_detect;
+        acoustic_rx.is_enabled = enabled;
+    }
+
     static void preamble_detect(float u, float v) {
-        if (ABS(v) > ACOUSTIC_RX_START_THRESHOLD) {
+        if (ABS(v) > acoustic_rx_start_threshold) {
             acoustic_rx.preamble_ttl = 100;
             acoustic_rx.preamble_loc = 100;
             acoustic_rx.preamble_max = ABS(v);

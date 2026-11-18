@@ -63,8 +63,11 @@ extern "C" {
 
 #endif
 
+    // Installed by the shared modem; absent in standalone decoder tests.
+    static void (*ir_update_timer)() = nullptr;
+
     static struct {
-        int is_enabled;
+        volatile int is_enabled;
         unsigned phase;
         unsigned decimation;
         unsigned margin;
@@ -84,6 +87,13 @@ extern "C" {
         volatile unsigned tail;
     } ir_rx = {};
 
+    // Called with interrupts masked; cancelling RX must not touch TX.
+    static inline void ir_rx_set_enabled(bool enabled) {
+        if (bool(ir_rx.is_enabled) == enabled) return;
+        ir_rx = {};
+        ir_rx.is_enabled = enabled;
+    }
+
 #if CYBERBEAR_IRPCB_ENABLED
     // These operations run in the foreground; restore the caller's IRQ state.
     static void ir_set_mode(int on) {
@@ -96,6 +106,7 @@ extern "C" {
         ir_tx.gap = IR_BIT_SAMPLES;
         ir_tx.tail = ir_tx.head;
         setPin_PP(GPIOE, 12, on ? ON : OFF);
+        if (ir_update_timer) ir_update_timer();
         __set_PRIMASK(mask);
     }
 
@@ -112,6 +123,7 @@ extern "C" {
             ir_tx.queue[ir_tx.head] = word | (bits << 16) | (protocol << 21);
             ir_tx.head = next;
         }
+        if (ir_update_timer) ir_update_timer();
         __set_PRIMASK(mask);
     }
 
@@ -155,6 +167,7 @@ extern "C" {
         if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
             ir_tx.active = 0;
             ir_tx.gap = IR_BIT_SAMPLES;
+            if (ir_update_timer) ir_update_timer();
         }
         return level ? ON : OFF;
     }
@@ -169,6 +182,7 @@ extern "C" {
         ir_tx.gap = IR_BIT_SAMPLES;
         ir_tx.tail = ir_tx.head;
         setPin_PP(GPIOE, 12, on ? ON : OFF);
+        if (ir_update_timer) ir_update_timer();
         __set_PRIMASK(mask);
     }
 
@@ -185,6 +199,7 @@ extern "C" {
             ir_tx.queue[ir_tx.head] = static_cast<uint8_t>(byte);
             ir_tx.head = next;
         }
+        if (ir_update_timer) ir_update_timer();
         __set_PRIMASK(mask);
     }
 
@@ -213,6 +228,7 @@ extern "C" {
         if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
             ir_tx.active = 0;
             ir_tx.gap = IR_BIT_SAMPLES;
+            if (ir_update_timer) ir_update_timer();
         }
         return level ? ON : OFF;
     }

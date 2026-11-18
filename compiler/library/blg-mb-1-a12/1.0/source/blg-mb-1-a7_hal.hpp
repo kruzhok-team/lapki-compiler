@@ -465,6 +465,8 @@ namespace mrx {
             namespace detail {
 
                 void initDetector() {
+                    static bool initialized = false;
+                    if (initialized) return;
                     
                     RCC -> APB2ENR |= RCC_APB2ENR_TIM15EN;
                     TIM15 -> CR1 &= ~TIM_CR1_CEN;
@@ -476,6 +478,7 @@ namespace mrx {
 
                     NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
                     NVIC_SetPriority(TIM1_BRK_TIM15_IRQn,20); //Посчитать аккуратнее
+                    initialized = true;
                 }
                 
                 void enableDetector(bool que) {

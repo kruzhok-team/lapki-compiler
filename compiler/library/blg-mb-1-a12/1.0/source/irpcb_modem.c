@@ -91,6 +91,7 @@ extern "C" {
             ir_pcb_stop_timer();
             ir_tx.gap = IR_BIT_SAMPLES;
             ir_tx.active = 0;
+            if (ir_update_timer) ir_update_timer();
             break;
         }
     }

@@ -31,10 +31,9 @@ public:
 
             mrx::hal::microphone::api::init();
 
-            mrx::hal::microphone::detail::initDetector();
-
             detail::microphone::isInit = true;
         }
+        mrx::hal::microphone::detail::initDetector();
         on();
     }
 

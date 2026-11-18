@@ -170,7 +170,7 @@
     },
     "EarsBytes": {
       "name": "Уши-байты",
-      "description": "КиберМишка настроил уши на принятие сообщений.",
+      "description": "Приём байтов по акустике. По умолчанию выключен; включите действием «Включить приём».",
       "img": "blg-mb/byteEars.svg",
       "signals": {
         "isByteReceived": {
@@ -187,11 +187,51 @@
           "img": "tjc-ms/lastData.svg",
           "type": "uint8_t",
           "description": "Последний полученный байт."
+        },
+        "threshold": {
+          "alias": "Порог громкости",
+          "img": "tjc-ms/lastData.svg",
+          "type": "uint16_t",
+          "description": "Порог старта акустического сообщения после фильтра 6 кГц. По умолчанию 400; больше значение — меньше чувствительность. Общий для всех компонентов «Уши-байты»."
         }
       },
-      "methods": {},
-      "buildFiles": ["Microphone.hpp", "EarsBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
-      "importFiles": ["Microphone.hpp", "EarsBytes.cpp"],
+      "methods": {
+        "on": {
+          "alias": "Включить приём",
+          "img": "arduino/switch-on.svg",
+          "description": "Включает приём байтов. Повторный вызов не сбрасывает текущий приём.",
+          "parameters": []
+        },
+        "off": {
+          "alias": "Выключить приём",
+          "img": "arduino/switch-off.svg",
+          "description": "Останавливает обработку приёма, очищает незавершённый кадр и непрочитанные байты.",
+          "parameters": []
+        },
+        "setThreshold": {
+          "alias": "Установить порог громкости",
+          "img": "blg-mb/volumeThreshold.svg",
+          "description": "Устанавливает порог старта следующего сообщения: 0–65535. Не изменяет порог компонента «Уши-громкость».",
+          "parameters": [
+            {
+              "name": "Порог",
+              "type": "int",
+              "description": "Амплитуда после фильтра, не проценты громкости."
+            }
+          ]
+        }
+      },
+      "buildFiles": [
+        "Microphone.hpp",
+        "EarsBytes.cpp",
+        "modem.c",
+        "ir_modem.c",
+        "acoustic_modem.c"
+      ],
+      "importFiles": [
+        "Microphone.hpp",
+        "EarsBytes.cpp"
+      ],
       "singletone": false
     },
    "IR": {
@@ -251,7 +291,7 @@
     },
     "NoseBytes": {
       "name": "Нос-байты",
-      "description": "КиберМишка настроил нос на принятие сообщений.",
+      "description": "Приём байтов по ИК. По умолчанию выключен; включите действием «Включить приём».",
       "img": "blg-mb/byteNose.svg",
       "signals": {
         "isByteReceived": {
@@ -269,10 +309,30 @@
           "type": "uint8_t",
           "description": "Последний полученный байт."
         }
-         },
-      "methods": {},
-      "buildFiles": ["NoseBytes.cpp", "modem.c", "ir_modem.c", "acoustic_modem.c"],
-      "importFiles": ["NoseBytes.cpp"],
+      },
+      "methods": {
+        "on": {
+          "alias": "Включить приём",
+          "img": "arduino/switch-on.svg",
+          "description": "Включает приём байтов. Повторный вызов не сбрасывает текущий приём.",
+          "parameters": []
+        },
+        "off": {
+          "alias": "Выключить приём",
+          "img": "arduino/switch-off.svg",
+          "description": "Останавливает обработку приёма, очищает незавершённый кадр и непрочитанные байты.",
+          "parameters": []
+        }
+      },
+      "buildFiles": [
+        "NoseBytes.cpp",
+        "modem.c",
+        "ir_modem.c",
+        "acoustic_modem.c"
+      ],
+      "importFiles": [
+        "NoseBytes.cpp"
+      ],
       "singletone": false
     },
    "Accel": {

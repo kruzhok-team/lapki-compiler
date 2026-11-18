@@ -8,7 +8,9 @@ bool noseInitialized = false;
 class NoseBytes {
 public:
     int value = 0;
-    NoseBytes() {
+    NoseBytes() = default;
+
+    void on() {
         if (!noseInitialized) {
             if (!mrx::hal::photoDiode::initialized) {
                 mrx::hal::photoDiode::init();
@@ -16,16 +18,25 @@ public:
                 mrx::hal::photoDiode::initialized = true;
             }
 
-            ir_modem_init();
-            ir_rx.is_enabled = 1;
-            init_modem();
-
             noseInitialized = true;
         }
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_rx_set_enabled(true);
+        init_modem();
+        __set_PRIMASK(mask);
+    }
+
+    void off() {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_rx_set_enabled(false);
+        update_modem_timer();
+        __set_PRIMASK(mask);
     }
 
     bool isByteReceived() {
-        if (ir_rx_is_available()) {
+        if (ir_rx.is_enabled && ir_rx_is_available()) {
             value = ir_rx_read_byte();
             return true;
         }
