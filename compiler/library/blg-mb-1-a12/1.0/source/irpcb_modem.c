@@ -2,6 +2,8 @@
 
 #include "ir_modem.c"
 
+#if CYBERBEAR_IRPCB_ENABLED
+
 // TIM17 remains at 48 kHz for CyberBear RX/TX and the acoustic modem.
 // TIM16 toggles PE12 only during an IRPCB packet. TIM1 is used by initLoad().
 extern "C" {
@@ -127,3 +129,5 @@ extern "C" {
         ir_pcb_tx.initialized = true;
     }
 }
+
+#endif // CYBERBEAR_IRPCB_ENABLED

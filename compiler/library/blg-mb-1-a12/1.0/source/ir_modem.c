@@ -1,5 +1,10 @@
 #pragma once
 
+// Temporarily disabled while investigating the matrix update slowdown.
+#ifndef CYBERBEAR_IRPCB_ENABLED
+#define CYBERBEAR_IRPCB_ENABLED 0
+#endif
+
 // Streaming port of bear_opt.zip: signal_reciever.ipynb / demo.
 // TIM17 supplies 48 kHz: 0 = 12 kHz, 1 = 1.5 kHz, 256 samples/symbol.
 // Frame: one 0-frequency header, one silent symbol, eight data bits (MSB first).
@@ -18,12 +23,13 @@ extern "C" {
         IR_BUFFER_SIZE = 64,
         IR_DETECT_STEP = 15,
         IR_STARTUP_MARGIN = 70,
-        IR_QUEUE_SIZE = 16,
-        IR_TX_CYBERBEAR = 0,
-        IR_TX_IRPCB = 1,
-        IR_TX_PIN_OWNED = 0 // Neither ON nor OFF: the other timer drives PE12.
+        IR_QUEUE_SIZE = 16
+#if CYBERBEAR_IRPCB_ENABLED
+        , IR_TX_CYBERBEAR = 0, IR_TX_IRPCB = 1
+#endif
     };
 
+#if CYBERBEAR_IRPCB_ENABLED
     // Optional backend, registered only by the IRPCB LED component.
     static void (*ir_pcb_start)(uint16_t, unsigned) = nullptr;
     static void (*ir_pcb_stop)() = nullptr;
@@ -41,6 +47,21 @@ extern "C" {
         volatile unsigned head;
         volatile unsigned tail;
     } ir_tx = {};
+
+#else
+    static struct {
+        int initialized;
+        int turn_mode;
+        unsigned frame_sample;
+        unsigned gap;
+        int active;
+        uint8_t byte;
+        volatile uint8_t queue[IR_QUEUE_SIZE];
+        volatile unsigned head;
+        volatile unsigned tail;
+    } ir_tx = {};
+
+#endif
 
     static struct {
         int is_enabled;
@@ -63,6 +84,7 @@ extern "C" {
         volatile unsigned tail;
     } ir_rx = {};
 
+#if CYBERBEAR_IRPCB_ENABLED
     // These operations run in the foreground; restore the caller's IRQ state.
     static void ir_set_mode(int on) {
         uint32_t mask = __get_PRIMASK();
@@ -97,14 +119,13 @@ extern "C" {
         ir_tx_enqueue(static_cast<uint8_t>(byte), 8, IR_TX_CYBERBEAR);
     }
 
-    // Return the LED level, or IR_TX_PIN_OWNED while TIM16 drives PE12.
+    // Return the LED level for exactly one sample; no waits in the IRQ.
     static int ir_tx_advance() {
         if (ir_tx.turn_mode)
             return ON;
         if (!ir_tx.active) {
-            unsigned gap = ir_tx.gap;
-            if (gap) {
-                ir_tx.gap = gap - 1;
+            if (ir_tx.gap) {
+                --ir_tx.gap;
                 return OFF;
             }
             if (ir_tx.tail == ir_tx.head)
@@ -116,29 +137,87 @@ extern "C" {
             ir_tx.frame_sample = 0;
             ir_tx.active = 1;
             if (ir_tx.protocol == IR_TX_IRPCB) {
-                if (ir_pcb_start) {
+                if (ir_pcb_start)
                     ir_pcb_start(static_cast<uint16_t>(packet), (packet >> 16) & 31);
-                    return IR_TX_PIN_OWNED;
-                }
-                ir_tx.active = 0;
+                else
+                    ir_tx.active = 0;
                 return OFF;
             }
         }
         if (ir_tx.protocol == IR_TX_IRPCB)
-            return IR_TX_PIN_OWNED;
+            return OFF; // TIM16 owns PE12 until this packet is complete.
 
         unsigned symbol = ir_tx.frame_sample / IR_BIT_SAMPLES;
         unsigned period = 4;
         if (symbol >= 2 && (ir_tx.byte & (0x80 >> (symbol - 2))))
             period = 32;
-        // Both carrier periods are powers of two; avoid a division per sample.
-        int level = symbol != 1 && (ir_tx.frame_sample & (period - 1)) < period / 2;
+        int level = symbol != 1 && ir_tx.frame_sample % period < period / 2;
         if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
             ir_tx.active = 0;
             ir_tx.gap = IR_BIT_SAMPLES;
         }
         return level ? ON : OFF;
     }
+
+#else
+    // These operations run in the foreground; restore the caller's IRQ state.
+    static void ir_set_mode(int on) {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_tx.turn_mode = on;
+        ir_tx.active = 0;
+        ir_tx.gap = IR_BIT_SAMPLES;
+        ir_tx.tail = ir_tx.head;
+        setPin_PP(GPIOE, 12, on ? ON : OFF);
+        __set_PRIMASK(mask);
+    }
+
+    static void ir_off() { ir_set_mode(0); }
+    static void ir_on() { ir_set_mode(1); }
+
+    static void ir_tx_send_byte(int byte) {
+        uint32_t mask = __get_PRIMASK();
+        __disable_irq();
+        ir_tx.turn_mode = 0;
+        unsigned next = (ir_tx.head + 1) % IR_QUEUE_SIZE;
+        // A full queue drops the new byte, never corrupts the frame in flight.
+        if (next != ir_tx.tail) {
+            ir_tx.queue[ir_tx.head] = static_cast<uint8_t>(byte);
+            ir_tx.head = next;
+        }
+        __set_PRIMASK(mask);
+    }
+
+    // Return the LED level for exactly one sample; no waits in the IRQ.
+    static int ir_tx_advance() {
+        if (ir_tx.turn_mode)
+            return ON;
+        if (!ir_tx.active) {
+            if (ir_tx.gap) {
+                --ir_tx.gap;
+                return OFF;
+            }
+            if (ir_tx.tail == ir_tx.head)
+                return OFF;
+            ir_tx.byte = ir_tx.queue[ir_tx.tail];
+            ir_tx.tail = (ir_tx.tail + 1) % IR_QUEUE_SIZE;
+            ir_tx.frame_sample = 0;
+            ir_tx.active = 1;
+        }
+
+        unsigned symbol = ir_tx.frame_sample / IR_BIT_SAMPLES;
+        unsigned period = 4;
+        if (symbol >= 2 && (ir_tx.byte & (0x80 >> (symbol - 2))))
+            period = 32;
+        int level = symbol != 1 && ir_tx.frame_sample % period < period / 2;
+        if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
+            ir_tx.active = 0;
+            ir_tx.gap = IR_BIT_SAMPLES;
+        }
+        return level ? ON : OFF;
+    }
+
+#endif
 
     static float ir_history(unsigned channel, unsigned index) {
         return ir_rx.history[channel][(ir_rx.end + index) % IR_BUFFER_SIZE];
@@ -207,12 +286,10 @@ extern "C" {
             ir_rx.phase >= 16 ? signal : -signal,
             (ir_rx.phase + 8) % 32 < 16 ? signal : -signal
         };
-        // Keep the same filter coefficient without eight FPU divisions per tick.
-        static constexpr float alpha = 1.0f / 48.0f;
         for (unsigned i = 0; i < 4; ++i) {
-            ir_rx.lowpass[i] += (products[i] - ir_rx.lowpass[i]) * alpha;
+            ir_rx.lowpass[i] += (products[i] - ir_rx.lowpass[i]) / 48.0f;
             ir_rx.lowpass_twice[i] +=
-                (ir_rx.lowpass[i] - ir_rx.lowpass_twice[i]) * alpha;
+                (ir_rx.lowpass[i] - ir_rx.lowpass_twice[i]) / 48.0f;
         }
         // The notebook decimates the first processed sample, then every 16th.
         if (ir_rx.decimation == 0) {
@@ -248,10 +325,15 @@ extern "C" {
         // NoseBytes enables reception only after the photodiode ADC is ready.
         if (ir_rx.is_enabled)
             ir_rx_advance(ADC1->DR);
+#if CYBERBEAR_IRPCB_ENABLED
         if (ir_tx.initialized) {
             int level = ir_tx_advance();
-            if (level != IR_TX_PIN_OWNED)
+            if (!(ir_tx.active && ir_tx.protocol == IR_TX_IRPCB))
                 setPin_PP(GPIOE, 12, level);
         }
+#else
+        if (ir_tx.initialized)
+            setPin_PP(GPIOE, 12, ir_tx_advance());
+#endif
     }
 }

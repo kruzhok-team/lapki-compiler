@@ -103,7 +103,7 @@ def test_original_notebook_recording(native_modem):
 
 
 def test_irpcb_transmitter(tmp_path):
-    """A12 carrier/timer driver, standard IRPCB RX and mixed protocol FIFO."""
+    """Preserved opt-in backend; production builds disable it by default."""
     compiler = shutil.which('g++')
     if compiler is None:
         pytest.skip('g++ is needed for native IR tests')
@@ -116,7 +116,7 @@ def test_irpcb_transmitter(tmp_path):
         '-fno-sanitize-recover=all', f'-I{tmp_path}',
         f'-I{ROOT / "test/irpcb/stubs"}',
         f'-I{ROOT / "compiler/library/IRPCB/1.0/source/lib"}',
-        f'-I{SOURCES}', '-DIR_RX_ENABLED=1',
+        f'-I{SOURCES}', '-DIR_RX_ENABLED=1', '-DCYBERBEAR_IRPCB_ENABLED=1',
         str(FIXTURES / 'irpcb.cpp'), '-o', str(binary)
     ], check=True, capture_output=True, text=True)
     subprocess.run([str(binary)], check=True, capture_output=True, text=True)
@@ -182,3 +182,14 @@ async def test_generate_and_build(components, tmp_path):
                                 capture_output=True, text=True)
         assert result.returncode == 0, result.stdout + result.stderr
     assert 0 < (tmp_path / 'build/sketch.bin').stat().st_size < 88 * 1024
+    # A disabled IRPcb must not install TIM16's ISR, even if the component is
+    # present and sendByte/sendWord are called in the generated scheme.
+    symbols = subprocess.check_output(
+        ['arm-none-eabi-nm', str(tmp_path / 'build/sketch.elf')], text=True)
+    timer16 = next(line for line in symbols.splitlines()
+                   if line.endswith(' TIM1_UP_TIM16_IRQHandler'))
+    assert timer16.split()[1] == 'W'
+    if components == ['IRPcb']:
+        timer17 = next(line for line in symbols.splitlines()
+                       if line.endswith(' TIM1_TRG_COM_TIM17_IRQHandler'))
+        assert timer17.split()[1] == 'W'
