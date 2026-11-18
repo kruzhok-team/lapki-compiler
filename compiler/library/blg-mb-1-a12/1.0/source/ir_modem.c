@@ -20,7 +20,8 @@ extern "C" {
         IR_STARTUP_MARGIN = 70,
         IR_QUEUE_SIZE = 16,
         IR_TX_CYBERBEAR = 0,
-        IR_TX_IRPCB = 1
+        IR_TX_IRPCB = 1,
+        IR_TX_PIN_OWNED = 0 // Neither ON nor OFF: the other timer drives PE12.
     };
 
     // Optional backend, registered only by the IRPCB LED component.
@@ -96,13 +97,14 @@ extern "C" {
         ir_tx_enqueue(static_cast<uint8_t>(byte), 8, IR_TX_CYBERBEAR);
     }
 
-    // Return the LED level for exactly one sample; no waits in the IRQ.
+    // Return the LED level, or IR_TX_PIN_OWNED while TIM16 drives PE12.
     static int ir_tx_advance() {
         if (ir_tx.turn_mode)
             return ON;
         if (!ir_tx.active) {
-            if (ir_tx.gap) {
-                --ir_tx.gap;
+            unsigned gap = ir_tx.gap;
+            if (gap) {
+                ir_tx.gap = gap - 1;
                 return OFF;
             }
             if (ir_tx.tail == ir_tx.head)
@@ -114,21 +116,23 @@ extern "C" {
             ir_tx.frame_sample = 0;
             ir_tx.active = 1;
             if (ir_tx.protocol == IR_TX_IRPCB) {
-                if (ir_pcb_start)
+                if (ir_pcb_start) {
                     ir_pcb_start(static_cast<uint16_t>(packet), (packet >> 16) & 31);
-                else
-                    ir_tx.active = 0;
+                    return IR_TX_PIN_OWNED;
+                }
+                ir_tx.active = 0;
                 return OFF;
             }
         }
         if (ir_tx.protocol == IR_TX_IRPCB)
-            return OFF; // TIM16 owns PE12 until this packet is complete.
+            return IR_TX_PIN_OWNED;
 
         unsigned symbol = ir_tx.frame_sample / IR_BIT_SAMPLES;
         unsigned period = 4;
         if (symbol >= 2 && (ir_tx.byte & (0x80 >> (symbol - 2))))
             period = 32;
-        int level = symbol != 1 && ir_tx.frame_sample % period < period / 2;
+        // Both carrier periods are powers of two; avoid a division per sample.
+        int level = symbol != 1 && (ir_tx.frame_sample & (period - 1)) < period / 2;
         if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
             ir_tx.active = 0;
             ir_tx.gap = IR_BIT_SAMPLES;
@@ -203,10 +207,12 @@ extern "C" {
             ir_rx.phase >= 16 ? signal : -signal,
             (ir_rx.phase + 8) % 32 < 16 ? signal : -signal
         };
+        // Keep the same filter coefficient without eight FPU divisions per tick.
+        static constexpr float alpha = 1.0f / 48.0f;
         for (unsigned i = 0; i < 4; ++i) {
-            ir_rx.lowpass[i] += (products[i] - ir_rx.lowpass[i]) / 48.0f;
+            ir_rx.lowpass[i] += (products[i] - ir_rx.lowpass[i]) * alpha;
             ir_rx.lowpass_twice[i] +=
-                (ir_rx.lowpass[i] - ir_rx.lowpass_twice[i]) / 48.0f;
+                (ir_rx.lowpass[i] - ir_rx.lowpass_twice[i]) * alpha;
         }
         // The notebook decimates the first processed sample, then every 16th.
         if (ir_rx.decimation == 0) {
@@ -244,7 +250,7 @@ extern "C" {
             ir_rx_advance(ADC1->DR);
         if (ir_tx.initialized) {
             int level = ir_tx_advance();
-            if (!(ir_tx.active && ir_tx.protocol == IR_TX_IRPCB))
+            if (level != IR_TX_PIN_OWNED)
                 setPin_PP(GPIOE, 12, level);
         }
     }

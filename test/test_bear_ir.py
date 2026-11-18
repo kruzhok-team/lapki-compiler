@@ -126,7 +126,8 @@ def test_irpcb_transmitter(tmp_path):
 @pytest.mark.parametrize('components', [
     ['IR'], ['NoseBytes'], ['EarsBytes'], ['IR', 'NoseBytes'],
     ['NoseBytes', 'IR', 'EarsBytes'], ['IRPcb'], ['IR', 'IRPcb'],
-    ['IRPcb', 'IR'], ['NoseBytes', 'IRPcb', 'IR', 'EarsBytes']
+    ['IRPcb', 'IR'], ['NoseBytes', 'IRPcb', 'IR', 'EarsBytes'],
+    ['NoseBytes', 'IR', 'EarsBytes', 'MatrixPicture']
 ])
 async def test_generate_and_build(components, tmp_path):
     """Existing component interfaces and all modem include orders build for ARM."""
@@ -141,7 +142,8 @@ async def test_generate_and_build(components, tmp_path):
     for node in list(graph.findall(f'{namespace}node')):
         if node.attrib['id'].startswith('component_'):
             graph.remove(node)
-    ids = {'IR': 'ir', 'IRPcb': 'irpcb', 'NoseBytes': 'nose', 'EarsBytes': 'ears'}
+    ids = {'IR': 'ir', 'IRPcb': 'irpcb', 'NoseBytes': 'nose', 'EarsBytes': 'ears',
+           'MatrixPicture': 'matrix'}
     for component in components:
         node = ElementTree.SubElement(graph, f'{namespace}node', id=f'component_{component}')
         ElementTree.SubElement(node, f'{namespace}data', key='dNote').text = 'formal'
@@ -149,6 +151,8 @@ async def test_generate_and_build(components, tmp_path):
         ElementTree.SubElement(node, f'{namespace}data', key='dData').text = (
             f'id/ {ids[component]}\n\ntype/ {component}')
     body = 'entry/\n'
+    if 'MatrixPicture' in components:
+        body += 'matrix.draw(heart);\n'
     if 'IRPcb' in components:
         body += 'irpcb.sendByte(85);\n'
     if 'IR' in components:
