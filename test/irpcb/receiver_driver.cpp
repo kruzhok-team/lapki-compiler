@@ -17,7 +17,10 @@ static void timeout() {
     IRPCB_TEST_RX_IRQHandler();
 }
 static void sample(bool level) {
-    Gpio::input_level = level;
+    // IR_PCB-F_Cu.gtl: DD1 pad 11, T1C1/PA1 is connected to /IR_RCVR.
+    // PA3 is a different net, /UART_RX. Do not follow the driver's pin macro.
+    if(level) Gpio::input_levels |= 1u << 1;
+    else Gpio::input_levels &= ~(1u << 1);
     IRRcvr::tmr_rx.flags = 1;
     IRPCB_TEST_RX_IRQHandler();
 }
@@ -53,6 +56,11 @@ int main() {
     assert(d.samples == 4096 && d.packets == 1 && d.fast_intervals && d.slow_intervals);
     pulse(2400); // Capture flags in sampler mode cannot advance or decode anything.
     assert(IRRcvr::GetDiagnostics().samples == d.samples);
+    for(unsigned t = 0; t < 1024; ++t) {
+        Gpio::input_levels ^= 1u << 3; // UART traffic must not appear as IR edges.
+        sample(false);
+    }
+    assert(IRRcvr::GetDiagnostics().edges == d.edges);
 
     // Local TX mutes incoming bytes, while diagnostics still observe the pin.
     IRLed::TransmitWord(0xffff, 16, 90, nullptr);

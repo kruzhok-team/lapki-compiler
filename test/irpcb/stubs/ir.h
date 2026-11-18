@@ -10,7 +10,9 @@
 #define TMR_IR_RX 1
 #define TMR_IR_RX_IRQ 1
 #define TMR_IR_RX_IRQ_HNDLR IRPCB_TEST_RX_IRQHandler
-#define IR_RX_DATA_PIN 3
+#ifndef IR_RX_DATA_PIN
+#define IR_RX_DATA_PIN 1
+#endif
 #define IRQ_PRIO_HIGH 7
 #define DAC_DMA 2
 #define DMA_PRIO_HIGH 0
@@ -35,11 +37,11 @@ inline void LockFromIRQ() {}
 inline void UnlockFromIRQ() {}
 }
 namespace Gpio {
-inline bool input_level = false;
+inline uint32_t input_levels = 0;
 enum Pull { PullUp };
 inline void SetupAnalog(int) {}
 inline void SetupInput(int, Pull) {}
-inline bool IsHi(int) { return input_level; }
+inline bool IsHi(int pin) { return input_levels & (1u << pin); }
 }
 namespace Nvic { inline void EnableVector(int, int) {} }
 template<typename T> bool IsLike(T actual, T expected, uint32_t deviation) {

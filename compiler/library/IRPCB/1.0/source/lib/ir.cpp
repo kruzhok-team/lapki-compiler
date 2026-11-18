@@ -311,7 +311,7 @@ void SetMode(uint8_t mode) {
     else {
         Gpio::SetupInput(IR_RX_DATA_PIN, Gpio::PullUp);
         tmr_rx.Init();
-        // This mode needs the raw carrier at PA3, not a demodulated envelope.
+        // This mode needs the raw carrier at PA1, not a demodulated envelope.
         tmr_rx.SelectSlaveMode(TimHw::SlaveMode::Disable);
         tmr_rx.DisableAutoreloadBuffering();
         tmr_rx.SetUpdateSrcOvfOnly();

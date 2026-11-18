@@ -97,7 +97,8 @@
 #define IR_BIT_CNT_MAX  16L // Just for buffer reservation
 
 // IR Rcvr
-#define IR_RX_DATA_PIN  PA3
+// /IR_RCVR is PA1 (TIMER1_CH1); PA3 is the separate UART RX net.
+#define IR_RX_DATA_PIN  PA1
 
 // Spi Flash
 #define FLASH_NSS       PA15

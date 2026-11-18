@@ -1,6 +1,7 @@
 """IRPCB exchange: shared RAM, legacy formats and A12 interoperability."""
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 from xml.etree import ElementTree
@@ -48,8 +49,13 @@ def test_native_receiver(tmp_path, driver):
              '-fno-sanitize-recover=all', f'-I{SOURCE / "lib"}']
     if driver:
         shutil.copyfile(SOURCE / 'lib/ir.cpp', tmp_path / 'ir.cpp')
+        # Use the real board definition; the simulated wire is fixed to the
+        # hardware /IR_RCVR net (PA1) independently of that definition.
+        pin = re.search(r'^#define\s+IR_RX_DATA_PIN\s+PA(\d+)\b',
+                        (SOURCE / 'board.h').read_text(), re.MULTILINE)
+        assert pin is not None
         flags = [f'-I{tmp_path}', f'-I{FIXTURES / "stubs"}',
-                 '-DIR_RX_ENABLED=1', *flags]
+                 '-DIR_RX_ENABLED=1', f'-DIR_RX_DATA_PIN={pin[1]}', *flags]
     else:
         flags.append(
             f'-I{ROOT / "compiler/library/blg-mb-1-a12/1.0/source"}')
