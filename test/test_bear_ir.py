@@ -102,10 +102,31 @@ def test_original_notebook_recording(native_modem):
     assert received == [0xaa]
 
 
+def test_irpcb_transmitter(tmp_path):
+    """A12 carrier/timer driver, standard IRPCB RX and mixed protocol FIFO."""
+    compiler = shutil.which('g++')
+    if compiler is None:
+        pytest.skip('g++ is needed for native IR tests')
+    shutil.copyfile(ROOT / 'compiler/library/IRPCB/1.0/source/lib/ir.cpp',
+                    tmp_path / 'ir.cpp')
+    binary = tmp_path / 'a12-irpcb'
+    subprocess.run([
+        compiler, '-std=c++17', '-Wall', '-Wextra', '-Werror',
+        '-Wno-unused-parameter', '-fsanitize=undefined',
+        '-fno-sanitize-recover=all', f'-I{tmp_path}',
+        f'-I{ROOT / "test/irpcb/stubs"}',
+        f'-I{ROOT / "compiler/library/IRPCB/1.0/source/lib"}',
+        f'-I{SOURCES}', '-DIR_RX_ENABLED=1',
+        str(FIXTURES / 'irpcb.cpp'), '-o', str(binary)
+    ], check=True, capture_output=True, text=True)
+    subprocess.run([str(binary)], check=True, capture_output=True, text=True)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize('components', [
     ['IR'], ['NoseBytes'], ['EarsBytes'], ['IR', 'NoseBytes'],
-    ['NoseBytes', 'IR', 'EarsBytes']
+    ['NoseBytes', 'IR', 'EarsBytes'], ['IRPcb'], ['IR', 'IRPcb'],
+    ['IRPcb', 'IR'], ['NoseBytes', 'IRPcb', 'IR', 'EarsBytes']
 ])
 async def test_generate_and_build(components, tmp_path):
     """Existing component interfaces and all modem include orders build for ARM."""
@@ -120,7 +141,7 @@ async def test_generate_and_build(components, tmp_path):
     for node in list(graph.findall(f'{namespace}node')):
         if node.attrib['id'].startswith('component_'):
             graph.remove(node)
-    ids = {'IR': 'ir', 'NoseBytes': 'nose', 'EarsBytes': 'ears'}
+    ids = {'IR': 'ir', 'IRPcb': 'irpcb', 'NoseBytes': 'nose', 'EarsBytes': 'ears'}
     for component in components:
         node = ElementTree.SubElement(graph, f'{namespace}node', id=f'component_{component}')
         ElementTree.SubElement(node, f'{namespace}data', key='dNote').text = 'formal'
@@ -128,8 +149,12 @@ async def test_generate_and_build(components, tmp_path):
         ElementTree.SubElement(node, f'{namespace}data', key='dData').text = (
             f'id/ {ids[component]}\n\ntype/ {component}')
     body = 'entry/\n'
+    if 'IRPcb' in components:
+        body += 'irpcb.sendByte(85);\n'
     if 'IR' in components:
         body += 'ir.sendByte(150);\n'
+    if 'IRPcb' in components:
+        body += 'irpcb.sendWord(4660);\n'
     for component in ['NoseBytes', 'EarsBytes']:
         if component in components:
             body += f'\n{ids[component]}.isByteReceived/\n'

@@ -223,6 +223,32 @@
     "loopActions": [],
     "singletone": false
    },
+    "IRPcb": {
+      "name": "ИК-Светодиод (ИК-ТЮК)",
+      "description": "Передача с КиберМишки обычному ИК-приёмнику ИК-ТЮКа на несущей 56 кГц. Можно использовать вместе с обычным ИК-светодиодом в одной схеме; кадры отправляются по очереди.",
+      "img": "blg-mb/ir.svg",
+      "signals": {},
+      "constructorParameters": {},
+      "variables": {},
+      "methods": {
+        "sendByte": {
+          "alias": "Отправить байт ИК-ТЮКу",
+          "img": "arduino/switch-on.svg",
+          "description": "Передаёт младшие 8 бит. Обычный приёмник ИК-ТЮКа сохраняет байт в старших 8 битах пакета word16.",
+          "parameters": [{"name": "byte", "type": "int", "description": "Передаваемый байт, 0–255."}]
+        },
+        "sendWord": {
+          "alias": "Отправить слово ИК-ТЮКу",
+          "img": "arduino/switch-on.svg",
+          "description": "Передаёт младшие 16 бит; обычный приёмник ИК-ТЮКа получает слово целиком.",
+          "parameters": [{"name": "word", "type": "int", "description": "Передаваемое слово, 0–65535."}]
+        }
+      },
+      "importFiles": ["irpcb_led.hpp"],
+      "buildFiles": ["irpcb_led.hpp", "irpcb_modem.c", "modem.c", "ir_modem.c", "acoustic_modem.c"],
+      "loopActions": [],
+      "singletone": false
+    },
     "NoseBytes": {
       "name": "Нос-байты",
       "description": "КиберМишка настроил нос на принятие сообщений.",
