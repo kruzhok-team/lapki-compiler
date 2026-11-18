@@ -102,6 +102,25 @@ def test_original_notebook_recording(native_modem):
     assert received == [0xaa]
 
 
+def test_acoustic_receiver(tmp_path):
+    """Use production filters and decoder with simulated microphone samples."""
+    compiler = shutil.which('g++')
+    if compiler is None:
+        pytest.skip('g++ is needed for native acoustic tests')
+    shutil.copyfile(SOURCES / 'acoustic_modem.c', tmp_path / 'acoustic_modem.c')
+    (tmp_path / 'commonEars.hpp').write_text(
+        '#pragma once\n#include <cstdint>\n'
+        'namespace stm32g431 { namespace ears { uint16_t adcArray[2] = {}; } }\n')
+    binary = tmp_path / 'acoustic'
+    subprocess.run([
+        compiler, '-std=c++17', '-Wall', '-Wextra', '-Werror',
+        '-Wno-unused-parameter', '-Wno-missing-field-initializers',
+        '-fsanitize=undefined', '-fno-sanitize-recover=all', f'-I{tmp_path}',
+        str(FIXTURES / 'acoustic.cpp'), '-o', str(binary)
+    ], check=True, capture_output=True, text=True)
+    subprocess.run([str(binary)], check=True, capture_output=True, text=True)
+
+
 def test_irpcb_transmitter(tmp_path):
     """Preserved opt-in backend; production builds disable it by default."""
     compiler = shutil.which('g++')

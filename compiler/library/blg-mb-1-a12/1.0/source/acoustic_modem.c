@@ -9,6 +9,12 @@ extern "C" {
     int BIT_INTERVAL = 595;
     int BIT_WINDOW = 250;
 
+    // Пороги амплитуды после полосовых фильтров, не проценты громкости.
+    // Больше порог — меньше чувствительность; после изменения пересобрать прошивку.
+    static constexpr float ACOUSTIC_RX_START_THRESHOLD = 400.0f; // Раньше 200.
+    static constexpr float ACOUSTIC_RX_TRAINING_THRESHOLD = 100.0f;
+    static constexpr float ACOUSTIC_RX_BIT_THRESHOLD_RATIO = 0.75f;
+
     // Полосовой фильтр, IIR, ~2.9 КГц
     static float filter_2_9_next(float x) {
         static float y_past[3] = {0.0f};
@@ -85,11 +91,10 @@ extern "C" {
 
         int have_byte;
         int is_enabled;
-        // TODO: чувствительность как параметр
     } acoustic_rx = { .fn = preamble_detect, 0 };
 
     static void preamble_detect(float u, float v) {
-        if (ABS(v) > 200.0f) {
+        if (ABS(v) > ACOUSTIC_RX_START_THRESHOLD) {
             acoustic_rx.preamble_ttl = 100;
             acoustic_rx.preamble_loc = 100;
             acoustic_rx.preamble_max = ABS(v);
@@ -128,7 +133,13 @@ extern "C" {
             return;
         }
 
-        acoustic_rx.bit_thresh = 0.75f * acoustic_rx.training_max;
+        // A noise-triggered start followed by silence used to set a near-zero
+        // bit threshold and manufacture a byte. Require a real training tone.
+        if (acoustic_rx.training_max < ACOUSTIC_RX_TRAINING_THRESHOLD) {
+            acoustic_rx.fn = preamble_detect;
+            return;
+        }
+        acoustic_rx.bit_thresh = ACOUSTIC_RX_BIT_THRESHOLD_RATIO * acoustic_rx.training_max;
         acoustic_rx.bit_pend = 8;
         acoustic_rx.bit_ttl = BIT_WINDOW;
         acoustic_rx.bit_holdoff = BIT_INTERVAL - BIT_WINDOW;
