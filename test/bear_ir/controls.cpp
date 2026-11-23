@@ -16,9 +16,12 @@ static AdcRegisters adc;
 static AdcRegisters *ADC1 = &adc;
 static TimerRegisters timer;
 static TimerRegisters *TIM17 = &timer;
-static const uint32_t RCC_AHB2ENR_GPIOEEN = 1, RCC_APB2ENR_TIM17EN = 2;
+static TimerRegisters pcb_timer;
+static TimerRegisters *TIM16 = &pcb_timer;
+static const uint32_t RCC_AHB2ENR_GPIOEEN = 1, RCC_APB2ENR_TIM17EN = 2, RCC_APB2ENR_TIM16EN = 4;
 static const uint32_t TIM_CR1_CEN = 1, TIM_DIER_UIE = 1, TIM_SR_UIF = 1, TIM_EGR_UG = 1;
-static const int TIM1_TRG_COM_TIM17_IRQn = 26, ON = 1, OFF = 2;
+static const uint32_t TIM_CR1_URS = 4;
+static const int TIM1_UP_TIM16_IRQn = 25, TIM1_TRG_COM_TIM17_IRQn = 26, ON = 1, OFF = 2;
 static int led = OFF;
 static unsigned irq_mask, photo_inits, mic_inits, detector_requests;
 static uint32_t __get_PRIMASK() { return irq_mask; }
@@ -54,6 +57,7 @@ static void enableDetector(bool) {}
 #include "NoseBytes.cpp"
 #include "EarsBytes.cpp"
 #include "ir.hpp"
+#include "irpcb_led.hpp"
 
 static bool running() { return timer.CR1 & TIM_CR1_CEN; }
 static void tick() {
@@ -174,5 +178,27 @@ int main() {
     ir.sendByte(5);
     assert(running());
     finish_tx();
+
+    IRPcb irpcb;
+    assert(!running() && !(pcb_timer.CR1 & TIM_CR1_CEN));
+    irpcb.sendByte(0x55);
+    ir.sendByte(0x96);
+    assert(running());
+    for (unsigned i = 0; i <= IR_BIT_SAMPLES && running(); ++i)
+        tick();
+    assert(ir_pcb_tx.running && !running());
+    nose.on();
+    assert(running() && ir_pcb_tx.running);
+    nose.off();
+    assert(!running() && ir_pcb_tx.running);
+    unsigned half_periods = 0;
+    while (ir_pcb_tx.running) {
+        pcb_timer.SR |= TIM_SR_UIF;
+        TIM1_UP_TIM16_IRQHandler();
+        assert(++half_periods < 10000);
+    }
+    assert(running() && !(pcb_timer.CR1 & TIM_CR1_CEN));
+    finish_tx();
+
     std::cout << "RX controls: default off, threshold, reset, independent channels, TX clock\n";
 }

@@ -1,8 +1,7 @@
 #pragma once
 
-// Temporarily disabled while investigating the matrix update slowdown.
 #ifndef CYBERBEAR_IRPCB_ENABLED
-#define CYBERBEAR_IRPCB_ENABLED 0
+#define CYBERBEAR_IRPCB_ENABLED 1
 #endif
 
 // Streaming port of bear_opt.zip: signal_reciever.ipynb / demo.
@@ -25,7 +24,7 @@ extern "C" {
         IR_STARTUP_MARGIN = 70,
         IR_QUEUE_SIZE = 16
 #if CYBERBEAR_IRPCB_ENABLED
-        , IR_TX_CYBERBEAR = 0, IR_TX_IRPCB = 1
+        , IR_TX_CYBERBEAR = 0, IR_TX_IRPCB = 1, IR_TX_PIN_OWNED = 0
 #endif
     };
 
@@ -131,7 +130,7 @@ extern "C" {
         ir_tx_enqueue(static_cast<uint8_t>(byte), 8, IR_TX_CYBERBEAR);
     }
 
-    // Return the LED level for exactly one sample; no waits in the IRQ.
+    // Return the LED level, or leave PE12 under TIM16 control.
     static int ir_tx_advance() {
         if (ir_tx.turn_mode)
             return ON;
@@ -149,21 +148,22 @@ extern "C" {
             ir_tx.frame_sample = 0;
             ir_tx.active = 1;
             if (ir_tx.protocol == IR_TX_IRPCB) {
-                if (ir_pcb_start)
+                if (ir_pcb_start) {
                     ir_pcb_start(static_cast<uint16_t>(packet), (packet >> 16) & 31);
-                else
-                    ir_tx.active = 0;
+                    return IR_TX_PIN_OWNED;
+                }
+                ir_tx.active = 0;
                 return OFF;
             }
         }
         if (ir_tx.protocol == IR_TX_IRPCB)
-            return OFF; // TIM16 owns PE12 until this packet is complete.
+            return IR_TX_PIN_OWNED;
 
         unsigned symbol = ir_tx.frame_sample / IR_BIT_SAMPLES;
         unsigned period = 4;
         if (symbol >= 2 && (ir_tx.byte & (0x80 >> (symbol - 2))))
             period = 32;
-        int level = symbol != 1 && ir_tx.frame_sample % period < period / 2;
+        int level = symbol != 1 && (ir_tx.frame_sample & (period - 1)) < period / 2;
         if (++ir_tx.frame_sample == 10 * IR_BIT_SAMPLES) {
             ir_tx.active = 0;
             ir_tx.gap = IR_BIT_SAMPLES;
@@ -344,7 +344,7 @@ extern "C" {
 #if CYBERBEAR_IRPCB_ENABLED
         if (ir_tx.initialized) {
             int level = ir_tx_advance();
-            if (!(ir_tx.active && ir_tx.protocol == IR_TX_IRPCB))
+            if (level != IR_TX_PIN_OWNED)
                 setPin_PP(GPIOE, 12, level);
         }
 #else

@@ -58,6 +58,7 @@ extern "C" {
         setPin_PP(GPIOE, 12, ON);
         TIM16->DIER |= TIM_DIER_UIE;
         TIM16->CR1 |= TIM_CR1_CEN;
+        if (ir_update_timer) ir_update_timer();
     }
 
     static void ir_pcb_next_segment() {
