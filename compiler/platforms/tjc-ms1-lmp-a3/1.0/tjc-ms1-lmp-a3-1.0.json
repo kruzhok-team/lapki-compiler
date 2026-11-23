@@ -166,6 +166,57 @@
         "singletone": false
       },
       
+      "IRLed": {
+        "name": "ИК-светодиод",
+        "description": "Передаёт байты по ИК-протоколу КиберМишки A12 через выбранный LED-выход. Штатный светодиод и разъём на этом канале получают один сигнал. Для обычных светодиодов выберите другие каналы.",
+        "img": "blg-mb/ir.svg",
+        "signals": {},
+        "constructorParameters": {},
+        "initializationFunction": "init",
+        "initializationParameters": {
+          "pin": {
+            "type": [
+              "1",
+              "2",
+              "3"
+            ],
+            "description": "Номер LED-выхода с подключённым ИК-светодиодом."
+          }
+        },
+        "variables": {},
+        "methods": {
+          "sendByte": {
+            "alias": "Отправить байт",
+            "img": "blg-mb/ir.svg",
+            "description": "Передаёт младшие 8 бит в фоне. Когда очередь заполнена, новый байт пропускается. После передачи выход выключается.",
+            "parameters": [
+              {
+                "name": "byte",
+                "type": "int",
+                "description": "Передаваемый байт, 0–255."
+              }
+            ]
+          },
+          "on": {
+            "alias": "Включить",
+            "img": "arduino/switch-on.svg",
+            "description": "Отменяет очередь передачи и включает постоянное свечение."
+          },
+          "off": {
+            "alias": "Выключить",
+            "img": "arduino/switch-off.svg",
+            "description": "Отменяет очередь передачи и выключает светодиод."
+          }
+        },
+        "buildFiles": [
+          "IRLed.hpp"
+        ],
+        "importFiles": [
+          "IRLed.hpp"
+        ],
+        "singletone": true
+      },
+
       "LED": {
         "description": "Компонент для взаимодействия со светодиодом",
         "img": "arduino/led.svg",

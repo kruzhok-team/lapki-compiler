@@ -28,6 +28,10 @@ LEDPin leds[LED_COUNT] = {
 // По таймеру вызывается `update`
 class LEDController {
 public:
+#if __has_include("IRLed.hpp")
+    static uint8_t irOutput; // Zero-based LED channel reserved by IRLed.
+#endif
+
     static void init()
     {
         RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
@@ -75,7 +79,15 @@ public:
     {
         for (uint8_t i = 0; i < LED_COUNT; i++)
         {
+#if __has_include("IRLed.hpp")
+            if (i == irOutput)
+                continue;
+#endif
             processLED(i);
         }
     }
 };
+
+#if __has_include("IRLed.hpp")
+uint8_t LEDController::irOutput = LED_COUNT;
+#endif

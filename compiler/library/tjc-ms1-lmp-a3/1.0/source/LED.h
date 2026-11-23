@@ -1,6 +1,9 @@
 #pragma once
 
 #include "PWM.hpp"
+#if __has_include("IRLed.hpp")
+#include "IRLed.hpp"
+#endif
 #define MAX_BRIGHTNESS 100
 
 class LED {
@@ -97,6 +100,10 @@ public:
 private:
     void _on(const uint8_t brightness = MAX_BRIGHTNESS)
     {
+#if __has_include("IRLed.hpp")
+        if (cyberbear_ir::output == pin - 4)
+            return;
+#endif
         // change state
         value = 1;
 
@@ -122,6 +129,10 @@ private:
 
     void _off()
     {
+#if __has_include("IRLed.hpp")
+        if (cyberbear_ir::output == pin - 4)
+            return;
+#endif
         GPIOA->BSRR |= ( GPIO_BSRR_BR0 << pin );
         value = 0;
 
