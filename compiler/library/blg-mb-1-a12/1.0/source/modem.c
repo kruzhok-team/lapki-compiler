@@ -20,8 +20,12 @@ extern "C" {
         uint32_t mask = __get_PRIMASK();
         __disable_irq();
         if (modem_settings.initialized) {
-            bool needed = ir_rx.is_enabled || acoustic_rx.is_enabled ||
-                          ir_tx.active || ir_tx.head != ir_tx.tail;
+            bool tx_needs_clock = ir_tx.active || ir_tx.head != ir_tx.tail;
+#if CYBERBEAR_IRPCB_ENABLED
+            if (ir_tx.active && ir_tx.protocol == IR_TX_IRPCB)
+                tx_needs_clock = false; // TIM16 wakes TIM17 for the next frame.
+#endif
+            bool needed = ir_rx.is_enabled || acoustic_rx.is_enabled || tx_needs_clock;
             if (needed) {
                 if (!(TIM17->CR1 & TIM_CR1_CEN)) {
                     TIM17->CNT = 0;

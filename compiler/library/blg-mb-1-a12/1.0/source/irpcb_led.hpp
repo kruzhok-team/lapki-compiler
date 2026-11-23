@@ -22,7 +22,7 @@ public:
         ir_tx_enqueue(static_cast<uint16_t>(static_cast<uint8_t>(byte)) << 8,
                       8, IR_TX_IRPCB);
 #else
-        (void)byte; // Temporarily disabled: no queue, timer or LED changes.
+        (void)byte;
 #endif
     }
 
