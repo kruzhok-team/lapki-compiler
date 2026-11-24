@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="gFormat" for="graphml" attr.name="format" attr.type="string" />
+  <key id="dName" for="node" attr.name="name" attr.type="string" />
+  <key id="dVertex" for="node" attr.name="vertex" attr.type="string" />
+  <key id="dStateMachine" for="graph" attr.name="stateMachine" attr.type="string" />
+  <key id="dNote" for="node" attr.name="note" attr.type="string" />
+  <key id="dData" for="node" attr.name="data" attr.type="string" />
+  <key id="dGeometry" for="node" attr.name="geometry" />
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <graph id="Infrared" edgedefault="directed">
+    <data key="dStateMachine" />
+    <node id="meta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">platform/ blg-mb-1-a12
+
+standardVersion/ 1.0
+
+platformVersion/ 1.0
+
+name/ Проверка ИК-приёма</data>
+    </node>
+    <node id="component_nose">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ nose
+
+type/ NoseBytes</data>
+    </node>
+    <node id="initial">
+      <data key="dVertex">initial</data>
+      <data key="dGeometry">
+        <point x="0" y="0" />
+      </data>
+    </node>
+    <node id="exchange">
+      <data key="dName">Ожидание ИК-байта</data>
+      <data key="dData">entry/
+eye.setColorPalette(&amp;ColorBlue);
+headerEye.setColorPalette(&amp;ColorBlack);
+nose.on();
+poll.start(5);
+
+nose.isByteReceived/
+eye.setColorPalette(nose.value == 5 ? &amp;ColorGreen : &amp;ColorRed);
+
+poll.timeout/
+static unsigned previous = 2;
+const unsigned phase = (*static_cast&lt;volatile uint32_t *&gt;(&amp;tim17_up) / 48000u) &amp; 1u;
+if (phase != previous) { headerEye.setColorPalette(phase ? &amp;ColorOrange : &amp;ColorBlack); previous = phase; }
+</data>
+      <data key="dGeometry">
+        <rect x="100" y="100" width="300" height="160" />
+      </data>
+    </node>
+    <edge id="start" source="initial" target="exchange" />
+    <node id="component_eye">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ eye
+
+type/ Eyes
+
+pin/ 1</data>
+    </node>
+    <node id="component_headerEye">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ headerEye
+
+type/ Eyes
+
+pin/ 2</data>
+    </node>
+    <node id="component_poll">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT</data>
+      <data key="dData">id/ poll
+
+type/ Timer
+
+</data>
+    </node>
+  </graph>
+</graphml>
