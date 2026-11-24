@@ -4,9 +4,9 @@
 #include "LEDController.hpp"
 
 namespace cyberbear_ir {
-    // Both boards run the APB timers at 16 MHz (PLL 64 MHz, AHB /4, APB /1).
+    // The measured IR frame on lmp8-a1 implies a 64 MHz TIM16 input clock.
     // One tick per 12 kHz half-period also gives eight ticks per 1.5 kHz half-period.
-    constexpr uint32_t timerClock = 16'000'000;
+    constexpr uint32_t timerClock = 64'000'000;
     constexpr uint32_t tickRate = 24'000;
     constexpr uint16_t ticksPerSymbol = 128;
     constexpr uint8_t queueMask = 15;
