@@ -12,8 +12,8 @@ namespace cyberbear_ir {
     constexpr uint8_t queueMask = 15;
 
     static GPIO_TypeDef *port;
-    static uint32_t highMask;
-    static uint32_t lowMask;
+    static uint32_t inactiveMask;
+    static uint32_t activeMask;
     static uint8_t queue[queueMask + 1];
     static uint8_t head;
     static uint8_t tail;
@@ -35,7 +35,7 @@ namespace cyberbear_ir {
         __disable_irq();
         stop();
         head = tail = 0;
-        port->BSRR = on ? highMask : lowMask;
+        port->BSRR = on ? activeMask : inactiveMask;
         __set_PRIMASK(primask);
     }
 }
@@ -47,14 +47,14 @@ extern "C" void TIM16_IRQHandler()
     TIM16->SR = 0;
     const uint16_t frameTick = tick++;
     const uint8_t symbol = frameTick / ticksPerSymbol;
-    bool high = false;
+    bool pulse = false;
     if (symbol == 1) {
-        high = (frameTick & 1) == 0;
+        pulse = (frameTick & 1) == 0;
     } else if (symbol >= 3 && symbol <= 10) {
         const bool bit = (queue[tail] >> (10 - symbol)) & 1;
-        high = (frameTick & (bit ? 8 : 1)) == 0;
+        pulse = (frameTick & (bit ? 8 : 1)) == 0;
     }
-    port->BSRR = high ? highMask : lowMask;
+    port->BSRR = pulse ? activeMask : inactiveMask;
 
     // One quiet symbol before the start and two after the last bit.
     if (tick == 13 * ticksPerSymbol) {
@@ -82,11 +82,12 @@ public:
         port = led.port;
         const uint8_t gpioPin = led.pin;
 
-        highMask = 1u << gpioPin;
-        lowMask = highMask << 16;
-        port->BSRR = lowMask;
+        // The IR output on this board is active low.
+        inactiveMask = 1u << gpioPin;
+        activeMask = inactiveMask << 16;
+        port->BSRR = inactiveMask;
         const uint32_t modeShift = gpioPin * 2u;
-        port->OTYPER &= ~highMask;
+        port->OTYPER &= ~inactiveMask;
         port->PUPDR &= ~(3u << modeShift);
         port->MODER = (port->MODER & ~(3u << modeShift)) | (1u << modeShift);
 
@@ -126,7 +127,7 @@ public:
             queue[head] = static_cast<uint8_t>(value);
             head = next;
             if (idle) {
-                port->BSRR = lowMask;
+                port->BSRR = inactiveMask;
                 tick = 0;
                 TIM16->CNT = 0;
                 TIM16->CR1 = TIM_CR1_CEN;
