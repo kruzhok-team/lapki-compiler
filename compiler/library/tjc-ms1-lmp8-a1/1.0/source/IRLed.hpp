@@ -82,12 +82,11 @@ public:
         port = led.port;
         const uint8_t gpioPin = led.pin;
 
-        // The IR output on this board is active low.
-        inactiveMask = 1u << gpioPin;
-        activeMask = inactiveMask << 16;
+        activeMask = 1u << gpioPin;
+        inactiveMask = activeMask << 16;
         port->BSRR = inactiveMask;
         const uint32_t modeShift = gpioPin * 2u;
-        port->OTYPER &= ~inactiveMask;
+        port->OTYPER &= ~activeMask;
         port->PUPDR &= ~(3u << modeShift);
         port->MODER = (port->MODER & ~(3u << modeShift)) | (1u << modeShift);
 
