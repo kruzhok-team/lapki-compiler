@@ -11,8 +11,8 @@
 extern "C" {
     // Настройка чувствительности ИК-приёмника. После изменения пересобрать прошивку.
     // Пороги относятся к энергии после фильтров, а не к сырым значениям АЦП.
-    static constexpr float IR_RX_START_THRESHOLD = 40.0f; // Минимум для старта кадра.
-    static constexpr float IR_RX_BIT_THRESHOLD = 40.0f;   // Минимум для чтения бита.
+    static constexpr float IR_RX_START_THRESHOLD = 10.0f; // Минимум для старта кадра.
+    static constexpr float IR_RX_BIT_THRESHOLD = 10.0f;   // Минимум для чтения бита.
     // Отношение краёв к пику старта: меньше — строже, больше — мягче (от 0 до 1).
     static constexpr float IR_RX_START_PEAK_RATIO = 0.5f;
 
